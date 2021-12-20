@@ -1,0 +1,41 @@
+# yoda
+yoda is an acronym of Yet Onather Delirious Application, and does naturally not refer to any greenish midget with pointy ears,
+albeit it had been said that reading yoda source aloud sounds like the very same midget talking.
+
+yoda implements a compiler which converts a close resemblance of Forth source code to bash functions,
+an interpreter which runs them, and a base vocabulary of useful functions, strongly orientated towards
+what a common Forth interpreter offers. It can be used to augment bash, can serve as shell, or as Forthish
+coding environment.
+
+In some respects does yoda differ from Forth:
+- forward referencing of words, either only those compiled to new
+  words, or also those called upon while interpreting. Feature can
+  be enabled and disabled any time.
+- strings. An additional string stack has been added, entering strings
+  doesn't go through  s"  word. Instead are strings recognised and dealt
+  with by a pattern matching mechanism, invoked on words not found in
+  the dictionary. Literal numbers, ASCII values of single characters,
+  shell commands are subject to the same mechanism.
+- there is no virtual machine. Compiling a word creates a bash function,
+  containing, from a bash viewpoint, "native code". The yoda interpreter
+  operates within the same shell environment as the functions its
+  compiler generates - yoda doesn't shell (unless bash does for invoking
+  an external command).
+- Due to its forward referencing capability does yoda not need all of
+  the functionality necessary for compiling a program already prior to
+  beginning of compilation. Instead can it resolve those after compilation
+  on a need-to-include base. This allows for a more automatic and
+  comfortable library inclusion management. The library "postlib",
+  referenced during resolve passes, exists for this purpose: compile
+  nothing from it, unless needed.
+  Another libary, prelib, is included before main source compilation.
+  prelib is unsuited for resolving forward referenced words.
+- yoda has no built-in interpreter, but an interpreter can be compiled
+  from postlib if needed (forward referenced). Its name is "quit".
+- yoda attempts to eliminate immediate words, but a few remnants are left:
+  ( and \ are "conventionally immediate", mostly because their interpret
+  time and compile time semantics are identical. I may in time get rid of
+  the "immediate" feature completely.
+  Most other otherwise immediate words employ a scheme similar to what
+  cmForth does: added context specific vocabularies. Those words in the
+  compiler specific vocabulary are inherently "immediate".

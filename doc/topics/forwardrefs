@@ -23,10 +23,10 @@ a number between parenthesises. For example:
 
      ok (3)
 
-This indicates that 3 references to compiled, but unresolved words exist.
+This indicates that 3 references to non-existing words have been compiled.
 If no unresolved references exists, no count is shown.
 
-To show the names of those unresolved references, execute ".undefined"
+To show the names of those unresolved references, execute ".unresolved"
 or "crossref". The last section of the "crossref" output, below
 "### headersunresolved ###, shows them.
 
@@ -63,6 +63,8 @@ needed   can be used to test existence of a specific forward reference. A flag
 need     creates a forward reference explicitely. Rather than forward references,
          created by unknown words in code, these may have better use for signalling
          to postlib.
+
+exists   check whether a word exists, return a flag reflecting this.
 
 resolve  resolve against postlib. Don't wait for implicite resolving at the
          end of program loading, but do it now. This may be done multiple times,

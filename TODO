@@ -1,6 +1,4 @@
 --- problem solving todos
-- exists shows irregular behaviour when querying an existing data item:
-  no result is returned.
 - +loop uses a rather simplistic end of loop checking, which
   doesn't work with negative loop increments
 
@@ -8,7 +6,7 @@
 - allow customising query attributes
 - allow customising prompt
 - does>  tricky. consider detokeniser intervention
-- add context vocabularies to selected searches (only undoc left)
+- add context vocabularies to selected searches (only undoc remaining)
 - make header of currently compiled word non-findable until semicolon.
   can be done by classical hide/reveal,  by postponing header creation,
   or by moving when compilation has completed.

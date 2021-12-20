@@ -1,0 +1,10 @@
+name:                else
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+description:         a compile time flow control word
+                     part of if .. else .. then flow control construct.
+example:             ...
+                     true if  ( taken )
+                     else     ( not taken )
+                     then

@@ -1,0 +1,10 @@
+name:                topic
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          open the topicby number, as shown in output of topics
+contexts:            interpreting, compiling
+
+notes:               as topic is opened in a text editor, specifying an existing
+                     editor in the congiguration is important. By default is vi
+                     configured

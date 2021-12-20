@@ -1,0 +1,6 @@
+name:                and
+stack:               ( u1 u2 -- u3 )
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          u3 is the result of bitwise ANDing u1 with u2
+contexts:            interpreting, compiling

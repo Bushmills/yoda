@@ -1,0 +1,4 @@
+#!/usr/local/bin/yoda
+need . need u.
+boot quit
+"Yoda shell" type$ cr

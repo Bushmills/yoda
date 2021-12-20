@@ -1,0 +1,145 @@
+TOPIC: forward references
+
+Forward referencing yet undefined colon words is possible, but not enabled
+by default. To enable, create a variable named "forwardrefs", and set its
+value to non-zero. For example:
+
+   variable forwardrefs
+   forwardrefs on
+
+
+To turn forward references off again, do:
+
+   forwardrefs off
+
+
+when forward refs are turned off, an attempt to compile a non-existing word
+into a word currently created will immediately result in an error.
+
+With forward references turned on, unknown words may be compiled into new
+words. These are expected to get eventually resolved at a later point.
+The "ok" prompt will show the count of unresolved forward references as
+a number between parenthesises. For example:
+
+     ok (3)
+
+This indicates that 3 references to compiled, but unresolved words exist.
+If no unresolved references exists, no count is shown.
+
+To show the names of those unresolved references, execute ".undefined"
+or "crossref". The last section of the "crossref" output, below
+"### headersunresolved ###, shows them.
+
+Resolving forward references is done automatically, as soon as a forward
+referenced word gets defined as colon definition. Resolving a forward
+reference with a data item, like a constant or a variable, is not possible.
+
+Note that this automatic resolving of forward references will still take
+place when forwardrefs have been disabled again. This only prevents creation
+of forward references, not resolving them.
+
+A library meant for containing potentially unresolved words will be included
+at the end of the forsh script. All definitions in that library should make
+use of conditional compilation, and include the there defined words only on
+a need base: As postlib can be included multiple times, unconditionally
+compiled words would cause redefinitions.
+
+
+Some words exist for managing forward references and conditional inclusion:
+   u:
+   need
+   needed
+   resolve
+
+u:       is almost identical with : but compiles the following word only if it's
+         an unresolved forward reference.
+
+needed   can be used to test existence of a specific forward reference. A flag
+         is produced, reflecting the result of the test.
+         This flag can be conditionally responded to with flow control constructs
+         "lest" and "unless"
+
+need     creates a forward reference explicitely. Rather than forward references,
+         created by unknown words in code, these may have better use for signalling
+         to postlib.
+
+resolve  resolve against postlib. Don't wait for implicite resolving at the
+         end of program loading, but do it now. This may be done multiple times,
+         and in fact, it often is. For example, conditionally compiled words in
+         postlib may create additional forward references, which are then resolved
+         in another resolve pass.
+
+         Therefore is this case legal:
+
+main program:
+               : hello fwd1 ;
+               resolve
+               hello
+
+postlib:
+               u: fwd3  "Hello, world!" type$  ;
+               u: fwd2  fwd3  ;
+               u: fwd1  fwd2  ;
+
+Compilation may be slowed down slightly with this order of forward references, because
+of the need of multiple inclusions of postlib:  when executing "resolve" in main program,
+postlib will be included first time to resolve "fwd1". By conditionally compiling "fwd1",
+the new forward reference "fwd2" will be created, causing a second inclusion run of
+postlib, which now resolves "fwd2" - and thereby creating "fwd3" forward refernce.
+Consequently will the need of yet another inclusion run be detected, and only after
+this third inclusion will headers count have stabilized.
+Changing the sequence to  fwd1, fwd2, fwd3 results in a single inclusion resolving
+all forward references.
+
+
+But even without switching forward references on (which essentially means "mark
+needed but not existing words automatically), they can be used by manual control:
+Assume that forwardrefs are turned off and will remain doing so, and that there's
+a word called "hello" in the postlib which we want to execute or compile into
+new words.  By explicit marking the need, followed by resolving, will the needed
+word be available:
+                     need hello        \ mark hello as needed
+                     resolve           \ load it from postlib
+                     hello             \ run it
+
+                     \ or everything on a single line:
+                     need hello resolve hello
+
+which is essentially what "instantresolve on" will do automatically, Read more about
+this new experimental feature here:
+
+An experimental feature has been introduced, allowing forward references not only
+in compiled words, but also when interactively typing them on the input line.
+As with forwardrefs, it is turned off by default. To enable, set both variables
+forwardrefs and instantresolve to non-zero values.  If any of these variables doesn't
+exist, simply create it first.
+
+               forwardrefs on
+               instantresolve on
+
+\ for creating and setting at the same time, this is a shorter way:
+\         create instantresolve true ,
+
+The effect can be tried by executing "hello" which has been added to postlib for
+testing purposes. Another word suited for testing is "dump":
+
+               $1000 $80 dump
+
+for some slightly less memory contents there, you may want to populate it with
+a string:
+
+               "This is a very nice string, albeit a tad long"
+               $1000 dup unpack$ dump
+
+
+
+When setting a cold start vector at the end of a source file - useful for hashbanged
+scripts - will name of cold start entry be marked as needed, then resolving takes place.
+Consequence is that cold boot entries may be forward referenced too. Please see the
+file "quit" which compiles and runs an interactive interpreter/compiler on terminal
+i/o, by just executing the two words  "boot quit".  quit is a definition coming from
+postlib.
+
+At the end of program inclusion from command line or hashbang will resolve be executed
+again, if any unresolved references remain. Only if no unresolved references remain
+will control be passed to cold start entry.

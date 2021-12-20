@@ -1,0 +1,5 @@
+name:                swap$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 $2 -- $2 $1 )
+decription:          swaps the top two string stack items

@@ -1,0 +1,75 @@
+forwardrefs @
+forwardrefs on
+
+u: quit  ( -- )
+   warm
+   #10 base !
+   begin
+      query
+      evaluate
+      prompt
+   again ;
+
+u: .  ( n -- )
+   maxuint and                    \ reduce to relevant bits
+   dup msb and if                 \ sign bit set?
+      '-' emit                    \ number is negative
+      [ maxuint 1+ ] literal -    \ adjust
+      abs
+   then
+   (u.) space ;	                  \ output
+
+u: u.  ( u .. )
+   (u.) space ;
+
+( output unsigned number in any base. recursive implementation )
+u: (u.)  ( u -- )
+   base @ u/mod
+   ?dup if recurse then
+   digit emit ;
+
+u: digit ( u -- c )
+   '0 +
+   dup '9' >
+   39 and + ;
+
+u: decimal  #10 base !  ;
+u: hex      #16 base !  ;
+u: binary     2 base !  ;
+
+u: epoch "EPOCHSECONDS" env ;
+
+needed dump lest from dump
+needed fg needed bg or needed attr or lest from ansi
+
+
+\ below are only words for forward refs testing
+u: fwd     fwd1         \ depend on words which build forward referencing
+           backw1 ;     \ chains in both directions (u: compiles conditionally, 
+                        \ only when a word has been marked as needed)
+
+u: fwd1    fwd2   ;     \ new forward refs are added, but resolved in the same pass
+u: fwd2    fwd3   ;
+u: fwd3    hello  ;
+u: hello   "Hello, world!" type$ cr ;
+u: backw3  hello  ;
+u: backw2  backw3 ;
+u: backw1  backw2 ;     \ resolve must do multiple passes
+
+\ how to test:
+\   try different approaches towards resolving forward references:
+\   1. quasi-manual:
+\               need fwd
+\               resolve
+\               fwd
+\   2. automatic compile time resolving:
+\               forwardrefs on
+\               : foo fwd  ;
+\               foo
+\   3. automatic interpret time resolving
+\               forwardrefs on
+\               instantresolve on
+\               fwd
+\
+
+forwardrefs !

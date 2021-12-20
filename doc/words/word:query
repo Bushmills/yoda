@@ -1,0 +1,5 @@
+name:                query
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          prompt for a line of input, write it to terminal input buffer

@@ -1,0 +1,34 @@
+name:                mid$
+stack:               ( u1 u2 -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+decription:          replaces $1 against a part of it, specified by first character
+                     position u1, and length of u2.
+
+contexts:            interpreting, compiling
+
+example:             "abcdefgh"  2 3 mid$       \ produces  "cde"
+
+notes:               positive u1 and u2 are boundary safe, meaning they may
+                     refer to positions and lengths of extract string which don't
+                     exist, as in   "abc"  10 20 mid$.  strings parts outside the
+                     source string, $1, will be dealt with as empty string.
+
+                     mid$ can be used with negate sub string length u2, in which case
+                     will u2 be treated like "remove that many chars from the remainder":
+                     "abcdefgh"   2 -4 mid$
+                     \ produces "cd", namely "cdefgh" with last 4 chars removed
+                     negative sub string lengths are NOT boundary safe.
+
+                     mid$ can be also be used with negate sub string begin index u1.
+                     By doing so, first char is indexed by counting from the end of the
+                     string, rather than from begin of string:
+                     "abcdefgh" -5 3 mid$
+                     \ produces "def", the first three chars of the last 5 chars
+                     negative u1 is boundary safe too.
+
+                     "abcdefgh"   3  2 mid$  ->  "de"   ( first two chars of "defgh" )
+                     "abcdefgh"   3 -2 mid$  ->  "def"  ( "defgh" with last two chars removed )
+                     "abcdefgh"  -3  2 mid$  ->  "fg"   ( first two chars of "fgh" )
+                     "abcdefgh"  -3 -2 mid$  ->  "f"    ( fgh with last two chars removed )
+

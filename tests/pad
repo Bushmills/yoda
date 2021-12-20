@@ -1,0 +1,8 @@
+#!/usr/local/bin/yoda
+need . resolve
+100 allot
+: foo
+    1024 allot
+    pad here - .  ;
+foo
+pad . cr

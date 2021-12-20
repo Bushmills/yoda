@@ -1,0 +1,20 @@
+name:                instantresolve
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+
+decription:          a variable, serving as flag to turn resolving of interpretative
+                     forward references on. When enabled will unknown words, entered
+                     at interpretation time, be resolved immediately from portlib. If
+                     a word was resolved successfully, it will be executed directly
+                     after, otherwise an error is reported.
+
+contexts:            interpreting, compiling
+
+example:             forwardrefs on
+                     instantresolve on
+
+notes:               needs forwardrefs to be turned on.
+                     Feature is still experimental, handle carefully.
+
+

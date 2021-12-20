@@ -1,0 +1,5 @@
+name:                secs
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( u -- )
+description:         pauses for u seconds

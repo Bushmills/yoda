@@ -1,0 +1,46 @@
+forwardrefs @
+forwardrefs on                  ( needs hex and u. )
+
+\ no pictured number conversion yet: manually add leading zero if single digit only.
+: .byte ( c -- )
+        dup
+        $10 < if
+           '0 emit
+        then u. ;
+
+\ output u hex bytes at a
+: .bytes ( a u -- )
+        for
+           count .byte
+        next drop ;
+
+\ output single char. replace non-printables against dot
+: emitsave ( c -- )
+        dup
+        bl < if
+           drop '.'
+        then emit ;
+
+\ output u chars at a. could have used "type" if it was control char safe.
+: .chars ( a u -- )
+        for
+           count emitsave
+        next drop ;
+
+\ single line hexdump of u bytes at a. returns next yet undumped address
+: dumpline ( a1 u -- a2 )
+        over u. 2 spaces
+        2dup .bytes space
+        2dup .chars +  ;
+
+: dump  ( a n -- )
+        base @ >r hex                \ save current number base, change to hex
+        >r dup $f invert and         \ let address begin at 16 byte boundary
+        tuck - r> +                  \ correct count of bytes to output accordingly
+        #15 + #16 /                  \ determine number of lines to output
+        for
+           #16 dumpline cr           \ loop through lines
+        next drop
+        r> base !  ;                 \ restore former number base
+
+forwardrefs !

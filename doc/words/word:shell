@@ -1,0 +1,14 @@
+name:                shell
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          a variable, used as flag to turn off or on passing unknown
+                     words for execution to shell.
+
+contexts:            interpreting, compiling
+
+example:             shell on
+
+notes:               a combination of forwardrefs, instanresolve and shell all turned
+                     on can't be recommended, as word searching path can get rather
+                     complicated and harder to predict.

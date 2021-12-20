@@ -1,0 +1,37 @@
+variable scr
+variable blk
+#1024 constant b/blk
+
+#64 constant c/l
+b/blk c/l / constant l/s
+
+2 constant #buffers
+#buffers array buffers
+
+0  #buffers times   4 allot   here over buffers !  b/blk allot  1+
+drop
+
+\ buffer layout:
+\   -2   -1    0 ... b/blk-1
+\       dirty  blk
+
+
+\ buffer
+
+\ n block:
+\   already in mem?  no:   have free buffer?
+\                            yes: use free buffer
+\                            no:  use oldest buffer
+\                                 contents dirty?
+\                                     yes:  save-buffer
+\                                 use oldest buffer
+\                                 load block into mem
+\                   yes:  return addr
+
+\ list
+\ update
+\ empty-buffers
+\ save-buffer
+\ copy
+\ load
+\ flush

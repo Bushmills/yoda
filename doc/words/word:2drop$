@@ -1,0 +1,5 @@
+name:                2drop$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 $2 -- )
+decription:          remove and trash the topmost two items of string stack

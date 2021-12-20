@@ -1,0 +1,21 @@
+#!/usr/local/bin/yoda
+"String comparison tests: " type$
+
+create errors 0 ,
+: expected ( x1 x2 -- )   <> negate errors +! ;
+
+"abc" "abc"    2dup$ $=  -1 expected
+               2dup$ $<   0 expected
+                     $>   0 expected
+
+"abc" "abd"    2dup$ $=   0 expected
+               2dup$ $<  -1 expected
+                     $>   0 expected
+
+"abd" "abc"    2dup$ $=   0 expected
+               2dup$ $<   0 expected
+                     $>  -1 expected
+
+errors @      unless                    "No errors" type$
+errors @ ?dup lest     need . resolve    . "errors" type$
+cr

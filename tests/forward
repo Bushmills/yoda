@@ -1,0 +1,16 @@
+#!/usr/local/bin/yoda
+
+variable forwardrefs
+forwardrefs on
+
+: run xxx foo bar ;
+boot run
+
+: foo fwd10 bar ;
+: bar fwd20 xxx ;
+: xxx fwd30 ;
+
+: fwd10 fwd20 hello ;
+: zzz "zzz" type$ cr ;
+: fwd20 fwd30 ;
+: fwd30 zzz ;

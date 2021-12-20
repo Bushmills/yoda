@@ -1,0 +1,18 @@
+name:                inline
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+
+decription:          compiling words into new words will normally result in a
+                     function call. Tagging a just compiled word with "inline"
+                     instructs the compiler to insert the code the functions
+                     contains instead.
+contexts:            interpreting, but can be compiled into other words.
+
+example:             : reverse3  swap rot ;   inline
+                     : test   reverse3 ;
+                     see test
+
+notes:               affects the most recently compiled word.
+                     Should not have any effect on data words, as those are
+                     inline compiled anyway.

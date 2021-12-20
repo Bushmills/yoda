@@ -1,0 +1,5 @@
+name:                2swap$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 $2 $3 $4 -- $3 $4 $1 $2 )
+description:         swaps two pairs of string stack items

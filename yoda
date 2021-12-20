@@ -1,0 +1,759 @@
+#!/bin/bash
+
+# ----- about -------------------------------------------- #fold00
+# yoda is an acronym of Yet Onather Delirious Application, and does
+# naturally not refer to any greenish midget with pointy ears, albeit
+# it had been said that reading yoda source aloud sounds like the very
+# same midget talking. It's all lowercast letters because I'm too lazy
+# to lock the shift key everytime I write it.
+# yoda implements a compiler which converts a close resemblance of Forth
+# source code to bash functions, an interpreter which runs them, and
+# a base vocabulary of useful functions, strongly orientated towards
+# what a common Forth interpreter offers.
+#
+# In some respects does yoda differ from Forth:
+# - forward referencing of words, either only those compiled to new
+#   words, or also those called upon while interpreting. Feature can
+#   be enabled and disabled any time.
+# - strings. An additional string stack has been added, entering strings
+#   doesn't go through  s"  word. Instead are strings recognised and dealt
+#   with by a pattern matching mechanism, invoked on words not found in
+#   the dictionary. Numbers, single characters, shell commands are
+#   subject of the same mechanism.
+# - there is no virtual machine. Compiling a word creates a bash function,
+#   containing, from bash viewpoint, "native code". The yoda interpreter
+#   operates within the same shell environment as the functions its
+#   compiler generates - yoda doesn't shell (unless bash does for invoking
+#   an external command).
+# - Due to its forward referencing capability does yoda not need all of
+#   the functionality necessary for compiling a program already prior to
+#   beginning of compilation. Instead can it resolve those after compilation
+#   on a need-to-include base. This allows for a more automatic and
+#   comfortable library inclusion management. The library "postlib",
+#   referenced during resolve passes, exists for this purpose: compile
+#   nothing from it, unless needed.
+#   Another libary, prelib, will be included before main source compilation.
+#   prelib is unsuited for resolving forward referenced words.
+# - yoda has no built-in interpreter, but an interpreter can be compiled
+#   from postlib if needed (forward referenced). Its name is "quit".
+# - yoda attempts to eliminate immediate words, but a few remnants are left:
+#   ( and \ are "conventionally immediate", mostly because their interpret
+#   time and compile time semantics are identical. I may in time get rid of
+#   the "immediate" feature completely.
+#   Most other otherwise immediate words employ a scheme similar to what
+#   cmForth does: added context specific vocabularies. Those words in the
+#   compiler specific vocabulary are inherently "immediate".
+
+# editor used is efte, folds in source files are therefore efte compatible.
+
+# What learned you have, unlearn you must!
+
+# ----- versions ----------------------------------------- #fold00
+# I think we're about ready for approaching version 1.0, so lets start counting.
+# date is post-gregorian Sol3, time is UTC
+version=0  subversion=1    # 2021dec20,14:57
+#     removed or commented some unused variables
+#     added "_"
+#     added config item "clear"
+
+# invoke shellcheck with:    shellcheck -x yoda,
+#   this will include primitives and configuration if their names match
+#   those written in the shellcheck directives where they are sourced.
+# shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
+                                                                     #  right, that's the reason for using single quotes there.
+
+# ----- declarations ------------------------------------- #fold00
+
+shopt -s extglob
+
+config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
+trace=0                                                              # turn chatty system on
+log=1                                                                # turn logging on
+break=2                                                              # break will return (0), exit (1) or execute coldvector (2)
+clean=1                                                              # empty stack on error/ctrl-c
+
+primitives="primitives.sh"                                           # yoda primitives, utilities, detokeniser table
+prelib="prelib"                                                      # yoda source loaded before program
+postlib="postlib"                                                    # forth source for resolving possible forward references
+
+read -r tmp _ < <(realpath "$0")
+read -r mydir _ < <(dirname "$tmp")
+
+doc="$mydir/doc"                                                     # documentation base directory
+worddoc_prefix="word"                                                # used as part of file names, prevents files to go hidden by leading period
+worddoc="$doc/words/$worddoc_prefix"                                 # directory of words documentation, also first part of word doc file name
+topicdoc="$doc/topics"                                               # directory containing files describing topics
+[[ -d $topicdoc ]] || trace "topics dir $topicdoc missing"
+
+libdirs=()                                                           # array of possible library paths
+libdirs+=("$mydir")                                                  # look in directory where yoda resides
+[[ -d "$mydir/lib" ]] && libdirs+=("$mydir/lib")                     # look in directory "lib" under dir in which yoda resides, if existing
+[[ -d "/usr/local/lib/yoda" ]] && libdirs+=("/usr/local/lib/yoda")   # look in /usr/local/lib/yoda if existing
+
+logfile="$mydir/yoda.log"
+rm -f "$logfile"                                                     # each run starts with a fresh log
+
+header_code="function"   					                              # prefix to bash function names,  _${nextname} will be appended upon header creation
+nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
+
+declare -ai r=() s=() m=()
+declare -a ss=()
+
+declare -Ai flags                                                    # header flags (inline, immediate)
+headerslistlist=(
+         "headersstateless"   					                        # searched during both interpreting and compiling
+         "headersinterpretonly"   				                        # searched during compiling only
+         "headerscompileonly")    				                        # searched during interpreting only
+declare -n headers="headersstateless"                                # headers is a vector- or pointer variable.
+for tmp in "${headerslistlist[@]}"; do
+   declare -A "$tmp"
+done
+declare -A headersunresolved   					                        # forward referenced. Not searched.
+#declare -A headerstrash                                              # throwaway headers. Not searched.
+
+
+# header flags:
+flagscount="0"
+immediate=$((1<<flagscount++))   				                        # precedence bit (try to fade out, use interpretonly/compileonly)
+inline=$((1<<flagscount++))   					                        # compile function code rather than calls to function
+
+# ----- compiler muting ---------------------------------- #fold00
+
+derestricted=1                                                       # conditional compilation can turn off code generation
+restrict()   {
+   derestricted=0
+#   declare -n headers="headerstrash"                                 # should headers be created during restricted mode, they can be trashed easily
+}
+derestrict() {
+   derestricted=1
+#   declare -n headers="headersstateless"                             # when derestricting, focus on stateless headers again.
+#   headerstrash=()
+}
+restricted() {                                                       # flag current state
+   return "$derestricted"
+}
+derestrict
+
+# ----- state variables, switches, globals, static etc --- #fold00
+bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
+#bits=32
+#bits=16                                                             # 16 bits are nice for testing
+
+msb="$((1<<(bits-1)))"
+maxint="$((msb-1))"
+maxuint="$((maxint|msb))"
+
+compiling=0   						                                       # state flag: interpreting or compiling
+line=""   						                                          # source line being worked on. modified during parsing and processing
+word=""   							                                       # bl delimited string from line currently being processed
+lastword=""   						                                       # most recently created word, set by create.
+
+editor()  { vi "$@" & }                                              # used with doc, edit
+
+magic="$((RANDOM+100000))"   		                                    # flow control and : ;  use these to check structure
+remagic()  { ((magic+=RANDOM+10000)); }
+
+
+declare -A asc=()                                                    # ascii table
+declare -a char=()                                                   # character table
+for i in {1..255}; do                                                # ascii->char LUT for emit, pack$, char$
+   char[i]="$(echo -en "\\x$(printf "%x" "$i")")"
+   ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
+done
+
+
+# ----- ANSI/VT100 attributes ---------------------------- #fold00
+
+# use in error and prompt.
+# for use in programs, library ansi has been supplied
+   red='1'
+   green='2'
+
+   normal='0'
+#   italics='3'
+#   underscore='4'
+#   reverse='7'
+
+# ----- read and write target vars ----------------------- #fold00
+# target vars are those defined in programs. Therefore provisions
+# for those not existing are included. Defaults are supplied for
+# such cases.
+
+# variable name as arg1
+# value of variable returned as return value (0..255)
+# doesn't exist: 0
+getvar()  {
+   [[ -z "${headers["$1"]}" ]] && return 0	                   	   # no variable by that name: 0
+   eval "${headers["$1"]}"					                              # execute code which pushs data address of flag to stack
+   ((tmp=m[s[-1]]))   						                              # read from memory address
+   unset "s[-1]"			                                             # drop pushed value
+   return "$tmp"
+}
+
+# arg1: value to store, arg2: variable name
+setvar()  {
+   [[ -z "${headers["$2"]}" ]] && return 1                           # no variable by that name
+   eval "${headers["$2"]}"					                              # execute code which pushs data address of flag to stack
+   (( m[s[-1]] = $1 ))   					                              # store numerical arg at memory address
+   unset "s[-1]"						                                    # drop pushed value
+   return 0
+}
+
+# same as setvar but unused
+# setflag()  { setvar "$1" "$2"; }
+
+# flag / variable name as arg1
+getflag()  {
+   [[ -z "${headers["$1"]}" ]] && return 1
+   eval "${headers["$1"]}"					                              # execute code which pushs data address of flag to stack
+   ((tmp = ! m[s[-1]]))						                              # read from memory address
+   unset "s[-1]"                                                     # drop pushed value
+   return "$tmp"
+}
+
+# ----- errors and diagnostic ---------------------------- #fold00
+
+comp=("" ":")
+trace()  {
+   ((trace)) &&
+   printf "### %-1s %-20s %s\n" "${comp[compiling & 1]}" "[${FUNCNAME[1]}]" "$@"
+#                                                 ^^^  convert any non-zero to 1, used as array index
+}
+
+logindent=0
+log()  {
+   ((log)) && {
+      tmp="$((${#headersunresolved[@]}))"
+      ((tmp))&&tmp="[$tmp]"||tmp=""
+      printf "%-26s-> %-16s %5s%${logindent}s %s\n" "${FUNCNAME[2]}" "${FUNCNAME[1]}" "$tmp" "" "$@" >> "$logfile"
+   }
+}
+
+logplus()  { log "$@"; ((logindent+=2)) ; }
+logminus() { ((logindent+=-2)); log "$@"; }
+
+warm()  {
+   line=""                                                           # signal to evaluate to stop evaluation of current line
+   linenr="-1"                                                       # signal to from to stop sending more lines to evaluate
+   compiling=0                                                       # interpret
+   derestrict                                                        # turn off code suppressing
+   r=()
+   ((clean)) && s=() ss=()                                           # empty stacks
+   setvar "10" "base"                                                # set decimal if base exists
+}
+
+coldvector=""   						                                    # colon word "boot" assigns coldvector. started when compilation completed.
+cold()  {                                                            # also by running cold. error restarts interpreter at cold
+   [[ -z "$coldvector" ]] && exit 1
+   warm; $coldvector
+}
+
+callstack()  {
+   printf "%s: " "Call stack"
+   printf "%s " "${FUNCNAME[@]:2:4}"                                 # remove callstack and error from output, print names of 4 functions
+   printf "\n"
+}
+
+error()  {                                                           # Zeile mit fehlerwort ANSI markieren
+#         >--<              >--<   >--------------------------<                                >-----<     begin and end of line
+#                  >--<                                                    >----<                          error word
+#            >-----<  >----<                                      >---<              >------<              ANSI sequences
+   printf "%s\e[4%sm%s\e[%sm %s\n" "${tib%"${word}"*"${line}"}" "${red}" "${word}" "${normal}" "$line"
+   printf 'ERROR: %s\n' "$@"
+   callstack
+   warm
+}
+
+emptyname()   		{ error "no or empty name"; }
+notfound()        { error "$word not found"; }
+stillcompiling()  { error "still compiling after $*"; }
+unbalancedstack() { error "unbalanced stack in file $*"; }
+filenotfound()    { error "file not found: $*"; }
+unstructured()    { error "unstructured: $word expects $*"; }
+abort()           { error "abort $1"; }
+
+# I don't know how to reset bash call stack.
+# cold and warm above don't relaunch script with defined
+# initial conditions, instead they only signal back to
+# stop interpreting input. error isn't therefore able to
+# stop execution of endless loops or break out or abort
+# interrupted functions. Neither is Ctrl-C unless main
+# interpreter loop (quit) is called - but doing so will
+# merely add a new call to quit to the top of call stack,
+# no actual reinitialisation of call stack is done.
+
+ctrl-c()  {
+   printf "%s\n" "break"
+   ((break == 1)) && exit 1
+   callstack
+   ((break == 2)) && cold
+}
+trap ctrl-c SIGINT
+
+pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
+
+# ----- pretend optimiser -------------------------------- #fold00
+# currently only a detokeniser. Plugged preparing further use.
+# The way it works:
+#    when a word gets compiled to a function, it will first be
+#    cached in an array "body". semicolon then calls compile,
+#    which generates a bash function from body.
+#    first thing compile does is calling optimise, which visits
+#    all items in body, potentially modifies or substitutes them
+#    before writing then to array target.
+#    compile then creates the bash function from target, which
+#    at that point is expected to contain literal code only.
+
+#  bits
+#  0-3   stack in    0..14, 1111=unknown or not applicable
+#  4-7   stack out   -8..6, 1111=unknown or not applicable
+#        function header   needed?
+#        atomic (code tokens, need replacement against real code)
+#        data   (literal)
+#        data   (ref)
+#        flow control
+# all 0: don't optimise, copy literal code
+analyserflag="8"                                                     # skip stack effect indicators
+functionheader="$((1<<analyserflag++))"
+functionheader="0"
+atomiccode="$((1<<analyserflag++))"
+flowcontrol="$((1<<analyserflag++))"
+literal="$((1<<analyserflag++))"
+
+# for debugging only:
+analysername=()
+analysername[functionheader]="Function header"
+analysername[atomiccode]="atom"
+analysername[flowcontrol]="flow control"
+analysername[literal]="literal"
+
+
+
+# sets analyser flag(s) arg1 for last code/atom compiled instruction.
+# something tricky with setting analyser flags when an inlinable word
+# was compiled to an immediate word which executes during compilation
+# of the word is was used in, because in that situation applies:
+#  - compilation state is on
+#  - compiler copies analyser flag setting code to new word
+analyserflag()  {
+   (( ${#body[@]} )) || error "attempted to mark code in $lastword as $2 while body empty"
+   (( analyser[-1] |= $1 ))
+}
+
+# currently it only checks for "atom" tag, and replaces thusly
+# tagged lines against corresponding entries from atom table.
+
+declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
+
+optimise()  {                                                        # run code generator on ${analyser[@]} data, as provided by primitives.
+   target=()
+#   corresponding=()                                                  # index array source line to target line.
+   for ((tmp=0; tmp<${#body[@]}; tmp++)); do
+#      corresponding[tmp]="${#target[@]}"                             # allow optimiser to locate target code for any source line.
+                                                                     # needed for post mod or removal
+      targetline="${body[tmp]}"                                      # assume no optimsation will take place
+      (( analyser[tmp] )) && {                                       # proven wrong. something will be done.
+         bodyline="$targetline"
+trace "analyser=${analysername[${analyser[tmp]}]} at body pos $tmp of $lastword: ${body[tmp]}"
+         (( analyser[tmp] & atomiccode )) &&  {                      # pretend optimiser. only replace atoms against code now
+            targetline="${atom[${bodyline}]}"
+         }
+      }
+      target+=("$targetline")
+   done
+}
+
+# ----- line parser -------------------------------------- #fold00
+
+# these need extglobs, set with "shopt -s extglob"
+
+# read space delimited word from line without removing it.
+peek_word()  {
+   word="${line##+([[:space:]])}"                  		            # remove all leading spaces (nee
+   word="${word%%[[:space:]]*}"                    		            # bl lookahead
+}
+
+# read space delimited word from line, remove it,
+# remove single leading space from remainder of line.
+word()  {
+   peek_word
+   line="${line#*"$word"}"              			                     # quotes around word are needed
+   line="${line#+([[:space:]])}"                   		            # remove single leading space (n
+}
+
+# read string from line and remove it, also remove delimiter.
+# delimiter passed as argument.
+# leading spaces aren't removed from remainder of line.
+parse()  {
+   word="${line%%"${1}"*}"
+   line="${line#*"${1}"}"                                            # " unconfuse efte syntax highlighting
+}
+
+# ----- create headers ----------------------------------- #fold00
+
+#setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
+                                                                     # some array keys like "'".
+setheaderflag()  {                                                   # where against this form has no problem with those,
+   flags["$lastword"]="$(( ${flags["$lastword"]} | "$1" ))"
+}
+immediate()  { setheaderflag "$immediate"; }
+inline()     { setheaderflag "$inline" ; }
+
+interpretonly()   {
+   headersinterpretonly["$lastword"]="${headers["$lastword"]}"
+   unset -v 'headers["$lastword"]'
+}
+
+# fails to remove from source voc when name contains or begins with [
+compileonly()  {
+   headerscompileonly["$lastword"]="${headers["$lastword"]}"
+   unset -v 'headers["$lastword"]'
+}
+
+# create header, but don't compile, and don't generate function yet.
+# compiling (that is, creating a bash function) is left to semicolon, calling compile
+# arg1: word
+# arg2: name
+header()  {
+   lastword="$1"                                                     # global variable. setting header flags needs this one
+   [[ -z "${headers["$1"]}" ]] ||  {
+      [[ ${headers["$1"]} == "${header_code}_"* ]] && echo "redefining $1"
+   }
+   headers["$1"]="$2"    					                              # associate word with name
+   flags["$1"]="0"                                                   # default to no flags
+   body=()                                                           # reinitialise code buffer
+   analyser=()                                                       # reinitialise code tags for analyser
+}
+
+
+create()  {
+   [[ -z "$1" ]] && emptyname
+   name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
+   header "$1" "$name"
+#  general header                                                    # possibly optimiser is interested in this
+}
+
+
+colon()  {
+   if [[ -z "${headersunresolved["$1"]}" ]]; then                    # check whether word is an unresolved forward reference
+      create "$1"  "$header_code"                                    # no: create header with a new name
+   else
+      name="${headersunresolved[$1]}"                                # yes: create header with name of forward reference
+      unset "headersunresolved[$1]"                                  # remove forward reference
+      header "$1" "$name"
+      compiling=1
+      log "resolved: $1"
+   fi
+#   functionheader                                                   # optimiser may like to know
+}
+
+# ----- compiler ----------------------------------------- #fold00
+
+code()  {   							                                    # literal code compiler
+   trace "$1"
+   body+=("$1")
+   analyser+=(0)                                                     # default to no optimiser intervention
+}
+
+# atoms may be:
+#  - micro instructions
+#  - single instructions
+#  - primitives
+# those can describe their effects more easily to the optimiser,
+# enabling it to combine and remove them to target code.
+# in addition are meta directives allowed:
+#  - compile time instructions for word creation, such as header building
+atom()  {
+   code "$1"                                                         # insert into code buffer
+   analyserflag "$atomiccode" "atom"                                 # mark as atom, needing further processing
+}                                                                    # (currently atoms are only substituted against literal code)
+
+codebody()  {                                                        # inline compiler
+   body+=(
+         "$(
+             type "$1" |
+             sed -n '/^ /{s/^ *//g;p}'
+          )"
+        )
+   analyser+=("$functionheader")
+}
+
+compile()  {   							                                 # build new function from code in body array
+   restricted || {
+      optimise   						                                    # here's the proper place for static code evaluation.
+      name="${headers["$lastword"]}"   	                           #   but code needs to provide more clues about its semantics
+      eval "$name() {   					                              #   without such, some peepholing may still be possible.
+         $(printf '%s\n' "${target[@]}")   			                  #   considering to introduce late translation of primitives here,
+      }"   							                                       #   to aid both coding and optimising.
+   }
+}
+
+# execute or compile args. Similar to invoke,
+# maybe one of these can be eliminated.
+stateless()   {
+   if ((compiling)); then
+      code "$@"
+   else
+      eval "$*"
+   fi
+}
+
+
+
+# ----- patterns ----------------------------------------- #fold00
+
+pattern()  {   		                                                # pattern interpreted as
+   restricted || {
+# some patterns can simply be ignored when code creation is muted
+      base=10
+      getvar "base" || base="$?"
+      tmp="0123456789abcdefghijklmnopqrstuvwxyz"		               # cut legal chars for base
+      [[ $word =~ ^[${tmp:0:$base}]+$ ]] && {			               # 1234      unsigned number
+         stateless "s+=($((${base}#${word})))"  		               # convert signless numbers without special treatment
+         return 0; }
+      [[ $word =~ ^-[${tmp:0:$base}]+$ ]] && {			               # -1234     negative number
+         stateless "s+=("-$((${base}#${word:1}))")"  	                     # printf can only convert signless numbers
+         return 0; }
+      [[ $word =~ ^\$[${tmp:0:16}]+$ ]] && {   			               # $abcd     hex number
+         tmp="$((16#${word:1}))"
+         stateless "s+=(\"$tmp\")"; return 0; }
+      [[ $word =~ ^\%[${tmp:0:2}]+$ ]] && {   			               # %1101     binary number
+         tmp="$((2#${word:1}))"
+         stateless "s+=(\"$tmp\")"; return 0; }
+      [[ $word =~ ^\#[${tmp:0:10}]+$ ]] && {   			               # #1234     decimal number
+         tmp="$((10#${word:1}))"
+         stateless "s+=(\"$tmp\")"
+         return 0; }
+      [[ ${word} == \'? || ${word} == \'?\' ]] && {     	            # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
+         read -r tmp < <(printf "%d" "'${word:1:1}'")
+         stateless "s+=(\"$tmp\")"; return 0; }
+      [[ ${word} == ^[a-z] ]] && {   				                     # ^X        return control char
+         read -r tmp < <(printf "%d" "'${word:1:1}")
+         stateless "s+=(\"$((tmp&31))\")"; return 0; }
+      [[ "${word:0:1}${word:0-1}" == '""' ]] && {                    # quoted string, single word
+      (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
+         stateless "ss+=(\"${word:1:${#word}-2}\")"                  # extract string
+         return 0; }
+      }
+   }
+
+# other patterns, especially those doing parsing or modifying line, must partially execute
+   [[ "${word:0:2}" == '#!' ]] && {                		            # #!        ignore hashbang
+      line=""; return 0; }   					                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
+
+   [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
+      tmp="${word:1}"                                                # strip leading " from first word
+      parse '"'                                                      # parse rest of line for closing quotes
+      restricted || stateless "ss+=(\"$tmp $word\")"                 # compile or execute: add to string stack unless compilation was muted
+      return 0; }
+
+   [[ "${word:0:1}" == '>' ]] && {				                        # >foo      execute a shell command
+      tmp="${word:1}"                                                #           up to ; as args
+      if [[ "$line" == *';'* ]]; then                                # if line contains ;
+         parse ';'                                                   # then parse input until ;
+      else
+         word="$line"                                                # otherwise is whole line passed as arguments
+         line=""                                                     # and removed from further evaluation
+      fi
+      restricted || stateless "$tmp $word"                           # execute or compile the parsed shell command
+      return 0
+   }
+   getflag 'shell' || return 1                                       # done unless shell flag was set
+   restricted || {
+      stateless "${word} ${line}" ||	                              # in which case execution as shell command is attempted
+      error "returned $?"                                            # non-zero exit values of shell commands will be passed on to yoda error handler
+   }
+   line=""                                                           # assignment sets return value to 0
+}
+
+
+# ----- resolve forward refs ----------------------------- #fold00
+
+# total headers count is used to help determining if resolving
+# forward refs create new forward refs, in which case resolving
+# will be repeated.
+totalheaders()  {
+   totalheaders=$((     ${#headersstateless[@]}
+                     +  ${#headerscompileonly[@]}
+                     +  ${#headersinterpretonly[@]}
+                     +  ${#headersunresolved[@]}
+                  ))
+}
+
+resolving=0
+# loop through postlib inclusion until total header count stabilises.
+# doing so because resolving forward references from postlib may create
+# new forward references, which also need resolving.
+resolve()  {
+   (( ${#headersunresolved[@]} )) || return                          # only run if unresolved words exist
+   ((resolving)) && return
+   local resolving=1
+   for dir in "${libdirs[@]}"; do
+      file="$dir/$postlib"                                           # search for postlib in libdir[@] directories
+      [[ -f "$file" ]] && break                                      # break when/if found
+   done
+   [[ -f "$file" ]] && {                                             # postlib was found: will be repeatedly included until header count stabilises
+      previousheaders="-1"
+      totalheaders                                                   # total headers count before inclusion
+      until (( totalheaders == previousheaders )); do                # loop until header count stabilises
+         previousheaders="$totalheaders"
+         from "$file"                                                # include postlib
+         ((${#headersunresolved[@]})) || break                       # no more forwardrefs: done
+         totalheaders                                                # total headers count now, after inclusion
+      done
+   }
+}
+
+
+# ----- line interpreter --------------------------------- #FOLD00
+
+# text compiler and interpreter, the so-called outer interpreter
+
+# do a single word, which has already been found.
+# must still figure out run- or compile time action,
+# arg1: word
+# arg2: name found
+invoke() {
+   tmp="${flags[$1]}"
+   (( ! compiling || (tmp & immediate) )) && {
+      eval "$2"                                                      # must eval because data handling code is stored in an array element.
+      return                                                         # which doesn't matter during compilation. But to execution at interpret time,
+   }                                                                 # the eval is needed for some operations.
+   (( tmp & inline )) && {                                           # compiling: inline compilable?
+      codebody "$2"                                                  # yes: compile function body
+      return
+   }
+   code "$2"                                                         # no: compile call to function
+}
+
+# create a forward ref by the name of arg1
+# now unused arg2 passes referer
+forwardref()  {
+   [[ -z ${headersunresolved["$word"]} ]] && {                       # don't re-forwardref and already forward ref'ed word
+      headersunresolved["$1"]="${header_code}_$((nextname++))"       # create unresolved header with new name, associate with word
+      log "new forw: $1"
+   }
+}
+
+# interpret/compile the line passed as argument
+# in here most compiling and interpreting work is done.
+# split this thing up.
+evaluate()  {
+   local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
+   local tib="$line"  	                                             # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
+trace "line=[$line]"
+   while [[ -n "$line" ]]; do   				                           # still more to process on line (parsing removes strings from line)
+      word   							                                    # parse white space delimited word
+      [[ -z "$word" ]] && continue   				                     # empty: tabs, line end, nothing of substance
+      [[ -z "${headersstateless["$word"]}" ]] || {   		            # word found in stateless dictionary
+         invoke "$word" "${headersstateless["$word"]}"               # compile or execute
+         continue
+      }
+      if ((compiling)); then   				                           # word wasn't found. search state specific vocabularies
+         [[ -z "${headerscompileonly["$word"]}" ]] || {   	         # found in in compileonly while compiling
+            ${headerscompileonly["$word"]}                           # word in there are inherently "immediate", therefore they're executed here
+            continue                                                 #     because that alöso deals with inline compilation.
+         }
+      else                                                           # interpreting
+         [[ -z "${headersinterpretonly["$word"]}" ]] || {   	      # word found in interpretonly
+            ${headersinterpretonly["$word"]}
+            continue
+         }
+      fi
+      pattern "$word" && continue                                    # not found yet: try patterns (numbers, strings, chars, hashbang, shell commands)
+      restricted && continue                                         # muted code generation: don't go through forward refs, but silently
+                                                                     #     assume "word found", as it will be ignored anyway.
+                                                                     # can't do that with patterns above - those may consume multi word strings.
+      getflag "forwardrefs" && {                                     #     and forward references enabled ...
+         restricted || {                                             #     don't create forward refs during suppressed compilation phases
+            ((compiling)) && {                                       # still not successfully dealt with word. last resolve: in case of compiling ...
+               forwardref "$word"  "$lastword"                       #     create a forward reference.
+               code "${headersunresolved["$word"]}"                  #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
+               continue                                              # hope that it will eventually get resolved
+            }
+            getflag "instantresolve" && {                            # interpret time forward references enables?
+               logplus "instant resolve needs $word"                 # log, then indent
+               need "$word"; resolve                                 # yes: declare need, immediately try to resolve
+               [[ -z "${headersunresolved[$word]}" ]] && {           # if resolved:
+                  logminus "executing $word"                         #     unindent, log
+                  ${headers["$word"]}                                #     execute
+                  continue
+               }
+               logminus "can't resolve $word"                        # else unindent, log,
+               unset -v 'headersunresolved["$word"]'                 # restore former state, proceed with unknown word handling
+            }
+         }
+      }
+      notfound "$word"						                              # nothing helped. get grouchy.
+      line=""                                                        # stop evaluation: nothing left
+   done
+}
+
+# ----- read source -------------------------------------- #fold00
+# nestable source include
+# this from differs from the colon word, as it doesn't
+# try the different ${libdirs[@}} directories.
+# file, possible with path, must exist, or no go.
+# Callers did a check prior to calling.
+from()  {
+   local line lines linenr file word                                 # must protect for nested froms.
+   local stackeffect="${#s[@]}"   				                        # included files must have net stack effect of 0
+   readarray -t lines < "$1"                                         # read whole source into lines array
+   for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
+      line="${lines[linenr++]}"   				                        #   source can change line numbers for jumping (but isn't used)
+      evaluate "$line"                                               # process next line
+      ((linenr < 0)) && break                                        # source can flag "stop execution" with negative linenr (warm does so)
+   done
+   ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
+   (( stackeffect == ${#s[@]} )) || unbalancedstack "$1"             # demanding stack clean files with net effect zero.
+   (( ${#headersunresolved[@]} )) && {
+      log "$1"
+      resolve                                                        # only resolve on bottom level, to prevent endless recursion
+   }
+   tmp=$(realpath "$1")                                              # canonical name of the definite file
+   for file in "${files[@]}"; do                                     # while multiple inclusion is allowed here, those files won't be recorded multiple times
+      [[ "$tmp" == "$file" ]] && return                              # so when already recorded, break out
+   done
+   files+=("$tmp")                                                   # first time inclusion: add to files array
+}
+
+configuration()  {
+# shellcheck source=./yoda.conf
+   [[ -f "$mydir/$config" ]] && source "$mydir/$config"              # currently only looking in dir where yoda resides
+}
+
+### ---------------------------------- ###
+###       RUN THIS CONTRAPTION         ###
+### -----------------------------------###
+[[ -z "$1" ]] || {   					                                 # no args: nothing to do
+   [[ -f "$1" ]] || filenotfound "$1"                                # arg1 must be name of an existing source file
+#--------------------------------------
+   configuration                                                     # try to load custom configuration
+#--------------------------------------
+   for dir in "${libdirs[@]}"; do                                    # search primitives
+      file="$dir/$primitives"                                        # search for prelib in libdir[@] directories
+      [[ -f "$file" ]] && break                                      # break when/if found
+   done
+# shellcheck source=./primitives.sh
+   [[ -f "$file" ]] && source "$file"                                # found primitives? include primitives
+#--------------------------------------
+   for dir in "${libdirs[@]}"; do                                    # include a library before loading source?
+      file="$dir/$prelib"                                            # search for prelib in libdir[@] directories
+      [[ -f "$file" ]] && break                                      # break when/if found
+   done
+   [[ -f "$file" ]] && from "$file"                                  # found prelib? include prelib
+#--------------------------------------
+   from "$1"                                                         # load source
+#--------------------------------------
+   [[ -z "$coldvector" ]] || {                                       # if cold launch point was specified, try to run.
+
+      (( ${#headersunresolved[@]} )) && resolve                      # still unresolved words? try to resolve those.
+      (( ${#headersunresolved[@]} )) || {
+         cold
+         exit 0
+      }
+      printf "%s\n" "unresolved forward references:"                 # still unresolved words
+      printf "%s\n" "${!headersunresolved[@]}" | nl
+      printf "%s\n" "Run this not I will."
+   }
+}                                                                    # cold will still refuse if any unresolveds are left

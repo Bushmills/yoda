@@ -1,0 +1,7 @@
+created:             auto     (remove line after having checked and revised description)
+name:                2drop
+stack:               ( x1 x2 -- )
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          drop top two stack items
+contexts:            interpreting, compiling

@@ -1,0 +1,14 @@
+name:                convert$
+stack:               ( -- x )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+decription:          converts a string to a number
+contexts:            interpreting, compiling
+
+example:             "22" "05" join$ convert$ .
+                     ( gives 2205 )
+
+notes:               this function doesn't at this point respect value of number base,
+                     but uses radix 10 for conversion. The string must therefore consist
+                     of character 0...9 only, leading dash is permitted.
+                     The string may also be a bash-computable expression.

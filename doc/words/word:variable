@@ -1,0 +1,20 @@
+name:                variable
+stack:               ( -- )
+                     ( -- a )  created variables
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          fetches a space delimited string from input stream, creates
+                     a variable with this name and allocated one cell to the
+                     variable to hold data.
+                     Such created variables push, when executed, the address where
+                     its data is stored.
+
+contexts:            interpreting, compiling
+
+example:             variable foo      \ create variable named foo
+                     123 foo !         \ store 123 in variable
+                     foo @ .           \ read from variable and output
+
+notes:               variable belongs to the group of defining words,
+                     as do create, constant, array, :, code:
+

@@ -1,0 +1,16 @@
+name:                forwardrefs
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          produces address of a variable, used as flag. When content
+                     aren't zero, use of unknown words in colon definition won't
+                     result in error, but in creating a forward reference for later
+                     resolving.
+
+contexts:            interpreting, compiling
+
+example:             forwardrefs on
+
+notes:               see topic forwardrefs
+                     see words resolve, instantresolve
+

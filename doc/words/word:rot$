@@ -1,0 +1,5 @@
+name:                rot$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 $2 $3 -- $2 $3 $1 )
+decription:          rearranges string stack such that third item is rotated to top

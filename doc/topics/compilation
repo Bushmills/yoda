@@ -1,0 +1,48 @@
+TOPIC: compilation
+As the term "compilation" refers to several related, but not identical facettes of forsh,
+some explanatory disambiguation may be due.
+
+Firstly, forsh translates Forth(ish) source code to bash instruction sequences.
+But rather than writing executable shell script files, it generates shell
+functions in the same execution context in which forsh is running. It is therefore
+not considered a "target compiler", a compiler with seperate execution contexts
+of compiler and generated program. Instead do the generated functions extend the
+compiler, adding to forsh's vocabulary. Some of the consequences of doing so are
+described in topic "shell".
+
+There is no traditional address list interpreting virtual machine. Best classification
+match is probably "subroutine threaded code".
+
+
+When compiling source to bash functions, three facettes of dealing with code are
+involved, and sometimes, only context tells what aspect of compilation is referred to.
+
+1 -"compilation as you may know it": reading some source from input which contains sequences
+which change operation of outer interpreter such that result of translation is postponed
+for later execution, rather than executed immediately"
+
+While forsh is doing so, the output isn't pure executable code, but a stream of
+post-processable tokens mixed with actual code literals. Each entry to the stream
+is tagged in such a way that postprocessing can make (some) sense of it.
+Functionality of this aspect of compilation is top levelled in the function "evaluate".
+
+This output of "evaluate" is collected in a buffer. Only when completion of
+compilation of a word has been signalled (by semicolon) will compilation proceed with next
+step, by passing this buffer to compilation 2, "optimiser"
+
+2 - "translation of tokenized and "atomic" code into executable instructions"
+
+Top level function for this is function "optimise", which reads code tokens from buffer,
+populated by evaluate (compilation step 1). Along with it comes a tag list, indicating for
+every item their nature, action and behaviour. This information is provided to ease the
+optimiser task to produce code. Its function is currently limited to a "proof of concept"
+aspect: forwarding literal code unmanipulated, and substitution of mnemonical code tokens
+against real code. The results of this compilation step are buffered again, and passed on
+to compilation step 3:
+
+3 - "creation of functions which are populated with executable code"
+
+from host point of view (bash), this is where "compilation" takes place: a function header
+is created, code is inserted into that function, then creation of function is properly
+finished, The function becomes thereby executable by name. At this point can "evaluate"
+- compiler step 1 - also find it, for compilation into new words, or interactive execution,

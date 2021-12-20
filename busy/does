@@ -1,0 +1,20 @@
+#/usr/local/bin/yoda
+need . resolve
+
+: myarray  create  does> depth . dup . over . +  ;
+
+\ crossref
+see does>
+see myarray
+10 allot
+10 myarray foo
+20 allot
+10 myarray bar
+5 foo .
+10 allot
+5 foo .
+8 bar .
+cr
+\ : xxx  5 foo  ;
+\ see xxx
+depth . cr bye

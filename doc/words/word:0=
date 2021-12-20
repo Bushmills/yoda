@@ -1,0 +1,6 @@
+name:                0=
+stack:               ( x -- f )
+return stack:        ( -- )
+string stack:        ( -- )
+decription:          replaces x against a true flag if x was zero, a false flag otherwise
+contexts:            interpreting, compiling

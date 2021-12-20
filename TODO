@@ -1,4 +1,6 @@
 --- problem solving todos
+- exists shows irregular behaviour when querying an existing data item:
+  no result is returned.
 - +loop uses a rather simplistic end of loop checking, which
   doesn't work with negative loop increments
 

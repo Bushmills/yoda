@@ -2,15 +2,18 @@ For starting, you need at least these two files:
 yoda
 primitives.sh
 
-But I recommend to also grab the rest, especially
-yoda.conf, quit, and the subdirectories doc and lib
+While yoda will be able to run with just these two
+files, you still may want to grab the rest, especially
+yoda.conf, quit, and the subdirectories doc and lib.
+
+Further instructions assume presence of files prelib 
+and postlib in the lib directory:
 
 For an initial run, change to the directory which contains
 the files yoda, primitives.sh and quit, and run there:
-./yoda quit
+bash yoda quit
 
-This assumes that you have bash installed on your system,
-which can be found in the directory /bin.
+This requires that you have bash installed on your system.
 
 Should you be greeted with a "Yoda shell" message, your
 setup appears to be fine. Verify by tapping the "Enter"
@@ -20,6 +23,10 @@ Next steps could be to:
 1. create symlinks to yoda and quit in a directory which
 is in your PATH.  /usr/local/bin may be a good candidate:
 
-2. edit and customise, if it seems appropriate, the file
-yoda.conf.  All settings ought to be set to reasonable
-defaults, but your preferences may differ.
+2. Make sure your bash can be found where the hashbangs in
+quit and yoda expect it, as /bin/bash.  Change hashbangs or
+location, if it can't
+
+2. edit and customise, if appropriate, the file yoda.conf.
+All settings should have been set to reasonable defaults,
+but your preferences may differ.

@@ -50,6 +50,7 @@ Some words exist for managing forward references and conditional inclusion:
    need
    needed
    resolve
+   exists
 
 u:       is almost identical with : but compiles the following word only if it's
          an unresolved forward reference.
@@ -125,8 +126,8 @@ testing purposes. Another word suited for testing is "dump":
 
                $1000 $80 dump
 
-for some slightly less memory contents there, you may want to populate it with
-a string:
+for some slightly less boring memory contents there, you may want to populate it
+with a string:
 
                "This is a very nice string, albeit a tad long"
                $1000 dup unpack$ dump

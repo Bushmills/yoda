@@ -6,7 +6,7 @@ While yoda will be able to run with just these two
 files, you still may want to grab the rest, especially
 yoda.conf, quit, and the subdirectories doc and lib.
 
-Further instructions assume presence of files prelib 
+Further instructions assume presence of files prelib
 and postlib in the lib directory:
 
 For an initial run, change to the directory which contains
@@ -21,12 +21,40 @@ key: an " ok" message should be produced.
 
 Next steps could be to:
 1. create symlinks to yoda and quit in a directory which
-is in your PATH.  /usr/local/bin may be a good candidate:
+is in your PATH.  /usr/local/bin may be a good candidate.
+Update the hashbang in quit which now specifies
+/usr/local/bin/yoda as its interpreter, if necessary.
 
-2. Make sure your bash can be found where the hashbangs in
-quit and yoda expect it, as /bin/bash.  Change hashbangs or
-location, if it can't
+Now you should be able to launch quit or yoda from anywhere.
+While yoda, the compiler, has no interactive command line or
+shell itself, it is capable of compiling one when needed.
+This is what you do by specifying "quit" as argument to
+yoda, and also when running quit directly (using yoda as its
+interpreter by virtue of its hashbang). Yoda will exit after
+running, unless it was instructed in the file it loaded not
+to do so (and instead run a word it had just compiled). quit
+implements a simple interactive mode loop.
 
 2. edit and customise, if appropriate, the file yoda.conf.
 All settings should have been set to reasonable defaults,
 but your preferences may differ.
+
+3. Test editor and doc path settings by first launching quit,
+then enter "topics". Of the list of numbered topics, choose one
+which attracts your interest. Open it in the editor by typing the
+number next to it, followed by space, the word "topic" and a tap
+on the "Return" key. The picked topic should open, ready for reading.
+If an empty file is opened, the topics doc directory isn't right (it
+defaults to subdirectory doc/topics in the directory where yoda was
+found and launched from). if no editor is launched, the editor
+settings may need adjustment (editor defaults to vi, and can be changed
+in yoda.conf)
+
+4. editor can also be used to open included libraries. When loading
+and running quit, just three of those should be present: prelib, postlib
+and quit. Get a list of those by typing "files". Like "topics", these
+are numbered. Use the number with "edit" to open, view and edit the chosen
+library.
+
+Similar first instructions can be obtained by executing "help" in the "quit"
+shell.

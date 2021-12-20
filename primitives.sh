@@ -241,7 +241,7 @@ colon 'immediate'
    code 'immediate'
 semicolon
 
-# ----- compiler and word search related ---- #fold00
+# ----- compiler and word search related ---- #FOLD00
 
 # ( -- 0 | a )
 exists() {
@@ -251,13 +251,12 @@ exists() {
       declare -n headers="$tmp"                                      # vector headers to next vocabulary
       [[ -z "${headers["$word"]}" ]] || {                            # word in there?
          tmp="${headers["$word"]}"                                   #     yes: remember name
-         [[ $tmp == ${header_code}* ]] || return 2                   # can not tick data
-         tmp="${headers["$word"]#"${header_code}_"}"                 # convert name to "address"
-         s+=("$((tmp))")
+         [[ $tmp == ${header_code}* ]] || break                      # can not tick data
+         s+=("${headers["$word"]#"${header_code}_"}")                # convert name to "address" and push
          return 0                                                    # found word, stacked execution token
       }
    done                                                              # go on search next voc
-   s+=("$((0))")
+   s+=("0")
 }
 
 
@@ -1280,7 +1279,7 @@ inline
 compileonly
 
 
-# ----- conditional compilation-------------- #fold00
+# ----- conditional compilation-------------- #FOLD00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their

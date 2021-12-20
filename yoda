@@ -68,7 +68,7 @@ shopt -s extglob
 
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
 trace=0                                                              # turn chatty system on
-log=1                                                                # turn logging on
+log=0                                                                # turn logging on
 break=2                                                              # break will return (0), exit (1) or execute coldvector (2)
 clean=1                                                              # empty stack on error/ctrl-c
 

@@ -290,8 +290,7 @@ colon ']'
 semicolon
 
 colon 'literal'
-   code 'restricted || code "s+=(\"${s[-1]}\")"'
-   code 'restricted || unset "s[-1]"'
+   code 'restricted || code "s+=(\"${s[-1]}\")"; unset "s[-1]"'
 semicolon
 compileonly
 

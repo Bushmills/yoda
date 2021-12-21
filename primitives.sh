@@ -811,7 +811,7 @@ inline
 }
 
 
-# ----- arithmetics ------------------------- #FOLD00
+# ----- arithmetics ------------------------- #fold00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -931,7 +931,7 @@ semicolon
 inline
 
 
-# ----- memory ------------------------------ #FOLD00
+# ----- memory ------------------------------ #fold00
 
 colon '@'
    atom '@'
@@ -1056,7 +1056,7 @@ colon 'move'
 semicolon
 inline
 
-# ----- flow control ------------------------ #fold00
+# ----- flow control ------------------------ #FOLD00
 
 remagic
 
@@ -1208,12 +1208,11 @@ compileonly
 colon '+loop'
    code "((s[-1] == $magic))||unstructured 'do'"
    atom 'drop'
-
-   code 'code "((i+=(s[-1])))"'
+   code 'code "((tmp=s[-1]))"'
    code 'code "unset \"s[-1]\""'
-   code 'code "((i < ibar))||break"'                                 # too simplistic, fails with negative increment
+   code 'code "((i+=tmp))"'
+   code 'code "((((ibar-(tmp<msb)-i)^tmp)&msb))&&break"'
    code 'code "done"'
-
    code "code 'ibar=\"\${r[-1]}\"'"
    code 'code "unset \"r[-1]\""'
    code "code 'i=\"\${r[-1]}\"'"

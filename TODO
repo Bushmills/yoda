@@ -1,6 +1,4 @@
 --- problem solving todos
-- +loop uses a rather simplistic end of loop checking, which
-  doesn't work with negative loop increments
 
 --- general todos
 - allow customising query attributes

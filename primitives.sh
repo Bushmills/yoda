@@ -41,7 +41,7 @@ atom['rdrop']='unset "r[-1]"'             # --r
 atom["rpop"]='unset "r[-1]"'              # --r
 atom["allot"]='((dp+=s[-1]))'
 
-# ----- colon/semicolon --------------------- #FOLD00
+# ----- colon/semicolon --------------------- #fold00
 
 semicolon()  {
    compile                                                           # compilation is gathered in an array body. Only
@@ -82,11 +82,13 @@ interpretonly
 
 words()	{
    local headers
-   for tmp in ${headerslistlist[@]}; do
+   for tmp in ${headerslistlist[@]} headersunresolved; do
       declare -n headers="$tmp"
-      printf '%s\n' "--- ${tmp#"headers"} ---"
-	   printf  "%s " "${!headers[@]}"
-      printf '\n\n'
+	   (( ${#headers[@]} )) && {
+         printf '%s\n' "--- ${tmp#"headers"} ---"
+   	   printf  "%s " "${!headers[@]}"
+         printf '\n\n'
+      }
    done
 }
 
@@ -150,7 +152,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #FOLD00
+# ----- does> ------------------------------- #fold00
 #  : myarray  create allot does> + ;
 #  10 myarray foo
 #  5 foo .
@@ -187,7 +189,7 @@ immediate
 
 
 
-# ----- defining words ---------------------- #FOLD00
+# ----- defining words ---------------------- #fold00
 
 # actually works: defining word builder
 data()  {
@@ -241,7 +243,7 @@ colon 'immediate'
    code 'immediate'
 semicolon
 
-# ----- compiler and word search related ---- #FOLD00
+# ----- compiler and word search related ---- #fold00
 
 # ( -- 0 | a )
 exists() {
@@ -300,7 +302,7 @@ semicolon
 
 
 
-# ----- misc -------------------------------- #FOLD00
+# ----- misc -------------------------------- #fold00
 
 colon 'noop'
    code ':'
@@ -821,7 +823,7 @@ inline
 }
 
 
-# ----- arithmetics ------------------------- #FOLD00
+# ----- arithmetics ------------------------- #fold00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -1070,7 +1072,7 @@ colon 'move'
 semicolon
 inline
 
-# ----- flow control ------------------------ #FOLD00
+# ----- flow control ------------------------ #fold00
 
 remagic
 
@@ -1308,7 +1310,7 @@ inline
 immediate
 
 
-# ----- conditional compilation-------------- #FOLD00
+# ----- conditional compilation-------------- #fold00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -1629,7 +1631,7 @@ semicolon
 
 # ----- experimental ------------------------ #fold00
 
-# ----- unsorted ---------------------------- #FOLD00
+# ----- unsorted ---------------------------- #fold00
 
 colon 'warm'
    code 'warm'

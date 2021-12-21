@@ -1,0 +1,128 @@
+As first first steps have been outlined in file INSTALL already, please
+receive some suggestions here for what to do as second first steps:
+
+1. show the available words (referred to as "the dictionary") by
+   executing  "words"
+
+   You may discover a handful of functions (usually refered to as "words",
+   but sometimes "functions" in the context of yoda because that's how they're
+   represented under bash) you may not be familiar with. The flow control
+   statements "unless", "lest", "times" and "many"  may belong to those,
+   and the plethora of stack words ending in a dollar character ($), as well
+   as the few words dealing with forward references.
+
+   We'll deal with those in time, for now there are more secondfirstish things
+   to explore.
+
+2. compile a word and see what we wrought:
+   An ever popular sophisticated tool of computer science is called "hello world".
+   It outputs a specific text to console. With yoda this is one way how this can
+   be achieved:
+         : hello  "Hello, world!" type$ ;
+   After entering and successful compilation (indicated by no error message, instead
+   an "ok" prompt shown), this just compiled word can be decompiled for viewing,
+   and executed. To decompile, enter:
+          see hello   
+   The bash function that line was translated to is shown, along with a function name
+   which is clearly different from how we called it.
+   Execute this function by entering:
+          hello
+   At least does this different name not affect our ability to call the function by
+   by the name we gave it.
+   bash functions can't carry the same name, because they are more limited regarding
+   the set of letters considered legal for function names. In yoda, characters may
+   be used for naming new words against which bash would balk when trying to use those
+   for functions.  Naming a word #### is entirely legal for yoda, while bash wouldn't
+   think twice about giving a function such a name. Therefore are all yoda names
+   translated to names bash can digest.
+
+3. yoda as shell
+   disabled by default, this can be switched on when needed:
+           shell on
+   as consequence will yoda pass on everything which it doesn't understand for execution
+   to bash, along with the remainder of the input line. Note that these commands aren't
+   executed in a subshell, but run within the same environment context as yoda does.
+   What that means can be demonstrated by these two commands:
+           foo="bar"
+           echo "$foo"
+   Disabling this shell mode again is done with:
+           shell off
+
+   As with shell on, both yoda and shell execution capabilities are merged and available
+   at the same time, both can be used to augment each other.
+   Try, for an example, this:
+           shell on
+           many  3 secs  page  df
+   What this will do is: 
+           many                      -  repeat remainder of the line until key pressed
+                    
+                 3 secs              -  pause for 3 seconds
+                         page        -  wipe screen and place cursor at start of screen
+                               df    -  execute OS command to show device use
+
+
+   Note that OS commands can also be executed while shell is off. But as those won't get
+   passed on automatically by yoda, they must be marked in a specific way. That's done
+   by prefixing them with a >, as in 
+           shell off    ( doesn't really matter, but shows that next line works anyway )
+           3 times  >sleep 1; >free
+   Rather than passing the whole input line to bash, the ; acts as a command terminator
+   char after which further evaluation of input line is returned to yoda. Without ; still
+   the whole line ispassed as command arguments. Note that instead of >sleep 1; we
+   could again have used 1 secs here instead. The choice whether yoda or shell is charged
+   with execution is ours.
+
+3a.  exchange environment variables with shell
+   read a number from a bash environment variable:
+         shell on
+         var=123          \ set bash variable var to 123
+         "var" env 2* .   \ read value of var, place on stack, multiply with 2, then output.
+
+   write the number on yoda stack into bash variable:
+         1000  "var" >env \ push 1000 to stack, then write to bash variable "var"
+         echo "$var"      \ check result
+
+   read a string from bash variable:
+         var="foo"        \ assign string "foo" to bash variable var	
+         "var" env$       \ read string from var, place on string stack
+         dup$ join$ type$ \ duplicate string, join both, then output.
+
+   write string to bash variable:
+         "bar" "var" >env$
+         echo "$var"
+
+         each of these four words to exchange environment data,  env, >env, env$ and >env$
+         thus expects the variable name as string on top of string stack.
+         env and >env then use the numeric stack for data i/o, while
+         env$ and >env$ fetch and place data from and on string stack.
+         
+
+4. loading a from file:
+         the word "from" is used for reading yoda source. Contrary to inclusion of
+         libraries does "from" not search through a list of directories. Instead it
+         must be provided the accurate location of the file to load.
+
+         assuming that our current directory (that is, the directory we were in when
+         quit was launched) is writable, we can create a source file here. To get to
+         know the current directory, execute
+              >pwd          ( execute OS command "pwd" which prints current directory )
+         assuming that our current directory is the directory with yoda in it, there's
+         probably a subdirectory named "tests", which contains, among others, a recursive
+         function to calculate fibonacci numbers. That function is commonly used for
+         demonstration and testing because of its simplicity.
+               from tests/fibo
+         opens, reads and compiles that file. It also runs and decompiles the generated
+         code.
+
+5. looking at loaded / compiled files:
+         for a list of already loaded files, execute
+	       files
+         if you have included the fibo file above, it will be shown too, with a number
+         on its left. That number is the "handle" which can be used to refer to this
+         file. Say it is 4, then this will display the contents of that file:
+               4 list
+         Should you want to open it in the configured editor, enter:
+               4 edit
+
+6. "My head is smoking - how do I exit?"
+	 execute:  bye

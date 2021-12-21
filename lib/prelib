@@ -8,8 +8,3 @@ create base            #10  ,
 create shell          false ,
 create forwardrefs    false ,
 create instantresolve false ,
-
-: //  ( -- )
-                      >line=""
-;  immediate
-// allow alternative comments like these

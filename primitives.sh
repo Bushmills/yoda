@@ -78,7 +78,7 @@ semicolon
 interpretonly
 
 
-# ----- diagnostics ------------------------- #FOLD00
+# ----- diagnostics ------------------------- #fold00
 
 words()	{
    local headers
@@ -243,7 +243,7 @@ colon 'immediate'
    code 'immediate'
 semicolon
 
-# ----- compiler and word search related ---- #FOLD00
+# ----- compiler and word search related ---- #fold00
 
 # ( -- 0 | a )
 exists() {
@@ -804,7 +804,7 @@ semicolon
 }
 
 
-# ----- arithmetics ------------------------- #fold00
+# ----- arithmetics ------------------------- #FOLD00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -912,7 +912,7 @@ semicolon
 inline
 
 
-# s3 s2 s1  -- s3*s2%s1 s3*s2/a1
+# s3 s2 s1  -- s3*s2%s1 s3*s2/s1
 colon '*/mod'
    code '(( tmp=s[-3]*s[-2], s[-3]=tmp%s[-1], s[-2]=tmp/s[-1] ))'
    atom 'drop'
@@ -925,7 +925,7 @@ semicolon
 inline
 
 
-# ----- memory ------------------------------ #fold00
+# ----- memory ------------------------------ #FOLD00
 
 colon '@'
    atom '@'
@@ -949,7 +949,7 @@ colon '!'
 semicolon
 inline
 
-colon '<-'  ä                    # swap !
+colon '<-'                      # swap !
 	code 'm[s[-2]]="s[-1]"'
    atom 'drop'
    atom 'drop'
@@ -981,7 +981,6 @@ colon 'exchange'
    atom 's1=tmp'
 semicolon
 
-declare -i dp=0
 colon 'here'
 	code 's+=("$dp")'
 semicolon
@@ -1028,17 +1027,27 @@ semicolon
 
 
 # ( a1 a2 u -- )
+move()  {                              # deals with destination overlapping source
+   ((tmp=s[-1]))
+   unset "s[-1]"
+   if ((s[-2] < s[-1])); then          # copy highest to lowest:
+      ((s[-1]+=tmp, s[-2]+=tmp))       # m[--a1+u} -> m[--a2+u],  u times
+      for ((;tmp--;)); do
+         ((m[--s[-1]] = m[--s[-2]]))
+      done
+   else                                # copy lowest tio highest
+      for ((;tmp--;)); do              # m[a1++} -> m[a2++],  u times
+         ((m[s[-1]++] = m[s[-2]++]))
+      done
+   fi
+   unset "s[-1]"
+   unset "s[-1]"
+}
+
+# ( a1 a2 u -- )
 colon 'move'
-# m[a1++} -> m[a++],  u times
-   code 'for ((;s[-1]--;)); do'
-   code '((m[s[-2]++] = m[s[-3]++]))'
-   code 'done'
-   atom 'drop'
-   atom 'drop'
-   atom 'drop'
+   code 'move'
 semicolon
-
-
 
 
 # ----- flow control ------------------------ #fold00
@@ -1280,7 +1289,7 @@ inline
 compileonly
 
 
-# ----- conditional compilation-------------- #FOLD00
+# ----- conditional compilation-------------- #fold00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their

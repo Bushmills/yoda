@@ -32,9 +32,9 @@ receive some suggestions here for what to do as second first steps:
    bash functions can't carry the same name, because they are more limited regarding
    the set of letters considered legal for function names. In yoda, characters may
    be used for naming new words against which bash would balk when trying to use those
-   for functions.  Naming a word #### is entirely legal for yoda, while bash wouldn't
-   think twice about giving a function such a name. Therefore are all yoda names
-   translated to names bash can digest.
+   for functions.  Naming a word #### is entirely legal for yoda, while bash outrightly
+   refused to give function such a name. Therefore are all yoda names translated to
+   names bash can be more comfortable with.
 
 3. yoda as shell
    disabled by default, this can be switched on when needed:
@@ -83,9 +83,9 @@ receive some suggestions here for what to do as second first steps:
          echo "$var"      \ check result
 
    read a string from bash variable:
-         var="foo"        \ assign string "foo" to bash variable var	
+         var="foobar"     \ assign string "foo" to bash variable var	
          "var" env$       \ read string from var, place on string stack
-         dup$ join$ type$ \ duplicate string, join both, then output.
+         4 left$ type$    \ modify, then output string.
 
    write string to bash variable:
          "bar" "var" >env$

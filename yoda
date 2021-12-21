@@ -502,7 +502,7 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 pattern()  {   		                                                # pattern interpreted as
    restricted || {
@@ -511,19 +511,19 @@ pattern()  {   		                                                # pattern inter
       getvar "base" || base="$?"
       tmp="0123456789abcdefghijklmnopqrstuvwxyz"		               # cut legal chars for base
       [[ $word =~ ^[${tmp:0:$base}]+$ ]] && {			               # 1234      unsigned number
-         stateless "s+=($((${base}#${word})))"  		               # convert signless numbers without special treatment
+         stateless "s+=($((${base}#${word} & maxuint)))"  	         # convert signless numbers without special treatment
          return 0; }
       [[ $word =~ ^-[${tmp:0:$base}]+$ ]] && {			               # -1234     negative number
-         stateless "s+=("-$((${base}#${word:1}))")"  	                     # printf can only convert signless numbers
+         stateless "s+=("$((-${base}#${word:1} & maxuint))")"
          return 0; }
       [[ $word =~ ^\$[${tmp:0:16}]+$ ]] && {   			               # $abcd     hex number
-         tmp="$((16#${word:1}))"
+         tmp="$((16#${word:1} & maxuint))"
          stateless "s+=(\"$tmp\")"; return 0; }
       [[ $word =~ ^\%[${tmp:0:2}]+$ ]] && {   			               # %1101     binary number
-         tmp="$((2#${word:1}))"
+         tmp="$((2#${word:1} & maxuint))"
          stateless "s+=(\"$tmp\")"; return 0; }
       [[ $word =~ ^\#[${tmp:0:10}]+$ ]] && {   			               # #1234     decimal number
-         tmp="$((10#${word:1}))"
+         tmp="$((10#${word:1} & maxuint))"
          stateless "s+=(\"$tmp\")"
          return 0; }
       [[ ${word} == \'? || ${word} == \'?\' ]] && {     	            # 'X bzw 'X' return ASCII - easier on editor syntax highlighting

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -116,7 +116,7 @@ declare -A headersunresolved   					                        # forward referenced
 
 # header flags:
 flagscount="0"
-immediate=$((1<<flagscount++))   				                        # precedence bit (try to fade out, use interpretonly/compileonly)
+#immediate=$((1<<flagscount++))   				                        # precedence bit (try to fade out, use interpretonly/compileonly)
 inline=$((1<<flagscount++))   					                        # compile function code rather than calls to function
 
 # ----- compiler muting ---------------------------------- #fold00
@@ -294,7 +294,7 @@ trap ctrl-c SIGINT
 
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -391,14 +391,14 @@ parse()  {
    line="${line#*"${1}"}"                                            # " unconfuse efte syntax highlighting
 }
 
-# ----- create headers ----------------------------------- #fold00
+# ----- create headers ----------------------------------- #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
 setheaderflag()  {                                                   # where against this form has no problem with those,
    flags["$lastword"]="$(( ${flags["$lastword"]} | "$1" ))"
 }
-immediate()  { setheaderflag "$immediate"; }
+#immediate()  { setheaderflag "$immediate"; }
 inline()     { setheaderflag "$inline" ; }
 
 interpretonly()   {
@@ -406,8 +406,7 @@ interpretonly()   {
    unset -v 'headers["$lastword"]'
 }
 
-# fails to remove from source voc when name contains or begins with [
-compileonly()  {
+immediate()  {
    headerscompileonly["$lastword"]="${headers["$lastword"]}"
    unset -v 'headers["$lastword"]'
 }
@@ -502,7 +501,7 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 pattern()  {   		                                                # pattern interpreted as
    restricted || {
@@ -569,7 +568,7 @@ pattern()  {   		                                                # pattern inter
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -607,7 +606,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -617,7 +616,8 @@ resolve()  {
 # arg2: name found
 invoke() {
    tmp="${flags[$1]}"
-   (( ! compiling || (tmp & immediate) )) && {
+#   (( ! compiling || (tmp & immediate) )) && {
+   (( compiling )) || {
       eval "$2"                                                      # must eval because data handling code is stored in an array element.
       return                                                         # which doesn't matter during compilation. But to execution at interpret time,
    }                                                                 # the eval is needed for some operations.

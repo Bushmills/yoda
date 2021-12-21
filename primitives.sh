@@ -41,7 +41,7 @@ atom['rdrop']='unset "r[-1]"'             # --r
 atom["rpop"]='unset "r[-1]"'              # --r
 atom["allot"]='((dp+=s[-1]))'
 
-# ----- colon/semicolon --------------------- #fold00
+# ----- colon/semicolon --------------------- #FOLD00
 
 semicolon()  {
    compile                                                           # compilation is gathered in an array body. Only
@@ -59,7 +59,7 @@ colon ';'      # semicolon
    atom 'drop'
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
-compileonly
+immediate
 
 colon ':'      # colon
    code 'word'                                                       # parse space delimited word from input stream
@@ -150,7 +150,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #fold00
+# ----- does> ------------------------------- #FOLD00
 #  : myarray  create allot does> + ;
 #  10 myarray foo
 #  5 foo .
@@ -183,11 +183,11 @@ colon 'does>'
 # ;  will compile previous code to last header
 
 semicolon
-compileonly
+immediate
 
 
 
-# ----- defining words ---------------------- #fold00
+# ----- defining words ---------------------- #FOLD00
 
 # actually works: defining word builder
 data()  {
@@ -241,7 +241,7 @@ colon 'immediate'
    code 'immediate'
 semicolon
 
-# ----- compiler and word search related ---- #fold00
+# ----- compiler and word search related ---- #FOLD00
 
 # ( -- 0 | a )
 exists() {
@@ -276,12 +276,12 @@ colon "[']"
    code 'code "s+=(${s-1})"'
    atom 'drop'
 semicolon
-compileonly
+immediate
 
 colon '['
    code 'restricted||compiling=0'                                    # don't allow to suspend compilation when compilation is muted
-semicolon                                                            # consequence of above is that any compileonly word which modifies stack if not paired
-compileonly                                                          # must be forbidden to so so by checking restricted state, literal is an example for such a word.
+semicolon                                                            # consequence of above is that any immediate word which modifies stack if not paired
+immediate                                                          # must be forbidden to so so by checking restricted state, literal is an example for such a word.
 
 colon ']'
    code 'compiling=1'
@@ -290,7 +290,7 @@ semicolon
 colon 'literal'
    code 'restricted || { code "s+=(\"${s[-1]}\")"; unset "s[-1]"; }'
 semicolon
-compileonly
+immediate
 
 colon 'execute'
    atom 'tmp=s1'
@@ -300,7 +300,7 @@ semicolon
 
 
 
-# ----- misc -------------------------------- #fold00
+# ----- misc -------------------------------- #FOLD00
 
 colon 'noop'
    code ':'
@@ -310,7 +310,17 @@ inline
 colon "\\"                                                           # double quoted escaped backslash rather than
    code 'line=""'                                                    # single quoted single backslash because
 semicolon                                                            # efte syntax highlighting gets confused
+interpretonly
+
+colon "\\"                                                           # double quoted escaped backslash rather than
+   code 'line=""'                                                    # single quoted single backslash because
+semicolon                                                            # efte syntax highlighting gets confused
 immediate
+
+colon '('
+   code "parse ')'"
+semicolon
+interpretonly
 
 colon '('
    code "parse ')'"
@@ -811,7 +821,7 @@ inline
 }
 
 
-# ----- arithmetics ------------------------- #fold00
+# ----- arithmetics ------------------------- #FOLD00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -851,12 +861,16 @@ inline
 colon 'cells'
    code ':'
 semicolon
+interpretonly
+
+colon 'cells'
+   code ':'
+semicolon
 immediate
 
 colon 'cell+'
    atom '1+'
 semicolon
-immediate
 inline
 
 colon '+'
@@ -1066,7 +1080,7 @@ colon 'if'
    code 'code "if ((tmp)); then"'
    code "s+=(\"\${#body[@]}\" \"$magic\")"                           # allow check of structure and empty function
 semicolon
-compileonly
+immediate
 
 colon 'else'
    code "(( s[-1]++ == \"$magic\" )) || unstructured 'if'"
@@ -1074,7 +1088,7 @@ colon 'else'
    code 'code "else"'
    code 's[-2]="${#body[@]}"'
 semicolon
-compileonly
+immediate
 
 colon 'then'
    code "(( s[-1] == \"$magic\" ||  s[-1] == \"$((magic+1))\" )) || unstructured 'if or else'"
@@ -1083,7 +1097,7 @@ colon 'then'
    atom 'drop'
    code 'code "fi"'
 semicolon
-compileonly
+immediate
 
 
 remagic
@@ -1092,7 +1106,7 @@ colon 'begin'
    code 'code "while :; do"'
    code "s+=(\"\${#body[@]}\" \"$magic\")"                           # allow check of structure and empty function
 semicolon
-compileonly
+immediate
 
 
 colon 'again'
@@ -1102,7 +1116,7 @@ colon 'again'
    atom 'drop'
    code 'code "done"'
 semicolon
-compileonly
+immediate
 
 colon 'until'
    code "(( s[-1] == \"$magic\" )) || unstructured 'begin'"
@@ -1113,14 +1127,14 @@ colon 'until'
    code 'code "done"'
    code 'code "unset \"s[-1]\""'
 semicolon
-compileonly
+immediate
 
 colon 'while'
    code "(( s[-1]++ == \"$magic\" )) || unstructured 'begin'"
    code 'code "((s[-1]))||break"'
    code 'code "unset \"s[-1]\""'
 semicolon
-compileonly
+immediate
 
 colon 'repeat'
    code "(( s[-1] == \"$((magic+1))\" )) || unstructured 'while'"
@@ -1129,7 +1143,7 @@ colon 'repeat'
    code 'code "done"'
    code 'code "unset \"s[-1]\""'
 semicolon
-compileonly
+immediate
 
 
 remagic
@@ -1140,7 +1154,7 @@ colon 'for'
    code 'code "for ((; i--; )); do"'
    code "s+=(\"\${#body[@]}\" \"$magic\")"                           # allow check of structure and empty function
 semicolon
-compileonly
+immediate
 
 colon 'i'
    code 's+=("i")'
@@ -1161,7 +1175,7 @@ colon 'next'
    code "code 'i=\"\${r[-1]}\"'"
    code 'code "unset \"r[-1]\""'
 semicolon
-compileonly
+immediate
 
 
 remagic
@@ -1177,20 +1191,20 @@ dodo()  {
 colon 'leave'
    code 'code "break"'
 semicolon
-compileonly
+immediate
 
 colon '?leave'
    code "code 'tmp=\"\${s[-1]}\"; unset \"s[-1]\"'"
    code 'code "((tmp))&&break"'
 semicolon
-compileonly
+immediate
 
 colon 'do'
    code 'code "dodo"'
    code 'code "while :;do"'
    code "s+=(\"$magic\")"                                            # allow check of structure and empty function
 semicolon
-compileonly
+immediate
 
 colon 'loop'
    code "((s[-1] == $magic))||unstructured 'do'"
@@ -1202,7 +1216,7 @@ colon 'loop'
    code "code 'ibar=\"\${r[-1]}\"'"
    code 'code "unset \"r[-1]\""'
 semicolon
-compileonly
+immediate
 
 
 colon '+loop'
@@ -1218,7 +1232,7 @@ colon '+loop'
    code "code 'i=\"\${r[-1]}\"'"
    code 'code "unset \"r[-1]\""'
 semicolon
-compileonly
+immediate
 
 
 # compiled version: skip until end of word on false
@@ -1227,7 +1241,7 @@ colon 'lest'
    code 'code "unset \"s[-1]\""'
    code 'code "((tmp))||return" '
 semicolon
-compileonly    # compile only are inherently immediate
+immediate    # compile only are inherently immediate
 
 # interpreted version: skip rest of line when false
 colon 'lest'
@@ -1243,7 +1257,7 @@ colon 'unless'
    code 'code "unset \"s[-1]\""'
    code 'code "((tmp))&&return" '
 semicolon
-compileonly    # compile only are inherently immediate
+immediate    # compile only are inherently immediate
 
 # interpreted version: skip rest of line when true
 colon 'unless'
@@ -1291,10 +1305,10 @@ colon 'exit'
    code 'return'
 semicolon
 inline
-compileonly
+immediate
 
 
-# ----- conditional compilation-------------- #fold00
+# ----- conditional compilation-------------- #FOLD00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -1615,9 +1629,8 @@ semicolon
 
 # ----- experimental ------------------------ #fold00
 
-# ----- unsorted ---------------------------- #fold00
+# ----- unsorted ---------------------------- #FOLD00
 
-# TODO: take recently introduced warmvector into consideration
 colon 'warm'
    code 'warm'
 semicolon
@@ -1718,4 +1731,4 @@ semicolon
 colon 'recurse'
    code 'code "${headersstateless["$lastword"]}"'
 semicolon
-compileonly
+immediate

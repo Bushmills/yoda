@@ -78,24 +78,26 @@ semicolon
 interpretonly
 
 
-# ----- diagnostics ------------------------- #fold00
+# ----- diagnostics ------------------------- #FOLD00
 
 words()	{
-   for tmp in headersstateless headersinterpretonly headerscompileonly; do
-      declare -n usedheaders="$tmp"
+   local headers
+   for tmp in ${headerslistlist[@]}; do
+      declare -n headers="$tmp"
       printf '%s\n' "--- ${tmp#"headers"} ---"
-	   printf  "%s " "${!usedheaders[@]}"
+	   printf  "%s " "${!headers[@]}"
       printf '\n\n'
    done
 }
 
 crossref()  {
-   for tmp in headersstateless headersinterpretonly headerscompileonly headersunresolved; do
-      declare -n usedheaders="$tmp"
-      (( ${#usedheaders[@]} )) && {
+   local headers
+   for tmp in ${headerslistlist[@]} headersunresolved; do
+      declare -n headers="$tmp"
+      (( ${#headers[@]} )) && {
          printf '%s:\n' "${tmp#"headers"}"
-         for tmp2 in "${!usedheaders[@]}"; do
-	         printf  "    %-16s %s\n" "${usedheaders["$tmp2"]}" "$tmp2"
+         for tmp2 in "${!headers[@]}"; do
+	         printf  "    %-16s %s\n" "${headers["$tmp2"]}" "$tmp2"
          done | sort -t'_' -k2,2 -n
       }
    done

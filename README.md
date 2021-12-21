@@ -32,7 +32,7 @@ In some respects does yoda differ from Forth:
   comfortable library inclusion management. The library "postlib",
   referenced during resolve passes, exists for this purpose: compile
   nothing from it, unless needed.
-  Another libary, prelib, is included before main source compilation.
+  Another library, prelib, is included before main source compilation.
   prelib is unsuited for resolving forward referenced words.
 
 - yoda has no built-in interpreter, but an interpreter can be compiled

@@ -67,7 +67,7 @@ colon ':'      # colon
    code "s+=(\"\${#body[@]}\" \"$magic\")"                           # allow check of structure and empty function
    code 'compiling=1'
 semicolon
-interpretonly
+interactive
 
 colon 'u:'      # ucolon
    code 'word'                                                       # parse space delimited word from input stream
@@ -75,7 +75,15 @@ colon 'u:'      # ucolon
    code "s+=(\"\${#body[@]}\" \"$magic\")"                           # allow check of structure and empty function
    code 'compiling=1'
 semicolon
-interpretonly
+interactive
+
+colon 'interactive'                                                  # move header to interpreter context vocabulary
+   code 'interactive'
+semicolon
+
+colon 'immediate'                                                    # move header to compiler context vocabulary
+   code 'immediate'
+semicolon
 
 
 # ----- diagnostics ------------------------- #fold00
@@ -238,10 +246,6 @@ colon "array"
    atom 'drop'
 semicolon
 
-# could possibly be faded out. in favour of context vocs
-colon 'immediate'
-   code 'immediate'
-semicolon
 
 # ----- compiler and word search related ---- #fold00
 
@@ -312,7 +316,7 @@ inline
 colon "\\"                                                           # double quoted escaped backslash rather than
    code 'line=""'                                                    # single quoted single backslash because
 semicolon                                                            # efte syntax highlighting gets confused
-interpretonly
+interactive
 
 colon "\\"                                                           # double quoted escaped backslash rather than
    code 'line=""'                                                    # single quoted single backslash because
@@ -322,7 +326,7 @@ immediate
 colon '('
    code "parse ')'"
 semicolon
-interpretonly
+interactive
 
 colon '('
    code "parse ')'"
@@ -454,7 +458,7 @@ colon 'r>'
 semicolon
 inline
 
-# ----- string stack ------------------------ #FOLD00
+# ----- string stack ------------------------ #fold00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -874,7 +878,7 @@ inline
 colon 'cells'
    code ':'
 semicolon
-interpretonly
+interactive
 
 colon 'cells'
    code ':'
@@ -1262,7 +1266,7 @@ colon 'lest'
    code 'unset "s[-1]"'
    code '((tmp))||line=""'
 semicolon
-interpretonly
+interactive
 
 # compiled version: skip until end of word on true
 colon 'unless'
@@ -1278,7 +1282,7 @@ colon 'unless'
    code 'unset "s[-1]"'
    code '((tmp))&&line=""'
 semicolon
-interpretonly
+interactive
 
 # evaluate input line unrtil end u times
 colon 'times'
@@ -1290,7 +1294,7 @@ colon 'times'
    atom 'rdrop'
    code 'line=""'
 semicolon
-interpretonly
+interactive
 
 # this is the prefered version, repeating the line upon encountering many
 # prefered because its use is more symmetrical with times, both specified

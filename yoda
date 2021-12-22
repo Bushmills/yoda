@@ -93,7 +93,7 @@ libdirs+=("$mydir")                                                  # look in d
 logfile="$mydir/yoda.log"
 rm -f "$logfile"                                                     # each run starts with a fresh log
 
-header_code="function"   					                              # prefix to bash function names,  _${nextname} will be appended upon header creation
+header_code="function"                                               # prefix to bash function names,  _${nextname} will be appended upon header creation
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
 
 declare -ai r=() s=() m=()
@@ -103,32 +103,32 @@ declare -i dp=0
 
 declare -Ai flags                                                    # header flags (inline, immediate)
 headerslistlist=(
-         "headersstateless"   					                        # searched during both interpreting and compiling
-         "headersinterpretonly"   				                        # searched during compiling only
-         "headerscompileonly")    				                        # searched during interpreting only
+         "headersstateless"                                          # searched during both interpreting and compiling
+         "headersinterpretonly"                                      # searched during compiling only
+         "headerscompileonly")                                       # searched during interpreting only
 declare -n headers="headersstateless"                                # headers is a vector- or pointer variable.
 for tmp in "${headerslistlist[@]}"; do
    declare -A "$tmp"
 done
-declare -A headersunresolved   					                        # forward referenced. Not searched.
+declare -A headersunresolved                                         # forward referenced. Not searched.
 
 declare -a lasterror
 lasterror=("" "-1" "0")
 
 # header flags:
 flagscount="0"
-inline=$((1<<flagscount++))   					                        # compile function code rather than calls to function
+inline=$((1<<flagscount++))                                          # compile function code rather than calls to function
 
 # ----- compiler muting ---------------------------------- #fold00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
    derestricted=0
-#   declare -n headers="headerstrash"                                 # should headers be created during restricted mode, they can be trashed easily
+#   declare -n headers="headerstrash"                                # should headers be created during restricted mode, they can be trashed easily
 }
 derestrict() {
    derestricted=1
-#   declare -n headers="headersstateless"                             # when derestricting, focus on stateless headers again.
+#   declare -n headers="headersstateless"                            # when derestricting, focus on stateless headers again.
 #   headerstrash=()
 }
 restricted() {                                                       # flag current state
@@ -136,7 +136,7 @@ restricted() {                                                       # flag curr
 }
 derestrict
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=16                                                             # 16 bits are nice for testing
@@ -145,10 +145,10 @@ msb="$((1<<(bits-1)))"
 maxint="$((msb-1))"
 maxuint="$((maxint|msb))"
 
-compiling=0   						                                       # state flag: interpreting or compiling
-line=""   						                                          # source line being worked on. modified during parsing and processing
-word=""   							                                       # bl delimited string from line currently being processed
-lastword=""   						                                       # most recently created word, set by create.
+compiling=0                                                          # state flag: interpreting or compiling
+line=""                                                              # source line being worked on. modified during parsing and processing
+word=""                                                              # bl delimited string from line currently being processed
+lastword=""                                                          # most recently created word, set by create.
 
 editor="vi"
 #xeditor="featherpad"
@@ -158,7 +158,7 @@ editor="vi"
    editor="$xeditor"
 }
 
-magic="$((RANDOM+100000))"   		                                    # flow control and : ;  use these to check structure
+magic="$((RANDOM+100000))"                                           # flow control and : ;  use these to check structure
 remagic()  { ((magic+=RANDOM+10000)); }
 
 
@@ -191,19 +191,19 @@ done
 # value of variable returned as return value (0..255)
 # doesn't exist: 0
 getvar()  {
-   [[ -z "${headers["$1"]}" ]] && return 0	                   	   # no variable by that name: 0
-   eval "${headers["$1"]}"					                              # execute code which pushs data address of flag to stack
-   ((tmp=m[s[-1]]))   						                              # read from memory address
-   unset "s[-1]"			                                             # drop pushed value
+   [[ -z "${headers["$1"]}" ]] && return 0                           # no variable by that name: 0
+   eval "${headers["$1"]}"                                           # execute code which pushs data address of flag to stack
+   ((tmp=m[s[-1]]))                                                  # read from memory address
+   unset "s[-1]"                                                     # drop pushed value
    return "$tmp"
 }
 
 # arg1: value to store, arg2: variable name
 setvar()  {
    [[ -z "${headers["$2"]}" ]] && return 1                           # no variable by that name
-   eval "${headers["$2"]}"					                              # execute code which pushs data address of flag to stack
-   (( m[s[-1]] = $1 ))   					                              # store numerical arg at memory address
-   unset "s[-1]"						                                    # drop pushed value
+   eval "${headers["$2"]}"                                           # execute code which pushs data address of flag to stack
+   (( m[s[-1]] = $1 ))                                               # store numerical arg at memory address
+   unset "s[-1]"                                                     # drop pushed value
    return 0
 }
 
@@ -213,13 +213,13 @@ setvar()  {
 # flag / variable name as arg1
 getflag()  {
    [[ -z "${headers["$1"]}" ]] && return 1
-   eval "${headers["$1"]}"					                              # execute code which pushs data address of flag to stack
-   ((tmp = ! m[s[-1]]))						                              # read from memory address
+   eval "${headers["$1"]}"                                           # execute code which pushs data address of flag to stack
+   ((tmp = ! m[s[-1]]))                                              # read from memory address
    unset "s[-1]"                                                     # drop pushed value
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #FOLD00
+# ----- errors and diagnostic ---------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -250,7 +250,7 @@ warm()  {
    setvar "10" "base"                                                # set decimal if base exists
 }
 
-coldvector=""   						                                    # colon word "boot" assigns coldvector. started when compilation completed.
+coldvector=""                                                        # colon word "boot" assigns coldvector. started when compilation completed.
 cold()  {                                                            # also by running cold. error restarts interpreter at cold
    [[ -z "$coldvector" ]] && exit 1
    warm; $coldvector
@@ -275,7 +275,7 @@ error()  {                                                           # Zeile mit
    warm
 }
 
-emptyname()   		{ error "no or empty name"; }
+emptyname()     { error "no or empty name"; }
 notfound()        { error "$word not found"; }
 stillcompiling()  { error "still compiling after $*"; }
 unbalancedstack() { error "unbalanced stack in file $*"; }
@@ -358,9 +358,9 @@ declare -A atom                                                      # a table w
 
 optimise()  {                                                        # run code generator on ${analyser[@]} data, as provided by primitives.
    target=()
-#   corresponding=()                                                  # index array source line to target line.
+#   corresponding=()                                                 # index array source line to target line.
    for ((tmp=0; tmp<${#body[@]}; tmp++)); do
-#      corresponding[tmp]="${#target[@]}"                             # allow optimiser to locate target code for any source line.
+#      corresponding[tmp]="${#target[@]}"                            # allow optimiser to locate target code for any source line.
                                                                      # needed for post mod or removal
       targetline="${body[tmp]}"                                      # assume no optimsation will take place
       (( analyser[tmp] )) && {                                       # proven wrong. something will be done.
@@ -380,16 +380,16 @@ trace "analyser=${analysername[${analyser[tmp]}]} at body pos $tmp of $lastword:
 
 # read space delimited word from line without removing it.
 peek_word()  {
-   word="${line##+([[:space:]])}"                  		            # remove all leading spaces (nee
-   word="${word%%[[:space:]]*}"                    		            # bl lookahead
+   word="${line##+([[:space:]])}"                                    # remove all leading spaces (nee
+   word="${word%%[[:space:]]*}"                                      # bl lookahead
 }
 
 # read space delimited word from line, remove it,
 # remove single leading space from remainder of line.
 word()  {
    peek_word
-   line="${line#*"$word"}"              			                     # quotes around word are needed
-   line="${line#+([[:space:]])}"                   		            # remove single leading space (n
+   line="${line#*"$word"}"                                           # quotes around word are needed
+   line="${line#+([[:space:]])}"                                     # remove single leading space (n
 }
 
 # read string from line and remove it, also remove delimiter.
@@ -407,7 +407,6 @@ parse()  {
 setheaderflag()  {                                                   # where against this form has no problem with those,
    flags["$lastword"]="$(( ${flags["$lastword"]} | "$1" ))"
 }
-#immediate()  { setheaderflag "$immediate"; }
 inline()     { setheaderflag "$inline" ; }
 
 # move header to compiler context vocabulary
@@ -432,7 +431,7 @@ header()  {
    [[ -z "${headersstateless["$1"]}" ]] ||  {
       [[ ${headersstateless["$1"]} == "${header_code}_"* ]] && echo "redefining $1"
    }
-   headersstateless["$1"]="$2"    				                        # associate word with name
+   headersstateless["$1"]="$2"                                       # associate word with name
    flags["$1"]="0"                                                   # default to no flags
    body=()                                                           # reinitialise code buffer
    analyser=()                                                       # reinitialise code tags for analyser
@@ -462,7 +461,7 @@ colon()  {
 
 # ----- compiler ----------------------------------------- #fold00
 
-code()  {   							                                    # literal code compiler
+code()  {                                                            # literal code compiler
    trace "$1"
    body+=("$1")
    analyser+=(0)                                                     # default to no optimiser intervention
@@ -491,13 +490,13 @@ codebody()  {                                                        # inline co
    analyser+=("$functionheader")
 }
 
-compile()  {   							                                 # build new function from code in body array
+compile()  {                                                         # build new function from code in body array
    restricted || {
-      optimise   						                                    # here's the proper place for static code evaluation.
-      name="${headersstateless["$lastword"]}"   	                  #   but code needs to provide more clues about its semantics
-      eval "$name() {   					                              #   without such, some peepholing may still be possible.
-         $(printf '%s\n' "${target[@]}")   			                  #   considering to introduce late translation of primitives here,
-      }"   							                                       #   to aid both coding and optimising.
+      optimise                                                       # here's the proper place for static code evaluation.
+      name="${headersstateless["$lastword"]}"                        #   but code needs to provide more clues about its semantics
+      eval "$name() {                                                #   without such, some peepholing may still be possible.
+         $(printf '%s\n' "${target[@]}")                             #   considering to introduce late translation of primitives here,
+      }"                                                             #   to aid both coding and optimising.
    }
 }
 
@@ -513,54 +512,54 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
-pattern()  {   		                                                # pattern interpreted as
+pattern()  {                                                         # pattern interpreted as
    restricted || {
 # some patterns can simply be ignored when code creation is muted
       base=10
       getvar "base" || base="$?"
-      tmp="0123456789abcdefghijklmnopqrstuvwxyz"		               # cut legal chars for base
-      [[ $word =~ ^[${tmp:0:$base}]+$ ]] && {			               # 1234      unsigned number
-         stateless "s+=($((${base}#${word} & maxuint)))"  	         # convert signless numbers without special treatment
+      tmp="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
+      [[ $word =~ ^[${tmp:0:$base}]+$ ]] && {                        # 1234      unsigned number
+         stateless "s+=($((${base}#${word} & maxuint)))"             # convert signless numbers without special treatment
          return 0; }
-      [[ $word =~ ^-[${tmp:0:$base}]+$ ]] && {			               # -1234     negative number
+      [[ $word =~ ^-[${tmp:0:$base}]+$ ]] && {                       # -1234     negative number
          stateless "s+=("$((-${base}#${word:1} & maxuint))")"
          return 0; }
-      [[ $word =~ ^\$[${tmp:0:16}]+$ ]] && {   			               # $abcd     hex number
+      [[ $word =~ ^\$[${tmp:0:16}]+$ ]] && {                         # $abcd     hex number
          tmp="$((16#${word:1} & maxuint))"
          stateless "s+=(\"$tmp\")"; return 0; }
-      [[ $word =~ ^\%[${tmp:0:2}]+$ ]] && {   			               # %1101     binary number
+      [[ $word =~ ^\%[${tmp:0:2}]+$ ]] && {                          # %1101     binary number
          tmp="$((2#${word:1} & maxuint))"
          stateless "s+=(\"$tmp\")"; return 0; }
-      [[ $word =~ ^\#[${tmp:0:10}]+$ ]] && {   			               # #1234     decimal number
+      [[ $word =~ ^\#[${tmp:0:10}]+$ ]] && {                         # #1234     decimal number
          tmp="$((10#${word:1} & maxuint))"
          stateless "s+=(\"$tmp\")"
          return 0; }
-      [[ ${word} == \'? || ${word} == \'?\' ]] && {     	            # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
+      [[ ${word} == \'? || ${word} == \'?\' ]] && {                  # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
          read -r tmp < <(printf "%d" "'${word:1:1}'")
          stateless "s+=(\"$tmp\")"; return 0; }
-      [[ ${word} == ^[a-z] ]] && {   				                     # ^X        return control char
+      [[ ${word} == ^[a-z] ]] && {                                   # ^X        return control char
          read -r tmp < <(printf "%d" "'${word:1:1}")
          stateless "s+=(\"$((tmp&31))\")"; return 0; }
       [[ "${word:0:1}${word:0-1}" == '""' ]] && {                    # quoted string, single word
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-         stateless "ss+=(\"${word:1:${#word}-2}\")"                      # extract string
+         stateless "ss+=(\"${word:1:${#word}-2}\")"                  # extract string
          return 0; }
       }
    }
 
 # other patterns, especially those doing parsing or modifying line, must partially execute
-   [[ "${word:0:2}" == '#!' ]] && {                		            # #!        ignore hashbang
-      line=""; return 0; }   					                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
+   [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
+      line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
 
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
-      restricted || stateless "ss+=(\"$tmp $word\")"                   # compile or execute: add to string stack unless compilation was muted
+      restricted || stateless "ss+=(\"$tmp $word\")"                 # compile or execute: add to string stack unless compilation was muted
       return 0; }
 
-   [[ "${word:0:1}" == '>' ]] && {				                        # >foo      execute a shell command
+   [[ "${word:0:1}" == '>' ]] && {                                   # >foo      execute a shell command
       tmp="${word:1}"                                                #           up to ; as args
       if [[ "$line" == *';'* ]]; then                                # if line contains ;
          parse ';'                                                   # then parse input until ;
@@ -573,7 +572,7 @@ pattern()  {   		                                                # pattern inter
    }
    getflag 'shell' || return 1                                       # done unless shell flag was set
    restricted || {
-      stateless "${word} ${line}" ||	                              # in which case execution as shell command is attempted
+      stateless "${word} ${line}" ||                                 # in which case execution as shell command is attempted
       error "returned $?"                                            # non-zero exit values of shell commands will be passed on to yoda error handler
    }
    line=""                                                           # assignment sets return value to 0
@@ -654,26 +653,26 @@ forwardref()  {
 # split this thing up.
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
-   local tib="$line"  	                                             # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
+   local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
 trace "line=[$line]"
-   while [[ -n "$line" ]]; do   				                           # still more to process on line (parsing removes strings from line)
-      word   							                                    # parse white space delimited word
-      [[ -z "$word" ]] && continue   				                     # empty: tabs, line end, nothing of substance
-      [[ -z "${headersstateless["$word"]}" ]] || {   		            # word found in stateless dictionary
+   while [[ -n "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
+      word                                                           # parse white space delimited word
+      [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
+      [[ -z "${headersstateless["$word"]}" ]] || {                   # word found in stateless dictionary
          invoke "$word" "${headersstateless["$word"]}"               # compile or execute
          continue
       }
-      if ((compiling)); then   				                           # word wasn't found. search state specific vocabularies
-         [[ -z "${headerscompileonly["$word"]}" ]] || {   	         # found in in compileonly while compiling
+      if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
+         [[ -z "${headerscompileonly["$word"]}" ]] || {              # found in in compileonly while compiling
             ${headerscompileonly["$word"]}                           # word in there are inherently "immediate", therefore they're executed here
-            continue                                                 #     because that alöso deals with inline compilation.
+            continue                                                 #     because that also deals with inline compilation.
          }
-         [[ -z "${headersunresolved["$word"]}" ]] || {   	         # found in in unresolved while compiling
+         [[ -z "${headersunresolved["$word"]}" ]] || {               # found in in unresolved while compiling
             code "${headersunresolved[$word]}"                       # compile it
             continue
          }
       else                                                           # interpreting
-         [[ -z "${headersinterpretonly["$word"]}" ]] || {   	      # word found in interpretonly
+         [[ -z "${headersinterpretonly["$word"]}" ]] || {            # word found in interpretonly
             ${headersinterpretonly["$word"]}
             continue
          }
@@ -702,12 +701,12 @@ trace "line=[$line]"
             }
          }
       }
-      notfound "$word"						                              # nothing helped. get grouchy.
+      notfound "$word"                                               # nothing helped. get grouchy.
       line=""                                                        # stop evaluation: nothing left
    done
 }
 
-# ----- read source -------------------------------------- #FOLD00
+# ----- read source -------------------------------------- #fold00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -715,11 +714,11 @@ trace "line=[$line]"
 # Callers did a check prior to calling.
 from()  {
    local line lines linenr file word                                 # must protect for nested froms.
-   local stackeffect="${#s[@]}"   				                        # included files must have net stack effect of 0
+   local stackeffect="${#s[@]}"                                      # included files must have net stack effect of 0
    file="$(realpath $1)"
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
-      line="${lines[linenr++]}"   				                        #   source can change line numbers for jumping (but isn't used)
+      line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
       evaluate "$line"                                               # process next line
       ((linenr < 0)) && break                                        # source can flag "stop execution" with negative linenr (warm does so)
    done
@@ -744,7 +743,7 @@ configuration()  {
 ### ---------------------------------- ###
 ###       RUN THIS CONTRAPTION         ###
 ### -----------------------------------###
-[[ -z "$1" ]] || {   					                                 # no args: nothing to do
+[[ -z "$1" ]] || {                                                   # no args: nothing to do
    [[ -f "$1" ]] || filenotfound "$1"                                # arg1 must be name of an existing source file
 #--------------------------------------
    configuration                                                     # try to load custom configuration
@@ -763,10 +762,9 @@ configuration()  {
    [[ -f "$file" ]] && from "$file"                                  # found prelib? include prelib
 #--------------------------------------
    file="$(realpath $1)"
-   from "$file"                                                         # load source
+   from "$file"                                                      # load source
 #--------------------------------------
    [[ -z "$coldvector" ]] || {                                       # if cold launch point was specified, try to run.
-
       (( ${#headersunresolved[@]} )) && resolve                      # still unresolved words? try to resolve those.
       (( ${#headersunresolved[@]} )) || {
          cold

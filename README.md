@@ -35,8 +35,8 @@ In some respects does yoda differ from Forth:
   Another library, prelib, is included before main source compilation.
   prelib is unsuited for resolving forward referenced words.
 
-- yoda has no built-in interpreter, but an interpreter can be compiled
-  from postlib if needed (forward referenced). Its name is "quit".
+- yoda has no built-in interactive interpreter, but compiles an interpreter
+  from library when needed (forward referenced). Its name is "quit".
 
 - yoda has now eliminated immediate words. While the word "immediate"
   still exists and is used, its semantics are different: it causes moving

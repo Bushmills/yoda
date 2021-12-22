@@ -454,7 +454,7 @@ colon 'r>'
 semicolon
 inline
 
-# ----- string stack ------------------------ #fold00
+# ----- string stack ------------------------ #FOLD00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -545,6 +545,17 @@ colon 'trim$'
    code 'ss[-1]="${ss[-1]//[[:space:]]/}"'
 semicolon
 inline
+
+# ( -- u )  string: ( $1 $2 -- $3 )     remove  $2* from $1, return removed chars count
+colon 'cut$'
+   code 's+=(${#ss[-2]})'
+   code 'ss[-2]="${ss[-2]%${ss[-1]}*}"'
+   code '((s-=${#ss[-2]}))'
+   code 'unset "ss[-1]"'
+semicolon
+
+# count substring occurances
+# : #substrings  swap$ 0 begin over$ cut$ while 1+ repeat 2drop$ ;
 
 # -leading$:  ${myVar##*( )}
 # -trailing$: ${myVar%%*( )}

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -62,7 +62,7 @@ version=0  subversion=1    # 2021dec20,14:57
 # shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
                                                                      #  right, that's the reason for using single quotes there.
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 
@@ -213,7 +213,7 @@ getflag()  {
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #fold00
+# ----- errors and diagnostic ---------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -262,6 +262,12 @@ error()  {                                                           # Zeile mit
 #            >-----<  >----<                                      >---<              >------<              ANSI sequences
    printf "%s\e[4%sm%s\e[%sm %s\n" "${tib%"${word}"*"${line}"}" "${red}" "${word}" "${normal}" "$line"
    printf 'ERROR: %s\n' "$@"
+
+   column=$((${#tib}-${#line}-${#word}+1))
+   lasterror=("$file" "$linenr" "$column")
+   (( linenr < 0 )) || {
+      printf "at %s of %s\n" "$linenr,$column" "$file"
+   }
    callstack
    warm
 }
@@ -391,7 +397,7 @@ parse()  {
    line="${line#*"${1}"}"                                            # " unconfuse efte syntax highlighting
 }
 
-# ----- create headers ----------------------------------- #fold00
+# ----- create headers ----------------------------------- #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -451,7 +457,7 @@ colon()  {
 #   functionheader                                                   # optimiser may like to know
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 code()  {   							                                    # literal code compiler
    trace "$1"
@@ -504,7 +510,7 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 pattern()  {   		                                                # pattern interpreted as
    restricted || {
@@ -571,7 +577,7 @@ pattern()  {   		                                                # pattern inter
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -589,6 +595,7 @@ resolving=0
 # doing so because resolving forward references from postlib may create
 # new forward references, which also need resolving.
 resolve()  {
+   local file
    (( ${#headersunresolved[@]} )) || return                          # only run if unresolved words exist
    ((resolving)) && return
    local resolving=1
@@ -609,7 +616,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #FOLD00
+# ----- line interpreter --------------------------------- #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -697,7 +704,7 @@ trace "line=[$line]"
    done
 }
 
-# ----- read source -------------------------------------- #fold00
+# ----- read source -------------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -706,7 +713,8 @@ trace "line=[$line]"
 from()  {
    local line lines linenr file word                                 # must protect for nested froms.
    local stackeffect="${#s[@]}"   				                        # included files must have net stack effect of 0
-   readarray -t lines < "$1"                                         # read whole source into lines array
+   file="$(realpath $1)"
+   readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"   				                        #   source can change line numbers for jumping (but isn't used)
       evaluate "$line"                                               # process next line
@@ -751,7 +759,8 @@ configuration()  {
    done
    [[ -f "$file" ]] && from "$file"                                  # found prelib? include prelib
 #--------------------------------------
-   from "$1"                                                         # load source
+   file="$(realpath $1)"
+   from "$file"                                                         # load source
 #--------------------------------------
    [[ -z "$coldvector" ]] || {                                       # if cold launch point was specified, try to run.
 

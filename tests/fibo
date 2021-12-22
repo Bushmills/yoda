@@ -1,10 +1,10 @@
 #!/usr/local/bin/yoda
 
-: fibo ( u1 -- u2 )
-      1- dup 1 > if
-         dup recurse swap
-         1-  recurse +
-      then ;
+: fibo ( u -- u2 )         \ fibo(u+1) =
+      1- dup 1 > lest      \ bottom out
+      dup 1- recurse       \    fibo(u-1)
+      swap recurse +       \    + fibo(u)
+   ;
 
 need . resolve
 : fibos  ( u -- )

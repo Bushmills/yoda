@@ -1357,7 +1357,7 @@ colon 'exists'
    code 'exists' || error "can't tick data"
 semicolon
 
-# ----- i/o --------------------------------- #FOLD00
+# ----- i/o --------------------------------- #fold00
 
 colon 'ansi'
    code 'printf "\e[%sm" "${s[-1]}"'
@@ -1610,7 +1610,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #FOLD00
+# ----- convenience ------------------------- #fold00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=()'
@@ -1647,7 +1647,13 @@ colon 'list'
 semicolon
 
 
-# ----- experimental ------------------------ #fold00
+# ----- experimental ------------------------ #FOLD00
+
+colon 'trash'
+   code 'word'
+   code 'unset "headersstateless[$word]"'
+semicolon
+
 
 # ----- unsorted ---------------------------- #fold00
 

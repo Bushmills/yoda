@@ -736,7 +736,7 @@ colon rshift
 semicolon
 inline
 
-# ----- comparison -------------------------- #fold00
+# ----- comparison -------------------------- #FOLD00
 
 ((unsigned)) || {
 
@@ -750,14 +750,17 @@ colon '0<'
 semicolon
 inline
 
+# instead of having to deal with uint wraparound in every primitive
+# where it matters, better make sure that numbers are wrapped the
+# moment they enter the stack.
 colon '='
-   code '((s[-2] = -(s[-2] == s[-1])))'
+   code '((s[-2] = -((s[-2] & maxuint) == (s[-1] & maxuint))))'
    atom 'drop'
 semicolon
 inline
 
 colon '<>'
-   code '((s[-2] = -(s[-2] != s[-1])))'
+   code '((s[-2] = -((s[-2] & maxuint) != (s[-1] & maxuint))))'
    atom 'drop'
 semicolon
 inline

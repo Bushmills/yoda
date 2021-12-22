@@ -451,7 +451,7 @@ colon()  {
 #   functionheader                                                   # optimiser may like to know
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 code()  {   							                                    # literal code compiler
    trace "$1"
@@ -485,7 +485,7 @@ codebody()  {                                                        # inline co
 compile()  {   							                                 # build new function from code in body array
    restricted || {
       optimise   						                                    # here's the proper place for static code evaluation.
-      name="${headers["$lastword"]}"   	                           #   but code needs to provide more clues about its semantics
+      name="${headersstateless["$lastword"]}"   	                  #   but code needs to provide more clues about its semantics
       eval "$name() {   					                              #   without such, some peepholing may still be possible.
          $(printf '%s\n' "${target[@]}")   			                  #   considering to introduce late translation of primitives here,
       }"   							                                       #   to aid both coding and optimising.
@@ -609,7 +609,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -619,7 +619,6 @@ resolve()  {
 # arg2: name found
 invoke() {
    tmp="${flags[$1]}"
-#   (( ! compiling || (tmp & immediate) )) && {
    (( compiling )) || {
       eval "$2"                                                      # must eval because data handling code is stored in an array element.
       return                                                         # which doesn't matter during compilation. But to execution at interpret time,
@@ -658,6 +657,10 @@ trace "line=[$line]"
          [[ -z "${headerscompileonly["$word"]}" ]] || {   	         # found in in compileonly while compiling
             ${headerscompileonly["$word"]}                           # word in there are inherently "immediate", therefore they're executed here
             continue                                                 #     because that alöso deals with inline compilation.
+         }
+         [[ -z "${headersunresolved["$word"]}" ]] || {   	         # found in in unresolved while compiling
+            code "${headersunresolved[$word]}"                       # compile it
+            continue
          }
       else                                                           # interpreting
          [[ -z "${headersinterpretonly["$word"]}" ]] || {   	      # word found in interpretonly

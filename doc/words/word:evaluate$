@@ -1,11 +1,8 @@
-created:             auto     (remove line after having checked and revised description)
 name:                evaluate$
 stack:               ( -- )
-return stack:        ( -- )
-string stack:        ( -- )
-category:
-input stream:
-decription:          none
+return stack:        ( -- ??? )
+string stack:        ( $1 -- ??? )
+decription:          takes a string from string stack and evaluates it as if it was
+                     entered or read from file.
 contexts:            interpreting, compiling
-example:             none
-notes:               none
+example:             "3 5 * ." evaluate$

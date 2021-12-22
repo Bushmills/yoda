@@ -6,22 +6,20 @@
 - add context vocabularies to selected searches (only undoc remaining)
 
 --- general todos, improvements, fancyness
-- a word symmetric with "immediate" for moving newly created words into
-  interpret-only context vocabulary. maybe "interactive"?
 - "fix" for opening file at error location in editor.
 - a "needed" for testing a list of words rather than just a single word
 - string operations based on search and match are mostly absent.
-  index / index$ might cover a lot already.
+  index / index$ might cover a lot already. cut$ was added
 - addressing stack items per stack pointer, rather than by adding and
   removing top elements might save some instructions and potentially
   result in some speed increase, as may (test) more thorough use of
   arithmetic assignments, possibly avoiding some integer to string and
   back conversions
-- let string to number, number to string respect base
+- string to number, number to string should respect base
 - pictured number formatting
 - allow customising query attributes
 - allow customising prompt
-- make header of currently compiled word non-findable until semicolon.
+- hide header of currently compiled word until compilation completed.
   can be done by classical hide/reveal,  by postponing header creation,
   or by moving when compilation has completed.
   postponing is probably the way to go: delegate to detokeniser.

@@ -219,7 +219,7 @@ getflag()  {
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #fold00
+# ----- errors and diagnostic ---------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -459,7 +459,7 @@ colon()  {
 #   functionheader                                                   # optimiser may like to know
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 code()  {                                                            # literal code compiler
    trace "$1"
@@ -512,7 +512,7 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
@@ -544,11 +544,13 @@ pattern()  {                                                         # pattern i
          stateless "s+=(\"$((tmp&31))\")"; return 0; }
       [[ "${word:0:1}${word:0-1}" == '""' ]] && {                    # quoted string, single word
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-         stateless "ss+=(\"${word:1:${#word}-2}\")"                  # extract string
+         ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
+            code  "ss+=('${word:1:${#word}-2}')"                     # But variable expansion take place in interpreted branch.
+            return 0; }                                              # Both requirements are hard to formulate in one common version.
+         ss+=("${word:1:${#word}-2}")
          return 0; }
       }
    }
-
 # other patterns, especially those doing parsing or modifying line, must partially execute
    [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
       line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
@@ -556,9 +558,14 @@ pattern()  {                                                         # pattern i
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
-      restricted || stateless "ss+=(\"$tmp $word\")"                 # compile or execute: add to string stack unless compilation was muted
-      return 0; }
-
+      restricted || {
+         ((compiling)) && {
+            code "ss+=('$tmp $word')"                                # compile: compile code to add string to string stack unless compilation was muted
+            return 0; }
+         ss+=("$tmp $word")                                           # interpret push string to string stack
+         return 0;
+      }
+   }
    [[ "${word:0:1}" == '>' ]] && {                                   # >foo      execute a shell command
       tmp="${word:1}"                                                #           up to ; as args
       if [[ "$line" == *';'* ]]; then                                # if line contains ;

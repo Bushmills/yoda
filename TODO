@@ -1,10 +1,26 @@
---- problem solving todos
-
---- general todos
-- allow customising query attributes
-- allow customising prompt
+--- todos solving problems, shortcomings, quirks
+- ticking a word with headers in more than one context vocabulary allows
+  no control nor test over which version was ticked.
+- better support for unsigned
 - does>  tricky. consider detokeniser intervention
 - add context vocabularies to selected searches (only undoc remaining)
+
+--- general todos, improvements, fancyness
+- a word symmetric with "immediate" for moving newly created words into
+  interpret-only context vocabulary. maybe "interactive"?
+- "fix" for opening file at error location in editor.
+- a "needed" for testing a list of words rather than just a single word
+- string operations based on search and match are mostly absent.
+  index / index$ might cover a lot already.
+- addressing stack items per stack pointer, rather than by adding and
+  removing top elements might save some instructions and potentially
+  result in some speed increase, as may (test) more thorough use of
+  arithmetic assignments, possibly avoiding some integer to string and
+  back conversions
+- let string to number, number to string respect base
+- pictured number formatting
+- allow customising query attributes
+- allow customising prompt
 - make header of currently compiled word non-findable until semicolon.
   can be done by classical hide/reveal,  by postponing header creation,
   or by moving when compilation has completed.

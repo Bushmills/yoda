@@ -14,4 +14,4 @@
 "gedit"      used lest >fixargs='+${lasterror[1]}:$((${lasterror[2]}))'
 : fix        "lasterror[1]" env 0< unless >eval editor "$fixargs" "$lasterror";  ;
 
-\ trash used
+trash used

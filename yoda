@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -62,7 +62,7 @@ version=0  subversion=1    # 2021dec20,14:57
 # shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
                                                                      #  right, that's the reason for using single quotes there.
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 
@@ -111,12 +111,12 @@ for tmp in "${headerslistlist[@]}"; do
    declare -A "$tmp"
 done
 declare -A headersunresolved   					                        # forward referenced. Not searched.
-#declare -A headerstrash                                              # throwaway headers. Not searched.
 
+declare -a lasterror
+lasterror=("" "-1" "0")
 
 # header flags:
 flagscount="0"
-#immediate=$((1<<flagscount++))   				                        # precedence bit (try to fade out, use interpretonly/compileonly)
 inline=$((1<<flagscount++))   					                        # compile function code rather than calls to function
 
 # ----- compiler muting ---------------------------------- #fold00
@@ -213,7 +213,7 @@ getflag()  {
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #FOLD00
+# ----- errors and diagnostic ---------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -262,12 +262,9 @@ error()  {                                                           # Zeile mit
 #            >-----<  >----<                                      >---<              >------<              ANSI sequences
    printf "%s\e[4%sm%s\e[%sm %s\n" "${tib%"${word}"*"${line}"}" "${red}" "${word}" "${normal}" "$line"
    printf 'ERROR: %s\n' "$@"
-
-   column=$((${#tib}-${#line}-${#word}+1))
-   lasterror=("$file" "$linenr" "$column")
-   (( linenr < 0 )) || {
-      printf "at %s of %s\n" "$linenr,$column" "$file"
-   }
+   row=$((${#tib}-${#line}-${#word}+1))
+   lasterror=("$file" "$linenr" "$row")
+   (( linenr < 0 )) || printf "at %s of %s\n" "$linenr,$row" "$file"
    callstack
    warm
 }
@@ -397,7 +394,7 @@ parse()  {
    line="${line#*"${1}"}"                                            # " unconfuse efte syntax highlighting
 }
 
-# ----- create headers ----------------------------------- #FOLD00
+# ----- create headers ----------------------------------- #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -542,7 +539,7 @@ pattern()  {   		                                                # pattern inter
          stateless "s+=(\"$((tmp&31))\")"; return 0; }
       [[ "${word:0:1}${word:0-1}" == '""' ]] && {                    # quoted string, single word
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-         stateless "ss+=(\"${word:1:${#word}-2}\")"                  # extract string
+         stateless 'ss+=(${word:1:${#word}-2})'                      # extract string
          return 0; }
       }
    }
@@ -554,7 +551,7 @@ pattern()  {   		                                                # pattern inter
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
-      restricted || stateless "ss+=(\"$tmp $word\")"                 # compile or execute: add to string stack unless compilation was muted
+      restricted || stateless 'ss+=("$tmp $word")'                 # compile or execute: add to string stack unless compilation was muted
       return 0; }
 
    [[ "${word:0:1}" == '>' ]] && {				                        # >foo      execute a shell command
@@ -577,7 +574,7 @@ pattern()  {   		                                                # pattern inter
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -704,7 +701,7 @@ trace "line=[$line]"
    done
 }
 
-# ----- read source -------------------------------------- #FOLD00
+# ----- read source -------------------------------------- #fold00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.

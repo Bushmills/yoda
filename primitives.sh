@@ -736,7 +736,7 @@ colon rshift
 semicolon
 inline
 
-# ----- comparison -------------------------- #FOLD00
+# ----- comparison -------------------------- #fold00
 
 ((unsigned)) || {
 
@@ -1357,7 +1357,7 @@ colon 'exists'
    code 'exists' || error "can't tick data"
 semicolon
 
-# ----- i/o --------------------------------- #fold00
+# ----- i/o --------------------------------- #FOLD00
 
 colon 'ansi'
    code 'printf "\e[%sm" "${s[-1]}"'
@@ -1406,7 +1406,7 @@ semicolon
 # TODO: configurable ANSI sequences
 query()  {
    printf '\e[3%sm' "$green"
-   read -er -i "$keybuf" tib                                         # key? may have put chars into keybuf
+   IFS="" read -er -i "$keybuf" tib                                  # key? may have put chars into keybuf
    keybuf=""
    printf '\e[%sm' "$normal"
 }
@@ -1610,7 +1610,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #fold00
+# ----- convenience ------------------------- #FOLD00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=()'

@@ -1,5 +1,5 @@
 #!/usr/local/bin/yoda
-need . resolve
+need .
 100 allot
 : foo
     1024 allot

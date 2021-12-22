@@ -6,7 +6,7 @@
       swap recurse +       \    + fibo(u)
    ;
 
-need . resolve
+need .
 : fibos  ( u -- )
       2 do
          i fibo . cr

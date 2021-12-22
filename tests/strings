@@ -1,7 +1,7 @@
 #!/usr/local/bin/yoda
 "String comparison tests: " type$
 
-need . resolve  
+need .
 create errors 0 ,
 : check    ( -- )        
         errors @ ?dup
@@ -10,7 +10,7 @@ create errors 0 ,
         then type$ cr  ;
 
 : expected ( x1 x2 -- )
-        = 1+ errors +!  ;
+        = 1+ errors +! ;
 
 "abc" "abc"    
         2dup$ $=     true expected

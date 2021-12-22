@@ -38,10 +38,10 @@ In some respects does yoda differ from Forth:
 - yoda has no built-in interpreter, but an interpreter can be compiled
   from postlib if needed (forward referenced). Its name is "quit".
 
-- yoda attempts to eliminate immediate words, but a few remnants are left:
-  ( and \ are "conventionally immediate", mostly because their interpret
-  time and compile time semantics are identical. I may in time get rid of
-  the "immediate" feature completely.
-  Most other otherwise immediate words employ a scheme similar to what
-  cmForth does: added context specific vocabularies. Those words in the
-  compiler specific vocabulary are inherently "immediate".
+- yoda has now eliminated immediate words. While the word "immediate"
+  still exists and is used, its semantics are different: it causes moving
+  the header of last word into the compiler context vocabulary, rather than
+  marking the word as state smart. Such a word doesn't have interpret time
+  semantics (and can't be found when not compiling). For interpret time
+  semantics of such a word, create it again with identical name, and specify
+  only those.

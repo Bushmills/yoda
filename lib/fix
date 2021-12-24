@@ -1,6 +1,10 @@
 
-( -- f )  ( string: $1 -- )
+( string: $1 -- )  ( -- f )
 : used       "editor" env$ $= ;
+
+\ "error" places filename, error line and error column in lasterror[0], [1] and [2].
+\ error line and columns can be passed to editor for moving cursor to error location.
+\ but as editor invocation lines differs, here's a selection of two handfuls:
 
 "nano"       used lest >fixargs='+${lasterror[1]},${lasterror[2]}'
 "mcedit"     used lest >fixargs='+${lasterror[1]}'
@@ -11,7 +15,17 @@
 "featherpad" used lest >fixargs='+${lasterror[1]},$((${lasterror[2]}-1))'
 "mousepad"   used lest >fixargs='-l ${lasterror[1]} -c $((${lasterror[2]}-1))'
 "efte"       used lest >fixargs='-l${lasterror[1]},${lasterror[2]}'
-"gedit"      used lest >fixargs='+${lasterror[1]}:$((${lasterror[2]}))'
+"gedit"      used lest >fixargs='+${lasterror[1]}:${lasterror[2]}'
+
+\ in case error occured while not loading from file, number in lasterror[1] (the line number)
+\ will be negative. Therefore will fix refuse to open a file when lasterror[1] is negative.
+
 : fix        "lasterror[1]" env 0< unless >eval editor "$fixargs" "$lasterror";  ;
 
-trash used
+\ "unless" is the opposite of "lest" above: conditionally skip rest of line (when interpreting),
+\ or rest of word (when compiled into):
+\      condition lest    condition  "is true" type$
+\      condition unless  condition  "is false" type$
+\  compiled into a word, unless has same semantics as ?exit has in other systems.
+
+trash used   ( used is a too common word to waste it for this: discard header )

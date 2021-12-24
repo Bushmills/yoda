@@ -13,5 +13,6 @@
 \ number output is so common that we want to have them along
 \ with quit anyway, even though they're not depended upon:
 need . need u.
+from fix
 boot quit                  ( "boot" sets the cold entry word )
 "Yoda shell" type$ cr      ( rather chatty today, aren't we? )

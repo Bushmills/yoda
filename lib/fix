@@ -21,6 +21,7 @@
 \ will be negative. Therefore will fix refuse to open a file when lasterror[1] is negative.
 
 : fix        "lasterror[1]" env 0< unless >eval editor "$fixargs" "$lasterror";  ;
+\ this should be a beautiful place for an "error: no error" instead of silently ignoring.
 
 \ "unless" is the opposite of "lest" above: conditionally skip rest of line (when interpreting),
 \ or rest of word (when compiled into):

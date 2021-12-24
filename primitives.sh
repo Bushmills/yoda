@@ -14,27 +14,27 @@ atom["dup"]='s+=("s[-1]")'                # push_s1
 atom["over"]='s+=("s[-2]")'               # push_s2
 atom["pluck"]='s+=("s[-3]")'              # push_s3
 atom["drop"]='unset "s[-1]"'              # pop
-atom["@"]='s[-1]="m[s[-1]]"'              # s1=(s1)
+atom["@"]='s[-1]=m[s[-1]]'                # s1=(s1)
 atom["1+"]='((s[-1]++))'                  # s1++
 atom["1-"]='((s[-1]--))'                  # s1--
 atom["2*"]='((s[-1]*=2))'
 atom["2/"]='((s[-1]/=2))'
-atom["s1=tmp"]='s[-1]="$tmp"'
-atom["s2=tmp"]='s[-2]="$tmp"'
-atom["s3=tmp"]='s[-3]="$tmp"'
-atom["s4=tmp"]='s[-4]="$tmp"'
-atom["tmp=s1"]='tmp=${s[-1]}'
-atom["tmp=s2"]='tmp=${s[-2]}'
-atom["tmp=s3"]='tmp=${s[-3]}'
-atom["tmp=s4"]='tmp=${s[-4]}'
-atom["s1=s2"]='s[-1]=${s[-2]}'
-atom["s1=s3"]='s[-1]=${s[-3]}'
-atom["s2=s1"]='s[-2]=${s[-1]}'
-atom["s2=s3"]='s[-2]=${s[-3]}'
-atom["s3=s1"]='s[-3]=${s[-1]}'
-atom["s3=s2"]='s[-3]=${s[-2]}'
-atom["s4=s2"]='s[-4]=${s[-2]}'
-atom["s4=s2"]='s[-4]=${s[-2]}'
+atom["s1=tmp"]='s[-1]="tmp"'
+atom["s2=tmp"]='s[-2]="tmp"'
+atom["s3=tmp"]='s[-3]="tmp"'
+atom["s4=tmp"]='s[-4]="tmp"'
+atom["tmp=s1"]='tmp="${s[-1]}"'
+atom["tmp=s2"]='tmp="${s[-2]}"'
+atom["tmp=s3"]='tmp="${s[-3]}"'
+atom["tmp=s4"]='tmp="${s[-4]}"'
+atom["s1=s2"]='s[-1]="s[-2]"'
+atom["s1=s3"]='s[-1]="s[-3]"'
+atom["s2=s1"]='s[-2]="s[-1]"'
+atom["s2=s3"]='s[-2]="s[-3]"'
+atom["s3=s1"]='s[-3]="s[-1]"'
+atom["s3=s2"]='s[-3]="s[-2]"'
+atom["s4=s2"]='s[-4]="s[-2]"'
+atom["s4=s2"]='s[-4]="s[-2]"'
 atom["r@"]='s+=("r[-1]")'
 atom['rpush']='r+=("s[-1]")'              # s1 -> r++
 atom['rdrop']='unset "r[-1]"'             # --r
@@ -471,7 +471,7 @@ semicolon
 inline
 
 colon 'dup$'
-   code 'ss+=( "${ss[-1]}" )'
+   code 'ss+=("${ss[-1]}")'
 semicolon
 inline
 
@@ -671,26 +671,29 @@ semicolon
 # $ -> a -- n
 unpackstring()  {
    string="${ss[-1]}"
-   tmp="${#string}"
    unset "ss[-1]"
-   for ((len=0; tmp--; len++)); do
-      m[s[-1]++]="${asc[${string:len:1}]}"
+   ((tmp="${#string}", s1=s[-1]))
+   for ((len=0; tmp--;)); do
+      ((m[s1++]="asc[${string:len++:1}]"))
    done
-   s[-1]="$len"
+   ((s[-1]="$len"))
 }
 colon 'unpack$'
    code 'unpackstring'
 semicolon
 
-# a n -- -> $
+# a n -- -> $        # using temp vars speeds this up, compared to working on array items
 packstring()  {
-   ss+=("")
-   for ((; s[-1]--; )); do
-      ss[-1]+="${asc[m[s[-2]++]]}"
+   ((s1=s[-1], s2=s[-2]))
+   unset "s[-1]"
+   unset "s[-1]"
+   tmp=""
+   for ((; s1--; )); do
+      tmp+="${char[m[s2++]]}"
    done
-   unset "s[-1]"
-   unset "s[-1]"
+   ss+=("$tmp")
 }
+
 colon 'pack$'
    code 'packstring'
 semicolon
@@ -741,7 +744,7 @@ inline
 ((unsigned)) || {
 
 colon '0='
-   code '((s[-1] = -(! s[-1])))'
+   code '((s[-1] = -(! (s[-1] & maxuint))))'
 semicolon
 inline
 
@@ -775,6 +778,7 @@ inline
 #   code 'unset "s[-1]"'
 #semicolon
 
+# probably broken
 colon '<'
    code '((s[-2] = -(s[-2] < s[-1])))'
    atom 'drop'
@@ -788,58 +792,6 @@ colon '>'
 semicolon
 inline
 }
-
-
-((unsigned)) && {
-
-colon '0='  # tested 16
-   code '((s[-1] = -(! (s[-1]&maxuint))))'
-semicolon
-inline
-
-colon '0<'  # tested 16
-   code '((s[-1] = (! (s[-1]&msb))-1))'
-semicolon
-inline
-
-colon '='  # tested 16
-   code '((s[-2] =  -(!((s[-2]^s[-1])&maxuint))))'
-   atom 'drop'
-semicolon
-inline
-
-colon '<>'  # tested 16
-   code '((s[-2] =  -((s[-2]^s[-1])&maxuint)))'
-   atom 'drop'
-semicolon
-inline
-
-colon 'u<' # partially tested 16. maybe broken.
-   code '((s[-2] = -((s[-2]&maxuint) < (s[-1]&maxuint))))'
-   atom 'drop'
-semicolon
-inline
-
-colon 'u>' # partially tested 16
-   code '((s[-2] = -((s[-2]&maxuint) > (s[-1]&maxuint))))'
-   atom 'drop'
-semicolon
-inline
-
-colon '<' # broken
-   code '((s[-2] = -(s[-2] < s[-1])))'
-   atom 'drop'
-semicolon
-inline
-
-colon '>' # broken
-   code '((s[-2] = -(s[-2] > s[-1])))'
-   atom 'drop'
-semicolon
-inline
-
-}
-
 
 # ----- arithmetics ------------------------- #fold00
 
@@ -947,7 +899,7 @@ colon '*/'
 semicolon
 
 colon '/mod'		# x1 x2 -- rem quot
-   code '(( tmp = s[-1], s[-1] = s[-2]/tmp, s[-2] = s[-2]%tmp ))'
+   code '(( s1=s[-1], s2=s[-2], s[-1]=s2/s1, s[-2]=s2%s1 ))'
 semicolon
 inline
 
@@ -960,7 +912,7 @@ semicolon
 
 
 colon 'u/mod'		# u1 u2 -- rem quot
-   code '(( tmp=s[-1]&maxuint, s[-1]=(s[-2]&maxuint)/tmp, s[-2]=(s[-2]&maxuint)%tmp ))'
+   code '(( s1=s[-1]&maxuint, s2=s[-2],  s[-1]=(s2&maxuint)/s1, s[-2]=(s2&maxuint)%s1 ))'
 semicolon
 inline
 
@@ -978,38 +930,38 @@ semicolon
 inline
 
 colon 'count'
-   code 's+=("m[s[-1]++] & 255")'
+   code 's+=("m[s[-1]++]&255")'
 semicolon
 inline
 
 colon '!'
-   code 'm[s[-1]]="s[-2]"'
+   code '((m[s[-1]]="s[-2]"))'
    atom 'drop'
    atom 'drop'
 semicolon
 inline
 
 colon '<-'                      # swap !
-   code 'm[s[-2]]="s[-1]"'
+   code '((m[s[-2]]="s[-1]"))'
    atom 'drop'
    atom 'drop'
 semicolon
 
 colon '+!'
-   code 'm[s[-1]]+="s[-2]"'
+   code '((m[s[-1]]+="s[-2]"))'
    atom 'drop'
    atom 'drop'
 semicolon
 inline
 
 colon 'on'
-   code 'm[s[-1]]="-1"'
+   code '((m[s[-1]]="-1"))'
    atom 'drop'
 semicolon
 inline
 
 colon 'off'
-   code 'm[s[-1]]="0"'
+   code '((m[s[-1]]="0"))'
    atom 'drop'
 semicolon
 inline
@@ -1033,55 +985,57 @@ semicolon
 inline
 
 colon ','
-   code 'm[dp++]="${s[-1]}"'
+   code '((m[dp++]=s[-1]))'
    atom 'drop'
 semicolon
 inline
 
+# pad is 256 cells above here.
 colon 'pad'
    code 's+=("dp+256")'
 semicolon
 inline
 
-
+# 1.1secs ->
 # ( a u c -- )
 colon 'fill'
-
-   code 'for ((;s[-2]--;)); do'
-   code '((m[s[-3]++] = s[-1]))'                                     # c -> m[a++],  u times
+   code '((s1=s[-1], s2=s[-2], s3=s[-3]))'
+   atom 'drop'
+   atom 'drop'
+   atom 'drop'
+   code 'for ((;s2--;)); do'
+   code '((m[s3++] = s1))'                                     # c -> m[a++],  u times
    code 'done'
-   atom 'drop'
-   atom 'drop'
-   atom 'drop'
 semicolon
 
 # ( a u -- )
 colon 'erase'
 # 0 -> m[a++],  u times
-   code 'for ((;s[-1]--;)); do'
-   code '((m[s[-2]++] = 0))'
+   code '((s1=s[-1], s2=s[-2]))'
+   atom 'drop'
+   atom 'drop'
+   code 'for ((;s1--;)); do'
+   code '((m[s2++]=0))'
    code 'done'
-   atom 'drop'
-   atom 'drop'
 semicolon
 
-
+# 1.8 -> 1.45
 # ( a1 a2 u -- )
 move()  {                                                            # deals with destination overlapping source
-   ((tmp=s[-1]))
+   ((s1=s[-1], s2=s[-2], s3=s[-3]))
    unset "s[-1]"
-   if ((s[-2] < s[-1])); then                                        # copy highest to lowest:
-      ((s[-1]+=tmp, s[-2]+=tmp))                                     # m[--a1+u} -> m[--a2+u],  u times
-      for ((;tmp--;)); do
-         ((m[--s[-1]] = m[--s[-2]]))
+   unset "s[-1]"
+   unset "s[-1]"
+   if ((s3 < s2)); then                                              # copy highest to lowest:
+      ((s2+=s1, s3+=s1))                                             # m[--a1+u} -> m[--a2+u],  u times
+      for ((;s1--;)); do
+         ((m[--s2] = m[--s3]))
       done
    else                                                              # copy lowest tio highest
-      for ((;tmp--;)); do                                            # m[a1++} -> m[a2++],  u times
-         ((m[s[-1]++] = m[s[-2]++]))
+      for ((;s1--;)); do                                             # m[a1++} -> m[a2++],  u times
+         ((m[s2++] = m[s3++]))
       done
    fi
-   unset "s[-1]"
-   unset "s[-1]"
 }
 
 # ( a1 a2 u -- )
@@ -1095,9 +1049,9 @@ inline
 remagic
 
 colon 'if'
-   code 'code "((tmp = s[-1]))"'                                     # can't use atoms here yet
+   code 'code "((s1 = s[-1]))"'                                     # can't use atoms here yet
    code 'code "unset \"s[-1]\""'
-   code 'code "if ((tmp)); then"'
+   code 'code "if ((s1)); then"'
    code "s+=(\"\${#body[@]}\" \"$magic\")"                           # allow check of structure and empty function
 semicolon
 immediate
@@ -1214,8 +1168,8 @@ semicolon
 immediate
 
 colon '?leave'
-   code "code 'tmp=\"\${s[-1]}\"; unset \"s[-1]\"'"
-   code 'code "((tmp))&&break"'
+   code "code 's1=\"\${s[-1]}\"; unset \"s[-1]\"'"
+   code 'code "((s1))&&break"'
 semicolon
 immediate
 
@@ -1242,10 +1196,10 @@ immediate
 colon '+loop'
    code "((s[-1] == $magic))||unstructured 'do'"
    atom 'drop'
-   code 'code "((tmp=s[-1]))"'
+   code 'code "((s1=s[-1]))"'
    code 'code "unset \"s[-1]\""'
-   code 'code "((i+=tmp))"'
-   code 'code "((((ibar-(tmp<msb)-i)^tmp)&msb))&&break"'
+   code 'code "((i+=s1))"'
+   code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
    code 'code "done"'
    code "code 'ibar=\"\${r[-1]}\"'"
    code 'code "unset \"r[-1]\""'
@@ -1257,33 +1211,33 @@ immediate
 
 # compiled version: skip until end of word on false
 colon 'lest'
-   code 'code "tmp=\"\${s[-1]}\""'
+   code 'code "s1=\"\${s[-1]}\""'
    code 'code "unset \"s[-1]\""'
-   code 'code "((tmp))||return" '
+   code 'code "((s1))||return" '
 semicolon
 immediate    # compile only are inherently immediate
 
 # interpreted version: skip rest of line when false
 colon 'lest'
-   code 'tmp="${s[-1]}"'
+   code 's1="${s[-1]}"'
    code 'unset "s[-1]"'
-   code '((tmp))||line=""'
+   code '((s1))||line=""'
 semicolon
 interactive
 
 # compiled version: skip until end of word on true
 colon 'unless'
-   code 'code "tmp=\"\${s[-1]}\""'
+   code 'code "s1=\"\${s[-1]}\""'
    code 'code "unset \"s[-1]\""'
-   code 'code "((tmp))&&return" '
+   code 'code "((s1))&&return" '
 semicolon
 immediate    # compile only are inherently immediate
 
 # interpreted version: skip rest of line when true
 colon 'unless'
-   code 'tmp="${s[-1]}"'
+   code 's1="${s[-1]}"'
    code 'unset "s[-1]"'
-   code '((tmp))&&line=""'
+   code '((s1))&&line=""'
 semicolon
 interactive
 
@@ -1306,14 +1260,6 @@ colon 'many'
    code 'until read -rsn1 -t 0.01; do evaluate "$line"; done'
    code 'line=""'
 semicolon
-
-
-# the alternative:  repeat line until a key is registered.
-# rest of the line will be executed after key was tapped.
-# sleep 1; clear; df; many
-#colon 'many'
-#   code 'read -rs -t 0.01 || line="$tib"'
-#semicolon
 
 
 colon 'bye'
@@ -1376,6 +1322,7 @@ colon 'parse$'
    code  'ss[-1]="$word"'
 semicolon
 
+# fails when called with ascii 0 for terminator char
 colon 'parse'
    code 'parse "${char[s[-1]]}"'
    atom 'drop'
@@ -1387,7 +1334,7 @@ keybuf=""
 colon 'key'
    code 'if [[ -z "$keybuf" ]]; then'                                # key? may have put chars into keybuf
    code 'IFS="" read -rsn1 tmp'                                      # keybuf empty: read from console
-   code 'keybuf+="${tmp}"'                                           # space if -z $tmp
+   code 'keybuf+="${tmp}"'                                           # consider space if -z $tmp
    code 'fi'
    code 'tmp="${keybuf:0:1}"'                                        # read key from keybuf
    code 'tmp=$(printf "%d" '"\"'""\${tmp}\")"                        # treat ctrls as spaces, convert to ASCII
@@ -1396,10 +1343,10 @@ colon 'key'
 semicolon
 
 colon 'key?'
-   code '[[ -z "$keybuf" ]] || { s+=("-1"); return; }'               # key in keybuf: yes, key waiting
+   code '[[ -z "$keybuf" ]] || { s+=("-1"); return; }'               # key in keybuf: yes, flag "key ready"
    code 'IFS="" read -rsn1 -t0.01 tmp'                               # no key in keybuf: poll console
    code 's+=(-$((! $?)))'                                            # return value reflects key timeout condition
-   code 'keybuf+="$tmp"'                                             # add key to buffer
+   code 'keybuf+="$tmp"'                                             # add key to buffer. maybe add space if -z $tmp
 semicolon
 
 # read line into tib
@@ -1454,19 +1401,19 @@ semicolon
 inline
 
 prompt()  {
-   if ((compiling)); then
+   ((compiling)) && {
       printf "|%-4s" ""                                              # just a vertical bar, then indenting, while compiling
-   else
-      printf " %s" "ok"                                              # ok prompt
-      ((${#s[@]})) &&  {                                             # stack depth > 0?
-         tmp=".........+"                                            # yes: print a dot for each item
-         printf " %s" "${tmp:0:${#s[@]}}"                            # but not more than in $tmp
-      }
-      ((${#headersunresolved[@]})) &&  {                             # unresolved words > 0?
-         printf " (%d)" "${#headersunresolved[@]}"                   # yes: show count
-      }
-      printf "\n"                                                    # finalize with linefeed
-   fi
+      return
+   }
+   printf " %s" "ok"                                                 # ok prompt
+   ((${#s[@]})) &&  {                                                # stack depth > 0?
+      tmp=".........+"                                               # yes: print a dot for each item
+      printf " %s" "${tmp:0:${#s[@]}}"                               # but not more than in $tmp
+   }
+   ((${#headersunresolved[@]})) &&  {                                # unresolved words > 0?
+      printf " (%d)" "${#headersunresolved[@]}"                      # yes: show count
+   }
+   printf "\n"                                                       # finalize with linefeed
 }
 
 colon 'prompt'
@@ -1647,7 +1594,7 @@ colon 'list'
 semicolon
 
 
-# ----- experimental ------------------------ #FOLD00
+# ----- experimental ------------------------ #fold00
 
 colon 'trash'
    code 'word'
@@ -1725,7 +1672,7 @@ semicolon
 # doesn't obey base
 # ( -- x ) (string: $1 -- )
 colon 'convert$'
-   code '((s += ( 10#${ss[-1]} ) ))'
+   code '((s+=(10#${ss[-1]})))'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -1758,3 +1705,9 @@ colon 'recurse'
    code 'code "${headersstateless["$lastword"]}"'
 semicolon
 immediate
+
+# a microseconds epoch, used for benchmarking
+colon 'realtime'
+   code 's+=(${EPOCHREALTIME//,/})'
+semicolon
+inline

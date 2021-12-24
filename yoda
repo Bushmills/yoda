@@ -100,7 +100,8 @@ declare -ai r=() s=() m=()
 declare -a ss=()
 declare -i dp=0
 
-
+declare -i s1 s2 s3 s4                                               # temp variables to hold stack items s[-1] ... s[-4]
+                                                                     # easier to read than "tmp, tmp2"
 declare -Ai flags                                                    # header flags (inline, immediate)
 headerslistlist=(
          "headersstateless"                                          # searched during both interpreting and compiling
@@ -219,7 +220,7 @@ getflag()  {
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #FOLD00
+# ----- errors and diagnostic ---------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -395,9 +396,18 @@ word()  {
 # read string from line and remove it, also remove delimiter.
 # delimiter passed as argument.
 # leading spaces aren't removed from remainder of line.
+# failed when ASCII 0 char was specified as terminator. As
+# it's rather common with Forth to use asc 0 to represent end
+# of line, it receives special treatment here
 parse()  {
+   [[ -z "$1" ]] && {
+      word="$line"
+      line=""
+      return
+   }
    word="${line%%"${1}"*}"
-   line="${line#*"${1}"}"                                            # " unconfuse efte syntax highlighting
+   line="${line#${word}}"                                            # " unconfuse efte syntax highlighting
+   line="${line#$1}"
 }
 
 # ----- create headers ----------------------------------- #fold00
@@ -459,7 +469,7 @@ colon()  {
 #   functionheader                                                   # optimiser may like to know
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 code()  {                                                            # literal code compiler
    trace "$1"
@@ -512,7 +522,7 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
@@ -562,7 +572,7 @@ pattern()  {                                                         # pattern i
          ((compiling)) && {
             code "ss+=('$tmp $word')"                                # compile: compile code to add string to string stack unless compilation was muted
             return 0; }
-         ss+=("$tmp $word")                                           # interpret push string to string stack
+         ss+=("$tmp $word")                                          # interpret push string to string stack
          return 0;
       }
    }
@@ -604,10 +614,10 @@ resolving=0
 # doing so because resolving forward references from postlib may create
 # new forward references, which also need resolving.
 resolve()  {
-   local file
    (( ${#headersunresolved[@]} )) || return                          # only run if unresolved words exist
-   ((resolving)) && return
-   local resolving=1
+   ((resolving)) && return                                           # nesting into resolve doesn't get any more work done -
+   local file                                                        #   we'll resolve anything open, or we don't, no matter
+   local resolving=1                                                 #   how often resolve calls itself. This would only slow down
    for dir in "${libdirs[@]}"; do
       file="$dir/$postlib"                                           # search for postlib in libdir[@] directories
       [[ -f "$file" ]] && break                                      # break when/if found

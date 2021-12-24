@@ -1,5 +1,6 @@
 ### yoda base vocabulary ###
-# ----- populating detokeniser -------------- #fold00
+### yoda base vocabulary ###
+# ----- populating detokeniser -------------- #FOLD00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -41,7 +42,7 @@ atom['rdrop']='unset "r[-1]"'             # --r
 atom["rpop"]='unset "r[-1]"'              # --r
 atom["allot"]='((dp+=s[-1]))'
 
-# ----- colon/semicolon --------------------- #fold00
+# ----- colon/semicolon --------------------- #FOLD00
 
 semicolon()  {
    compile                                                           # compilation is gathered in an array body. Only
@@ -86,7 +87,7 @@ colon 'immediate'                                                    # move head
 semicolon
 
 
-# ----- diagnostics ------------------------- #fold00
+# ----- diagnostics ------------------------- #FOLD00
 
 words()	{
    local headers
@@ -160,7 +161,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #fold00
+# ----- does> ------------------------------- #FOLD00
 #  : myarray  create allot does> + ;
 #  10 myarray foo
 #  5 foo .
@@ -197,7 +198,7 @@ immediate
 
 
 
-# ----- defining words ---------------------- #fold00
+# ----- defining words ---------------------- #FOLD00
 
 # actually works: defining word builder
 data()  {
@@ -247,7 +248,7 @@ colon "array"
 semicolon
 
 
-# ----- compiler and word search related ---- #fold00
+# ----- compiler and word search related ---- #FOLD00
 
 # ( -- 0 | a )
 exists() {
@@ -306,7 +307,7 @@ semicolon
 
 
 
-# ----- misc -------------------------------- #fold00
+# ----- misc -------------------------------- #FOLD00
 
 colon 'noop'
    code ':'
@@ -333,7 +334,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #fold00
+# ----- parameter stack --------------------- #FOLD00
 
 colon 'depth'
    code 's+=("${#s[@]}")'
@@ -429,7 +430,7 @@ colon '-rot'
 semicolon
 inline
 
-# ----- return stack ------------------------ #fold00
+# ----- return stack ------------------------ #FOLD00
 
 colon 'rdepth'
    code 's+=("${#r[@]}")'
@@ -458,7 +459,7 @@ colon 'r>'
 semicolon
 inline
 
-# ----- string stack ------------------------ #fold00
+# ----- string stack ------------------------ #FOLD00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -702,7 +703,7 @@ inline
 # should there be a string holding second stack,
 # allowing to temporarily move strings out of the way?
 
-# ----- bit logic --------------------------- #fold00
+# ----- bit logic --------------------------- #FOLD00
 
 colon 'and'
    code '((s[-2] &= s[-1]))'
@@ -739,7 +740,7 @@ colon rshift
 semicolon
 inline
 
-# ----- comparison -------------------------- #fold00
+# ----- comparison -------------------------- #FOLD00
 
 ((unsigned)) || {
 
@@ -793,7 +794,7 @@ semicolon
 inline
 }
 
-# ----- arithmetics ------------------------- #fold00
+# ----- arithmetics ------------------------- #FOLD00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -917,7 +918,7 @@ semicolon
 inline
 
 
-# ----- memory ------------------------------ #fold00
+# ----- memory ------------------------------ #FOLD00
 
 colon '@'
    atom '@'
@@ -1044,7 +1045,7 @@ colon 'move'
 semicolon
 inline
 
-# ----- flow control ------------------------ #fold00
+# ----- flow control ------------------------ #FOLD00
 
 remagic
 
@@ -1274,7 +1275,7 @@ inline
 immediate
 
 
-# ----- conditional compilation-------------- #fold00
+# ----- conditional compilation-------------- #FOLD00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -1303,7 +1304,7 @@ colon 'exists'
    code 'exists' || error "can't tick data"
 semicolon
 
-# ----- i/o --------------------------------- #fold00
+# ----- i/o --------------------------------- #FOLD00
 
 colon 'ansi'
    code 'printf "\e[%sm" "${s[-1]}"'
@@ -1465,7 +1466,7 @@ colon 'files'
    code 'printf "%s\n"  "${files[@]}"|nl'                            # show list of already included files
 semicolon
 
-# ----- documentation ----------------------- #fold00
+# ----- documentation ----------------------- #FOLD00
 
 
 undoc_template()  {
@@ -1557,7 +1558,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #fold00
+# ----- convenience ------------------------- #FOLD00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=()'
@@ -1594,15 +1595,22 @@ colon 'list'
 semicolon
 
 
-# ----- experimental ------------------------ #fold00
+# ----- experimental ------------------------ #FOLD00
 
 colon 'trash'
    code 'word'
    code 'unset "headersstateless[$word]"'
 semicolon
 
+colon 'review'
+   code 'word'
+   code 'read tmp1 tmp2 _ <<< "${where[$word]}"'
+   code 'lasterror=("${files[tmp1]}" "$tmp2" "1")'
+   code '[[ -z "$tmp1" ]] || ${headersstateless["fix"]}'
+semicolon
 
-# ----- unsorted ---------------------------- #fold00
+
+# ----- unsorted ---------------------------- #FOLD00
 
 colon 'warm'
    code 'warm'

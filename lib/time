@@ -1,0 +1,6 @@
+: time
+        0 parse
+        realtime >r 
+        evaluate$ 
+        realtime r> -
+        . ;

@@ -22,7 +22,7 @@ receive some suggestions here for what to do as second first steps:
    After entering and successful compilation (indicated by no error message, instead
    an "ok" prompt shown), this just compiled word can be decompiled for viewing,
    and executed. To decompile, enter:
-          see hello   
+          see hello
    The bash function that line was translated to is shown, along with a function name
    which is clearly different from how we called it.
    Execute this function by entering:
@@ -53,9 +53,9 @@ receive some suggestions here for what to do as second first steps:
    Try, for an example, this:
            shell on
            many  3 secs  page  df
-   What this will do is: 
+   What this will do is:
            many                      -  repeat remainder of the line until key pressed
-                    
+
                  3 secs              -  pause for 3 seconds
                          page        -  wipe screen and place cursor at start of screen
                                df    -  execute OS command to show device use
@@ -63,7 +63,7 @@ receive some suggestions here for what to do as second first steps:
 
    Note that OS commands can also be executed while shell is off. But as those won't get
    passed on automatically by yoda, they must be marked in a specific way. That's done
-   by prefixing them with a >, as in 
+   by prefixing them with a >, as in
            shell off    ( doesn't really matter, but shows that next line works anyway )
            3 times  >sleep 1; >free
    Rather than passing the whole input line to bash, the ; acts as a command terminator
@@ -83,7 +83,7 @@ receive some suggestions here for what to do as second first steps:
          echo "$var"      \ check result
 
    read a string from bash variable:
-         var="foobar"     \ assign string "foo" to bash variable var	
+         var="foobar"     \ assign string "foo" to bash variable var
          "var" env$       \ read string from var, place on string stack
          4 left$ type$    \ modify, then output string.
 
@@ -95,7 +95,7 @@ receive some suggestions here for what to do as second first steps:
          thus expects the variable name as string on top of string stack.
          env and >env then use the numeric stack for data i/o, while
          env$ and >env$ fetch and place data from and on string stack.
-         
+
 
 4. loading a from file:
          the word "from" is used for reading yoda source. Contrary to inclusion of
@@ -123,6 +123,8 @@ receive some suggestions here for what to do as second first steps:
                4 list
          Should you want to open it in the configured editor, enter:
                4 edit
+         Any word compiled from file can be opened in the editor:
+               review boot    ( or whatever word you may be interested in instead )
 
 6. "My head is smoking - how do I exit?"
 	 execute:  bye

@@ -1,6 +1,7 @@
 forwardrefs @
 forwardrefs on
 
+
 u: quit  ( -- )
    warm
    #10 base !
@@ -9,6 +10,7 @@ u: quit  ( -- )
       evaluate
       prompt
    again ;
+
 
 u: .  ( n -- )
    maxuint and                    \ reduce to relevant bits
@@ -33,11 +35,11 @@ u: digit ( u -- c )
    dup '9' >
    39 and + ;
 
-u: decimal  #10 base !  ;
-u: hex      #16 base !  ;
-u: binary     2 base !  ;
-
-u: epoch "EPOCHSECONDS" env ;
+u: decimal  ( -- )    #10 base !  ;
+u: hex      ( -- )    #16 base !  ;
+u: binary   ( --  )     2 base !  ;
+u: type     ( a u -- )  pack$ type$  ;
+u: epoch    ( -- u ) "EPOCHSECONDS" env  ;
 
 needed dump lest from dump
 needed fg needed bg or needed attr or lest from ansi
@@ -45,7 +47,7 @@ needed fg needed bg or needed attr or lest from ansi
 
 \ below are only words for forward refs testing
 u: fwd     fwd1         \ depend on words which build forward referencing
-           backw1 ;     \ chains in both directions (u: compiles conditionally, 
+           backw1 ;     \ chains in both directions (u: compiles conditionally,
                         \ only when a word has been marked as needed)
 
 u: fwd1    fwd2   ;     \ new forward refs are added, but resolved in the same pass

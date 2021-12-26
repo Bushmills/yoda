@@ -1,5 +1,4 @@
 ### yoda base vocabulary ###
-### yoda base vocabulary ###
 # ----- populating detokeniser -------------- #FOLD00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -161,7 +160,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #FOLD00
+# ----- does> ------------------------------- #fold00
 #  : myarray  create allot does> + ;
 #  10 myarray foo
 #  5 foo .
@@ -267,6 +266,16 @@ exists() {
 }
 
 
+# factor code common with header
+# ' foo alias bar
+colon 'alias'
+   code 'word'
+   code 'where["$word"]="$filenr $linenr"'                           # remember file and line nr
+   code 'headersstateless["$word"]="${header_code}_${s[-1]}"'
+   code 'flags["$word"]="0"'                                         # default to no flags
+   atom 'drop'
+semicolon
+
 tick()  {
    local headers                                                     # meant to spare me from saving and restoring vectored headers variable
    exists || error "can't tick data"
@@ -295,7 +304,8 @@ colon ']'
 semicolon
 
 colon 'literal'
-   code 'restricted || { code "s+=(\"${s[-1]}\")"; unset "s[-1]"; }'
+   code 'restricted || { code "s+=(\"${s[-1]}\")"'
+   code 'unset "s[-1]"; }'
 semicolon
 immediate
 
@@ -307,7 +317,7 @@ semicolon
 
 
 
-# ----- misc -------------------------------- #FOLD00
+# ----- misc -------------------------------- #fold00
 
 colon 'noop'
    code ':'
@@ -334,7 +344,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #FOLD00
+# ----- parameter stack --------------------- #fold00
 
 colon 'depth'
    code 's+=("${#s[@]}")'
@@ -430,7 +440,7 @@ colon '-rot'
 semicolon
 inline
 
-# ----- return stack ------------------------ #FOLD00
+# ----- return stack ------------------------ #fold00
 
 colon 'rdepth'
    code 's+=("${#r[@]}")'
@@ -703,7 +713,7 @@ inline
 # should there be a string holding second stack,
 # allowing to temporarily move strings out of the way?
 
-# ----- bit logic --------------------------- #FOLD00
+# ----- bit logic --------------------------- #fold00
 
 colon 'and'
    code '((s[-2] &= s[-1]))'
@@ -794,7 +804,7 @@ semicolon
 inline
 }
 
-# ----- arithmetics ------------------------- #FOLD00
+# ----- arithmetics ------------------------- #fold00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -889,7 +899,8 @@ inline
 
 
 colon 'abs'
-   code '((s[-1] *= (((0<s[-1])-1)|1)))'
+#   code '((s[-1] *= (((0<s[-1])-1)|1)))'
+    code '((s[-1]&msb))&&((s[-1]*=-1))'
 semicolon
 inline
 
@@ -1061,7 +1072,7 @@ colon 'else'
    code "(( s[-1]++ == \"$magic\" )) || unstructured 'if'"
    code '(( s[-2] == ${#body[@]} )) && code ":"'
    code 'code "else"'
-   code 's[-2]="${#body[@]}"'
+   code '((s[-2]="${#body[@]}"))'
 semicolon
 immediate
 
@@ -1147,13 +1158,15 @@ colon 'next'
    code '((s[-1] == ${#body[@]})) && code ":"'
    atom 'drop'
    code 'code "done"'
-   code "code 'i=\"\${r[-1]}\"'"
+#   code "code 'i=\"\${r[-1]}\"'"
+   code "code '((i=r[-1]))'"
    code 'code "unset \"r[-1]\""'
 semicolon
 immediate
 
 
 remagic
+
 dodo()  {
    r+=("$ibar")
    r+=("$i")
@@ -1162,17 +1175,6 @@ dodo()  {
    ((ibar=s[-1]))
    unset "s[-1]"
 }
-
-colon 'leave'
-   code 'code "break"'
-semicolon
-immediate
-
-colon '?leave'
-   code "code 's1=\"\${s[-1]}\"; unset \"s[-1]\"'"
-   code 'code "((s1))&&break"'
-semicolon
-immediate
 
 colon 'do'
    code 'code "dodo"'
@@ -1186,13 +1188,12 @@ colon 'loop'
    atom 'drop'
    code 'code "((++i < ibar))||break"'
    code 'code "done"'
-   code "code 'i=\"\${r[-1]}\"'"
+   code "code '((i=\"r[-1]\"))'"
    code 'code "unset \"r[-1]\""'
-   code "code 'ibar=\"\${r[-1]}\"'"
+   code "code '((ibar=\"r[-1]\"))'"
    code 'code "unset \"r[-1]\""'
 semicolon
 immediate
-
 
 colon '+loop'
    code "((s[-1] == $magic))||unstructured 'do'"
@@ -1202,12 +1203,25 @@ colon '+loop'
    code 'code "((i+=s1))"'
    code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
    code 'code "done"'
-   code "code 'ibar=\"\${r[-1]}\"'"
+   code "code '((ibar=\"r[-1]\"))'"
    code 'code "unset \"r[-1]\""'
-   code "code 'i=\"\${r[-1]}\"'"
+   code "code '((i=\"r[-1]\"))'"
    code 'code "unset \"r[-1]\""'
 semicolon
 immediate
+
+colon 'leave'
+   code 'code "break"'
+semicolon
+immediate
+
+colon '?leave'
+   code "code 's1=\"\${s[-1]}\"'"
+   code 'unset \"s[-1]\"'
+   code 'code "((s1))&&break"'
+semicolon
+immediate
+
 
 
 # compiled version: skip until end of word on false
@@ -1220,7 +1234,7 @@ immediate    # compile only are inherently immediate
 
 # interpreted version: skip rest of line when false
 colon 'lest'
-   code 's1="${s[-1]}"'
+   code '((s1="s[-1]"))'
    code 'unset "s[-1]"'
    code '((s1))||line=""'
 semicolon
@@ -1236,7 +1250,7 @@ immediate    # compile only are inherently immediate
 
 # interpreted version: skip rest of line when true
 colon 'unless'
-   code 's1="${s[-1]}"'
+   code '((s1="s[-1]"))'
    code 'unset "s[-1]"'
    code '((s1))&&line=""'
 semicolon
@@ -1275,7 +1289,7 @@ inline
 immediate
 
 
-# ----- conditional compilation-------------- #FOLD00
+# ----- conditional compilation-------------- #fold00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -1466,7 +1480,7 @@ colon 'files'
    code 'printf "%s\n"  "${files[@]}"|nl'                            # show list of already included files
 semicolon
 
-# ----- documentation ----------------------- #FOLD00
+# ----- documentation ----------------------- #fold00
 
 
 undoc_template()  {
@@ -1558,7 +1572,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #FOLD00
+# ----- convenience ------------------------- #fold00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=()'
@@ -1602,14 +1616,6 @@ colon 'trash'
    code 'unset "headersstateless[$word]"'
 semicolon
 
-colon 'review'
-   code 'word'
-   code 'read tmp1 tmp2 _ <<< "${where[$word]}"'
-   code 'lasterror=("${files[tmp1]}" "$tmp2" "1")'
-   code '[[ -z "$tmp1" ]] || ${headersstateless["fix"]}'
-semicolon
-
-
 # ----- unsorted ---------------------------- #FOLD00
 
 colon 'warm'
@@ -1648,11 +1654,12 @@ inline
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
    code 's+=("${!ss[-1]}")'
+   code 'unset "ss[-1]"'
 semicolon
 inline
 
 # store $1 in bash environment variable with name $2
-# ( x -- ) ( string:  $1-- )
+# ( x -- ) ( string:  $1 -- )
 colon '>env'
    code 'eval "${ss[-1]}=${s[-1]}"'
    code 'unset "ss[-1]"'

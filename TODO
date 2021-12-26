@@ -6,7 +6,8 @@
 - add context vocabularies to selected searches (only undoc remaining)
 
 --- general todos, improvements, fancyness
-- "fix" for opening file at error location in editor.
+- while "review" is functional, its implementation is a bit messy,
+  specifically the way primitives store their location information.
 - a "needed" for testing a list of words rather than just a single word
 - string operations based on search and match are mostly absent.
   index / index$ might cover a lot already. cut$ was added

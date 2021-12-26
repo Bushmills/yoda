@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -62,7 +62,7 @@ version=0  subversion=1    # 2021dec20,14:57
 # shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
                                                                      #  right, that's the reason for using single quotes there.
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 
@@ -122,7 +122,27 @@ lasterror=("" "-1" "0")
 flagscount="0"
 inline=$((1<<flagscount++))                                          # compile function code rather than calls to function
 
-# ----- compiler muting ---------------------------------- #FOLD00
+
+#  bits
+#  0-3   stack in    0..14, 1111=unknown or not applicable
+#  4-7   stack out   -8..6, 1111=unknown or not applicable
+#        function header   needed?
+#        atomic (code tokens, need replacement against real code)
+#        data   (literal)
+#        data   (ref)
+#        flow control
+# all 0: don't optimise, copy literal code
+analyserflag="8"                                                     # skip stack effect indicators
+functionheader="$((1<<analyserflag++))"
+inlined="$((1<<analyserflag++))"
+atomiccode="$((1<<analyserflag++))"
+literalcode="$((1<<analyserflag++))"
+literalnumber="$((1<<analyserflag++))"
+literalstring="$((1<<analyserflag++))"
+flowcontrol="$((1<<analyserflag++))"
+
+
+# ----- compiler muting ---------------------------------- #fold00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -185,7 +205,7 @@ done
 #   underscore='4'
 #   reverse='7'
 
-# ----- read and write target vars ----------------------- #FOLD00
+# ----- read and write target vars ----------------------- #fold00
 # target vars are those defined in programs. Therefore provisions
 # for those not existing are included. Defaults are supplied for
 # such cases.
@@ -222,7 +242,7 @@ getflag()  {
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #FOLD00
+# ----- errors and diagnostic ---------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -306,7 +326,51 @@ trap ctrl-c SIGINT
 
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+
+
+# ----- headers ------------------------------------------ #fold00
+
+#setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
+                                                                     # some array keys like "'".
+setheaderflag()  {                                                   # where against this form has no problem with those,
+   flags["$lastword"]="$(( ${flags["$lastword"]} | "$1" ))"
+}
+inline()     { setheaderflag "$inline" ; }
+
+# move header to compiler context vocabulary
+immediate()  {
+   headerscompileonly["$lastword"]="${headersstateless["$lastword"]}"
+   unset -v 'headersstateless["$lastword"]'
+}
+
+# move header to interpreter context vocabulary
+interactive()   {
+   headersinterpretonly["$lastword"]="${headersstateless["$lastword"]}"
+   unset -v 'headersstateless["$lastword"]'
+}
+
+
+# create header, but don't compile, and don't generate function yet.
+# compiling (that is, creating a bash function) is left to semicolon, calling compile
+# won't detect redefinition if word was moved to contect vocabulary
+# arg1: word
+# arg2: name
+header()  {
+   lastword="$1"                                                     # global variable. setting header flags needs this one
+   (( linenr < 0 )) ||                                               # not entered at keyboard
+      where["$lastword"]="$filenr $linenr"                           # remember file and line nr
+   [[ -z "${headersstateless["$1"]}" ]] ||  {
+      [[ ${headersstateless["$1"]} == "${header_code}_"* ]] && echo "redefining $1"
+   }
+   headersstateless["$1"]="$2"                                       # associate word with name
+   flags["$1"]="0"                                                   # default to no flags
+   body=()                                                           # reinitialise code buffer
+   analyser=()                                                       # reinitialise code tags for analyser
+}
+
+
+
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -317,24 +381,6 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 #    before writing then to array target.
 #    compile then creates the bash function from target, which
 #    at that point is expected to contain literal code only.
-
-#  bits
-#  0-3   stack in    0..14, 1111=unknown or not applicable
-#  4-7   stack out   -8..6, 1111=unknown or not applicable
-#        function header   needed?
-#        atomic (code tokens, need replacement against real code)
-#        data   (literal)
-#        data   (ref)
-#        flow control
-# all 0: don't optimise, copy literal code
-analyserflag="8"                                                     # skip stack effect indicators
-functionheader="$((1<<analyserflag++))"
-inlined="$((1<<analyserflag++))"
-atomiccode="$((1<<analyserflag++))"
-literalcode="$((1<<analyserflag++))"
-literalnumber="$((1<<analyserflag++))"
-literalstring="$((1<<analyserflag++))"
-flowcontrol="$((1<<analyserflag++))"
 
 
 # sets analyser flag(s) arg1 for last code/atom compiled instruction.
@@ -374,10 +420,14 @@ optimise()  {                                                        # run code 
 
       (( analyser[tmp] )) && {                                       # proven wrong. something will be done.
 
-#        (( analyser[tmp] & functionheader )) &&  {                  # test attempting to delegate header creation to detokeniser
-#           pretend "create function header for $lastword, targetline=$targetline, dp=$dp, compiling=$compiling, derestricted=$derestricted"
-#           continue
-#        }
+# only pretending anyway right now, real headers are
+# still defined in advance of compilation.
+#
+# preparing to delegate header creation to detokeniser
+        (( analyser[tmp] & functionheader )) &&  {                  # test attempting to delegate header creation to detokeniserr
+#           pretend "create function header for $lastword at body line $tmp"
+           continue
+        }
 
          bodyline="$targetline"
          (( analyser[tmp] & atomiccode )) &&  {                      # pretend optimiser. only replace atoms against code now
@@ -389,7 +439,37 @@ optimise()  {                                                        # run code 
    done
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+
+# ----- defining words ----------------------------------- #FOLD00
+
+create()  {
+   [[ -z "$1" ]] && emptyname
+   name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
+   header "$1" "$name"
+   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+   [[ -z "$linenr" ]] &&
+      where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
+}
+
+
+colon()  {
+   [[ -z "$1" ]] && emptyname
+   if [[ -z "${headersunresolved["$1"]}" ]]; then                    # check whether word is an unresolved forward reference
+      name="${header_code}_$((nextname++))"                          # prefix function names will avoid effect described on next line
+   else                                                              # created word will resolve forward reference(s)
+      name="${headersunresolved[$1]}"                                # as word name use name of forward reference
+      unset "headersunresolved[$1]"                                  # remove forward reference
+      log "resolving: $1"
+   fi
+   header "$1" "$name"
+   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+   [[ -z "$linenr" ]] &&
+      where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
+   compiling=1
+}
+
+
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -424,76 +504,7 @@ parse()  {
    line="${line#$1}"
 }
 
-# ----- create headers ----------------------------------- #FOLD00
-
-#setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
-                                                                     # some array keys like "'".
-setheaderflag()  {                                                   # where against this form has no problem with those,
-   flags["$lastword"]="$(( ${flags["$lastword"]} | "$1" ))"
-}
-inline()     { setheaderflag "$inline" ; }
-
-# move header to compiler context vocabulary
-immediate()  {
-   headerscompileonly["$lastword"]="${headersstateless["$lastword"]}"
-   unset -v 'headersstateless["$lastword"]'
-}
-
-# move header to interpreter context vocabulary
-interactive()   {
-   headersinterpretonly["$lastword"]="${headersstateless["$lastword"]}"
-   unset -v 'headersstateless["$lastword"]'
-}
-
-# create header, but don't compile, and don't generate function yet.
-# compiling (that is, creating a bash function) is left to semicolon, calling compile
-# won't detect redefinition if word was moved to contect vocabulary
-# arg1: word
-# arg2: name
-header()  {
-   lastword="$1"                                                     # global variable. setting header flags needs this one
-   (( linenr < 0 )) ||                                               # not entered at keyboard
-      where["$lastword"]="$filenr $linenr"                           # remember file and line nr
-   [[ -z "${headersstateless["$1"]}" ]] ||  {
-      [[ ${headersstateless["$1"]} == "${header_code}_"* ]] && echo "redefining $1"
-   }
-   headersstateless["$1"]="$2"                                       # associate word with name
-   flags["$1"]="0"                                                   # default to no flags
-   body=()                                                           # reinitialise code buffer
-   analyser=()                                                       # reinitialise code tags for analyser
-}
-
-
-create()  {
-   [[ -z "$1" ]] && emptyname
-   name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
-   header "$1" "$name"
-   [[ -z "$linenr" ]] &&                                             # from primitive:
-   where["$lastword"]="0 ${BASH_LINENO}"                             # remember file and line number
-#  general header                                                    # possibly optimiser is interested in this
-}
-
-
-colon()  {
-   if [[ -z "${headersunresolved["$1"]}" ]]; then                    # check whether word is an unresolved forward reference
-      create "$1"  "$header_code"                                    # no: create header with a new name
-      [[ -z "$linenr" ]] &&                                          # from primitive:
-      where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
-   else
-      name="${headersunresolved[$1]}"                                # yes: create header with name of forward reference
-      unset "headersunresolved[$1]"                                  # remove forward reference
-      header "$1" "$name"
-      compiling=1
-      log "resolved: $1"
-   fi
-#   body+=("dummyheader")
-#   analyser+=("$functionheader")
-#   put header into body
-#   tell optimizer to deal with it
-#   functionheader                                                   # optimiser may like to know
-}
-
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # arg1: code token, arg2: code token type (opt)
 code()  {                                                            # literal code compiler
@@ -512,23 +523,25 @@ code()  {                                                            # literal c
 #  - compile time instructions for word creation, such as header building
 atom()  { code "$1" "$atomiccode"; }                                 # insert into code buffer, mark as atom
 
-#codebody()  {                                                        # inline compiler
-#   type "$1" | sed -n '/^ /{s/^ *//g;p}' |
-#   while read -r tmp; do
-#      echo "inlining;: [$tmp]"
-#      code "$tmp" "$inlined"
-#   done
-#}
-
 codebody()  {                                                        # inline compiler
-   body+=(
-         "$(
-             type "$1" |
-             sed -n '/^ /{s/^ *//g;p}'
-          )"
-        )
-   analyser+=("$inlined")
+   while read -r tmp; do
+      [[ "${tmp:0:1}" == "{" ]] &&
+      while read -r tmp; do
+         [[ "${tmp:0:1}" == "}" ]] && break
+         code "$tmp" "$inlined"
+      done
+   done < <(type "$1")
 }
+
+#codebody()  {                                                        # inline compiler
+#   body+=(
+#         "$(
+#             type "$1" |
+#             sed -n '/^ /{s/^ *//g;p}'
+#          )"
+#        )
+#   analyser+=("$inlined")
+#}
 
 compile()  {                                                         # build new function from code in body array
    restricted || {
@@ -550,7 +563,7 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
@@ -669,7 +682,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #FOLD00
+# ----- line interpreter --------------------------------- #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 

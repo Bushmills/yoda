@@ -62,7 +62,7 @@ version=0  subversion=1    # 2021dec20,14:57
 # shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
                                                                      #  right, that's the reason for using single quotes there.
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 
@@ -142,7 +142,7 @@ literalstring="$((1<<analyserflag++))"
 flowcontrol="$((1<<analyserflag++))"
 
 
-# ----- compiler muting ---------------------------------- #fold00
+# ----- compiler muting ---------------------------------- #FOLD00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -205,7 +205,7 @@ done
 #   underscore='4'
 #   reverse='7'
 
-# ----- read and write target vars ----------------------- #fold00
+# ----- read and write target vars ----------------------- #FOLD00
 # target vars are those defined in programs. Therefore provisions
 # for those not existing are included. Defaults are supplied for
 # such cases.
@@ -242,7 +242,7 @@ getflag()  {
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #fold00
+# ----- errors and diagnostic ---------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -328,7 +328,7 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 
 
 
-# ----- headers ------------------------------------------ #fold00
+# ----- headers ------------------------------------------ #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -370,7 +370,7 @@ header()  {
 
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -426,6 +426,13 @@ optimise()  {                                                        # run code 
 # preparing to delegate header creation to detokeniser
         (( analyser[tmp] & functionheader )) &&  {                  # test attempting to delegate header creation to detokeniserr
 #           pretend "create function header for $lastword at body line $tmp"
+
+# body[tmp]: "word name"
+# analyser[tmp]
+
+#           tmp2="${body[tmp]}"
+#           header "${tmp2% *}" "${tmp2#* }"
+#echo "optimise created header $tmp2"
            continue
         }
 
@@ -446,9 +453,17 @@ create()  {
    [[ -z "$1" ]] && emptyname
    name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
    header "$1" "$name"
-   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+
+#   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+#   code "$1 $name" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+#   lastword="$1"                                                     # global variable. setting header flags needs this one
+#   body=()                                                           # reinitialise code buffer
+#   analyser=()                                                       # reinitialise code tags for analyser
+
    [[ -z "$linenr" ]] &&
       where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
+
+
 }
 
 
@@ -462,10 +477,17 @@ colon()  {
       log "resolving: $1"
    fi
    header "$1" "$name"
-   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+
+#   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+#   code "$1 $name" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+#   lastword="$1"                                                     # global variable. setting header flags needs this one
+#   body=()                                                           # reinitialise code buffer
+#   analyser=()                                                       # reinitialise code tags for analyser
+
    [[ -z "$linenr" ]] &&
       where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
    compiling=1
+
 }
 
 
@@ -504,7 +526,7 @@ parse()  {
    line="${line#$1}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # arg1: code token, arg2: code token type (opt)
 code()  {                                                            # literal code compiler
@@ -643,7 +665,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -682,7 +704,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -770,7 +792,7 @@ trace "line=[$line]"
    done
 }
 
-# ----- read source -------------------------------------- #fold00
+# ----- read source -------------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.

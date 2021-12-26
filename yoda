@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -62,7 +62,7 @@ version=0  subversion=1    # 2021dec20,14:57
 # shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
                                                                      #  right, that's the reason for using single quotes there.
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 
@@ -71,6 +71,7 @@ trace=0                                                              # turn chat
 log=0                                                                # turn logging on
 break=2                                                              # break will return (0), exit (1) or execute coldvector (2)
 clean=1                                                              # empty stack on error/ctrl-c
+codedump=0
 
 primitives="primitives.sh"                                           # yoda primitives, utilities, detokeniser table
 prelib="prelib"                                                      # yoda source loaded before program
@@ -112,6 +113,7 @@ for tmp in "${headerslistlist[@]}"; do
    declare -A "$tmp"
 done
 declare -A headersunresolved                                         # forward referenced. Not searched.
+declare -A where                                                     # source file, line
 
 declare -a lasterror
 lasterror=("" "-1" "0")
@@ -120,7 +122,7 @@ lasterror=("" "-1" "0")
 flagscount="0"
 inline=$((1<<flagscount++))                                          # compile function code rather than calls to function
 
-# ----- compiler muting ---------------------------------- #fold00
+# ----- compiler muting ---------------------------------- #FOLD00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -183,7 +185,7 @@ done
 #   underscore='4'
 #   reverse='7'
 
-# ----- read and write target vars ----------------------- #fold00
+# ----- read and write target vars ----------------------- #FOLD00
 # target vars are those defined in programs. Therefore provisions
 # for those not existing are included. Defaults are supplied for
 # such cases.
@@ -220,7 +222,7 @@ getflag()  {
    return "$tmp"
 }
 
-# ----- errors and diagnostic ---------------------------- #fold00
+# ----- errors and diagnostic ---------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -304,7 +306,7 @@ trap ctrl-c SIGINT
 
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -327,18 +329,12 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 # all 0: don't optimise, copy literal code
 analyserflag="8"                                                     # skip stack effect indicators
 functionheader="$((1<<analyserflag++))"
-functionheader="0"
+inlined="$((1<<analyserflag++))"
 atomiccode="$((1<<analyserflag++))"
+literalcode="$((1<<analyserflag++))"
+literalnumber="$((1<<analyserflag++))"
+literalstring="$((1<<analyserflag++))"
 flowcontrol="$((1<<analyserflag++))"
-literal="$((1<<analyserflag++))"
-
-# for debugging only:
-analysername=()
-analysername[functionheader]="Function header"
-analysername[atomiccode]="atom"
-analysername[flowcontrol]="flow control"
-analysername[literal]="literal"
-
 
 
 # sets analyser flag(s) arg1 for last code/atom compiled instruction.
@@ -358,24 +354,42 @@ analyserflag()  {
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
 optimise()  {                                                        # run code generator on ${analyser[@]} data, as provided by primitives.
+   ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
+
    target=()
 #   corresponding=()                                                 # index array source line to target line.
+
+((codedump))&& {
+   echo ": $lastword"
+   for ((tmp=0; tmp<${#body[@]}; tmp++)); do
+      printf "%2d %-5s %s\n" "$tmp" "${analyser[tmp]}" "${body[tmp]}"
+   done
+   echo "------------------------------------------------"
+}
+
    for ((tmp=0; tmp<${#body[@]}; tmp++)); do
 #      corresponding[tmp]="${#target[@]}"                            # allow optimiser to locate target code for any source line.
                                                                      # needed for post mod or removal
       targetline="${body[tmp]}"                                      # assume no optimsation will take place
+
       (( analyser[tmp] )) && {                                       # proven wrong. something will be done.
+
+#        (( analyser[tmp] & functionheader )) &&  {                  # test attempting to delegate header creation to detokeniser
+#           pretend "create function header for $lastword, targetline=$targetline, dp=$dp, compiling=$compiling, derestricted=$derestricted"
+#           continue
+#        }
+
          bodyline="$targetline"
-trace "analyser=${analysername[${analyser[tmp]}]} at body pos $tmp of $lastword: ${body[tmp]}"
          (( analyser[tmp] & atomiccode )) &&  {                      # pretend optimiser. only replace atoms against code now
             targetline="${atom[${bodyline}]}"
          }
+
       }
       target+=("$targetline")
    done
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -410,7 +424,7 @@ parse()  {
    line="${line#$1}"
 }
 
-# ----- create headers ----------------------------------- #fold00
+# ----- create headers ----------------------------------- #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -438,6 +452,8 @@ interactive()   {
 # arg2: name
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
+   (( linenr < 0 )) ||                                               # not entered at keyboard
+      where["$lastword"]="$filenr $linenr"                           # remember file and line nr
    [[ -z "${headersstateless["$1"]}" ]] ||  {
       [[ ${headersstateless["$1"]} == "${header_code}_"* ]] && echo "redefining $1"
    }
@@ -452,6 +468,8 @@ create()  {
    [[ -z "$1" ]] && emptyname
    name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
    header "$1" "$name"
+   [[ -z "$linenr" ]] &&                                             # from primitive:
+   where["$lastword"]="0 ${BASH_LINENO}"                             # remember file and line number
 #  general header                                                    # possibly optimiser is interested in this
 }
 
@@ -459,6 +477,8 @@ create()  {
 colon()  {
    if [[ -z "${headersunresolved["$1"]}" ]]; then                    # check whether word is an unresolved forward reference
       create "$1"  "$header_code"                                    # no: create header with a new name
+      [[ -z "$linenr" ]] &&                                          # from primitive:
+      where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
    else
       name="${headersunresolved[$1]}"                                # yes: create header with name of forward reference
       unset "headersunresolved[$1]"                                  # remove forward reference
@@ -466,15 +486,20 @@ colon()  {
       compiling=1
       log "resolved: $1"
    fi
+#   body+=("dummyheader")
+#   analyser+=("$functionheader")
+#   put header into body
+#   tell optimizer to deal with it
 #   functionheader                                                   # optimiser may like to know
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
+# arg1: code token, arg2: code token type (opt)
 code()  {                                                            # literal code compiler
    trace "$1"
    body+=("$1")
-   analyser+=(0)                                                     # default to no optimiser intervention
+   analyser+=(${2:-0})                                                     # default to no optimiser intervention
 }
 
 # atoms may be:
@@ -485,10 +510,15 @@ code()  {                                                            # literal c
 # enabling it to combine and remove them to target code.
 # in addition are meta directives allowed:
 #  - compile time instructions for word creation, such as header building
-atom()  {
-   code "$1"                                                         # insert into code buffer
-   analyserflag "$atomiccode" "atom"                                 # mark as atom, needing further processing
-}                                                                    # (currently atoms are only substituted against literal code)
+atom()  { code "$1" "$atomiccode"; }                                 # insert into code buffer, mark as atom
+
+#codebody()  {                                                        # inline compiler
+#   type "$1" | sed -n '/^ /{s/^ *//g;p}' |
+#   while read -r tmp; do
+#      echo "inlining;: [$tmp]"
+#      code "$tmp" "$inlined"
+#   done
+#}
 
 codebody()  {                                                        # inline compiler
    body+=(
@@ -497,16 +527,14 @@ codebody()  {                                                        # inline co
              sed -n '/^ /{s/^ *//g;p}'
           )"
         )
-   analyser+=("$functionheader")
+   analyser+=("$inlined")
 }
 
 compile()  {                                                         # build new function from code in body array
    restricted || {
       optimise                                                       # here's the proper place for static code evaluation.
       name="${headersstateless["$lastword"]}"                        #   but code needs to provide more clues about its semantics
-      eval "$name() {                                                #   without such, some peepholing may still be possible.
-         $(printf '%s\n' "${target[@]}")                             #   considering to introduce late translation of primitives here,
-      }"                                                             #   to aid both coding and optimising.
+      eval "$name() { $(printf '%s\n' "${target[@]}"); }"            #   to aid both coding and optimising.
    }
 }
 
@@ -522,7 +550,7 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
@@ -552,19 +580,25 @@ pattern()  {                                                         # pattern i
       [[ ${word} == ^[a-z] ]] && {                                   # ^X        return control char
          read -r tmp < <(printf "%d" "'${word:1:1}")
          stateless "s+=(\"$((tmp&31))\")"; return 0; }
-      [[ "${word:0:1}${word:0-1}" == '""' ]] && {                    # quoted string, single word
+   }
+# other patterns, especially those doing parsing or modifying line, must partially execute
+
+# while only single word, this may not be skipped during
+# code muting, or multi word double quote register a
+# false match and parses to line end.
+   [[ "${word:0:1}${word:0-1}" == '""' ]] && {                       # quoted string, single word
+      restricted && return 0
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
          ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
             code  "ss+=('${word:1:${#word}-2}')"                     # But variable expansion take place in interpreted branch.
-            return 0; }                                              # Both requirements are hard to formulate in one common version.
+            return 0                                                 # Both requirements are hard to formulate in one common version.
+         }
          ss+=("${word:1:${#word}-2}")
-         return 0; }
+         return 0
       }
    }
-# other patterns, especially those doing parsing or modifying line, must partially execute
    [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
       line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
-
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
@@ -635,7 +669,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -730,9 +764,13 @@ trace "line=[$line]"
 # file, possible with path, must exist, or no go.
 # Callers did a check prior to calling.
 from()  {
-   local line lines linenr file word                                 # must protect for nested froms.
+   local line lines linenr file filenr word                          # must protect for nested froms.
    local stackeffect="${#s[@]}"                                      # included files must have net stack effect of 0
-   file="$(realpath $1)"
+   file="$(realpath $1)"                                             # canonical name of the file
+   for ((filenr=0; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed here, those files won't be recorded multiple times
+      [[ "${files[filenr]}" == "$file" ]] && break                   # so when already recorded, break out
+   done
+   (( filenr < ${#files[@]} )) ||  { files+=("$file"); }             # first time inclusion: add to files array
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
@@ -745,11 +783,6 @@ from()  {
       log "$1"
       resolve                                                        # only resolve on bottom level, to prevent endless recursion
    }
-   tmp=$(realpath "$1")                                              # canonical name of the definite file
-   for file in "${files[@]}"; do                                     # while multiple inclusion is allowed here, those files won't be recorded multiple times
-      [[ "$tmp" == "$file" ]] && return                              # so when already recorded, break out
-   done
-   files+=("$tmp")                                                   # first time inclusion: add to files array
 }
 
 configuration()  {
@@ -770,7 +803,10 @@ configuration()  {
       [[ -f "$file" ]] && break                                      # break when/if found
    done
 # shellcheck source=./primitives.sh
-   [[ -f "$file" ]] && source "$file"                                # found primitives? include primitives
+   [[ -f "$file" ]] && {
+      files=("$file")
+      source "$file"                                                 # found primitives? include primitives
+   }
 #--------------------------------------
    for dir in "${libdirs[@]}"; do                                    # include a library before loading source?
       file="$dir/$prelib"                                            # search for prelib in libdir[@] directories

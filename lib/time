@@ -1,6 +1,9 @@
-: time
-        0 parse
-        realtime >r 
-        evaluate$ 
-        realtime r> -
-        . ;
+\ use:   time command(s)
+\ measures and outputs time to execute command(s), unit is microseconds.
+: time  ( -- )
+        0 parse               \ read rest of input line
+        realtime >r           \ remember time now
+        evaluate$             \ execute input line
+        realtime r> -         \ subtract previously save time from now
+        u. ;                  \ output
+

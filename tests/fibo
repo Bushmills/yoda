@@ -12,5 +12,6 @@ need .
          i fibo . cr
       loop  ;
 
+resolve
 16 fibos
 see fibo

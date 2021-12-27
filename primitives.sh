@@ -14,27 +14,28 @@ atom["dup"]='s+=("s[-1]")'                # push_s1
 atom["over"]='s+=("s[-2]")'               # push_s2
 atom["pluck"]='s+=("s[-3]")'              # push_s3
 atom["drop"]='unset "s[-1]"'              # pop
-atom["@"]='s[-1]=m[s[-1]]'                # s1=(s1)
+atom["@"]='((s[-1]=m[s[-1]]))'            # s1=(s1)
 atom["1+"]='((s[-1]++))'                  # s1++
 atom["1-"]='((s[-1]--))'                  # s1--
 atom["2*"]='((s[-1]*=2))'
 atom["2/"]='((s[-1]/=2))'
-atom["s1=tmp"]='s[-1]="tmp"'
-atom["s2=tmp"]='s[-2]="tmp"'
-atom["s3=tmp"]='s[-3]="tmp"'
-atom["s4=tmp"]='s[-4]="tmp"'
-atom["tmp=s1"]='tmp="${s[-1]}"'
-atom["tmp=s2"]='tmp="${s[-2]}"'
-atom["tmp=s3"]='tmp="${s[-3]}"'
-atom["tmp=s4"]='tmp="${s[-4]}"'
-atom["s1=s2"]='s[-1]="s[-2]"'
-atom["s1=s3"]='s[-1]="s[-3]"'
-atom["s2=s1"]='s[-2]="s[-1]"'
-atom["s2=s3"]='s[-2]="s[-3]"'
-atom["s3=s1"]='s[-3]="s[-1]"'
-atom["s3=s2"]='s[-3]="s[-2]"'
-atom["s4=s2"]='s[-4]="s[-2]"'
-atom["s4=s2"]='s[-4]="s[-2]"'
+atom["negate"]='((s[-1]*=-1))'
+atom["s1=tmp"]='((s[-1]=tmp))'
+atom["s2=tmp"]='((s[-2]=tmp))'
+atom["s3=tmp"]='((s[-3]=tmp))'
+atom["s4=tmp"]='((s[-4]=tmp))'
+atom["tmp=s1"]='((tmp=s[-1]))'
+atom["tmp=s2"]='((tmp=s[-2]))'
+atom["tmp=s3"]='((tmp=s[-3]))'
+atom["tmp=s4"]='((tmp=s[-4]))'
+atom["s1=s2"]='((s[-1]=s[-2]))'
+atom["s1=s3"]='((s[-1]=s[-3]))'
+atom["s2=s1"]='((s[-2]=s[-1]))'
+atom["s2=s3"]='((s[-2]=s[-3]))'
+atom["s3=s1"]='((s[-3]=s[-1]))'
+atom["s3=s2"]='((s[-3]=s[-2]))'
+atom["s4=s2"]='((s[-4]=s[-2]))'
+atom["s4=s2"]='((s[-4]=s[-2]))'
 atom["r@"]='s+=("r[-1]")'
 atom['rpush']='r+=("s[-1]")'              # s1 -> r++
 atom['rdrop']='unset "r[-1]"'             # --r
@@ -47,9 +48,6 @@ semicolon()  {
    compile                                                           # compilation is gathered in an array body. Only
    compiling=0                                                       # when semicolon completes compilation, is
    derestrict
-# not good resolving here: when fwd ref will be resolved in same
-# source file, each semicolon will unnecessarily read postlib.
-#  resolve
 }                                                                    # a function created from contents of array.
 
 colon ';'      # semicolon
@@ -160,7 +158,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #fold00
+# ----- does> ------------------------------- #FOLD00
 #  : myarray  create allot does> + ;
 #  10 myarray foo
 #  5 foo .
@@ -279,7 +277,7 @@ semicolon
 tick()  {
    local headers                                                     # meant to spare me from saving and restoring vectored headers variable
    exists || error "can't tick data"
-   (( s[-1] )) || notfound "$word"                                   # none left -> all searched, but not found.
+   ((s[-1])) || notfound "$word"                                     # none left -> all searched, but not found.
 }
 
 # NOTE: tick and execute need names to look like foobar_4711
@@ -289,7 +287,7 @@ semicolon
 
 colon "[']"
    code 'tick'
-   code 'code "s+=(${s-1})"'
+   code 'code "s+=(\"${s[-1]}\")"'
    atom 'drop'
 semicolon
 immediate
@@ -297,14 +295,15 @@ immediate
 colon '['
    code 'restricted||compiling=0'                                    # don't allow to suspend compilation when compilation is muted
 semicolon                                                            # consequence of above is that any immediate word which modifies stack if not paired
-immediate                                                          # must be forbidden to so so by checking restricted state, literal is an example for such a word.
+immediate                                                            # must be forbidden to so so by checking restricted state, literal is an example for such a word.
 
 colon ']'
    code 'compiling=1'
 semicolon
 
 colon 'literal'
-   code 'restricted || { code "s+=(\"${s[-1]}\")"'
+   code 'restricted || {'
+   code 'code "s+=(\"${s[-1]}\")"'
    code 'unset "s[-1]"; }'
 semicolon
 immediate
@@ -317,7 +316,7 @@ semicolon
 
 
 
-# ----- misc -------------------------------- #fold00
+# ----- misc -------------------------------- #FOLD00
 
 colon 'noop'
    code ':'
@@ -344,7 +343,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #fold00
+# ----- parameter stack --------------------- #FOLD00
 
 colon 'depth'
    code 's+=("${#s[@]}")'
@@ -440,7 +439,7 @@ colon '-rot'
 semicolon
 inline
 
-# ----- return stack ------------------------ #fold00
+# ----- return stack ------------------------ #FOLD00
 
 colon 'rdepth'
    code 's+=("${#r[@]}")'
@@ -713,7 +712,7 @@ inline
 # should there be a string holding second stack,
 # allowing to temporarily move strings out of the way?
 
-# ----- bit logic --------------------------- #fold00
+# ----- bit logic --------------------------- #FOLD00
 
 colon 'and'
    code '((s[-2] &= s[-1]))'
@@ -804,7 +803,7 @@ semicolon
 inline
 }
 
-# ----- arithmetics ------------------------- #fold00
+# ----- arithmetics ------------------------- #FOLD00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -887,44 +886,43 @@ semicolon
 inline
 
 colon 'negate'
-   code '((s[-1] *= -1))'
+   atom 'negate'
 semicolon
 inline
 
-#colon '?negate'
-#   code '(( s[-1] && s[-2] *= -1))'
-#   atom 'drop'
-#semicolon
-#inline
-
+colon '?negate'
+   code '((s[-1]&&s[-2]*=-1))'
+   atom 'drop'
+semicolon
+inline
 
 colon 'abs'
-#   code '((s[-1] *= (((0<s[-1])-1)|1)))'
-    code '((s[-1]&msb))&&((s[-1]*=-1))'
+    code '((s[-1]&msb))&&'
+    atom 'negate'
 semicolon
 inline
 
 colon '*/'
-   code '(( s[-3] *= s[-2], s[-3] /= s[-1] ))'
+   code '((s[-3] *= s[-2], s[-3] /= s[-1]))'
    atom 'drop'
    atom 'drop'
 semicolon
 
 colon '/mod'		# x1 x2 -- rem quot
-   code '(( s1=s[-1], s2=s[-2], s[-1]=s2/s1, s[-2]=s2%s1 ))'
+   code '((s1=s[-1], s2=s[-2], s[-1]=s2/s1, s[-2]=s2%s1))'
 semicolon
 inline
 
 
 # s3 s2 s1  -- s3*s2%s1 s3*s2/s1
 colon '*/mod'
-   code '(( tmp=s[-3]*s[-2], s[-3]=tmp%s[-1], s[-2]=tmp/s[-1] ))'
+   code '((s1=s[-1], tmp=s[-3]*s[-2], s[-3]=tmp%s1, s[-2]=tmp/s1))'
    atom 'drop'
 semicolon
 
 
 colon 'u/mod'		# u1 u2 -- rem quot
-   code '(( s1=s[-1]&maxuint, s2=s[-2],  s[-1]=(s2&maxuint)/s1, s[-2]=(s2&maxuint)%s1 ))'
+   code '((s1=s[-1]&maxuint, s2=s[-2]&maxuint, s[-1]=s2/s1, s[-2]=s2%s1))'
 semicolon
 inline
 
@@ -1289,7 +1287,7 @@ inline
 immediate
 
 
-# ----- conditional compilation-------------- #fold00
+# ----- conditional compilation-------------- #FOLD00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -1480,7 +1478,7 @@ colon 'files'
    code 'printf "%s\n"  "${files[@]}"|nl'                            # show list of already included files
 semicolon
 
-# ----- documentation ----------------------- #fold00
+# ----- documentation ----------------------- #FOLD00
 
 
 undoc_template()  {
@@ -1572,7 +1570,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #fold00
+# ----- convenience ------------------------- #FOLD00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=()'
@@ -1646,7 +1644,7 @@ semicolon
 inline
 
 colon '#unresolved'
-   code 's+=( $((${#headersunresolved[@]})) )'
+   code 's+=($((${#headersunresolved[@]})))'
 semicolon
 inline
 

@@ -1,5 +1,4 @@
-#!/usr/local/bin/yoda
-
+#!/usr/local/bin/yoda from
 \ loading this file creates a forward reference to quit,
 \ which is resolved from library, then launched, providing
 \ an interactive command line to yoda.

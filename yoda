@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -101,9 +101,12 @@ declare -ai r=() s=() m=()
 declare -a ss=()
 declare -i dp=0
 
+base="$((dp++))"                                                     # will become variable base
+m[base]="10"                                                         # initially decimal. Patterns in this file want to know for input
+
 declare -i s1 s2 s3 s4                                               # temp variables to hold stack items s[-1] ... s[-4]
                                                                      # easier to read than "tmp, tmp2"
-declare -Ai flags                                                    # header flags (inline, immediate)
+declare -Ai flags                                                    # header flags (only inline left for now)
 headerslistlist=(
          "headersstateless"                                          # searched during both interpreting and compiling
          "headersinterpretonly"                                      # searched during compiling only
@@ -142,7 +145,7 @@ literalstring="$((1<<analyserflag++))"
 flowcontrol="$((1<<analyserflag++))"
 
 
-# ----- compiler muting ---------------------------------- #FOLD00
+# ----- compiler muting ---------------------------------- #fold00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -214,8 +217,8 @@ done
 # value of variable returned as return value (0..255)
 # doesn't exist: 0
 getvar()  {
-   [[ -z "${headers["$1"]}" ]] && return 0                           # no variable by that name: 0
-   eval "${headers["$1"]}"                                           # execute code which pushs data address of flag to stack
+   [[ -z "${headersstateless["$1"]}" ]] && return 0                  # no variable by that name: 0
+   eval "${headersstateless["$1"]}"                                  # execute code which pushs data address of flag to stack
    ((tmp=m[s[-1]]))                                                  # read from memory address
    unset "s[-1]"                                                     # drop pushed value
    return "$tmp"
@@ -223,8 +226,8 @@ getvar()  {
 
 # arg1: value to store, arg2: variable name
 setvar()  {
-   [[ -z "${headers["$2"]}" ]] && return 1                           # no variable by that name
-   eval "${headers["$2"]}"                                           # execute code which pushs data address of flag to stack
+   [[ -z "${headersstateless["$2"]}" ]] && return 1                  # no variable by that name
+   eval "${headersstateless["$2"]}"                                  # execute code which pushs data address of flag to stack
    (( m[s[-1]] = $1 ))                                               # store numerical arg at memory address
    unset "s[-1]"                                                     # drop pushed value
    return 0
@@ -235,8 +238,8 @@ setvar()  {
 
 # flag / variable name as arg1
 getflag()  {
-   [[ -z "${headers["$1"]}" ]] && return 1
-   eval "${headers["$1"]}"                                           # execute code which pushs data address of flag to stack
+   [[ -z "${headersstateless["$1"]}" ]] && return 1
+   eval "${headersstateless["$1"]}"                                  # execute code which pushs data address of flag to stack
    ((tmp = ! m[s[-1]]))                                              # read from memory address
    unset "s[-1]"                                                     # drop pushed value
    return "$tmp"
@@ -270,7 +273,7 @@ warm()  {
    derestrict                                                        # turn off code suppressing
    r=()
    ((clean)) && s=() ss=()                                           # empty stacks
-   setvar "10" "base"                                                # set decimal if base exists
+   m[base]="10"                                                      # set decimal if base exists
 }
 
 coldvector=""                                                        # colon word "boot" assigns coldvector. started when compilation completed.
@@ -479,7 +482,7 @@ colon()  {
    header "$1" "$name"
 
 #   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
-#   code "$1 $name" "$functionheader"                                       # preparing to delegate header creation to detokeniser
+#   code "$1 $name" "$functionheader"                                 # preparing to delegate header creation to detokeniser
 #   lastword="$1"                                                     # global variable. setting header flags needs this one
 #   body=()                                                           # reinitialise code buffer
 #   analyser=()                                                       # reinitialise code tags for analyser
@@ -488,6 +491,23 @@ colon()  {
       where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
    compiling=1
 
+# experimental:  word list following colon header
+# doesn't respect inline flag, but compiles call to function
+# regardless of flag. Only atoms will be inlined.
+   [[ -z "$2" ]] || {
+      shift
+      for word in $*; do
+         if [[ -z "${atom[$word]}" ]]; then
+            if [[ -z "${headersstateless[$word]}" ]]; then
+               error "undefined $word"
+            else
+               code "${headersstateless[$word]}"
+            fi
+         else
+            code "${atom[$word]}"
+         fi
+      done
+   }
 }
 
 
@@ -585,19 +605,18 @@ stateless()   {
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
 # some patterns can simply be ignored when code creation is muted
-      base=10
-      getvar "base" || base="$?"
+      ((radix=m[base]))
       tmp="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
-      [[ $word =~ ^[${tmp:0:$base}]+$ ]] && {                        # 1234      unsigned number
-         stateless "s+=($((${base}#${word} & maxuint)))"             # convert signless numbers without special treatment
+      [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                        # 1234      unsigned number
+         stateless "s+=($((${radix}#${word} & maxuint)))"             # convert signless numbers without special treatment
          return 0; }
-      [[ $word =~ ^-[${tmp:0:$base}]+$ ]] && {                       # -1234     negative number
-         stateless "s+=("$((-${base}#${word:1} & maxuint))")"
+      [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                       # -1234     negative number
+         stateless "s+=("$((-${radix}#${word:1} & maxuint))")"
          return 0; }
       [[ $word =~ ^\$[${tmp:0:16}]+$ ]] && {                         # $abcd     hex number
          tmp="$((16#${word:1} & maxuint))"
@@ -665,7 +684,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -704,7 +723,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #FOLD00
+# ----- line interpreter --------------------------------- #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -825,12 +844,10 @@ configuration()  {
    [[ -f "$mydir/$config" ]] && source "$mydir/$config"              # currently only looking in dir where yoda resides
 }
 
+
 ### ---------------------------------- ###
 ###       RUN THIS CONTRAPTION         ###
 ### -----------------------------------###
-[[ -z "$1" ]] || {                                                   # no args: nothing to do
-   [[ -f "$1" ]] || filenotfound "$1"                                # arg1 must be name of an existing source file
-#--------------------------------------
    configuration                                                     # try to load custom configuration
 #--------------------------------------
    for dir in "${libdirs[@]}"; do                                    # search primitives
@@ -849,17 +866,28 @@ configuration()  {
    done
    [[ -f "$file" ]] && from "$file"                                  # found prelib? include prelib
 #--------------------------------------
-   file="$(realpath $1)"
-   from "$file"                                                      # load source
+    evaluate "$*"
+
+#file="$1"
+#if [[ -z "$file" ]]; then
+#   for dir in "${libdirs[@]}"; do                                    # include a library before loading source?
+#      file="$dir/quit"                                               # search for prelib in libdir[@] directories
+#      [[ -f "$file" ]] && break                                      # break when/if found
+#   done
+#fi
+#[[ -f "$file" ]] || {
+#   echo "file not found: $file"                                   # arg1 must be name of an existing source file
+#   exit 1
+#}
+#from "$file" "$@"
 #--------------------------------------
-   [[ -z "$coldvector" ]] || {                                       # if cold launch point was specified, try to run.
-      (( ${#headersunresolved[@]} )) && resolve                      # still unresolved words? try to resolve those.
-      (( ${#headersunresolved[@]} )) || {
-         cold
-         exit 0
-      }
-      printf "%s\n" "unresolved forward references:"                 # still unresolved words
-      printf "%s\n" "${!headersunresolved[@]}" | nl
-      printf "%s\n" "Run this not I will."
+[[ -z "$coldvector" ]] || {                                       # if cold launch point was specified, try to run.
+   (( ${#headersunresolved[@]} )) && resolve                      # still unresolved words? try to resolve those.
+   (( ${#headersunresolved[@]} )) || {
+      cold
+      exit 0
    }
-}                                                                    # cold will still refuse if any unresolveds are left
+   printf "%s\n" "unresolved forward references:"                 # still unresolved words
+   printf "%s\n" "${!headersunresolved[@]}" | nl
+   printf "%s\n" "Run this not I will."
+}

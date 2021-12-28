@@ -1,12 +1,5 @@
-forwardrefs @
-forwardrefs on                  ( needs hex and u. )
-
 \ no pictured number conversion yet: manually add leading zero if single digit only.
-: .byte ( c -- )
-        dup
-        $10 < if
-           '0 emit
-        then u. ;
+: .byte ( c -- )  <# # # #>type space ;
 
 \ output u hex bytes at a
 : .bytes ( a u -- )
@@ -43,4 +36,3 @@ forwardrefs on                  ( needs hex and u. )
         next drop
         r> base !  ;                 \ restore former number base
 
-forwardrefs !

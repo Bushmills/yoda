@@ -1,0 +1,15 @@
+#!/usr/local/bin/yoda
+
+\ loading this file creates a forward reference to quit,
+\ which is resolved from library, then launched, providing
+\ an interactive command line to yoda.
+
+\ (Note that this forward reference is created even though
+\ forward references are currently turned off.
+\ The reason is that "boot" ignores forward reference
+\ setting and creates an "explicit" forward reference anyway.
+\ Another word to create explicit forward references is "need")
+
+from fix                   ( include fix and review. Not required but useful )
+boot quit                  ( "boot" sets the cold entry word )
+"Yoda shell" type$ cr      ( rather chatty today, aren't we? )

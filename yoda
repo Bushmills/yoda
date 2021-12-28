@@ -162,9 +162,9 @@ restricted() {                                                       # flag curr
 }
 derestrict
 
-# ----- state variables, switches, globals, static etc --- #fold00
-bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
-#bits=32
+# ----- state variables, switches, globals, static etc --- #FOLD00
+#bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
+bits=32
 #bits=16                                                             # 16 bits are nice for testing
 
 msb="$((1<<(bits-1)))"
@@ -511,7 +511,7 @@ colon()  {
 }
 
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -684,7 +684,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving

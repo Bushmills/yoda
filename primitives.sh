@@ -15,11 +15,11 @@ atom["over"]='s+=("s[-2]")'               # push_s2
 atom["pluck"]='s+=("s[-3]")'              # push_s3
 atom["drop"]='unset "s[-1]"'              # pop
 atom["@"]='((s[-1]=m[s[-1]]))'            # s1=(s1)
-atom["1+"]='((s[-1]++))'                  # s1++
-atom["1-"]='((s[-1]--))'                  # s1--
-atom["2*"]='((s[-1]*=2))'
+atom["1+"]='((s[-1]=(s[-1]+1)&maxuint))'  # s1++
+atom["1-"]='((s[-1]=(s[-1]-1)&maxuint))'  # s1--
+atom["2*"]='((s[-1]=(s[-1]*2)&maxuint))'
 atom["2/"]='((s[-1]/=2))'
-atom["negate"]='((s[-1]*=-1))'
+atom["negate"]='((s[-1]*=maxuint))'
 atom["s1=tmp"]='((s[-1]=tmp))'
 atom["s2=tmp"]='((s[-2]=tmp))'
 atom["s3=tmp"]='((s[-3]=tmp))'
@@ -714,36 +714,36 @@ inline
 # ----- bit logic --------------------------- #FOLD00
 
 colon 'and'
-   code '((s[-2] &= s[-1]))'
+   code '((s[-2]&=s[-1]))'
    atom 'drop'
 semicolon
 inline
 
 colon 'or'
-   code '((s[-2] |= s[-1]))'
+   code '((s[-2]|=s[-1]))'
    atom 'drop'
 semicolon
 inline
 
 colon 'xor'
-   code '((s[-2] ^= s[-1]))'
+   code '((s[-2]^=s[-1]))'
    atom 'drop'
 semicolon
 inline
 
 colon 'invert'
-   code '((s[-1] ^= -1))'
+   code '((s[-1]^=maxuint))'
 semicolon
 inline
 
 colon lshift
-   code '((s[-2] <<= s[-1]))'
+   code '((s[-2]=(s[-2]<<s[-1])&maxuint))'
    atom 'drop'
 semicolon
 inline
 
 colon rshift
-   code '((s[-2] >>= s[-1]))'
+   code '((s[-2]>>=s[-1]))'
    atom 'drop'
 semicolon
 inline
@@ -751,12 +751,12 @@ inline
 # ----- comparison -------------------------- #FOLD00
 
 colon '0='
-   code '((s[-1] = -(! (s[-1] & maxuint))))'
+   code '((s[-1]=s[-1]?0:maxuint))'                                  #&msb: 0->maxuint  x->0
 semicolon
 inline
 
 colon '0<'
-   code '((s[-1] = (! (s[-1] & msb))-1))'
+   code '((s[-1]=s[-1]&msb?maxuint:0))'                              #&msb: 0->0   msb->maxuint
 semicolon
 inline
 
@@ -764,13 +764,13 @@ inline
 # where it matters, better make sure that numbers are wrapped the
 # moment they enter the stack.
 colon '='
-   code '((s[-2] = -((s[-2] & maxuint) == (s[-1] & maxuint))))'
+   code '((s[-2]=(s[-2]&maxuint)==(s[-1]&maxuint)?maxuint:0))'
    atom 'drop'
 semicolon
 inline
 
 colon '<>'
-   code '((s[-2] = -((s[-2] & maxuint) != (s[-1] & maxuint))))'
+   code '((s[-2]=(s[-2]&maxuint)==(s[-1]&maxuint)?0:maxuint))'
    atom 'drop'
 semicolon
 inline
@@ -785,7 +785,7 @@ inline
 #   code 'unset "s[-1]"'
 #semicolon
 
-# probably broken
+# broken
 colon '<'
    code '((s[-2] = -(s[-2] < s[-1])))'
    atom 'drop'
@@ -852,19 +852,19 @@ semicolon
 inline
 
 colon '+'
-   code '((s[-2]+="s[-1]"))'
+   code '((s[-2]=(s[-1]+s[-2])&maxuint))'
    atom 'drop'
 semicolon
 inline
 
 colon '-'
-   code '((s[-2]-="s[-1]"))'
+   code '((s[-2]=(s[-2]-s[-1])&maxuint))'
    atom 'drop'
 semicolon
 inline
 
 colon '*'
-   code '((s[-2]*="s[-1]"))'
+   code '((s[-2]=(s[-1]*s[-2])&maxuint))'
    atom 'drop'
 semicolon
 inline
@@ -887,7 +887,7 @@ semicolon
 inline
 
 colon '?negate'
-   code '((s[-1]&&s[-2]*=-1))'
+   code '((s[-1]&&s[-2]*=maxuint))'
    atom 'drop'
 semicolon
 inline
@@ -899,20 +899,21 @@ semicolon
 inline
 
 colon '*/'
-   code '((s[-3] *= s[-2], s[-3] /= s[-1]))'
+   code '((s[-3]=(s[-3]*s[-2]/s[-1])&maxuint))'
    atom 'drop'
    atom 'drop'
 semicolon
 
-colon '/mod'		# x1 x2 -- rem quot
+# ( x1 x2 -- rem quot )
+colon '/mod'
    code '((s1=s[-1], s2=s[-2], s[-1]=s2/s1, s[-2]=s2%s1))'
 semicolon
 inline
 
 
-# s3 s2 s1  -- s3*s2%s1 s3*s2/s1
+# ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
 colon '*/mod'
-   code '((s1=s[-1], tmp=s[-3]*s[-2], s[-3]=tmp%s1, s[-2]=tmp/s1))'
+   code '((s1=s[-1], tmp=(s[-3]*s[-2]), s[-3]=tmp%s1, s[-2]=(tmp/s1)&maxuint))'
    atom 'drop'
 semicolon
 
@@ -947,13 +948,13 @@ colon '!'
 semicolon
 inline
 
-colon '<-'                      # swap !
+colon '<-'                       # swap !
    code '((m[s[-2]]="s[-1]"))'
    atom 'drop'
    atom 'drop'
 semicolon
 
-colon '+!'
+colon '+!'                       # maxuint
    code '((m[s[-1]]+="s[-2]"))'
    atom 'drop'
    atom 'drop'
@@ -961,7 +962,7 @@ semicolon
 inline
 
 colon 'on'
-   code '((m[s[-1]]="-1"))'
+   code '((m[s[-1]]=maxuint))'
    atom 'drop'
 semicolon
 inline
@@ -1149,7 +1150,6 @@ colon 'next'
    code '((s[-1] == ${#body[@]})) && code ":"'
    atom 'drop'
    code 'code "done"'
-#   code "code 'i=\"\${r[-1]}\"'"
    code "code '((i=r[-1]))'"
    code 'code "unset \"r[-1]\""'
 semicolon
@@ -1302,7 +1302,7 @@ semicolon
 colon 'needed'
    code 'word'
    code '[[ "${headersunresolved["$word"]}" ]]'
-   code 's+=( $(($?-1)) )'
+   code 's+=( $((${?}?0:maxuint)) )'
 semicolon
 
 colon 'exists'
@@ -1348,9 +1348,9 @@ colon 'key'
 semicolon
 
 colon 'key?'
-   code '[[ -z "$keybuf" ]] || { s+=("-1"); return; }'               # key in keybuf: yes, flag "key ready"
+   code '[[ -z "$keybuf" ]] || { s+=("$maxuint"); return; }'         # key in keybuf: yes, flag "key ready"
    code 'IFS="" read -rsn1 -t0.01 tmp'                               # no key in keybuf: poll console
-   code 's+=(-$((! $?)))'                                            # return value reflects key timeout condition
+   code 's+=($((${?}?0:maxuint)))'                                   # return value reflects key timeout condition
    code 'keybuf+="$tmp"'                                             # add key to buffer. maybe add space if -z $tmp
 semicolon
 
@@ -1467,7 +1467,7 @@ semicolon
 inline
 
 colon 'files'
-   code 'printf "%s\n"  "${files[@]}"|nl'                            # show list of already included files
+   code 'printf "%s\n" "${files[@]}"|nl'                             # show list of already included files
 semicolon
 
 
@@ -1482,23 +1482,28 @@ declare -a picturednumber=()
 colon 'base'
    code "s+=($base)"
 semicolon
+inline
 
 colon 'decimal'
    code 'm[base]="10"'
 semicolon
+inline
 
 colon 'hex'
    code 'm[base]="16"'
 semicolon
+inline
 
 colon 'binary'
    code 'm[base]="2"'
 semicolon
+inline
 
 
 colon '<#'
    code 'picturednumber+=("")'
 semicolon
+inline
 
 # ( n -- )
 colon '#'
@@ -1520,12 +1525,14 @@ colon 'hold'
    code 'picturednumber[-1]="${char[s[-1]]}${picturednumber[-1]}"'
    code 'unset "s[-1]"'
 semicolon
+inline
 
 # ( n -- )
 colon 'sign'
   code '((s[-1]&msb))&&picturednumber[-1]="-${picturednumber[-1]}"'
   atom 'drop'
 semicolon
+inline
 
 # ( x -- )
 colon '#>type'
@@ -1534,6 +1541,17 @@ colon '#>type'
    code 'unset "picturednumber[-1]"'
 semicolon
 
+# ( x -- a n )
+colon '#>'
+   code '((s[-1]=dp))'
+   atom 'dup'
+   code 'ss+=("${picturednumber[-1]}")'
+   code 'unset "picturednumber[-1]"'
+   code "${headersstateless[unpack$]}"
+semicolon
+
+
+# doesn't inline those words marked as "inline" above when defining words this way
 colon 'u.'   "         <#  #s              #>type space"; semicolon
 colon '.'    "dup abs  <#  #s  swap  sign  #>type space"; semicolon
 

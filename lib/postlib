@@ -4,40 +4,12 @@ forwardrefs on
 
 u: quit  ( -- )
    warm
-   #10 base !
    begin
       query
       evaluate
       prompt
    again ;
 
-
-u: .  ( n -- )
-   maxuint and                    \ reduce to relevant bits
-   dup msb and if                 \ sign bit set?
-      '-' emit                    \ number is negative
-      [ maxuint 1+ ] literal -    \ adjust
-      abs
-   then
-   (u.) space ;	                  \ output
-
-u: u.  ( u .. )
-   (u.) space ;
-
-( output unsigned number in any base. recursive implementation )
-u: (u.)  ( u -- )
-   base @ u/mod
-   ?dup if recurse then
-   digit emit ;
-
-u: digit ( u -- c )
-   '0 +
-   dup '9' >
-   39 and + ;
-
-u: decimal  ( -- )    #10 base !  ;
-u: hex      ( -- )    #16 base !  ;
-u: binary   ( --  )     2 base !  ;
 u: type     ( a u -- )  pack$ type$  ;
 u: epoch    ( -- u ) "EPOCHSECONDS" env  ;
 

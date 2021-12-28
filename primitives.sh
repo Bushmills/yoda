@@ -408,7 +408,6 @@ colon '2swap'
    atom 's3=s1'
    atom 's1=tmp'
 semicolon
-inline
 
 colon 'nip'
    atom 's2=s1'
@@ -598,7 +597,7 @@ colon 'chop$'
    code 'unset "ss[-1]"'
    code 's+=("-${#ss[@]}")'
    code 'ss+=($tmp)'
-   code '((s += ${#ss[@]} ))'
+   code '((s+=${#ss[@]} ))'
 semicolon
 
 # ---------- command ---------      - output -        ----- mnemonic -----
@@ -751,8 +750,6 @@ inline
 
 # ----- comparison -------------------------- #FOLD00
 
-((unsigned)) || {
-
 colon '0='
    code '((s[-1] = -(! (s[-1] & maxuint))))'
 semicolon
@@ -801,7 +798,6 @@ colon '>'
    atom 'drop'
 semicolon
 inline
-}
 
 # ----- arithmetics ------------------------- #FOLD00
 
@@ -1006,7 +1002,7 @@ colon 'pad'
 semicolon
 inline
 
-# 1.1secs ->
+# c -> m[a++],  u times
 # ( a u c -- )
 colon 'fill'
    code '((s1=s[-1], s2=s[-2], s3=s[-3]))'
@@ -1018,18 +1014,15 @@ colon 'fill'
    code 'done'
 semicolon
 
-# ( a u -- )
-colon 'erase'
-# 0 -> m[a++],  u times
-   code '((s1=s[-1], s2=s[-2]))'
-   atom 'drop'
-   atom 'drop'
-   code 'for ((;s1--;)); do'
-   code '((m[s2++]=0))'
-   code 'done'
+colon '0'
+   code 's+=(0)'
 semicolon
 
-# 1.8 -> 1.45
+# 0 -> m[a++],  u times
+# ( a u -- )
+colon 'erase'   "0 fill"; semicolon
+
+
 # ( a1 a2 u -- )
 move()  {                                                            # deals with destination overlapping source
    ((s1=s[-1], s2=s[-2], s3=s[-3]))
@@ -1313,7 +1306,7 @@ colon 'needed'
 semicolon
 
 colon 'exists'
-   code 'exists' || error "can't tick data"
+   code 'exists'
 semicolon
 
 # ----- i/o --------------------------------- #FOLD00
@@ -1332,14 +1325,13 @@ inline
 
 colon 'parse$'
    code 'parse "${ss[-1]}"'
-   code  'ss[-1]="$word"'
+   code 'ss[-1]="$word"'
 semicolon
 
-# fails when called with ascii 0 for terminator char
 colon 'parse'
    code 'parse "${char[s[-1]]}"'
    atom 'drop'
-   code  'ss+=("$word")'
+   code 'ss+=("$word")'
 semicolon
 
 
@@ -1477,6 +1469,75 @@ inline
 colon 'files'
    code 'printf "%s\n"  "${files[@]}"|nl'                            # show list of already included files
 semicolon
+
+
+# ----- pictured number conversion ---------- #FOLD00
+
+# allow nesting pictured number conversion
+declare -a picturednumber=()
+
+# ( -- a )     a variable in yoda memory, but accessible from bash
+
+
+colon 'base'
+   code "s+=($base)"
+semicolon
+
+colon 'decimal'
+   code 'm[base]="10"'
+semicolon
+
+colon 'hex'
+   code 'm[base]="16"'
+semicolon
+
+colon 'binary'
+   code 'm[base]="2"'
+semicolon
+
+
+colon '<#'
+   code 'picturednumber+=("")'
+semicolon
+
+# ( n -- )
+colon '#'
+   code '((radix=m[base]))'
+   code '((s1=s[-1]&maxuint, s[-1]=s1/radix, tmp=s1%radix+48))'
+   code '((tmp>57))&&((tmp+=39))'
+   code 'picturednumber[-1]="${char[tmp]}${picturednumber[-1]}"'
+semicolon
+
+colon '#s'
+   code 'while :; do'
+   code '${headersstateless["#"]}'
+   code '((s[-1]))||break'
+   code 'done'
+semicolon
+
+# ( asc -- )
+colon 'hold'
+   code 'picturednumber[-1]="${char[s[-1]]}${picturednumber[-1]}"'
+   code 'unset "s[-1]"'
+semicolon
+
+# ( n -- )
+colon 'sign'
+  code '((s[-1]&msb))&&picturednumber[-1]="-${picturednumber[-1]}"'
+  atom 'drop'
+semicolon
+
+# ( x -- )
+colon '#>type'
+   atom 'drop'
+   code 'printf "%s" "${picturednumber[-1]}"'
+   code 'unset "picturednumber[-1]"'
+semicolon
+
+colon 'u.'   "         <#  #s              #>type space"; semicolon
+colon '.'    "dup abs  <#  #s  swap  sign  #>type space"; semicolon
+
+
 
 # ----- documentation ----------------------- #FOLD00
 

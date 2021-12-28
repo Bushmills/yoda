@@ -48,5 +48,7 @@ In some respects does yoda differ from Forth:
 
 - not fully adhering to standard by sometimes deviating choice of word names.
   so is "read-file" called "from", "evaluate" evaluates from tib, not from addr/cnt,
-  "list" isn't a word from the blocks word set (and doesn't behave like it). Some of
-  those choice may not be permanent, but on a "for the time being" base.
+  "list" isn't a word from the blocks word set (and doesn't behave like it),
+  pictured number conversion is nestable (that is,  <# ... #>  may appear
+  within another <# ... #> block).
+. Some of those choice may not be permanent, but on a "for the time being" base.

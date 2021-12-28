@@ -1,9 +1,6 @@
 -1 constant true
  0 constant false
 
-create base            #10  ,
-
-
 \ these aren't needed, but defined for convenience only:
 create shell          false ,
 create forwardrefs    false ,

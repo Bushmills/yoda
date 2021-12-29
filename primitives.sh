@@ -54,12 +54,6 @@ atom["here"]='s+=($dp)'
 
 # ----- colon/semicolon --------------------- #FOLD00
 
-semicolon()  {
-   compile                                                           # compilation is gathered in an array body. Only
-   compiling=0                                                       # when semicolon completes compilation, is
-   derestrict
-}                                                                    # a function created from contents of array.
-
 colon ';'      # semicolon
    code "(( s[-1] == $magic )) || unstructured ':'"                  # check the magic left by :
    atom 'drop'
@@ -617,7 +611,7 @@ colon 'pack$'
    code 'ss+=("$tmp")'
 semicolon
 
-# ----- bit logic --------------------------- #fold00
+# ----- bit logic --------------------------- #FOLD00
 
 colon 'and'
    code '((s[-2]&=s[-1]))'
@@ -654,7 +648,7 @@ colon rshift
 semicolon
 inline
 
-# ----- comparison -------------------------- #fold00
+# ----- comparison -------------------------- #FOLD00
 
 colon '0='
    code '((s[-1]=s[-1]?0:maxuint))'                                  #&msb: 0->maxuint  x->0
@@ -708,24 +702,6 @@ semicolon
 inline
 
 # ----- arithmetics ------------------------- #FOLD00
-
-colon maxuint                                                        # effectively a constant, but can't define them differently yet
-   literal "$maxuint"
-semicolon
-inline
-inout 0 1
-
-colon maxint                                                         # effectively a constant, but can't define them differently yet
-   literal "$maxint"
-semicolon
-inline
-inout 0 1
-
-colon msb                                                            # effectively a constant, but can't define them differently yet
-   literal "$msb"
-semicolon
-inline
-inout 0 1
 
 colon '1+'  "1+"; semicolon; inline    ; inout 1 1
 colon '1-'  "1-"; semicolon; inline    ; inout 1 1
@@ -884,7 +860,7 @@ colon 'exchange'
 semicolon
 inout 2 1
 
-colon 'here'   "here"; semicolon; inline;       inout 0 1
+colon 'here'   "here";       semicolon; inline;       inout 0 1
 colon 'allot'  "allot drop"; semicolon; inline; inout 1 0
 
 colon ','
@@ -910,14 +886,12 @@ colon 'fill'  "s1 s2 s3 drop drop drop"
 semicolon
 inout 3 0
 
-colon '0'
-   literal "0"
-semicolon
-inout 0 1
+constant 0 0
 
 # 0 -> m[a++],  u times
 # ( a u -- )
-colon 'erase'   "0 fill"; semicolon
+evaluate ': erase   0 fill ;'
+inline
 inout 2 0
 
 # ( a1 a2 u -- )
@@ -1036,7 +1010,7 @@ colon 'i'
 semicolon
 inline
 
-colon 'j'  "r@"; semicolon; inline
+evaluate ': j r@ ;'   ; inline
 
 colon 'next'
    code "((s[-1] == $magic))||unstructured 'for'"
@@ -1141,7 +1115,7 @@ colon 'unless'
 semicolon
 interactive
 
-# evaluate input line unrtil end u times
+# evaluate input line until end u times
 colon 'times'
    code 'r+=(i)'
    code '((i=s[-1]))'
@@ -1245,9 +1219,13 @@ inout 0 1
 
 colon 'key?'
    code '[[ -z "$keybuf" ]] || { s+=("$maxuint"); return; }'         # key in keybuf: yes, flag "key ready"
-   code 'IFS="" read -rsn1 -t0.01 tmp'                               # no key in keybuf: poll console
-   code 's+=($((${?}?0:maxuint)))'                                   # return value reflects key timeout condition
+   code 'IFS=""'                                                     # no key in keybuf: poll console
+   code 'if read -rsn1 -t0.01 tmp; then'
    code 'keybuf+="$tmp"'                                             # add key to buffer. maybe add space if -z $tmp
+   code 's+=($maxuint)'
+   code 'return'
+   code 'fi'
+   code 's+=(0)'
 semicolon
 inout 0 1
 
@@ -1282,11 +1260,7 @@ semicolon
 inline
 inout 0 0
 
-colon 'bl'
-   literal "32"
-semicolon
-inline
-inout 0 1
+constant bl 32
 
 colon 'space'
 	code 'printf " "'
@@ -1375,13 +1349,6 @@ semicolon
 # ----- pictured number conversion ---------- #FOLD00
 
 
-# ( -- a )     a variable in yoda memory, but accessible from bash
-colon 'base'
-   literal "$base"
-semicolon
-inline
-inout 0 1
-
 colon 'decimal'
    code 'm[base]="10"'
 semicolon
@@ -1443,17 +1410,16 @@ inline
 inout 1 0
 
 # doesn't inline those words marked as "inline" above when defining words this way
-colon '#>$'     "drop"; semicolon                                         ; inout 1 0   # ( x -- )
-colon '#>type'  "drop type$"; semicolon                                   ; inout 1 0    # ( x -- ) ( string:  $1 -- )
-colon '#>'      "drop here dup unpack$"; semicolon                        ; inout 1 2    # ( x -- a n ) ( string:  $1 -- )
-colon 'u.'      "         <#  #s              #>type space"; semicolon    ; inout 1 0    # ( u -- )
-colon '.'       "dup abs  <#  #s  swap  sign  #>type space"; semicolon    ; inout 1 0    # ( n -- )
+evaluate ': #>$      drop ;'                                       ; inout 1 0    # ( x -- )
+evaluate ': #>type   drop type$ ;'                                 ; inout 1 0    # ( x -- ) ( string:  $1 -- )
+evaluate ': #>       drop here dup unpack$ ;'                      ; inout 1 2    # ( x -- a n ) ( string:  $1 -- )
+evaluate ': u.       <#  #s              #>type space ;'           ; inout 1 0    # ( u -- )
+evaluate ': .        dup abs  <#  #s  swap  sign  #>type space ;'  ; inout 1 0    # ( n -- )
+evaluate ': .padded  dup$ count$ - spaces type$ ;'                 ; inout 1 0    # ( u -- ) (string: $1 -- )
+evaluate ': u.r      swap <# #s #>$ .padded ;'                     ; inout 2 0    # ( u1 u2 -- )
+evaluate ': .r       swap dup abs <# #s swap sign #>$ .padded ;'   ; inout 2 0    # ( n u -- )
 
-colon '.padded' "dup$ count$ - spaces type$"; semicolon                   ; inout 1 0    # ( u -- ) (string: $1 -- )
-colon 'u.r'     "swap <# #s #>$ .padded"; semicolon                       ; inout 2 0    # ( u1 u2 -- )
-colon '.r'      "swap dup abs <# #s swap sign #>$ .padded"; semicolon     ; inout 2 0    # ( n u -- )
-
-# ----- documentation ----------------------- #fold00
+# ----- documentation ----------------------- #FOLD00
 
 
 undoc_template()  {
@@ -1545,7 +1511,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #fold00
+# ----- convenience ------------------------- #FOLD00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=()'
@@ -1628,6 +1594,7 @@ colon 'env'
    code 'unset "ss[-1]"'
 semicolon
 inline
+inout 0 1
 
 # store $1 in bash environment variable with name $2
 # ( x -- ) ( string:  $1 -- )
@@ -1636,6 +1603,7 @@ colon '>env'
    code 'unset "ss[-1]"'
    atom 'drop'
 semicolon
+inout 1 0
 
 
 # read string from environment variable with name on string stack
@@ -1644,6 +1612,7 @@ colon 'env$'
    code 'ss[-1]="${!ss[-1]}"'
 semicolon
 inline
+inout 0 0
 
 # store string $1 in bash environment variable with name $2
 # ( string:  $1 $2 -- )
@@ -1652,6 +1621,7 @@ colon '>env$'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
+inout 0 0
 
 # convert a string representation of a number
 # or arithmetic expression to an integer
@@ -1662,11 +1632,14 @@ colon 'convert$'
    code 'unset "ss[-1]"'
 semicolon
 inline
+inout 0 1
 
 # convert a number to string
 # respects base
 # ( x -- ) (string: -- $1 )
-colon 'convert'   "<# #s #>$"; semicolon; inline
+evaluate ': convert  <# #s #>$ ;'
+inline
+inout 1 0
 
 # ( err -- )
 colon 'abort'
@@ -1693,3 +1666,4 @@ colon 'realtime'
    code 's+=(${EPOCHREALTIME//,/})'
 semicolon
 inline
+inout 0 1

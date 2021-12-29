@@ -16,8 +16,6 @@
   result in some speed increase, as may (test) more thorough use of
   arithmetic assignments, possibly avoiding some integer to string and
   back conversions
-- string to number, number to string should respect base
-- pictured number formatting
 - allow customising query attributes
 - allow customising prompt
 - hide header of currently compiled word until compilation completed.

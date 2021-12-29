@@ -65,6 +65,8 @@ version=0  subversion=1    # 2021dec20,14:57
 # ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
+shopt -u nullglob
+GLOBIGNORE='*:?'
 
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
 trace=0                                                              # turn chatty system on
@@ -575,16 +577,6 @@ codebody()  {                                                        # inline co
    done < <(type "$1")
 }
 
-#codebody()  {                                                        # inline compiler
-#   body+=(
-#         "$(
-#             type "$1" |
-#             sed -n '/^ /{s/^ *//g;p}'
-#          )"
-#        )
-#   analyser+=("$inlined")
-#}
-
 compile()  {                                                         # build new function from code in body array
    restricted || {
       optimise                                                       # here's the proper place for static code evaluation.
@@ -848,46 +840,34 @@ configuration()  {
 ### ---------------------------------- ###
 ###       RUN THIS CONTRAPTION         ###
 ### -----------------------------------###
-   configuration                                                     # try to load custom configuration
+configuration                                                        # try to load custom configuration
 #--------------------------------------
-   for dir in "${libdirs[@]}"; do                                    # search primitives
-      file="$dir/$primitives"                                        # search for prelib in libdir[@] directories
-      [[ -f "$file" ]] && break                                      # break when/if found
-   done
+for dir in "${libdirs[@]}"; do                                       # search primitives
+   file="$dir/$primitives"                                           # search for prelib in libdir[@] directories
+   [[ -f "$file" ]] && break                                         # break when/if found
+done
 # shellcheck source=./primitives.sh
-   [[ -f "$file" ]] && {
-      files=("$file")
-      source "$file"                                                 # found primitives? include primitives
-   }
-#--------------------------------------
-   for dir in "${libdirs[@]}"; do                                    # include a library before loading source?
-      file="$dir/$prelib"                                            # search for prelib in libdir[@] directories
-      [[ -f "$file" ]] && break                                      # break when/if found
-   done
-   [[ -f "$file" ]] && from "$file"                                  # found prelib? include prelib
-#--------------------------------------
-    evaluate "$*"
-
-#file="$1"
-#if [[ -z "$file" ]]; then
-#   for dir in "${libdirs[@]}"; do                                    # include a library before loading source?
-#      file="$dir/quit"                                               # search for prelib in libdir[@] directories
-#      [[ -f "$file" ]] && break                                      # break when/if found
-#   done
-#fi
-#[[ -f "$file" ]] || {
-#   echo "file not found: $file"                                   # arg1 must be name of an existing source file
-#   exit 1
-#}
-#from "$file" "$@"
-#--------------------------------------
-[[ -z "$coldvector" ]] || {                                       # if cold launch point was specified, try to run.
-   (( ${#headersunresolved[@]} )) && resolve                      # still unresolved words? try to resolve those.
-   (( ${#headersunresolved[@]} )) || {
-      cold
-      exit 0
-   }
-   printf "%s\n" "unresolved forward references:"                 # still unresolved words
-   printf "%s\n" "${!headersunresolved[@]}" | nl
-   printf "%s\n" "Run this not I will."
+[[ -f "$file" ]] && {
+   files="$file"
+   source "$file"                                                    # found primitives? include primitives
 }
+#--------------------------------------
+for dir in "${libdirs[@]}"; do                                       # include a library before loading source?
+   file="$dir/$prelib"                                               # search for prelib in libdir[@] directories
+   [[ -f "$file" ]] && break                                         # break when/if found
+done
+[[ -f "$file" ]] && from "$file"                                     # found prelib? include prelib
+#--------------------------------------
+if (( $# )); then
+   evaluate "$*"
+   if ! [[ -z "$coldvector" ]]; then                                 # if cold launch point was specified, try to run.
+      (( ${#headersunresolved[@]} )) && resolve                      # still unresolved words? try to resolve those.
+      if (( ${#headersunresolved[@]} )); then
+         printf "%s\n" "unresolved forward references:"              # still unresolved words
+         printf "%s\n" "${!headersunresolved[@]}" | nl
+         printf "%s\n" "Run this not I will."
+      else
+         cold
+      fi
+   fi
+fi

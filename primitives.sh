@@ -1,5 +1,5 @@
 ### yoda base vocabulary ###
-# ----- populating detokeniser -------------- #fold00
+# ----- populating detokeniser -------------- #FOLD00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -246,7 +246,7 @@ colon "array"
 semicolon
 
 
-# ----- compiler and word search related ---- #fold00
+# ----- compiler and word search related ---- #FOLD00
 
 # ( -- 0 | a )
 exists() {
@@ -384,7 +384,7 @@ colon 'rdepth'
 semicolon
 inline
 
-# ----- string stack ------------------------ #fold00
+# ----- string stack ------------------------ #FOLD00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -709,7 +709,7 @@ colon '>'
 semicolon
 inline
 
-# ----- arithmetics ------------------------- #fold00
+# ----- arithmetics ------------------------- #FOLD00
 
 colon maxuint                                                        # effectively a constant, but can't define them differently yet
    code "s+=(\"$maxuint\")"
@@ -1179,7 +1179,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #fold00
+# ----- i/o --------------------------------- #FOLD00
 
 colon 'ansi'
    code 'printf "\e[%sm" "${s[-1]}"'
@@ -1295,7 +1295,7 @@ inline
 
 include()  {
    local dir file already
-   [[ $1 = */* ]] && {                                               # slash in file spec -> don't search
+   [[ $1 == */* ]] && {                                               # slash in file spec -> don't search
       [[ -f "$1" ]] && {
          from "$1"                                                   # include with given path, allow multiple includes
          return 0                                                    # file found
@@ -1410,7 +1410,7 @@ colon '.padded' "dup$ count$ - spaces type$"; semicolon                    # ( u
 colon 'u.r'     "swap <# #s #>$ .padded"; semicolon                        # ( u1 u2 -- )
 colon '.r'      "swap dup abs <# #s swap sign #>$ .padded"; semicolon      # ( n u -- )
 
-# ----- documentation ----------------------- #fold00
+# ----- documentation ----------------------- #FOLD00
 
 
 undoc_template()  {

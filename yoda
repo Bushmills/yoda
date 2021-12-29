@@ -129,25 +129,26 @@ inline=$((1<<flagscount++))                                          # compile f
 
 
 #  bits
-#  0-3   stack in    0..14, 1111=unknown or not applicable
-#  4-7   stack out   -8..6, 1111=unknown or not applicable
 #        function header   needed?
 #        atomic (code tokens, need replacement against real code)
 #        data   (literal)
 #        data   (ref)
 #        flow control
 # all 0: don't optimise, copy literal code
-analyserflag="8"                                                     # skip stack effect indicators
+analyserflag="0"                                                     # skip stack effect indicators
 functionheader="$((1<<analyserflag++))"
 inlined="$((1<<analyserflag++))"
 atomiccode="$((1<<analyserflag++))"
-literalcode="$((1<<analyserflag++))"
 literalnumber="$((1<<analyserflag++))"
 literalstring="$((1<<analyserflag++))"
 flowcontrol="$((1<<analyserflag++))"
 
+declare -A stackin=()
+declare -A stackout=()
+declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- compiler muting ---------------------------------- #fold00
+
+# ----- compiler muting ---------------------------------- #FOLD00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -164,7 +165,7 @@ restricted() {                                                       # flag curr
 }
 derestrict
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 #bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 bits=32
 #bits=16                                                             # 16 bits are nice for testing
@@ -399,10 +400,10 @@ analyserflag()  {
    (( analyser[-1] |= $1 ))
 }
 
+
 # currently it only checks for "atom" tag, and replaces thusly
 # tagged lines against corresponding entries from atom table.
 
-declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
 optimise()  {                                                        # run code generator on ${analyser[@]} data, as provided by primitives.
    ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
@@ -410,26 +411,31 @@ optimise()  {                                                        # run code 
    target=()
 #   corresponding=()                                                 # index array source line to target line.
 
-((codedump))&& {
-   echo ": $lastword"
-   for ((tmp=0; tmp<${#body[@]}; tmp++)); do
-      printf "%2d %-5s %s\n" "$tmp" "${analyser[tmp]}" "${body[tmp]}"
-   done
-   echo "------------------------------------------------"
-}
+   ((codedump))&& {
+      echo ": $lastword"
+      for ((tmp=0; tmp<${#body[@]}; tmp++)); do
+         printf "%2d %-5s %s\n" "$tmp" "${analyser[tmp]}" "${body[tmp]}"
+      done
+      echo "------------------------------------------------"
+   }
 
    for ((tmp=0; tmp<${#body[@]}; tmp++)); do
 #      corresponding[tmp]="${#target[@]}"                            # allow optimiser to locate target code for any source line.
                                                                      # needed for post mod or removal
-      targetline="${body[tmp]}"                                      # assume no optimsation will take place
+      bodyline="${body[tmp]}"
+      bodyflag="${analyser[tmp]}"
 
-      (( analyser[tmp] )) && {                                       # proven wrong. something will be done.
+      (( bodyflag )) || {                                            # no flags: literal code, copy
+         target+=("$bodyline")
+         continue
+      }
 
+# some analyser flags were set. Examine.
+     (( analyser[tmp] & functionheader )) &&  {                      # test attempting to delegate header creation to detokeniserr
 # only pretending anyway right now, real headers are
 # still defined in advance of compilation.
 #
 # preparing to delegate header creation to detokeniser
-        (( analyser[tmp] & functionheader )) &&  {                  # test attempting to delegate header creation to detokeniserr
 #           pretend "create function header for $lastword at body line $tmp"
 
 # body[tmp]: "word name"
@@ -438,16 +444,25 @@ optimise()  {                                                        # run code 
 #           tmp2="${body[tmp]}"
 #           header "${tmp2% *}" "${tmp2#* }"
 #echo "optimise created header $tmp2"
-           continue
-        }
-
-         bodyline="$targetline"
-         (( analyser[tmp] & atomiccode )) &&  {                      # pretend optimiser. only replace atoms against code now
-            targetline="${atom[${bodyline}]}"
-         }
-
+         continue
       }
-      target+=("$targetline")
+
+      (( bodyflag & inlined )) &&  {                                 # inlined code: copy
+         target+=("$bodyline")
+         continue
+      }
+
+      (( bodyflag & atomiccode )) &&  {                              # atomic code: expand
+         target+=("${atom[${bodyline}]}")
+         continue
+      }
+
+      (( bodyflag & literalnumber )) &&  {                           # number literal: generate code pushing the number
+         target+=("s+=($bodyline)")
+         continue
+      }
+
+      echo "analyser flag not dealt with: $bodyflag on code $bodyline"
    done
 }
 
@@ -459,11 +474,11 @@ create()  {
    name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
    header "$1" "$name"
 
-#   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
-#   code "$1 $name" "$functionheader"                                       # preparing to delegate header creation to detokeniser
-#   lastword="$1"                                                     # global variable. setting header flags needs this one
-#   body=()                                                           # reinitialise code buffer
-#   analyser=()                                                       # reinitialise code tags for analyser
+#   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
+#   code "$1 $name" "$functionheader"                                # preparing to delegate header creation to detokeniser
+#   lastword="$1"                                                    # global variable. setting header flags needs this one
+#   body=()                                                          # reinitialise code buffer
+#   analyser=()                                                      # reinitialise code tags for analyser
 
    [[ -z "$linenr" ]] &&
       where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
@@ -483,11 +498,11 @@ colon()  {
    fi
    header "$1" "$name"
 
-#   code "$1" "$functionheader"                                       # preparing to delegate header creation to detokeniser
-#   code "$1 $name" "$functionheader"                                 # preparing to delegate header creation to detokeniser
-#   lastword="$1"                                                     # global variable. setting header flags needs this one
-#   body=()                                                           # reinitialise code buffer
-#   analyser=()                                                       # reinitialise code tags for analyser
+#   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
+#   code "$1 $name" "$functionheader"                                # preparing to delegate header creation to detokeniser
+#   lastword="$1"                                                    # global variable. setting header flags needs this one
+#   body=()                                                          # reinitialise code buffer
+#   analyser=()                                                      # reinitialise code tags for analyser
 
    [[ -z "$linenr" ]] &&
       where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
@@ -513,7 +528,14 @@ colon()  {
 }
 
 
-# ----- line parser -------------------------------------- #FOLD00
+# make stack effect of word known, aiding the optimiser
+inout()  {
+   stackin["$lastword"]="$1"
+   stackout["$lastword"]="$2"
+}
+
+
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -554,7 +576,11 @@ parse()  {
 code()  {                                                            # literal code compiler
    trace "$1"
    body+=("$1")
-   analyser+=(${2:-0})                                                     # default to no optimiser intervention
+   analyser+=(${2:-0})                                               # default to no optimiser intervention
+}
+
+literal()  {
+   code "$1"   "$literalnumber"
 }
 
 # atoms may be:
@@ -676,7 +702,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -715,7 +741,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -803,7 +829,7 @@ trace "line=[$line]"
    done
 }
 
-# ----- read source -------------------------------------- #FOLD00
+# ----- read source -------------------------------------- #fold00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.

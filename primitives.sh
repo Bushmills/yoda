@@ -303,6 +303,14 @@ colon 'execute'   "s1 drop"
    code "${header_code}_\${s1}"
 semicolon
 
+trash() {
+   unset "headersstateless[$1]"
+}
+
+colon 'trash'
+   code 'word'
+   code 'unset "headersstateless[$word]"'
+semicolon
 
 
 # ----- misc -------------------------------- #FOLD00
@@ -1418,6 +1426,7 @@ evaluate ': .        dup abs  <#  #s  swap  sign  #>type space ;'  ; inout 1 0  
 evaluate ': .padded  dup$ count$ - spaces type$ ;'                 ; inout 1 0    # ( u -- ) (string: $1 -- )
 evaluate ': u.r      swap <# #s #>$ .padded ;'                     ; inout 2 0    # ( u1 u2 -- )
 evaluate ': .r       swap dup abs <# #s swap sign #>$ .padded ;'   ; inout 2 0    # ( n u -- )
+trash .padded
 
 # ----- documentation ----------------------- #FOLD00
 
@@ -1548,10 +1557,6 @@ semicolon
 
 # ----- experimental ------------------------ #FOLD00
 
-colon 'trash'
-   code 'word'
-   code 'unset "headersstateless[$word]"'
-semicolon
 
 # ----- unsorted ---------------------------- #FOLD00
 

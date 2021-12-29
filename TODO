@@ -1,4 +1,7 @@
 --- todos solving problems, shortcomings, quirks
+- / seems more like u/ right now. review.
+- 2/ seems more like u2/ right now. review.
+- mod seems more like umod right now. review.
 - ticking a word with headers in more than one context vocabulary allows
   no control nor test over which version was ticked.
 - better support for unsigned

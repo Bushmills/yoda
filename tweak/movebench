@@ -1,0 +1,18 @@
+
+need .
+: bench
+   "test" $1000 unpack$ drop
+   20 for
+      $1000 $1800 $800 move
+      $1800 $1000 $800 move
+   next
+1 .   $1000 4 pack$ type$ cr
+2 .   $1800 4 pack$ type$ cr
+;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+
+boot test

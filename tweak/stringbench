@@ -1,0 +1,14 @@
+
+need .
+: bench
+   "this is a very nice albeit a bit long string"  
+   1000 for
+      here dup unpack$ pack$
+   next
+   type$ cr  ;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+boot test

@@ -1,0 +1,14 @@
+
+need .
+: bench
+   200 for
+      1000 1000 $aa fill
+   next
+ ;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+
+boot test

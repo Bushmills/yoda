@@ -1,0 +1,19 @@
+#!/usr/local/bin/yoda
+
+: bench
+   1000
+   dup 2* for
+       i over < >r
+       r@ here !
+       i 1 and
+       r> or
+       +
+   next
+   . ;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+
+boot test

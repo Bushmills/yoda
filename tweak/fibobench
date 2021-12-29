@@ -1,0 +1,19 @@
+
+need .
+
+
+: fibo ( u -- u2 ) 
+      1- dup 1 > lest
+      dup 1- recurse  
+      swap recurse +  
+   ;
+
+
+: bench  20 fibo drop ;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+
+boot test

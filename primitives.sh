@@ -50,7 +50,7 @@ atom['rpush']='r+=("s[-1]")'              # s1 -> r++
 atom['rdrop']='unset "r[-1]"'             # --r
 atom["rpop"]='unset "r[-1]"'              # --r
 atom["allot"]='((dp+=s[-1]))'
-atom["here"]='((s+=($dp)))'
+atom["here"]='s+=($dp)'
 
 # ----- colon/semicolon --------------------- #FOLD00
 

@@ -50,5 +50,6 @@ In some respects does yoda differ from Forth:
   so is "read-file" called "from", "evaluate" evaluates from tib, not from addr/cnt,
   "list" isn't a word from the blocks word set (and doesn't behave like it),
   pictured number conversion is nestable (that is,  <# ... #>  may appear
-  within another <# ... #> block).
-. Some of those choice may not be permanent, but on a "for the time being" base.
+  within another <# ... #> block), but doesn't expect a double length number.
+  Each started conversion allocates a string stack item as output buffer.
+  Some of those choice may not be permanent, but on a "for the time being" base.

@@ -431,7 +431,29 @@ colon()  {
       unset "headersunresolved[$1]"                                  # remove forward reference
       log "resolving: $1"
    fi
+
    header "$1" "$name"
+
+# -- hack alert:
+# source location isn't recorded properly when definition is
+# created by  "evaluate ': foo ... ;' as done several time in
+# primitives.sh. In order to fix their source locations in the
+# "where" array, it is examined here whether call to colon happened
+# two levels higher from evaluate. This hack is needed for another
+# hack which is here too and similar enough that they both can be
+# pulled together here:
+# source locations from primitives in general need that other hack
+# which takes source location from BASH_LINENO[0] (and from BASH_LINENO[2]
+# for the hack of the hack).
+# So when suddenly source lookup of primitives through "review" fails, this
+# would be the place to look at.
+   [[ -z "$linenr" ]] && {
+      tmp="${BASH_LINENO[0]}"
+      [[ "${FUNCNAME[2]}" == "evaluate" ]] &&
+         tmp="${BASH_LINENO[2]}"
+      where["$lastword"]="0 $tmp"
+
+   }
 
 #   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
 #   code "$1 $name" "$functionheader"                                # preparing to delegate header creation to detokeniser
@@ -439,13 +461,15 @@ colon()  {
 #   body=()                                                          # reinitialise code buffer
 #   analyser=()                                                      # reinitialise code tags for analyser
 
-   [[ -z "$linenr" ]] &&
-      where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
    compiling=1
 
 # experimental:  word list following colon header
 # doesn't respect inline flag, but compiles call to function
 # regardless of flag. Only atoms will be inlined.
+# most places which used this have been changed now to
+#  "evaluate ": foo bar ... ;"  -  a small number is remaining
+# where high level and low level code are mixed into a definition.
+# I'll probably remove this again.
    [[ -z "$2" ]] || {
       shift
       for word in $*; do

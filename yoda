@@ -338,8 +338,8 @@ parse()  {
       return
    }
    word="${line%%"${1}"*}"
-   line="${line#${word}}"                                            # " unconfuse efte syntax highlighting
-   line="${line#$1}"
+   line="${line#"${word}"}"                                            # " unconfuse efte syntax highlighting
+   line="${line#"$1"}"
 }
 
 # ----- compiler ----------------------------------------- #FOLD00
@@ -598,7 +598,6 @@ pattern()  {                                                         # pattern i
 # while only single word, this may not be skipped during
 # code muting, or multi word double quote register a
 # false match and parses to line end.
-# fails on string like "a[1] a[2]"
    [[ "${word:0:1}${word:0-1}" == '""' ]] && {                       # quoted string, single word
       restricted && return 0
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
@@ -612,6 +611,7 @@ pattern()  {                                                         # pattern i
    }
    [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
       line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
+
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes

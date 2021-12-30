@@ -1,0 +1,9 @@
+name:                spaces
+stack:               ( x -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            I/O
+
+decription:          output x spaces
+
+contexts:            interpreting, compiling

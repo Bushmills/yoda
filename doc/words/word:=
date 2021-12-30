@@ -1,0 +1,12 @@
+name:                =
+stack:               ( x1 x2 -- 0 | -1 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            comparison
+
+decription:          replaces top two stack items against true if they match,
+                     or false otherwise.
+
+contexts:            interpreting, compiling
+example:             none
+notes:               none

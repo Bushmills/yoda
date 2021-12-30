@@ -1,0 +1,10 @@
+name:                noop
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+
+decription:          probably unnecessary - was used to manually "pad" conditionals as
+                     bash doesn't allows those to contain no code. As that's now checked
+                     and reacted to automatically, the original need for noop has evaporated.
+
+contexts:            interpreting, compiling

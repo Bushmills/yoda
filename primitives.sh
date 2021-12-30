@@ -1,5 +1,5 @@
 ### yoda base vocabulary ###
-# ----- populating detokeniser -------------- #FOLD00
+# ----- populating detokeniser -------------- #fold00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -761,15 +761,21 @@ colon '/'
    code 'return; }'
    code '((s[-1]=(s2/s1)))'                # identical sign: result will be positive
 semicolon
-#inline
 inout 2 1
 
+
+# made fit for signed operation
 colon 'mod'
-   code '((s[-2]%="s[-1]"))'
+   atom 's1'
+   atom 's2'
    atom 'drop'
+   code '((tmp=s1^s2, s1&msb&&(s1=(s1*maxuint)&maxuint), s2&msb&&(s2=(s2*maxuint)&maxuint), tmp&msb))&&{'
+   code '((s[-1]=-(s2%s1)))'               # different sign: result will be negative
+   code 'return; }'
+   code '((s[-1]=(s2%s1)))'                # identical sign: result will be positive
 semicolon
-inline
 inout 2 1
+
 
 colon 'negate'  "negate"; semicolon; inline; inout 1 1
 

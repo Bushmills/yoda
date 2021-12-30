@@ -1,0 +1,7 @@
+name:                depth$
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( any -- any )
+category:            string stack
+decription:          returns number of items (strings) on string stack
+contexts:            interpreting, compiling

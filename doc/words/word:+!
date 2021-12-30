@@ -1,0 +1,9 @@
+name:                +!
+stack:               ( x a -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            memory, arithmetics
+
+decription:          adds x to contents at address a
+
+contexts:            interpreting, compiling

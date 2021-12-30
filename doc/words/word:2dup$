@@ -1,0 +1,9 @@
+name:                2dup$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 $2 -- $1 $2 $1 $2 )
+category:            string stack
+
+decription:          duplicate the top two string stack items
+
+contexts:            interpreting, compiling

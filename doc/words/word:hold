@@ -1,0 +1,20 @@
+name:                hold
+stack:               ( c -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+category:            number conversion
+
+decription:          meant for use during pictured number conversion, the character c
+                     is prepended to the string on string stack, allowing to insert
+                     characters of choice into the number in process of being converted.
+
+contexts:            interpreting, compiling
+
+example:             none
+
+notes:               While yoda allows using hold in different contexts than pictured
+                     number conversion, I advise to refrain from doing so, as such
+                     programs will most definitely become incompatible with any other
+                     Forth- or forthlike compiler.
+                     "char$ swap$ join$" will achieve the same (while not making your
+                     program any more compatible with other systems :) )

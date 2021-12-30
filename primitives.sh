@@ -751,36 +751,37 @@ semicolon
 inline
 inout 2 1
 
-# made fit for signed operation
-colon '/'
-   atom 's1'
-   atom 's2'
-   atom 'drop'
-   code '((tmp=s1^s2, s1&msb&&(s1=(s1*maxuint)&maxuint), s2&msb&&(s2=(s2*maxuint)&maxuint), tmp&msb))&&{'
-   code '((s[-1]=-(s2/s1)))'               # different sign: result will be negative
-   code 'return; }'
-   code '((s[-1]=(s2/s1)))'                # identical sign: result will be positive
-semicolon
-inout 2 1
-
 
 # made fit for signed operation
-colon 'mod'
+colon '/mod'
    atom 's1'
    atom 's2'
-   atom 'drop'
-   code '((tmp=s1^s2, s1&msb&&(s1=(s1*maxuint)&maxuint), s2&msb&&(s2=(s2*maxuint)&maxuint), tmp&msb))&&{'
-   code '((s[-1]=-(s2%s1)))'               # different sign: result will be negative
-   code 'return; }'
-   code '((s[-1]=(s2%s1)))'                # identical sign: result will be positive
+   code '((tmp=s1^s2))'
+   code '((s1&msb&&(s1=(s1*maxuint)&maxuint)))'
+   code 'if ((s2&msb)); then'
+   code '(((s2=(s2*maxuint)&maxuint)))'
+   code '((s[-2]=-(s2%s1)))'                                         # divided number negative: remainder negative
+   code 'else'
+   code '((s[-2]=s2%s1))'                                            # divided number positive: remainder positive
+   code 'fi'
+   code '((tmp&msb))&&'
+   code '((s[-1]=-(s2/s1)))||'                                       # different sign: negative quotient
+   code '((s[-1]=(s2/s1)))'                                          # identical sign: positive quotient
 semicolon
-inout 2 1
+inout 2 2
 
+#  14  4 /mod  . .   3  2   ->    3 *  4 + 2 ->  14
+# -14  4 /mod  . .  -3 -2   ->   -3 *  4 - 2 -> -14
+#  14 -4 /mod  . .  -3  2   ->   -3 * -4 + 2 ->  14
+# -14 -4 /mod  . .   3 -2   ->    3 * -4 - 2 -> -14
+
+evaluate ': /    /mod nip  ;'; inline; inout 2 1
+evaluate ': mod  /mod drop ;'; inline; inout 2 1
 
 colon 'negate'  "negate"; semicolon; inline; inout 1 1
 
 colon '?negate'
-   code '((s[-1]&&s[-2]*=maxuint))'
+   code '((s[-1]&&(s[-2]*=maxuint)))'
    atom 'drop'
 semicolon
 inline
@@ -801,11 +802,11 @@ semicolon
 inout 3 1
 
 # ( x1 x2 -- rem quot )
-colon '/mod'   "s1 s2"
-   code '((s[-1]=s2/s1, s[-2]=s2%s1))'
-semicolon
-inline
-inout  2 2
+#colon '/mod'   "s1 s2"
+#   code '((s[-1]=s2/s1, s[-2]=s2%s1))'
+#semicolon
+#inline
+#inout  2 2
 
 # ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
 colon '*/mod'     "s1 drop"

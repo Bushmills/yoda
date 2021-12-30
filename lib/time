@@ -7,3 +7,9 @@
         realtime r> -         \ subtract previously save time from now
         u. ;                  \ output
 
+\ measures time to run word with execution token on stack. microseconds
+: exectime ( xt -- u )
+      realtime >r
+      execute
+      realtime r>
+      -  ;

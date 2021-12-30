@@ -1,0 +1,12 @@
+name:                char$
+stack:               ( c -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+category:            string stack
+
+decription:          converts the ASCII of a character on stack to the character
+                     represented as string and pushed onto string stack
+
+contexts:            interpreting, compiling
+notes:               some limitations exist converting control characters, and
+                     non-printable characters in general, to strings.

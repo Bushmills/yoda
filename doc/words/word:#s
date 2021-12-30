@@ -1,0 +1,13 @@
+name:                #s
+stack:               ( x -- 0 )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+category:            pictured number conversion, string stack
+
+decription:          converts all (remaining) digits of x, respecting current
+                     radix, to characters, which are prepended to $1
+
+contexts:            interpreting, compiling
+
+notes:               meant to be used with pictured number conversion, albeit
+                     this implemenation doesn't require it. See notes at "hold"

@@ -1,0 +1,15 @@
+name:                execute
+stack:               ( xt -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:
+
+decription:          removes an execution token from stack and executes the word
+                     associated with it.
+
+contexts:            interpreting, compiling
+example:             none
+notes:               to obtain the execution token of a word, see '
+                     This allows treating executable code as unnamed or
+                     anonymous entity, what "lambdafication" is essentially
+                     about.

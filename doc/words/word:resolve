@@ -1,0 +1,24 @@
+name:                resolve
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            compiler
+
+decription:          performs a resolve run if any unresolved references exist,
+                     attempting to resolve those from postlib by conditional
+                     compilation. resolve may repeat the attempt when new forward
+                     references are created as result of resolving others. When
+                     no more unresolved references exist, or no more forward
+                     references are resolved and no new forward references are
+                     introduced, resolve considers its work as done and returns.
+
+contexts:            interpreting, compiling
+notes:               resolve may be executed whenever it seem appropriate. You may
+                     execute it interactively, after declaring a word as needed
+                     (see: need), but it will also be called by the compiler in some
+                     situations: after setting a boot vector, or before passing
+                     control to a just compiled program from command line. In latter
+                     case will yoda refuse execution if any unresolved references
+                     remain.
+                     see also "instantresolve" for implicit execution of resolve in
+                     interactive mode.

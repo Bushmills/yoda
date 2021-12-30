@@ -108,10 +108,10 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 #bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
-#bits=32
-bits=16                                                             # 16 bits are nice for testing
+bits=32
+#bits=16                                                             # 16 bits are nice for testing
 
 msb="$((1<<(bits-1)))"
 maxint="$((msb-1))"

@@ -668,18 +668,13 @@ colon '0<'
 semicolon
 inline
 
-# instead of having to deal with uint wraparound in every primitive
-# where it matters, better make sure that numbers are wrapped the
-# moment they enter the stack.
 colon '='
-#   code '((s[-2]=(s[-2]&maxuint)==(s[-1]&maxuint)?maxuint:0))'
    code '((s[-2]=(s[-2])==(s[-1])?maxuint:0))'
    atom 'drop'
 semicolon
 inline
 
 colon '<>'
-#   code '((s[-2]=(s[-2]&maxuint)==(s[-1]&maxuint)?0:maxuint))'
    code '((s[-2]=(s[-2])==(s[-1])?0:maxuint))'
    atom 'drop'
 semicolon
@@ -709,7 +704,7 @@ colon '>'
 semicolon
 inline
 
-# ----- arithmetics ------------------------- #FOLD00
+# ----- arithmetics ------------------------- #fold00
 
 colon '1+'  "1+"; semicolon; inline    ; inout 1 1
 colon '1-'  "1-"; semicolon; inline    ; inout 1 1
@@ -744,41 +739,46 @@ semicolon
 inline
 inout 2 1
 
-colon '*'
-   code '((s[-2]=(s[-1]*s[-2])&maxuint))'
-   atom 'drop'
-semicolon
-inline
-inout 2 1
 
 
-# made fit for signed operation
-colon '/mod'
+#                     msb&    msb&
+#  s3 s2 s1 -- r q  s1^s2^s3  s2^s3
+# ---------------------------------
+#  +  +  +     + +     0       ß0
+#  +  +  -     + -     1        0
+#  +  -  +     - -     1        1
+#  +  -  -     - +     0        1
+#  -  +  +     - -     1        1
+#  -  +  -     - +     0        1
+#  -  -  +     + +     0        0
+#  -  -  -     + -     1        0
+# ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
+colon '*/mod'
    atom 's1'
    atom 's2'
-   code '((tmp=s1^s2))'
-   code '((s1&msb&&(s1=(s1*maxuint)&maxuint)))'
-   code 'if ((s2&msb)); then'
-   code '(((s2=(s2*maxuint)&maxuint)))'
-   code '((s[-2]=-(s2%s1)))'                                         # divided number negative: remainder negative
-   code 'else'
-   code '((s[-2]=s2%s1))'                                            # divided number positive: remainder positive
-   code 'fi'
-   code '((tmp&msb))&&'
-   code '((s[-1]=-(s2/s1)))||'                                       # different sign: negative quotient
-   code '((s[-1]=(s2/s1)))'                                          # identical sign: positive quotient
+   atom 's3'
+   atom 'drop'
+   code '((signr=(s2^s3)&msb))'                                      # 0:+   x:-
+   code '((signq=(signr^s1)&msb))'                                   # 0:+   x:-
+   code '((s1&msb&&(s1=(s1*maxuint)&maxuint)))'                      # abs s1
+   code '((s2&msb&&(s2=(s2*maxuint)&maxuint)))'                      # abs s2
+   code '((s3&msb&&(s3=(s3*maxuint)&maxuint)))'                      # abs s3
+   code '((signr&&(s[-2]=-(s3*s2)%s1)||(s[-2]=(s3*s2)%s1)))'
+   code '((signq&&(s[-1]=-(s3*s2)/s1)||(s[-1]=(s3*s2)/s1)))'
 semicolon
-inout 2 2
+inout 3 2
 
-#  14  4 /mod  . .   3  2   ->    3 *  4 + 2 ->  14
-# -14  4 /mod  . .  -3 -2   ->   -3 *  4 - 2 -> -14
-#  14 -4 /mod  . .  -3  2   ->   -3 * -4 + 2 ->  14
-# -14 -4 /mod  . .   3 -2   ->    3 * -4 - 2 -> -14
+evaluate ': */     */mod nip ;'         ; inline; inout 3 1
+evaluate ': /mod   1 -rot  */mod  ;'    ; inline; inout 2 2
+evaluate ': *      1 */    ;'           ; inline; inout 2 1
+evaluate ': /      /mod nip  ;'         ; inline; inout 2 1
+evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1
 
-evaluate ': /    /mod nip  ;'; inline; inout 2 1
-evaluate ': mod  /mod drop ;'; inline; inout 2 1
-
-colon 'negate'  "negate"; semicolon; inline; inout 1 1
+colon 'negate'
+   atom 'negate'
+semicolon
+inline
+inout 1 1
 
 colon '?negate'
    code '((s[-1]&&(s[-2]*=maxuint)))'
@@ -794,19 +794,7 @@ semicolon
 inline
 inout 1 1
 
-colon '*/'
-   code '((s[-3]=(s[-3]*s[-2]/s[-1])&maxuint))'
-   atom 'drop'
-   atom 'drop'
-semicolon
-inout 3 1
-
-# ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
-colon '*/mod'     "s1 drop"
-   code '((tmp=(s[-2]*s[-1]), s[-2]=tmp%s1, s[-1]=(tmp/s1)&maxuint))'
-semicolon
-inout 3 2
-
+# needs testing
 colon 'u/mod'		# u1 u2 -- rem quot
    code '((s1=s[-1]&maxuint, s2=s[-2]&maxuint, s[-1]=s2/s1, s[-2]=s2%s1))'
 semicolon

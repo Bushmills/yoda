@@ -801,13 +801,6 @@ colon '*/'
 semicolon
 inout 3 1
 
-# ( x1 x2 -- rem quot )
-#colon '/mod'   "s1 s2"
-#   code '((s[-1]=s2/s1, s[-2]=s2%s1))'
-#semicolon
-#inline
-#inout  2 2
-
 # ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
 colon '*/mod'     "s1 drop"
    code '((tmp=(s[-2]*s[-1]), s[-2]=tmp%s1, s[-1]=(tmp/s1)&maxuint))'

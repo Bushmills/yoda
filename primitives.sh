@@ -52,7 +52,7 @@ atom["rpop"]='unset "r[-1]"'              # --r
 atom["allot"]='((dp+=s[-1]))'
 atom["here"]='s+=($dp)'
 
-# ----- colon/semicolon --------------------- #FOLD00
+# ----- colon/semicolon --------------------- #fold00
 
 colon ';'      # semicolon
    code "(( s[-1] == $magic )) || unstructured ':'"                  # check the magic left by :
@@ -88,7 +88,7 @@ colon 'immediate'                                                    # move head
 semicolon
 
 
-# ----- diagnostics ------------------------- #FOLD00
+# ----- diagnostics ------------------------- #fold00
 
 words()	{
    local headers
@@ -153,7 +153,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #FOLD00
+# ----- does> ------------------------------- #fold00
 #  : myarray  create allot does> + ;
 #  10 myarray foo
 #  5 foo .
@@ -190,7 +190,7 @@ inline
 
 
 
-# ----- defining words ---------------------- #FOLD00
+# ----- defining words ---------------------- #fold00
 
 # actually works: defining word builder
 data()  {
@@ -240,7 +240,7 @@ colon "array"
 semicolon
 
 
-# ----- compiler and word search related ---- #FOLD00
+# ----- compiler and word search related ---- #fold00
 
 # ( -- 0 | a )
 exists() {
@@ -313,7 +313,7 @@ colon 'trash'
 semicolon
 
 
-# ----- misc -------------------------------- #FOLD00
+# ----- misc -------------------------------- #fold00
 
 colon 'noop'
    code ':'
@@ -340,7 +340,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #FOLD00
+# ----- parameter stack --------------------- #fold00
 
 
 colon 'dup'       "dup"; semicolon; inline                              ; inout 1 2
@@ -372,7 +372,7 @@ colon 'pick'
 semicolon
 inline
 
-# ----- return stack ------------------------ #FOLD00
+# ----- return stack ------------------------ #fold00
 
 colon 'r@'     "r@";         semicolon; inline                          ; inout 0 1
 colon 'rdrop'  "rdrop";      semicolon; inline                          ; inout 0 0
@@ -384,7 +384,7 @@ colon 'rdepth'
 semicolon                                                               ; inout 0 1
 inline
 
-# ----- string stack ------------------------ #FOLD00
+# ----- string stack ------------------------ #fold00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -619,7 +619,7 @@ colon 'pack$'
    code 'ss+=("$tmp")'
 semicolon
 
-# ----- bit logic --------------------------- #FOLD00
+# ----- bit logic --------------------------- #fold00
 
 colon 'and'
    code '((s[-2]&=s[-1]))'
@@ -656,7 +656,7 @@ colon rshift
 semicolon
 inline
 
-# ----- comparison -------------------------- #FOLD00
+# ----- comparison -------------------------- #fold00
 
 colon '0='
    code '((s[-1]=s[-1]?0:maxuint))'                                  #&msb: 0->maxuint  x->0
@@ -751,11 +751,17 @@ semicolon
 inline
 inout 2 1
 
+# made fit for signed operation
 colon '/'
-   code '((s[-2]/="s[-1]"))'
+   atom 's1'
+   atom 's2'
    atom 'drop'
+   code '((tmp=s1^s2, s1&msb&&(s1=(s1*maxuint)&maxuint), s2&msb&&(s2=(s2*maxuint)&maxuint), tmp&msb))&&{'
+   code '((s[-1]=-(s2/s1)))'               # different sign: result will be negative
+   code 'return; }'
+   code '((s[-1]=(s2/s1)))'                # identical sign: result will be positive
 semicolon
-inline
+#inline
 inout 2 1
 
 colon 'mod'
@@ -807,7 +813,7 @@ semicolon
 inline
 inout 3 2
 
-# ----- memory ------------------------------ #FOLD00
+# ----- memory ------------------------------ #fold00
 
 colon '@'  "@"; semicolon; inline   ; inout 1 1
 
@@ -927,7 +933,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------ #FOLD00
+# ----- flow control ------------------------ #fold00
 
 remagic
 
@@ -1156,7 +1162,7 @@ inline
 immediate
 
 
-# ----- conditional compilation-------------- #FOLD00
+# ----- conditional compilation-------------- #fold00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -1185,7 +1191,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #FOLD00
+# ----- i/o --------------------------------- #fold00
 
 colon 'ansi'
    code 'printf "\e[%sm" "${s[-1]}"'
@@ -1354,7 +1360,7 @@ colon 'files'
 semicolon
 
 
-# ----- pictured number conversion ---------- #FOLD00
+# ----- pictured number conversion ---------- #fold00
 
 
 colon 'decimal'
@@ -1428,7 +1434,7 @@ evaluate ': u.r      swap <# #s #>$ .padded ;'                     ; inout 2 0  
 evaluate ': .r       swap dup abs <# #s swap sign #>$ .padded ;'   ; inout 2 0    # ( n u -- )
 trash .padded
 
-# ----- documentation ----------------------- #FOLD00
+# ----- documentation ----------------------- #fold00
 
 
 undoc_template()  {
@@ -1520,7 +1526,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #FOLD00
+# ----- convenience ------------------------- #fold00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=()'
@@ -1555,10 +1561,10 @@ colon 'list'   "s1 drop"
 semicolon
 
 
-# ----- experimental ------------------------ #FOLD00
+# ----- experimental ------------------------ #fold00
 
 
-# ----- unsorted ---------------------------- #FOLD00
+# ----- unsorted ---------------------------- #fold00
 
 colon 'warm'
    code 'warm'

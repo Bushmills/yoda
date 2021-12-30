@@ -1,5 +1,5 @@
 ### yoda base vocabulary ###
-# ----- populating detokeniser -------------- #fold00
+# ----- populating detokeniser -------------- #FOLD00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -19,7 +19,7 @@ atom["1+"]='((s[-1]=(s[-1]+1)&maxuint))'  # s1++
 atom["1-"]='((s[-1]=(s[-1]-1)&maxuint))'  # s1--
 atom["2*"]='((s[-1]=(s[-1]*2)&maxuint))'
 atom["2/"]='((s[-1]/=2))'
-atom["negate"]='((s[-1]*=maxuint))'
+atom["negate"]='((s[-1]=(-s[-1]&maxuint)))'
 atom["invert"]='((s[-1]^=maxuint))'
 
 atom["s1"]='((s1=s[-1]))'

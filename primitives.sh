@@ -704,26 +704,16 @@ colon '>'
 semicolon
 inline
 
-# ----- arithmetics ------------------------- #fold00
+# ----- arithmetics ------------------------- #FOLD00
 
 colon '1+'  "1+"; semicolon; inline    ; inout 1 1
 colon '1-'  "1-"; semicolon; inline    ; inout 1 1
 colon '2*'  "2*"; semicolon; inline    ; inout 1 1
 colon '2/'  "2/"; semicolon; inline    ; inout 1 1
 
-colon 'cells'
-   code ':'
-semicolon
-interactive
-inout 1 1
-
-colon 'cells'
-   code ':'
-semicolon
-immediate
-inout 1 1
-
-colon 'cell+' "1+"; semicolon; inline  inout 1 1
+evaluate ': cells ;'      ; immediate  ; inout 1 1
+evaluate ': cells ;'      ; interactive; inout 1 1
+evaluate ': cell+ 1+ ;'   ; inline;   inout 1 1
 
 colon '+'
    code '((s[-2]=(s[-1]+s[-2])&maxuint))'
@@ -758,13 +748,13 @@ colon '*/mod'
    atom 's2'
    atom 's3'
    atom 'drop'
-   code '((signr=(s2^s3)&msb))'                                      # 0:+   x:-
-   code '((signq=(signr^s1)&msb))'                                   # 0:+   x:-
-   code '((s1&msb&&(s1=(s1*maxuint)&maxuint)))'                      # abs s1
-   code '((s2&msb&&(s2=(s2*maxuint)&maxuint)))'                      # abs s2
-   code '((s3&msb&&(s3=(s3*maxuint)&maxuint)))'                      # abs s3
-   code '((signr&&(s[-2]=-(s3*s2)%s1)||(s[-2]=(s3*s2)%s1)))'
-   code '((signq&&(s[-1]=-(s3*s2)/s1)||(s[-1]=(s3*s2)/s1)))'
+   code '((signr=(s2^s3)))'                                          # 0:+   x:-
+   code '((signq=(signr^s1)))'                                       # 0:+   x:-
+   code '((s1&msb&&(s1=-s1&maxuint)))'                               # abs s1
+   code '((s2&msb&&(s2=-s2&maxuint)))'                               # abs s2
+   code '((s3&msb&&(s3=-s3&maxuint)))'                               # abs s3
+   code '((s[-2]=(signr&msb?-(s3*s2)%s1:(s3*s2)%s1)))'
+   code '((s[-1]=(signq&msb?-(s3*s2)/s1:(s3*s2)/s1)))'
 semicolon
 inout 3 2
 

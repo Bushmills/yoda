@@ -1,5 +1,4 @@
 
-need .
 : bench
    200 for
       1000 1000 erase

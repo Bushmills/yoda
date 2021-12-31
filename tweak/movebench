@@ -1,5 +1,4 @@
 
-need .
 : bench
    "test" $1000 unpack$ drop
    20 for

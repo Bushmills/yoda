@@ -1,0 +1,27 @@
+
+: bench
+   10 20
+   5000 for
+      2dup
+      over
+      nip
+      2over
+      swap
+      2swap
+      rot
+      2drop
+      tuck
+      drop
+      pluck
+      2drop
+      drop
+   next
+   2drop
+    ;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+
+boot test

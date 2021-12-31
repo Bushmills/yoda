@@ -1,4 +1,3 @@
-#!/usr/local/bin/yoda
 
 : bench
    1000

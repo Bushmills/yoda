@@ -1,0 +1,23 @@
+
+: bench
+   10 20
+   2000 for
+      over +
+      over -
+      over *
+      over /
+      3 lshift
+      3 rshift
+      negate
+      over *
+      over negate /
+   next
+   2drop             ( 10 20 expected )
+    ;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+
+boot test

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 
@@ -26,7 +26,7 @@ version=0  subversion=2    # 2021dec29,16:04
 # shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
                                                                      #  right, that's the reason for using single quotes there.
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -63,6 +63,7 @@ rm -f "$logfile"                                                     # each run 
 header_code="function"                                               # prefix to bash function names,  _${nextname} will be appended upon header creation
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
 
+declare -i sp=0
 declare -ai r=() s=() m=()
 declare -a ss=()
 declare -i dp=0
@@ -108,7 +109,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- state variables, switches, globals, static etc --- #fold00
+# ----- state variables, switches, globals, static etc --- #FOLD00
 #bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 bits=32
 #bits=16                                                             # 16 bits are nice for testing
@@ -142,7 +143,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -167,7 +168,7 @@ logminus() { ((logindent+=-2)); log "$@"; }
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- compiler muting ---------------------------------- #fold00
+# ----- compiler muting ---------------------------------- #FOLD00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -181,7 +182,7 @@ restricted() {                                                       # flag curr
 }
 derestrict
 
-# ----- ANSI/VT100 attributes ---------------------------- #fold00
+# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
 
 # use in error and prompt.
 # for use in programs, library ansi has been supplied
@@ -194,7 +195,7 @@ derestrict
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #fold00
+# ----- headers ------------------------------------------ #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -236,7 +237,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -305,13 +306,13 @@ optimise()  {                                                        # run code 
       elif (( bodyflag & atomiccode )); then                         # atomic code: expand
          targetline="${atom[${bodyline}]}"
       elif (( bodyflag & literalnumber )); then                      # number literal: generate code pushing the number
-         targetline="s+=($bodyline)"
+         targetline="((s[++sp]=$bodyline))"
       fi
       target+=("$targetline")
    done
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -346,7 +347,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # atoms may be:
 #  - micro instructions
@@ -357,6 +358,7 @@ parse()  {
 # in addition are meta directives allowed:
 #  - compile time instructions for word creation, such as header building
 atom()  { code "$1" "$atomiccode"; }                                 # insert into code buffer, mark as atom
+exec()  { code "${headersstateless[$1]}"; }
 
 codebody()  {                                                        # inline compiler
    while read -r tmp; do
@@ -388,7 +390,7 @@ stateless()   {
 
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -406,7 +408,7 @@ code()  {                                                            # literal c
 }
 
 literal()  {
-   code "$1"   "$literalnumber"
+   code "$1"   "$literalnumber"                                      # leave it to detokeniser to generate code
 }
 
 
@@ -466,28 +468,6 @@ colon()  {
 #   analyser=()                                                      # reinitialise code tags for analyser
 
    compiling=1
-
-# experimental:  word list following colon header
-# doesn't respect inline flag, but compiles call to function
-# regardless of flag. Only atoms will be inlined.
-# most places which used this have been changed now to
-#  "evaluate ": foo bar ... ;"  -  a small number is remaining
-# where high level and low level code are mixed into a definition.
-# I'll probably remove this again.
-   [[ -z "$2" ]] || {
-      shift
-      for word in $*; do
-         if [[ -z "${atom[$word]}" ]]; then
-            if [[ -z "${headersstateless[$word]}" ]]; then
-               error "undefined $word"
-            else
-               code "${headersstateless[$word]}"
-            fi
-         else
-            code "${atom[$word]}"
-         fi
-      done
-   }
 }
 
 
@@ -515,18 +495,23 @@ variable()  {
 }
 
 
-variable 'shell'             "0"
-variable 'forwardrefs'       "0"
-variable 'instantresolve'    "0"
-variable 'base'              "10"
+variable 'shell'              "0"
+variable 'forwardrefs'        "0"
+variable 'instantresolve'     "0"
+variable 'base'               "10"
 
-constant 'maxuint'           "$maxuint"
-constant 'maxint'            "$maxint"
-constant 'msb'               "$msb"
-constant 'true'              "$maxuint"
-constant 'false'             "0"
+constant 'maxuint'            "$maxuint"
+constant 'maxint'             "$maxint"
+constant 'msb'                "$msb"
+constant 'true'               "$maxuint"
+constant 'false'              "0"
+constant '0'                  "0"
+constant 'bl'                 "32"
 
-# ----- errors, traps, entry points----------------------- #fold00
+
+
+
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -534,7 +519,7 @@ warm()  {
    compiling=0                                                       # interpret
    derestrict                                                        # turn off code suppressing
    r=()
-   ((clean)) && s=() ss=()                                           # empty stacks
+   ((clean)) && s=() ss=() sp=0 rp=0                                 # empty stacks
    m[base]="10"                                                      # set decimal if base exists
 }
 
@@ -563,7 +548,7 @@ error()  {                                                           # Zeile mit
    warm
 }
 
-emptyname()     { error "no or empty name"; }
+emptyname()       { error "no or empty name"; }
 notfound()        { error "$word not found"; }
 stillcompiling()  { error "still compiling after $*"; }
 unbalancedstack() { error "unbalanced stack in file $*"; }
@@ -591,7 +576,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
@@ -599,27 +584,26 @@ pattern()  {                                                         # pattern i
       ((radix=m[base]))
       tmp="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
       [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                       # 1234      unsigned number
-         stateless "s+=($((${radix}#${word} & maxuint)))"            # convert signless numbers without special treatment
+         stateless "s[++sp]=\"$((${radix}#${word} & maxuint))\""     # convert signless numbers without special treatment
          return 0; }
       [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                      # -1234     negative number
-         stateless "s+=("$((-${radix}#${word:1} & maxuint))")"
+         stateless "s[++sp]=\"$((-${radix}#${word:1} & maxuint))\""
          return 0; }
       [[ $word =~ ^\$[${tmp:0:16}]+$ ]] && {                         # $abcd     hex number
          tmp="$((16#${word:1} & maxuint))"
-         stateless "s+=(\"$tmp\")"; return 0; }
+         stateless "s[++sp]=\"$tmp\""; return 0; }
       [[ $word =~ ^\%[${tmp:0:2}]+$ ]] && {                          # %1101     binary number
          tmp="$((2#${word:1} & maxuint))"
-         stateless "s+=(\"$tmp\")"; return 0; }
+         stateless "s[++sp]=\"$tmp\""; return 0; }
       [[ $word =~ ^\#[${tmp:0:10}]+$ ]] && {                         # #1234     decimal number
          tmp="$((10#${word:1} & maxuint))"
-         stateless "s+=(\"$tmp\")"
-         return 0; }
+         stateless "s[++sp]=\"$tmp\""; return 0; }
       [[ ${word} == \'? || ${word} == \'?\' ]] && {                  # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
          read -r tmp < <(printf "%d" "'${word:1:1}'")
-         stateless "s+=(\"$tmp\")"; return 0; }
+         stateless "s[++sp]=\"$tmp\""; return 0; }
       [[ ${word} == ^[a-z] ]] && {                                   # ^X        return control char
          read -r tmp < <(printf "%d" "'${word:1:1}")
-         stateless "s+=(\"$((tmp&31))\")"; return 0; }
+         stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
    }
 # other patterns, especially those doing parsing or modifying line, must partially execute
 
@@ -662,7 +646,7 @@ pattern()  {                                                         # pattern i
       restricted || stateless "$tmp $word"                           # execute or compile the parsed shell command
       return 0
    }
-   (( m[shell])) || return 1                                         # done unless shell flag was set
+   ((m[shell])) || return 1                                          # done unless shell flag was set
    restricted || {
       stateless "${word} ${line}" ||                                 # in which case execution as shell command is attempted
       error "returned $?"                                            # non-zero exit values of shell commands will be passed on to yoda error handler
@@ -671,7 +655,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -710,7 +694,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -798,7 +782,7 @@ trace "line=[$line]"
    done
 }
 
-# ----- read source -------------------------------------- #fold00
+# ----- read source -------------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -806,7 +790,7 @@ trace "line=[$line]"
 # Callers did a check prior to calling.
 from()  {
    local line lines linenr file filenr word                          # must protect for nested froms.
-   local stackeffect="${#s[@]}"                                      # included files must have net stack effect of 0
+   local stackeffect="$sp"                                           # included files must have net stack effect of 0
    file="$(realpath $1)"                                             # canonical name of the file
    for ((filenr=0; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed here, those files won't be recorded multiple times
       [[ "${files[filenr]}" == "$file" ]] && break                   # so when already recorded, break out
@@ -819,7 +803,7 @@ from()  {
       ((linenr < 0)) && break                                        # source can flag "stop execution" with negative linenr (warm does so)
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
-   (( stackeffect == ${#s[@]} )) || unbalancedstack "$1"             # demanding stack clean files with net effect zero.
+   (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
    (( ${#headersunresolved[@]} )) && {
       log "$1"
       resolve                                                        # only resolve on bottom level, to prevent endless recursion

@@ -10,7 +10,6 @@ u: quit  ( -- )
       prompt
    again ;
 
-u: type     ( a u -- )  pack$ type$  ;
 u: epoch    ( -- u ) "EPOCHSECONDS" env  ;
 
 needed dump lest from dump

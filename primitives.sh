@@ -1,6 +1,6 @@
 ### yoda base vocabulary ###
 
-# ----- populating detokeniser -------------- #fold00
+# ----- populating detokeniser -------------- #FOLD00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -241,7 +241,7 @@ colon "array"
 semicolon
 
 
-# ----- compiler and word search related ---- #fold00
+# ----- compiler and word search related ---- #FOLD00
 
 # ( -- 0 | a )
 exists() {
@@ -338,7 +338,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #fold00
+# ----- parameter stack --------------------- #FOLD00
 
 
 colon 'dup'
@@ -713,7 +713,7 @@ colon 'pack$'
    code 'ss+=("$tmp")'
 semicolon
 
-# ----- bit logic --------------------------- #fold00
+# ----- bit logic --------------------------- #FOLD00
 
 colon 'and'
    code '((s[sp-1]&=s[sp--]))'
@@ -744,6 +744,9 @@ colon rshift
    code '((s[sp-1]>>=s[sp--]))'
 semicolon
 inline
+
+evaluate "' lshift alias <<"
+evaluate "' rshift alias >>"
 
 # ----- comparison -------------------------- #fold00
 
@@ -783,7 +786,7 @@ colon '>'
 semicolon
 inline
 
-# ----- arithmetics ------------------------- #fold00
+# ----- arithmetics ------------------------- #FOLD00
 
 colon '1+'
    atom '1+'
@@ -1454,7 +1457,7 @@ evaluate ': .        0  .r space ;'                ; inline; inout 1 0    # ( n 
 evaluate ': u.       0 u.r space ;'                ; inline; inout 1 0    # ( u -- )
 evaluate 'trash .padded'
 
-# ----- documentation ----------------------- #fold00
+# ----- documentation ----------------------- #FOLD00
 
 
 undoc_template()  {
@@ -1475,7 +1478,7 @@ EOF
 
 undoc()  {
    for word in "${!headers[@]}"; do                                  # run through all headers
-      name="$worddoc:$word"
+      name="$worddoc:${word/\//U+0002F;}"
       [[ -f "$name" ]] || {                                          # found one for which no doc file exists
          undoc_template "$word" >"$name"
          editor "$name"
@@ -1488,7 +1491,7 @@ colon 'undoc'
 semicolon
 
 doc()       {
-   name="$worddoc:$1"
+   name="$worddoc:${1/\//U+0002F;}"
    editor "$name"
 }
 colon 'doc'

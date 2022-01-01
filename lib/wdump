@@ -1,0 +1,23 @@
+
+: .cell     ( u -- )                \ output width adapts to bits/cell
+         <#  bits 3 + 2 >>          \ no need for multiple of 8
+         for # next
+         #>type space ;
+
+: .cells    ( a u -- )              \ output u cells fromon address a
+         for skim .cell
+         next drop ;
+
+: wdumpline ( a1 u -- a2 )          \ single line dump of u cells at a.
+         over u. 2 spaces           \ address
+         2dup .cells +  ;
+
+: wdump  ( a n -- )                 \ "wide" dump.  cell dump, "cdump", looks like "char dump"
+         base @ >r hex              \ save current number base, change to hex
+         #72 bits 3 + 2 >> 1+ /     \ number of cells per line
+         -rot pluck 1- +
+         pluck /                    \ determine number of lines to output
+         for
+            over wdumpline cr       \ loop through lines
+         next 2drop
+         r> base !  ;               \ restore former number base

@@ -1,27 +1,24 @@
 
-: .byte ( c -- )  <# # # #>type space ;
+: .byte ( c -- )              \ 2 digits
+      <# # # #>type space ;
 
-\ output u hex bytes at a
-: .bytes ( a u -- )
+: .bytes ( a u -- )           \ output u hex bytes at a
         for
            count .byte
         next drop ;
 
-\ output single char. replace non-printables against dot
-: emitsave ( c -- )
+: emitsave ( c -- )           \ output single char. replace non-printables against dot
         dup
         bl < if
            drop '.'
         then emit ;
 
-\ output u chars at a. could have used "type" if it was control char safe.
-: .chars ( a u -- )
+: .chars ( a u -- )           \ output u chars at a. "type" isn't control char safe
         for
            count emitsave
         next drop ;
 
-\ single line hexdump of u bytes at a. returns next yet undumped address
-: dumpline ( a1 u -- a2 )
+: dumpline ( a1 u -- a2 )     \ single line hexdump of u bytes at a.
         over u. 2 spaces
         2dup .bytes space
         2dup .chars +  ;
@@ -35,32 +32,3 @@
            #16 dumpline cr           \ loop through lines
         next drop
         r> base !  ;                 \ restore former number base
-
-
-
-
-: .cell     ( u -- )
-         <#  bits 3 + 2 >>
-         for # next
-         #>type space ;
-
-: .cells    ( a u -- )
-         for
-            skim .cell
-         next drop ;
-
-\ single line hexdump of u cells at a. returns next yet undumped address
-: wdumpline ( a1 u -- a2 )
-         over u. 2 spaces
-         2dup .cells space +  ;
-
-: wdump  ( a n -- )
-         base @ >r hex                 \ save current number base, change to hex
-         #72 bits 3 + 2 >> 1+ /    \ number of cells per line
-         -rot pluck 1- +
-         pluck /                       \ determine number of lines to output
-         for
-            over wdumpline cr          \ loop through lines
-         next 2drop
-         r> base !  ;                  \ restore former number base
-

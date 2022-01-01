@@ -1,0 +1,9 @@
+name:                /
+stack:               ( n1 n2 -- n3 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            arithmetic
+
+decription:          signed division of n1 by n2. quotient is returned as n3
+
+contexts:            interpreting, compiling

@@ -1,0 +1,10 @@
+name:                type
+stack:               ( a u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            I/O
+
+decription:          outputs u chars which are stored as a list of ASCIIs in
+                     consecutive memory locations starting at address a.
+
+contexts:            interpreting, compiling

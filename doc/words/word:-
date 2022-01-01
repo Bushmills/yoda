@@ -1,0 +1,11 @@
+name:                -
+stack:               ( n1 n2 -- n3 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            arithmetics
+
+decription:          subtract n2 from n2, difference is returned as n3
+
+contexts:            interpreting, compiling
+example:             none
+notes:               none

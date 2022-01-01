@@ -1,0 +1,11 @@
+name:                .
+stack:               ( n -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            I/O
+
+decription:          outputs n as signed integer, with a trailing space appended.
+
+contexts:            interpreting, compiling
+example:             none
+notes:               respects contents of variable "base"

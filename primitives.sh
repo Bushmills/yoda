@@ -10,13 +10,13 @@
 # recent use of stack items and registers, for static elimination
 # of redundant operations.
 
-atom["dup"]='((s[++sp]=s[sp]))'           # push_s1
-atom["over"]='((s[++sp]=s[sp-1]))'        # push_s2
-atom["pluck"]='((s[++sp]=s[sp-2]))'       # push_s3
-atom["drop"]='((sp--))'                   # pop
-atom["@"]='((s[sp]=m[s[sp]]))'            # s1=(s1)
-atom["1+"]='((s[sp]=(s[sp]+1)&maxuint))'  # s1++
-atom["1-"]='((s[sp]=(s[sp]-1)&maxuint))'  # s1--
+atom["dup"]='((s[++sp]=s[sp]))'
+atom["over"]='((s[++sp]=s[sp-1]))'
+atom["pluck"]='((s[++sp]=s[sp-2]))'
+atom["drop"]='((sp--))'
+atom["@"]='((s[sp]=m[s[sp]]))'
+atom["1+"]='((s[sp]=(s[sp]+1)&maxuint))'
+atom["1-"]='((s[sp]=(s[sp]-1)&maxuint))'
 atom["2*"]='((s[sp]=(s[sp]<<1)&maxuint))'
 
 atom["negate"]='((s[sp]=(-s[sp]&maxuint)))'
@@ -45,12 +45,13 @@ atom["s3=s2"]='((s[sp-2]=s[sp-1]))'
 atom["s4=s1"]='((s[sp-3]=s[sp]))'
 atom["s4=s2"]='((s[sp-3]=s[sp-1]))'
 atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
-atom["r@"]='((s[++sp]=r[-1]))'
 
-atom['rpush']='r+=("s[sp]")'              # s1 -> r++
-atom['rdrop']='unset "r[-1]"'             # --r
-atom["rpop"]='unset "r[-1]"'              # --r
-atom["allot"]='((dp+=s[sp]))'
+atom["r@"]='((s[++sp]=r[rp]))'
+atom['>r']='((r[++rp]=s[sp--]))'
+atom['r>']='((s[++sp]=r[rp--]))'
+atom['rdrop']='((r--))'
+
+atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
 # ----- colon/semicolon --------------------- #FOLD00
@@ -234,9 +235,8 @@ semicolon
 colon "array"
    code 'word'                                                       # parse array name
    code "create \"\$word\""                                          # no header prefix passed - will get overwritten in next step anyway
-   code 'headers["$word"]="((s[sp]+=\"$dp\"))"'                      # rewrite
+   code 'headers["$word"]="((s[sp]+=$dp))"'                          # rewrite
    atom 'allot'
-   atom 'drop'
 semicolon
 
 
@@ -467,21 +467,19 @@ inline
 inout 0 0
 
 colon '>r'
-   atom 'rpush'
-   atom 'drop'
+   atom '>r'
 semicolon
 inline
 inout 1 0
 
 colon 'r>'
-   atom 'r@'
-   atom 'rdrop'
+   atom 'r>'
 semicolon
 inline
 inout 0 1
 
 colon 'rdepth'
-   code 's+=("${#r[@]}")'
+   code '((s[++sp]=rp))'
 semicolon                                                               ; inout 0 1
 inline
 
@@ -957,7 +955,6 @@ inout 0 1
 
 colon 'allot'
    atom 'allot'
-   atom 'drop'
 semicolon
 inline
 inout 1 0
@@ -978,12 +975,9 @@ inout 0 1
 # c -> m[a++],  u times
 # ( a u c -- )
 colon 'fill'
-   atom 's1'
-   atom 's2'
-   atom 's3'
-   atom 'drop'
-   atom 'drop'
-   atom 'drop'
+   code '((s1=s[sp--]))'
+   code '((s2=s[sp--]))'
+   code '((s3=s[sp--]))'
    code 'for ((;s2--;)); do'
    code '((m[s3++] = s1))'                                     # c -> m[a++],  u times
    code 'done'
@@ -1086,7 +1080,7 @@ immediate
 
 remagic
 colon 'for'
-   code "code 'r+=(\"\$i\")'"
+   code 'code "((r[++rp]=i))"'
    code 'code "((i=s[sp--]))"'
    code 'code "for ((; i--; )); do"'
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
@@ -1106,8 +1100,7 @@ colon 'next'
    code "((s[sp--] == $magic))||unstructured 'for'"
    code '((s[sp--] == ${#body[@]})) && code ":"'
    code 'code "done"'
-   code "code '((i=r[-1]))'"
-   code 'code "unset \"r[-1]\""'
+   code "code '((i=r[rp--]))'"
 semicolon
 immediate
 
@@ -1115,8 +1108,8 @@ immediate
 remagic
 
 dodo()  {
-   r+=("$ibar")
-   r+=("$i")
+   ((r[++rp]=ibar))
+   ((r[++rp]=i))
    ((i=s[sp--]))
    ((ibar=s[sp--]))
 }
@@ -1132,10 +1125,8 @@ colon 'loop'
    code "((s[sp--] == $magic))||unstructured 'do'"
    code 'code "((++i < ibar))||break"'
    code 'code "done"'
-   code "code '((i=\"r[-1]\"))'"
-   code 'code "unset \"r[-1]\""'
-   code "code '((ibar=\"r[-1]\"))'"
-   code 'code "unset \"r[-1]\""'
+   code "code '((i=r[rp--]))'"
+   code "code '((ibar=r[rp--]))'"
 semicolon
 immediate
 
@@ -1145,10 +1136,8 @@ colon '+loop'
    code 'code "((i+=s1))"'
    code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
    code 'code "done"'
-   code "code '((ibar=\"r[-1]\"))'"
-   code 'code "unset \"r[-1]\""'
-   code "code '((i=\"r[-1]\"))'"
-   code 'code "unset \"r[-1]\""'
+   code "code '((i=r[rp--]))'"
+   code "code '((ibar=r[rp--]))'"
 semicolon
 immediate
 
@@ -1188,10 +1177,10 @@ interactive
 
 # evaluate input line until end u times
 colon 'times'
-   code 'r+=(i)'
+   code '((r[++rp]=i))'
    code '((i=s[sp--]))'
    code 'while ((i--)); do evaluate "$line"; done'
-   code '((i=r[-1]))'
+   code '((i=r[rp--]))'
    atom 'rdrop'
    code 'line=""'
 semicolon
@@ -1475,14 +1464,16 @@ semicolon
 inline
 inout 1 0
 
-evaluate ': #>$      drop ;'                                       ; inout 1 0    # ( x -- )
-evaluate ': #>type   drop type$ ;'                                 ; inout 1 0    # ( x -- ) ( string:  $1 -- )
-evaluate ': #>       drop here dup unpack$ ;'                      ; inout 1 2    # ( x -- a n ) ( string:  $1 -- )
-evaluate ': u.       <#  #s              #>type space ;'           ; inout 1 0    # ( u -- )
-evaluate ': .        dup abs  <#  #s  swap  sign  #>type space ;'  ; inout 1 0    # ( n -- )
-evaluate ': .padded  dup$ count$ - spaces type$ ;'                 ; inout 1 0    # ( u -- ) (string: $1 -- )
-evaluate ': u.r      swap <# #s #>$ .padded ;'                     ; inout 2 0    # ( u1 u2 -- )
-evaluate ': .r       swap dup abs <# #s swap sign #>$ .padded ;'   ; inout 2 0    # ( n u -- )
+evaluate ': #>$      drop ;'                       ; inline; inout 1 0    # ( x -- )
+evaluate ': #>type   #>$ type$ ;'                  ; inline; inout 1 0    # ( x -- ) ( string:  $1 -- )
+evaluate ': #>       #>$ here here unpack$ ;'      ;         inout 1 2    # ( x -- a n ) ( string:  $1 -- )
+evaluate ': .padded  dup$ count$ - spaces type$ ;' ;         inout 1 0    # ( u -- ) (string: $1 -- )
+evaluate ': uconvert <# #s #>$ ;'                  ; inline; inout 1 0    # ( u -- ) (string: -- $1 )
+evaluate ': convert  dup abs uconvert sign ;'      ;         inout 1 0    # ( u -- ) (string: -- $1 )
+evaluate ': .r       swap  convert .padded ;'      ;         inout 2 0    # ( n u -- )
+evaluate ': u.r      swap uconvert .padded ;'      ;         inout 2 0    # ( u1 u2 -- )
+evaluate ': .        0  .r space ;'                ; inline; inout 1 0    # ( n -- )
+evaluate ': u.       0 u.r space ;'                ; inline; inout 1 0    # ( u -- )
 evaluate 'trash .padded'
 
 # ----- documentation ----------------------- #FOLD00
@@ -1697,13 +1688,6 @@ colon 'convert$'
 semicolon
 inline
 inout 0 1
-
-# convert a number to string
-# respects base
-# ( x -- ) (string: -- $1 )
-evaluate ': convert  <# #s #>$ ;'
-inline
-inout 1 0
 
 # ( err -- )
 colon 'abort'

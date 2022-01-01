@@ -63,10 +63,9 @@ rm -f "$logfile"                                                     # each run 
 header_code="function"                                               # prefix to bash function names,  _${nextname} will be appended upon header creation
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
 
-declare -i sp=0
 declare -ai r=() s=() m=()
+declare -i sp=0 rp=0 dp=0
 declare -a ss=()
-declare -i dp=0
 
 declare -i s1 s2 s3 s4                                               # temp variables to hold stack items s[-1] ... s[-4]
                                                                      # easier to read than "tmp, tmp2"
@@ -518,8 +517,8 @@ warm()  {
    linenr="-1"                                                       # signal to from to stop sending more lines to evaluate
    compiling=0                                                       # interpret
    derestrict                                                        # turn off code suppressing
-   r=()
-   ((clean)) && s=() ss=() sp=0 rp=0                                 # empty stacks
+   r=() rp=0
+   ((clean)) && s=() ss=() sp=0                                      # empty stacks
    m[base]="10"                                                      # set decimal if base exists
 }
 
@@ -554,7 +553,9 @@ stillcompiling()  { error "still compiling after $*"; }
 unbalancedstack() { error "unbalanced stack in file $*"; }
 filenotfound()    { error "file not found: $*"; }
 unstructured()    { error "unstructured: $word expects $*"; }
+stackunderflow()  { error "stack underflow"; }
 abort()           { error "abort $1"; }
+
 
 # I don't know how to reset bash call stack.
 # cold and warm above don't relaunch script with defined

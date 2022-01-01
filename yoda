@@ -16,15 +16,19 @@
 # ----- versions ----------------------------------------- #FOLD00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
-
-version=0  subversion=2    # 2021dec29,16:04
-#version=0  subversion=1    # 2021dec20,14:57
-
 # invoke shellcheck with:    shellcheck -x yoda,
 #   this will include primitives and configuration if their names match
 #   those written in the shellcheck directives where they are sourced.
-# shellcheck disable=SC2016                                          # "expressions don't expand between single quotes"
-                                                                     #  right, that's the reason for using single quotes there.
+# shellcheck disable=SC2016 disable=SC2034 disable=SC2154
+# SC2016: "expressions don't expand between single quotes"
+#         right, that's the reason for using single quotes there.
+# SC2034  # "appears unused. Verify use (or export if used externally)"
+#         mostly, "appears" is the correct term
+# SC2154 "(warning): base is referenced but not assigned."
+#        is assigned, but shellcheck can't see how
+
+version=0  subversion=2    # 2021dec29,16:04
+#version=0  subversion=1    # 2021dec20,14:57
 
 # ----- declarations ------------------------------------- #FOLD00
 
@@ -401,9 +405,8 @@ inout()  {
 
 # arg1: code token, arg2: code token type (opt)
 code()  {                                                            # literal code compiler
-#   trace "$1"
    body+=("$1")
-   analyser+=(${2:-0})                                               # default to no optimiser intervention
+   analyser+=("${2:-0}")                                             # default to no optimiser intervention
 }
 
 literal()  {
@@ -423,7 +426,7 @@ create()  {
 #   analyser=()                                                      # reinitialise code tags for analyser
 
    [[ -z "$linenr" ]] &&
-      where["$lastword"]="0 ${BASH_LINENO}"                          # remember file and line number
+      where["$lastword"]="0 ${BASH_LINENO[0]}"                       # remember file and line number
 }
 
 
@@ -488,7 +491,7 @@ constant()  {
 
 # initialized with 0 or optional arg2
 variable()  {
-   let "$1"="$dp"
+   (( "$1"="$dp" ))
    m[dp]="${2:-0}"
    constant "$1"  "$((dp++))"
 }
@@ -790,6 +793,7 @@ trace "line=[$line]"
 # file, possible with path, must exist, or no go.
 # Callers did a check prior to calling.
 from()  {
+   [[ -z "$1" ]] && return 2                                         # no file
    local line lines linenr file filenr word                          # must protect for nested froms.
    local stackeffect="$sp"                                           # included files must have net stack effect of 0
    file=""
@@ -803,9 +807,8 @@ from()  {
          }
       done
    fi
-   [[ -z "$file" ]] && return 1                                      # no file
    [[ -f "$file" ]] || return 1                                      # not found
-   file="$(realpath $file)"                                          # canonical or original name of file
+   file="$(realpath "$file")"                                        # canonical or original name of file
    for ((filenr=0; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
       [[ "${files[filenr]}" == "$file" ]] && break                   # so when already recorded, break out
    done
@@ -818,9 +821,9 @@ from()  {
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
-   (( ${#headersunresolved[@]} )) && {
+   (( ${#headersunresolved[@]} )) && {                               # any forward references created?
       log "$1"
-      resolve
+      resolve                                                        # try to resolve those right now
    }
    return 0
 }
@@ -836,16 +839,16 @@ configuration()  {
 ###       RUN THIS CONTRAPTION         ###
 ### -----------------------------------###
 configuration                                                        # try to load custom configuration
-# shellcheck source=./primitives.sh
 file="$mydir/$primitives"                                            # search for primitives in yoda directory
    [[ -f "$file" ]] && {
-   files="$file"
+   files[0]="$file"
+# shellcheck source=./primitives.sh
    source "$file"                                                    # found primitives? include primitives
 }
 from "$prelib"                                                       # include prelib
 if (( $# )); then
    evaluate "$*"
-   if ! [[ -z "$coldvector" ]]; then                                 # if cold launch point was specified, try to run.
+   if [[ -n "$coldvector" ]]; then                                   # if cold launch point was specified, try to run.
       (( ${#headersunresolved[@]} )) && resolve                      # still unresolved words? try to resolve those.
       if (( ${#headersunresolved[@]} )); then
          printf "%s\n" "unresolved forward references:"              # still unresolved words

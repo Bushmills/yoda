@@ -1,7 +1,4 @@
 --- todos solving problems, shortcomings, quirks
-- / seems more like u/ right now. review.
-- 2/ seems more like u2/ right now. review.
-- mod seems more like umod right now. review.
 - ticking a word with headers in more than one context vocabulary allows
   no control nor test over which version was ticked.
 - better support for unsigned
@@ -14,11 +11,6 @@
 - a "needed" for testing a list of words rather than just a single word
 - string operations based on search and match are mostly absent.
   index / index$ might cover a lot already. cut$ was added
-- addressing stack items per stack pointer, rather than by adding and
-  removing top elements might save some instructions and potentially
-  result in some speed increase, as may (test) more thorough use of
-  arithmetic assignments, possibly avoiding some integer to string and
-  back conversions
 - allow customising query attributes
 - allow customising prompt
 - hide header of currently compiled word until compilation completed.

@@ -1,6 +1,6 @@
 ### yoda base vocabulary ###
 
-# ----- populating detokeniser -------------- #FOLD00
+# ----- populating detokeniser -------------- #fold00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -241,7 +241,7 @@ colon "array"
 semicolon
 
 
-# ----- compiler and word search related ---- #FOLD00
+# ----- compiler and word search related ---- #fold00
 
 # ( -- 0 | a )
 exists() {
@@ -338,7 +338,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #FOLD00
+# ----- parameter stack --------------------- #fold00
 
 
 colon 'dup'
@@ -713,7 +713,7 @@ colon 'pack$'
    code 'ss+=("$tmp")'
 semicolon
 
-# ----- bit logic --------------------------- #FOLD00
+# ----- bit logic --------------------------- #fold00
 
 colon 'and'
    code '((s[sp-1]&=s[sp--]))'
@@ -786,7 +786,7 @@ colon '>'
 semicolon
 inline
 
-# ----- arithmetics ------------------------- #FOLD00
+# ----- arithmetics ------------------------- #fold00
 
 colon '1+'
    atom '1+'
@@ -1243,9 +1243,15 @@ semicolon
 # ----- i/o --------------------------------- #fold00
 
 colon 'ansi'
-   code 'printf "\e[%sm" "${s[sp--]}"'
+   code 'printf "\e[%bm" "${s[sp--]}"'
 semicolon
 inout 1 0
+
+colon 'at'
+   code '((s1=s[sp--]+1, s2=s[sp--]+1))'
+   code 'printf "\e[%b" "${s1};${s2}H"'
+semicolon
+inout 2 0
 
 colon 'emit'
    code 'printf "%c" "${char[s[sp--]&255]}"'                           # given an ASCII, print the character
@@ -1457,7 +1463,7 @@ evaluate ': .        0  .r space ;'                ; inline; inout 1 0    # ( n 
 evaluate ': u.       0 u.r space ;'                ; inline; inout 1 0    # ( u -- )
 evaluate 'trash .padded'
 
-# ----- documentation ----------------------- #FOLD00
+# ----- documentation ----------------------- #fold00
 
 
 undoc_template()  {
@@ -1664,7 +1670,7 @@ inout 0 0
 # respects base
 # ( -- x ) (string: $1 -- )
 colon 'convert$'
-   code '((s[++sp]=m[base]#ss[-1]))'
+   code '((s[++sp]=${m[base]}#${ss[-1]}))'
    code 'unset "ss[-1]"'
 semicolon
 inline

@@ -1,7 +1,6 @@
 forwardrefs @
 forwardrefs on
 
-
 u: quit  ( -- )
    warm
    begin
@@ -12,7 +11,8 @@ u: quit  ( -- )
 
 u: epoch    ( -- u ) "EPOCHSECONDS" env  ;
 
-needed dump lest from dump
+needed  dump lest from dump
+needed wdump lest from wdump
 needed fg needed bg or needed attr or lest from ansi
 
 

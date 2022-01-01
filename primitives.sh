@@ -1357,40 +1357,14 @@ colon 'prompt'
 semicolon
 inline
 
-include()  {
-   local dir file already
-   [[ $1 == */* ]] && {                                               # slash in file spec -> don't search
-      [[ -f "$1" ]] && {
-         from "$1"                                                   # include with given path, allow multiple includes
-         return 0                                                    # file found
-      }
-      return 1                                                       # not found error
-   }
-   for dir in "${libdirs[@]}"; do                                    # basename file -> search through lib dirs
-      file="$dir/$1"                                                 # search through lib dirs for file
-      [[ -f "$file" ]] && {                                          # file found: check if it's already included
-         for already in "${files[@]}"; do
-            [[ "$already" == "$file" ]] && {
-               echo "not including $file again"
-               file=""                                               # signal to outside loop that we're not interested in found file
-               break
-            }
-         done
-         [[ -z "$file" ]] || {
-            trace "loading from $file"
-            from "$file"                                             # load if found and not yet included
-            return 0                                                 # first time load
-         }
-         return 0                                                    # alrady loaded
-      }
-   done
-   return 1                                                          # file not found
-}
 
 colon 'from'
    code 'word'
-   code 'include $word || filenotfound "$word"'
+   code '[[ -z "$word" ]] ||'
+   code 'from "$word" ||'
+   code 'filenotfound "$word"'
 semicolon
+
 
 colon '#files'
    code '((s[++sp]=${#files[@]}))'

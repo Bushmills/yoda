@@ -792,11 +792,24 @@ trace "line=[$line]"
 from()  {
    local line lines linenr file filenr word                          # must protect for nested froms.
    local stackeffect="$sp"                                           # included files must have net stack effect of 0
-   file="$(realpath $1)"                                             # canonical name of the file
-   for ((filenr=0; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed here, those files won't be recorded multiple times
+   file=""
+   if [[ "$1" == */* ]]; then                                        # file contains slash(es): don't search
+      file="$1"
+   else
+      for dir in "${libdirs[@]}"; do
+         [[ -f "$dir/$1" ]] && {
+            file="$dir/$1"                                           # search through lib dirs
+            break                                                    # break when/if found
+         }
+      done
+   fi
+   [[ -z "$file" ]] && return 1                                      # no file
+   [[ -f "$file" ]] || return 1                                      # not found
+   file="$(realpath $file)"                                          # canonical or original name of file
+   for ((filenr=0; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
       [[ "${files[filenr]}" == "$file" ]] && break                   # so when already recorded, break out
    done
-   (( filenr < ${#files[@]} )) ||  { files+=("$file"); }             # first time inclusion: add to files array
+   (( filenr < ${#files[@]} )) || { files+=("$file"); }              # first time inclusion: add to files array
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
@@ -807,9 +820,11 @@ from()  {
    (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
    (( ${#headersunresolved[@]} )) && {
       log "$1"
-      resolve                                                        # only resolve on bottom level, to prevent endless recursion
+      resolve
    }
+   return 0
 }
+
 
 configuration()  {
 # shellcheck source=./yoda.conf
@@ -821,23 +836,13 @@ configuration()  {
 ###       RUN THIS CONTRAPTION         ###
 ### -----------------------------------###
 configuration                                                        # try to load custom configuration
-#--------------------------------------
-for dir in "${libdirs[@]}"; do                                       # search primitives
-   file="$dir/$primitives"                                           # search for prelib in libdir[@] directories
-   [[ -f "$file" ]] && break                                         # break when/if found
-done
 # shellcheck source=./primitives.sh
-[[ -f "$file" ]] && {
+file="$mydir/$primitives"                                            # search for primitives in yoda directory
+   [[ -f "$file" ]] && {
    files="$file"
    source "$file"                                                    # found primitives? include primitives
 }
-#--------------------------------------
-for dir in "${libdirs[@]}"; do                                       # include a library before loading source?
-   file="$dir/$prelib"                                               # search for prelib in libdir[@] directories
-   [[ -f "$file" ]] && break                                         # break when/if found
-done
-[[ -f "$file" ]] && from "$file"                                     # found prelib? include prelib
-#--------------------------------------
+from "$prelib"                                                       # include prelib
 if (( $# )); then
    evaluate "$*"
    if ! [[ -z "$coldvector" ]]; then                                 # if cold launch point was specified, try to run.

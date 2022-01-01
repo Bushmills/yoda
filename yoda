@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda,
@@ -30,7 +30,7 @@
 version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -112,7 +112,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 #bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 bits=32
 #bits=16                                                             # 16 bits are nice for testing
@@ -146,7 +146,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -171,7 +171,7 @@ logminus() { ((logindent+=-2)); log "$@"; }
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- compiler muting ---------------------------------- #FOLD00
+# ----- compiler muting ---------------------------------- #fold00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -185,7 +185,7 @@ restricted() {                                                       # flag curr
 }
 derestrict
 
-# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
+# ----- ANSI/VT100 attributes ---------------------------- #fold00
 
 # use in error and prompt.
 # for use in programs, library ansi has been supplied
@@ -315,7 +315,7 @@ optimise()  {                                                        # run code 
    done
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -350,7 +350,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # atoms may be:
 #  - micro instructions
@@ -439,7 +439,6 @@ colon()  {
       unset "headersunresolved[$1]"                                  # remove forward reference
       log "resolving: $1"
    fi
-
    header "$1" "$name"
 
 # -- hack alert:
@@ -505,15 +504,16 @@ variable 'base'               "10"
 constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"
 constant 'msb'                "$msb"
+constant 'cell'               "1"
 constant 'true'               "$maxuint"
 constant 'false'              "0"
 constant '0'                  "0"
 constant 'bl'                 "32"
+constant 'bits'               "$bits"
 
 
 
-
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -580,7 +580,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
@@ -659,7 +659,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -698,7 +698,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #FOLD00
+# ----- line interpreter --------------------------------- #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 

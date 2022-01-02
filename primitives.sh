@@ -484,7 +484,7 @@ colon 'rdepth'
 semicolon                                                               ; inout 0 1
 inline
 
-# ----- string stack ------------------------ #fold00
+# ----- string stack ------------------------ #FOLD00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -579,7 +579,7 @@ inline
 colon 'cut$'
    code '((s[++sp]=${#ss[-2]}))'
    code 'ss[-2]="${ss[-2]%${ss[-1]}*}"'
-   code '((s-=${#ss[-2]}))'
+   code '((s[sp]-=${#ss[-2]}))'
    code 'unset "ss[-1]"'
 semicolon
 

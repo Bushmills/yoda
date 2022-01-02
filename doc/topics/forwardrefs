@@ -1,64 +1,113 @@
 TOPIC: forward references
 
-Forward referencing yet undefined colon words is possible, but not enabled
-by default. To enable, create a variable named "forwardrefs", and set its
-value to non-zero. For example:
+By default will yoda not create forward references on its own, and behave
+like any conventional Forth interpreter: You can execute or compile only
+what is already present in the dictionary.
 
-   variable forwardrefs
+Still, forward references can be used without actually enabling them.
+"Enabling" in this context means, allowing yoda to create forward references
+to unresolved words itself.
+
+Creating forward references manually used the word "need". Example:
+
+   need hello
+
+You'll notice now a new number in the "ok" prompt, between parenthesise.
+That's the count of yet unresolved forward references.
+Executing "words" shows a new category at the end, listing the still needed
+words. "hello" should show there.  For showing only the names of unresolved
+words, execute:
+
+   .unresolved
+
+While "hello" has still not been resolved, attempting to execute it still
+produces an error.
+
+A straightforward way to resolve "hello" now manually is to execute
+"resolve":
+
+   resolve
+
+After pressing the Enter key, the number between parenthesises disappears,
+indicating that all forward references have been resolved. Executing
+
+   hello
+
+confirms this.
+
+Resolving also happens automatically sometimes. For example, after including
+a file, using "from", will resolve get executed if any unresolved forward
+references exist, in case the included files created any.
+
+Another way to resolve a forward reference is to simply define it:
+
+  need bar
+: foo  bar  ;                 \ notice that bar can be compiled, though it doesn't exist yet.
+                              \ that's because the compiler notices that it is a needed word.
+: bar "this is bar" type$  ;  \ by defining "bar", the forward reference will be resolved.
+
+
+
+The compiler can be instructed to accept unknown words as forward references
+automatically, without us needing to mark those with "need".
+To enable automatic forward references, set the variable "forwardrefs" to
+a non-zero value:
+
    forwardrefs on
 
-
-To turn forward references off again, do:
+To turn automatic forward referencing off again, execute:
 
    forwardrefs off
 
 
-when forward refs are turned off, an attempt to compile a non-existing word
-into a word currently created will immediately result in an error.
 
-With forward references turned on, unknown words may be compiled into new
-words. These are expected to get eventually resolved at a later point.
-The "ok" prompt will show the count of unresolved forward references as
-a number between parenthesises. For example:
+Forward references can be created and resolved even while they're typed,
+interactively. This needs enabling to. The variable for doing this is
+called  "instantresolve":
 
-     ok (3)
+   instantresolve on
 
-This indicates that 3 references to non-existing words have been compiled.
-If no unresolved references exists, no count is shown.
+Note that "forwardrefs" must be turned on too for instantresolve to have
+any effect.
 
-To show the names of those unresolved references, execute ".unresolved"
-or "crossref". The last section of the "crossref" output, below
-"### headersunresolved ###, shows them.
+A forward referencable word from the library is "dump" ("hello" is now a
+poor example because already present - you'd need to exit and restart
+yoda in order to forget it again). With "instantresolve" on, create a
+hex dump of a memory portion:
 
-Resolving forward references is done automatically, as soon as a forward
-referenced word gets defined as colon definition. Resolving a forward
-reference with a data item, like a constant or a variable, is not possible.
+   $1000 $100 dump
 
-Note that this automatic resolving of forward references will still take
-place when forwardrefs have been disabled again. This only prevents creation
-of forward references, not resolving them.
-
-A library meant for containing potentially unresolved words will be included
-at the end of the forsh script. All definitions in that library should make
-use of conditional compilation, and include the there defined words only on
-a need base: As postlib can be included multiple times, unconditionally
-compiled words would cause redefinitions.
+While the memory contents, presumably all zeroes, aren't that interesting,
+the fact that we were now able to run a definition which still needed loading
+and compiling before being executed is. You possibly noticed a small delay
+between pressing "Enter" and the hex dump showing - that's the time yoda
+needed to find dump, then read and compile it prior to executing it.
 
 
-Some words exist for managing forward references and conditional inclusion:
-   u:
-   need
-   needed
-   resolve
-   exists
+A library meant for containing potentially unresolved words exists. It is
+named "postlib" and included at the end. Definitions in there should all be
+of conditional nature to avoid redefinitions, as postlib may get read
+several times. Two kind of conditional compilation can be found in there:
+
+- source compiling to code in case they're needed
+- inclusion of other library files if they contain needed source.
+
+For managing conditional compilation, these words exist:
+
+      u:
+      need
+      needed
+      resolve
+      exists
+
 
 u:       is almost identical with : but compiles the following word only if it's
-         an unresolved forward reference.
+         an unresolved forward reference (i.e. only when needed)
 
 needed   can be used to test existence of a specific forward reference. A flag
          is produced, reflecting the result of the test.
          This flag can be conditionally responded to with flow control constructs
-         "lest" and "unless"
+         like "lest" and "unless"
 
 need     creates a forward reference explicitely. Rather than forward references,
          created by unknown words in code, these may have better use for signalling
@@ -70,14 +119,14 @@ resolve  resolve against postlib. Don't wait for implicite resolving at the
          end of program loading, but do it now. This may be done multiple times,
          and in fact, it often is. For example, conditionally compiled words in
          postlib may create additional forward references, which are then resolved
-         in another resolve pass.
+         in an extra resolve pass.
 
          Therefore is this case legal:
 
 main program:
-               : hello fwd1 ;
+               : foo fwd1 ;
                resolve
-               hello
+               foo
 
 postlib:
                u: fwd3  "Hello, world!" type$  ;
@@ -95,54 +144,7 @@ Changing the sequence to  fwd1, fwd2, fwd3 results in a single inclusion resolvi
 all forward references.
 
 
-But even without switching forward references on (which essentially means "mark
-needed but not existing words automatically), they can be used by manual control:
-Assume that forwardrefs are turned off and will remain doing so, and that there's
-a word called "hello" in the postlib which we want to execute or compile into
-new words.  By explicit marking the need, followed by resolving, will the needed
-word be available:
-                     need hello        \ mark hello as needed
-                     resolve           \ load it from postlib
-                     hello             \ run it
-
-                     \ or everything on a single line:
-                     need hello resolve hello
-
-which is essentially what "instantresolve on" will do automatically, Read more about
-this new experimental feature here:
-
-An experimental feature has been introduced, allowing forward references not only
-in compiled words, but also when interactively typing them on the input line.
-As with forwardrefs, it is turned off by default. To enable, set both variables
-forwardrefs and instantresolve to non-zero values.  If any of these variables doesn't
-exist, simply create it first.
-
-               forwardrefs on
-               instantresolve on
-
-\ for creating and setting at the same time, this is a shorter way:
-\         create instantresolve true ,
-
-The effect can be tried by executing "hello" which has been added to postlib for
-testing purposes. Another word suited for testing is "dump":
-
-               $1000 $80 dump
-
-for some slightly less boring memory contents there, you may want to populate it
-with a string:
-
-               "This is a very nice string, albeit a tad long"
-               $1000 dup unpack$ dump
-
-
-
-When setting a cold start vector at the end of a source file - useful for hashbanged
-scripts - will name of cold start entry be marked as needed, then resolving takes place.
-Consequence is that cold boot entries may be forward referenced too. Please see the
-file "quit" which compiles and runs an interactive interpreter/compiler on terminal
-i/o, by just executing the two words  "boot quit".  quit is a definition coming from
-postlib.
-
-At the end of program inclusion from command line or hashbang will resolve be executed
-again, if any unresolved references remain. Only if no unresolved references remain
-will control be passed to cold start entry.
+Yet another place where forward reference may be created automatically, regardless
+whether enabled or not, is when setting a cold start vector at the end of a source
+file, using the word "boot". The specified word to boot may be forward referenced
+too, and resolving attempt will take place upon completion of file loading.

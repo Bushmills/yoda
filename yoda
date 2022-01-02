@@ -611,7 +611,9 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
+
+declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 
 pattern()  {                                                         # pattern interpreted as
    restricted || {
@@ -619,20 +621,18 @@ pattern()  {                                                         # pattern i
       ((radix=m[base]))
       tmp="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
       [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                       # 1234      unsigned number
-         stateless "s[++sp]=\"$((${radix}#${word} & maxuint))\""     # convert signless numbers without special treatment
+         stateless "((s[++sp]=$((${radix}#${word}&maxuint))))"       # convert signless numbers without special treatment
          return 0; }
       [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                      # -1234     negative number
-         stateless "s[++sp]=\"$((-${radix}#${word:1} & maxuint))\""
+         stateless "((s[++sp]=$((-${radix}#${word:1}&maxuint))))"
          return 0; }
-      [[ $word =~ ^\$[${tmp:0:16}]+$ ]] && {                         # $abcd     hex number
-         tmp="$((16#${word:1} & maxuint))"
-         stateless "s[++sp]=\"$tmp\""; return 0; }
-      [[ $word =~ ^\%[${tmp:0:2}]+$ ]] && {                          # %1101     binary number
-         tmp="$((2#${word:1} & maxuint))"
-         stateless "s[++sp]=\"$tmp\""; return 0; }
-      [[ $word =~ ^\#[${tmp:0:10}]+$ ]] && {                         # #1234     decimal number
-         tmp="$((10#${word:1} & maxuint))"
-         stateless "s[++sp]=\"$tmp\""; return 0; }
+      [[ ${word:0:1} == [%#$] ]] && {                                # one of $ # %
+         radix="${bases[${word:0:1}]}"                               # yes: read radix associated with char
+         [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                # remainder of number all legal chars?
+            stateless "((s[++sp]=$((${radix}#${word:1}&maxuint))))"  # yes: convert from base and deal with it
+            return 0
+         }
+      }
       [[ ${word} == \'? || ${word} == \'?\' ]] && {                  # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
          read -r tmp < <(printf "%d" "'${word:1:1}'")
          stateless "s[++sp]=\"$tmp\""; return 0; }
@@ -820,7 +820,7 @@ trace "line=[$line]"
    ((sp<0))&&stackunderflow
 }
 
-# ----- read source -------------------------------------- #fold00
+# ----- read source -------------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.

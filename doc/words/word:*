@@ -1,0 +1,11 @@
+created:             auto     (remove line after having checked and revised description)
+name:                *
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:
+input stream:
+decription:          none
+contexts:            interpreting, compiling
+example:             none
+notes:               none

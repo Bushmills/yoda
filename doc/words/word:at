@@ -1,0 +1,15 @@
+name:                at
+stack:               ( column row -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            I/O
+
+decription:          move cursor and output position to column, row. 0 0 is upper
+                     left corner of screen.
+
+contexts:            interpreting, compiling
+
+notes:               This sends a VT52/VT100/ANSI "Escape" sequence to output, therefore
+                     cursor positioning will only be successful when terminal driver
+                     intercepts and acts on those. Console and X terminals commonly do.
+

@@ -1,0 +1,19 @@
+name:                cut$
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( $1 $2 -- $3 )
+category:            string stack
+input stream:
+
+decription:          searches for first occurance of $2 in $1, then remove matching
+                     string and rest of string until end of string from $1. Return
+                     the resulting string as $3. u is pushed to stack, informing how
+                     many characters were removed from $1.
+
+contexts:            interpreting, compiling
+
+example:             "this foo could be rather nice if it was..."  "if" cut$
+
+results:             "this foo could be rather nice "    ( on string stack )
+                     12      ( count of removed chars, on stack )
+

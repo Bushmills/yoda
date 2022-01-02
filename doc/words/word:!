@@ -1,0 +1,9 @@
+name:                !
+stack:               ( x a -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            memory
+
+decription:          stores x at memory address a
+
+contexts:            interpreting, compiling

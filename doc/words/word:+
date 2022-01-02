@@ -1,0 +1,9 @@
+name:                +
+stack:               ( n1 n2 -- n3 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            arithmetics
+
+decription:          adds n2 to n1 and removes n1
+
+contexts:            interpreting, compiling

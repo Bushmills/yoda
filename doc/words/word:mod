@@ -1,0 +1,15 @@
+name:                mod
+stack:               ( n1 n2 -- n3 )
+return stack:        ( -- )
+string stack:        ( -- )
+
+category:            arithmetics
+
+decription:          calculates remainder resulting from dividing signed
+                     integers n1/n2 and returns it as n3
+
+contexts:            interpreting, compiling
+
+notes:               for the reason why sign is applied the way it is, please
+                     check out /mod, and consider that adding remainder to
+                     product of quotient and divisor must yield the original divident.

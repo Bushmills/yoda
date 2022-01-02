@@ -1240,7 +1240,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #fold00
+# ----- i/o --------------------------------- #FOLD00
 
 colon 'ansi'
    code 'printf "\e[%bm" "${s[sp--]}"'
@@ -1463,7 +1463,7 @@ evaluate ': .        0  .r space ;'                ; inline; inout 1 0    # ( n 
 evaluate ': u.       0 u.r space ;'                ; inline; inout 1 0    # ( u -- )
 evaluate 'trash .padded'
 
-# ----- documentation ----------------------- #fold00
+# ----- documentation ----------------------- #FOLD00
 
 
 undoc_template()  {
@@ -1509,15 +1509,19 @@ semicolon
 # n topic
 
 colon 'topics'
+   code 'unset "GLOBIGNORE"'
    code 'printf "%s\n" "$topicdoc"/* | sed "s/.*\///" | nl'
+   code 'GLOBIGNORE="*:?"'
 semicolon
 
 # ( u -- )
 colon 'topic'
+   code 'unset "GLOBIGNORE"'
    atom 's1'
    atom 'drop'
    code '((s1)) && { topics=("$topicdoc"/*)'
    code 'editor "${topics[s1-1]}"; }'
+   code 'GLOBIGNORE="*:?"'
 semicolon
 
 helptext() {

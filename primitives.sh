@@ -58,7 +58,7 @@ atom["here"]='((s[++sp]=dp))'
 # ----- colon/semicolon --------------------- #fold00
 
 colon ';'      # semicolon
-   code "(( s[sp--] == $magic )) || unstructured ':'"                # check the magic left by :
+   code "(( s[sp--] == $magic )) || { unstructured 'no :'; return; }"  # check the magic left by :
    code '(( ${s[sp--]} == ${#body[@]} )) && code ":"'                # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
@@ -484,7 +484,7 @@ colon 'rdepth'
 semicolon                                                               ; inout 0 1
 inline
 
-# ----- string stack ------------------------ #FOLD00
+# ----- string stack ------------------------ #fold00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -1027,7 +1027,7 @@ semicolon
 immediate
 
 colon 'else'
-   code "(( s[sp]++ == \"$magic\" )) || unstructured 'if'"
+   code "(( s[sp]++ == \"$magic\" )) || { unstructured 'no if'; return; }"
    code '(( s[sp-1] == ${#body[@]} )) && code ":"'
    code 'code "else"'
    code '((s[sp-1]=${#body[@]}))'
@@ -1035,7 +1035,7 @@ semicolon
 immediate
 
 colon 'then'
-   code "(( s[sp] == $magic ||  s[sp] == $((magic+1)) )) || unstructured 'if or else'"
+   code "(( s[sp] == $magic ||  s[sp] == $((magic+1)) )) || { unstructured 'no if or else'; return; }"
    atom 'drop'
    code '(( s[sp--] == ${#body[@]} )) && code ":"'
    code 'code "fi"'
@@ -1054,14 +1054,14 @@ immediate
 
 
 colon 'again'
-   code "(( s[sp--] == \"$magic\" )) || unstructured 'begin'"
+   code "(( s[sp--] == \"$magic\" )) || { unstructured 'no begin'; return; }"
    code '(( s[sp--] == ${#body[@]} )) && code ":"'
    code 'code "done"'
 semicolon
 immediate
 
 colon 'until'
-   code "(( s[sp--] == \"$magic\" )) || unstructured 'begin'"
+   code "(( s[sp--] == \"$magic\" )) || { unstructured 'no begin'; return; }"
    code 'code "((s[sp--]))&&break"'
    atom 'drop'
    code 'code "done"'
@@ -1069,13 +1069,13 @@ semicolon
 immediate
 
 colon 'while'
-   code "(( s[sp]++ == $magic )) || unstructured 'begin'"
+   code "(( s[sp]++ == $magic )) || { unstructured 'no begin'; return; }"
    code 'code "((s[sp--]))||break"'
 semicolon
 immediate
 
 colon 'repeat'
-   code "(( s[sp--] == $((magic+1)) )) || unstructured 'while'"
+   code "(( s[sp--] == $((magic+1)) )) || { unstructured 'no while'; return; }"
    atom 'drop'
    code 'code "done"'
 semicolon
@@ -1101,7 +1101,7 @@ inout 0 1
 evaluate ': j r@ ;'   ; inline;  inout 0 1
 
 colon 'next'
-   code "((s[sp--] == $magic))||unstructured 'for'"
+   code "((s[sp--] == $magic))|| { unstructured 'no for'; return; }"
    code '((s[sp--] == ${#body[@]})) && code ":"'
    code 'code "done"'
    code "code '((i=r[rp--]))'"
@@ -1126,7 +1126,7 @@ semicolon
 immediate
 
 colon 'loop'
-   code "((s[sp--] == $magic))||unstructured 'do'"
+   code "((s[sp--] == $magic))|| { unstructured 'no do'; return; }"
    code 'code "((++i < ibar))||break"'
    code 'code "done"'
    code "code '((i=r[rp--]))'"
@@ -1135,7 +1135,7 @@ semicolon
 immediate
 
 colon '+loop'
-   code "((s[sp--] == $magic))||unstructured 'do'"
+   code "((s[sp--] == $magic))|| { unstructured 'no do'; return; }"
    code 'code "((s1=s[sp--]))"'
    code 'code "((i+=s1))"'
    code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
@@ -1240,7 +1240,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #FOLD00
+# ----- i/o --------------------------------- #fold00
 
 colon 'ansi'
    code 'printf "\e[%bm" "${s[sp--]}"'
@@ -1347,9 +1347,14 @@ inline
 inout 0 0
 
 prompt()  {
+   ((error)) && {
+      error=0
+      return 1
+   }
+
    ((compiling)) && {
       printf "|%-4s" ""                                              # just a vertical bar, then indenting, while compiling
-      return
+      return 0
    }
    printf " %s" "ok"                                                 # ok prompt
    ((${#s[@]})) &&  {                                                # stack depth > 0?
@@ -1463,7 +1468,7 @@ evaluate ': .        0  .r space ;'                ; inline; inout 1 0    # ( n 
 evaluate ': u.       0 u.r space ;'                ; inline; inout 1 0    # ( u -- )
 evaluate 'trash .padded'
 
-# ----- documentation ----------------------- #FOLD00
+# ----- documentation ----------------------- #fold00
 
 
 undoc_template()  {

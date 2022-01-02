@@ -113,9 +113,13 @@ declare -A stackout=()
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
 # ----- state variables, switches, globals, static etc --- #fold00
-#bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
-bits=32
-#bits=16                                                             # 16 bits are nice for testing
+bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
+#bits=32
+#bits=21                                                              # covers 6 decimal digits signed numeric space
+#bits=20                                                              # 20 bits, unusual but not impractical. 8086 address space
+#bits=16                                                              # 16 bits, a tad retro
+#bits=11                                                              # covers 3 decimal digits signed numeric space
+#bits=8                                                               # 8 bits are nice for testing
 
 msb="$((1<<(bits-1)))"
 maxint="$((msb-1))"
@@ -198,7 +202,7 @@ derestrict
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -240,7 +244,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -393,7 +397,7 @@ stateless()   {
 
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -499,6 +503,7 @@ variable()  {
 variable 'shell'              "0"
 variable 'forwardrefs'        "0"
 variable 'instantresolve'     "0"
+variable 'callstack'          "0"
 variable 'base'               "10"
 
 constant 'maxuint'            "$maxuint"
@@ -533,11 +538,11 @@ cold()  {                                                            # also by r
 
 callstack()  {
    printf "%s: " "Call stack"
-   printf "%s " "${FUNCNAME[@]:2:4}"                                 # remove callstack and error from output, print names of 4 functions
+   printf "%s " "${FUNCNAME[@]:5:${m[callstack]}}"                        # remove callstack and error from output
    printf "\n"
 }
 
-error()  {                                                           # Zeile mit fehlerwort ANSI markieren
+errormessage()  {                                                           # Zeile mit fehlerwort ANSI markieren
 #         >--<              >--<   >--------------------------<                                >-----<     begin and end of line
 #                  >--<                                                    >----<                          error word
 #            >-----<  >----<                                      >---<              >------<              ANSI sequences
@@ -546,18 +551,44 @@ error()  {                                                           # Zeile mit
    row=$((${#tib}-${#line}-${#word}))
    lasterror=("$file" "$linenr" "$row")
    (( linenr < 0 )) || printf "at %s of %s\n" "$linenr,$row" "$file"
-   callstack
+   ((m[callstack]))&&callstack
+}
+
+
+declare -a errortext
+nexterror=0
+
+# preparing for throw / catch
+error()  {
+   errormessage "$@"
    warm
 }
 
-emptyname()       { error "no or empty name"; }
-notfound()        { error "$word not found"; }
-stillcompiling()  { error "still compiling after $*"; }
-unbalancedstack() { error "unbalanced stack in file $*"; }
-filenotfound()    { error "file not found: $*"; }
-unstructured()    { error "unstructured: $word expects $*"; }
-stackunderflow()  { error "stack underflow"; }
-abort()           { error "abort $1"; }
+errornr()   {
+   error="$1"
+   shift
+   error "${errortext[error]} $*"
+}
+
+# a somewhat wild construct, sort of attempting
+# to emulate Forth's create ... does> here. I'm
+# surprised that shellcheck finds this acceptable
+newerror() {
+   (( "$1" = nexterror ))                                            # assign new error number to error name
+   eval "$1()  { errornr \"$1\" "\"\$*"\"; }"                        # synthesise error function with error name
+   shift
+   errortext[nexterror++]="$*"                                       # associate error message with error number
+}
+
+newerror "noerror"         "no error"
+newerror "emptyname"       "no or empty name"
+newerror "stackunderflow"  "stack underflow"
+newerror "notfound"        "not found:"
+newerror "stillcompiling"  "still compiling after"
+newerror "unbalancedstack" "unbalanced stack in file"
+newerror "unstructured"    "unstructured:"
+newerror "abort"           "abort"
+newerror "shellerror"      "shell returned"
 
 
 # I don't know how to reset bash call stack.
@@ -653,7 +684,7 @@ pattern()  {                                                         # pattern i
    ((m[shell])) || return 1                                          # done unless shell flag was set
    restricted || {
       stateless "${word} ${line}" ||                                 # in which case execution as shell command is attempted
-      error "returned $?"                                            # non-zero exit values of shell commands will be passed on to yoda error handler
+      shellerror "$?"                                                # non-zero exit values of shell commands will be passed on to yoda error handler
    }
    line=""                                                           # assignment sets return value to 0
 }
@@ -735,7 +766,9 @@ evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
 trace "line=[$line]"
-   while [[ -n "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
+   until [[ -z "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
+      ((error))&&break
+      ((sp<0))&&break
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
       [[ -z "${headersstateless["$word"]}" ]] || {                   # word found in stateless dictionary
@@ -784,9 +817,10 @@ trace "line=[$line]"
       notfound "$word"                                               # nothing helped. get grouchy.
       line=""                                                        # stop evaluation: nothing left
    done
+   ((sp<0))&&stackunderflow
 }
 
-# ----- read source -------------------------------------- #FOLD00
+# ----- read source -------------------------------------- #fold00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -817,7 +851,8 @@ from()  {
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
       evaluate "$line"                                               # process next line
-      ((linenr < 0)) && break                                        # source can flag "stop execution" with negative linenr (warm does so)
+      ((error))&&break
+      ((linenr < 0))&&break                                          # source can flag "stop execution" with negative linenr (warm does so)
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.

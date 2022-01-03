@@ -30,7 +30,7 @@
 version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -102,6 +102,7 @@ flowcontrol="$((1<<analyserflag++))"                                 # help reco
 optimisationboundary="$((1<<analyserflag++))"
 literalstring="$((1<<analyserflag++))"                               # probably unnecessary
 inlined="$((1<<analyserflag++))"                                     # probably useless
+does="$((1<<analyserflag++))"                                        # probably useless
 
 # when stack effect of words is known to optimiser, it will have
 # the possibility to determine whether stack items cached in
@@ -112,7 +113,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- state variables, switches, globals, static etc --- #fold00
+# ----- state variables, switches, globals, static etc --- #FOLD00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -244,7 +245,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -314,6 +315,9 @@ optimise()  {                                                        # run code 
          targetline="${atom[${bodyline}]}"
       elif (( bodyflag & literalnumber )); then                      # number literal: generate code pushing the number
          targetline="((s[++sp]=$bodyline))"
+      elif (( bodyflag & does )); then                               # does>
+         echo "detokeniser found does: building defining word $lastword"
+         targetline="${body[tmp]}; return"
       fi
       target+=("$targetline")
    done
@@ -611,10 +615,9 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
-
 pattern()  {                                                         # pattern interpreted as
    restricted || {
 # some patterns can simply be ignored when code creation is muted
@@ -820,7 +823,7 @@ trace "line=[$line]"
    ((sp<0))&&stackunderflow
 }
 
-# ----- read source -------------------------------------- #FOLD00
+# ----- read source -------------------------------------- #fold00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.

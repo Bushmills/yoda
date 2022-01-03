@@ -156,41 +156,44 @@ inline
 
 
 
-# ----- does> ------------------------------- #fold00
-#  : myarray  create allot does> + ;
-#  10 myarray foo
-#  5 foo .
-#
-#  defining word:  myarray
-#  defined word:   foo
-#
-#colon 'dodoes'
-#   code 'echo "executing dodoes, ref=arg1"'
-#semicolon
+# ----- does> ------------------------------- #FOLD00
 
-#colon 'does>'
-#   backslash 'this is does>'
-#   debug 'executing does'
-#   backslash 'compiling dodoes to end of defining word'
-#   code "code \"${headers[dodoes]}\" \"1234\""
-#   backslash 'compiling defining word now'
-#   code "compile"
-#   backslash 'compiling defining word finished'
 
-# compile following code into
-#   code 'word'
-#   backslash 'compile this to
-#   backslash 'following is run time code for defined word'
-#   backslash 'must be inlined or called from defined word, with data address already on stack'
-#   backslash 'create a new word for run time part'
-#   code "create \"bla\"   \"does\""
-#   code 'inline'
-#   code 'echo "--- will now compile run time part of defined word"'
-# ;  will compile previous code to last header
+# compiled before return into compling word.
+# will therefore be called by create part.
+# will consequently know who its caller is
+# (function name).  Will also know, by virtue
+# of $lastword, what function to add code to.
+# (or rather, instruct detokeniser to add code
+# to). will inline all code behind the return
+# following the call to itself from defining
+# word into lastword, which at that point consists
+# of a stack push of its creation address only.
+dodoes()  {
+   echo "dodoes executes, called from the function shown below"
+   echo "while defining word was busy defining $lastword:"
+   echo
+   type "${FUNCNAME[1]}"
+   echo
+   echo "so it seems that all it needs to do now is:"
+   echo "add to $lastword which currently consists of"
+   echo "${headersstateless[$lastword]}, which pushs the create address,"
+   echo "the code after 'return;', either by inlining"
+   echo "or by calling."
+}
 
-#semicolon
-#immediate
+# detokeniser detects this.
+# at dummy, a return is compiled, breaking out of the function.
+# code after does> is then compiled to same function behind return.
+colon 'does>'
+   code 'code "dodoes" "$does"'
+semicolon
+immediate
 
+#evaluate ": foo create , does> @ . ;"
+#evaluate "11 foo bar"
+# bar pushes the create address
+# missing:  calling code behind return
 
 
 # ----- defining words ---------------------- #fold00

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda,
@@ -151,7 +151,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -176,7 +176,7 @@ logminus() { ((logindent+=-2)); log "$@"; }
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- compiler muting ---------------------------------- #fold00
+# ----- compiler muting ---------------------------------- #FOLD00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -190,7 +190,7 @@ restricted() {                                                       # flag curr
 }
 derestrict
 
-# ----- ANSI/VT100 attributes ---------------------------- #fold00
+# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
 
 # use in error and prompt.
 # for use in programs, library ansi has been supplied
@@ -203,7 +203,7 @@ derestrict
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #fold00
+# ----- headers ------------------------------------------ #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -316,14 +316,14 @@ optimise()  {                                                        # run code 
       elif (( bodyflag & literalnumber )); then                      # number literal: generate code pushing the number
          targetline="((s[++sp]=$bodyline))"
       elif (( bodyflag & does )); then                               # does>
-         echo "detokeniser found does: building defining word $lastword"
+#         echo "detokeniser cme across does> while building defining word $lastword"
          targetline="${body[tmp]}; return"
       fi
       target+=("$targetline")
    done
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -358,7 +358,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # atoms may be:
 #  - micro instructions
@@ -401,7 +401,7 @@ stateless()   {
 
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -522,22 +522,25 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
    linenr="-1"                                                       # signal to from to stop sending more lines to evaluate
    compiling=0                                                       # interpret
+   error=0
    derestrict                                                        # turn off code suppressing
    r=() rp=0
-   ((clean)) && s=() ss=() sp=0                                      # empty stacks
+   ((sp<0))&&s=() sp=0                                               # always clear stack underflow
+   ((clean))&&s=() ss=() sp=0                                        # empty stacks
    m[base]="10"                                                      # set decimal if base exists
 }
 
 coldvector=""                                                        # colon word "boot" assigns coldvector. started when compilation completed.
 cold()  {                                                            # also by running cold. error restarts interpreter at cold
    [[ -z "$coldvector" ]] && exit 1
-   warm; $coldvector
+   warm
+   $coldvector
 }
 
 callstack()  {
@@ -559,13 +562,18 @@ errormessage()  {                                                           # Ze
 }
 
 
+# error handling will probably change completely:
+# coproc will print error line, then exit with error number as exit value.
+# from that value, the appropriate error message is selected and printed.
+# wait may need to pick that value up.
+# bye needs special attention.
+
 declare -a errortext
 nexterror=0
 
 # preparing for throw / catch
 error()  {
    errormessage "$@"
-   warm
 }
 
 errornr()   {
@@ -595,27 +603,17 @@ newerror "abort"           "abort"
 newerror "shellerror"      "shell returned"
 
 
-# I don't know how to reset bash call stack.
-# cold and warm above don't relaunch script with defined
-# initial conditions, instead they only signal back to
-# stop interpreting input. error isn't therefore able to
-# stop execution of endless loops or break out or abort
-# interrupted functions. Neither is Ctrl-C unless main
-# interpreter loop (quit) is called - but doing so will
-# merely add a new call to quit to the top of call stack,
-# no actual reinitialisation of call stack is done.
-
 ctrl-c()  {
    printf "%s\n" "break"
    ((break == 1)) && exit 1
-   callstack
+   ((m[callstack]))&&callstack
    ((break == 2)) && cold
 }
 trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -693,7 +691,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -732,7 +730,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -823,7 +821,7 @@ trace "line=[$line]"
    ((sp<0))&&stackunderflow
 }
 
-# ----- read source -------------------------------------- #fold00
+# ----- read source -------------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.

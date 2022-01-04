@@ -170,16 +170,32 @@ inline
 # word into lastword, which at that point consists
 # of a stack push of its creation address only.
 dodoes()  {
-   echo "dodoes executes, called from the function shown below"
-   echo "while defining word was busy defining $lastword:"
-   echo
-   type "${FUNCNAME[1]}"
-   echo
-   echo "so it seems that all it needs to do now is:"
-   echo "add to $lastword which currently consists of"
-   echo "${headersstateless[$lastword]}, which pushs the create address,"
-   echo "the code after 'return;', either by inlining"
-   echo "or by calling."
+#   echo "dodoes executes, called from the function shown below"
+#   echo "while defining word was busy defining $lastword:"
+#   echo
+#   type "${FUNCNAME[1]}" | sed -n '/^ /p'
+#   echo
+#   echo "so it seems that all it needs to do now is:"
+#   echo "add to $lastword which currently consists of"
+#   echo "${headersstateless[$lastword]}, which pushs the create address,"
+#   echo "the code after 'return;', either by inlining"
+#   echo "or by calling:"
+
+# using sed for all of it may be preferable. However, it's for now an
+# apparently functioning first implementation of does>
+   headersstateless["$lastword"]+="; "
+   while read -r tmp; do
+      if [[ "$tmp" == "dodoes;" ]]; then
+         read -r tmp;
+         if [[ "$tmp" == "return;" ]]; then
+            while read -r tmp; do
+               headersstateless["$lastword"]+=" $tmp"
+#               echo "$lastword does now:"
+#               echo "${headersstateless[$lastword]}"
+            done
+         fi
+      fi
+   done < <(type "${FUNCNAME[1]}" | sed -n '/^ /p')
 }
 
 # detokeniser detects this.
@@ -196,7 +212,7 @@ immediate
 # missing:  calling code behind return
 
 
-# ----- defining words ---------------------- #fold00
+# ----- defining words ---------------------- #FOLD00
 
 # actually works: defining word builder
 data()  {
@@ -244,7 +260,7 @@ colon "array"
 semicolon
 
 
-# ----- compiler and word search related ---- #fold00
+# ----- compiler and word search related ---- #FOLD00
 
 # ( -- 0 | a )
 exists() {
@@ -1018,7 +1034,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------ #fold00
+# ----- flow control ------------------------ #FOLD00
 
 remagic
 
@@ -1203,7 +1219,7 @@ semicolon
 
 
 colon 'bye'
-   code 'exit'
+   code 'exit 0'
 semicolon
 
 
@@ -1243,17 +1259,26 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #fold00
+# ----- i/o --------------------------------- #FOLD00
+
+colon 'esc['
+   code 'printf "\e[%s" "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+inout 1 0
 
 colon 'ansi'
    code 'printf "\e[%bm" "${s[sp--]}"'
 semicolon
+inline
 inout 1 0
 
 colon 'at'
    code '((s1=s[sp--]+1, s2=s[sp--]+1))'
    code 'printf "\e[%b" "${s1};${s2}H"'
 semicolon
+inline
 inout 2 0
 
 colon 'emit'
@@ -1351,7 +1376,7 @@ inout 0 0
 
 prompt()  {
    ((error)) && {
-      error=0
+      warm
       return 1
    }
 
@@ -1605,8 +1630,33 @@ colon 'list'
 semicolon
 
 
-# ----- experimental ------------------------ #fold00
+# ----- experimental ------------------------ #FOLD00
 
+# leftovers from running quit as coproc, exiting by error and
+# therefore having a word - the word calling quit - as outermost
+# error handler. While this works, it suffers from that along
+# with the quit session (which gets terminated) also all compiled
+# words go bust. That behavior is a tad harsh for dealing with
+# errors which may simply be a typo. But leeping them in, who knows
+# what else they may come in handy with.
+# similar to execute, but seperate process
+colon 'coproc'
+   atom 's1'
+   atom 'drop'
+   code "coproc ${header_code}_\${s1} < /dev/tty > /dev/tty"
+   code 'echo "coproc return value=$?"'
+   code 'echo "coproc fd=${COPROC[@]}"'
+semicolon
+
+colon 'wait'
+   code 'echo "wait fd=${COPROC[@]}"'
+   code 'echo "wait pid=$COPROC_PID"'
+   code 'wait -n -p pid $COPROC_PID'
+   code 'ret="$?"'
+   code '((ret==255))&&exit 255'
+   code 'echo "wait return value=$ret"'
+   code 'echo "wait pid=$pid"'
+semicolon
 
 # ----- unsorted ---------------------------- #fold00
 

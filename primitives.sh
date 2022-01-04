@@ -711,7 +711,7 @@ colon 'pack$'
    code 'ss+=("$tmp")'
 semicolon
 
-# ----- bit logic --------------------------- #fold00
+# ----- bit logic --------------------------- #FOLD00
 
 colon 'and'
    code '((s[sp-1]&=s[sp--]))'
@@ -724,7 +724,7 @@ semicolon
 inline
 
 colon 'xor'
-   code '((s[sp--]^=s[sp--]))'
+   code '((s[sp-1]^=s[sp--]))'
 semicolon
 inline
 

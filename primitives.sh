@@ -170,11 +170,11 @@ inline
 # word into lastword, which at that point consists
 # of a stack push of its creation address only.
 dodoes()  {
-   headersstateless["$lastword"]+="$(
-      type "${FUNCNAME[1]}"|
-      sed -n '/^ /p'|
-      sed -n '/dodoes;/,$p'|
-      sed '1,2d')"
+   headersstateless["$lastword"]+=";
+$(type "${FUNCNAME[1]}"|                                         # decompile function which called dodoes
+  sed -n '/^ /p'|                                                # retain indented lines
+  sed -n '/dodoes;/,$p'|                                         # drop everything up do "dodoes" plus next line
+  sed 's/^ *//;1,2d')"
 }
 
 # detokeniser detects this.

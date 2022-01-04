@@ -1,8 +1,12 @@
 \ testing does> with definition for an array
 \ not called "array" because there's array already:
 
-: arr
-   create allot
-   does> + ;
-
+: arr  create allot does> + ;
 10 arr myarr
+see myarr
+
+cr
+
+: emitter  create  , does> @ emit ;
+'* emitter star
+see star

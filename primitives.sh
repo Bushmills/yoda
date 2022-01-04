@@ -170,32 +170,11 @@ inline
 # word into lastword, which at that point consists
 # of a stack push of its creation address only.
 dodoes()  {
-#   echo "dodoes executes, called from the function shown below"
-#   echo "while defining word was busy defining $lastword:"
-#   echo
-#   type "${FUNCNAME[1]}" | sed -n '/^ /p'
-#   echo
-#   echo "so it seems that all it needs to do now is:"
-#   echo "add to $lastword which currently consists of"
-#   echo "${headersstateless[$lastword]}, which pushs the create address,"
-#   echo "the code after 'return;', either by inlining"
-#   echo "or by calling:"
-
-# using sed for all of it may be preferable. However, it's for now an
-# apparently functioning first implementation of does>
-   headersstateless["$lastword"]+="; "
-   while read -r tmp; do
-      if [[ "$tmp" == "dodoes;" ]]; then
-         read -r tmp;
-         if [[ "$tmp" == "return;" ]]; then
-            while read -r tmp; do
-               headersstateless["$lastword"]+=" $tmp"
-#               echo "$lastword does now:"
-#               echo "${headersstateless[$lastword]}"
-            done
-         fi
-      fi
-   done < <(type "${FUNCNAME[1]}" | sed -n '/^ /p')
+   headersstateless["$lastword"]+="$(
+      type "${FUNCNAME[1]}"|
+      sed -n '/^ /p'|
+      sed -n '/dodoes;/,$p'|
+      sed '1,2d')"
 }
 
 # detokeniser detects this.
@@ -212,7 +191,7 @@ immediate
 # missing:  calling code behind return
 
 
-# ----- defining words ---------------------- #FOLD00
+# ----- defining words ---------------------- #fold00
 
 # actually works: defining word builder
 data()  {
@@ -260,7 +239,7 @@ colon "array"
 semicolon
 
 
-# ----- compiler and word search related ---- #FOLD00
+# ----- compiler and word search related ---- #fold00
 
 # ( -- 0 | a )
 exists() {
@@ -1034,7 +1013,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------ #FOLD00
+# ----- flow control ------------------------ #fold00
 
 remagic
 
@@ -1259,7 +1238,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #FOLD00
+# ----- i/o --------------------------------- #fold00
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -1630,7 +1609,7 @@ colon 'list'
 semicolon
 
 
-# ----- experimental ------------------------ #FOLD00
+# ----- experimental ------------------------ #fold00
 
 # leftovers from running quit as coproc, exiting by error and
 # therefore having a word - the word calling quit - as outermost

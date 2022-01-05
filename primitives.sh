@@ -176,6 +176,17 @@ $(type "${FUNCNAME[1]}"|sed -n '/^[ \t]/p'|awk '/dodoes;/{getline;getline;p=1}p{
 # output only lines from dodoes+2 to end while removing leading spaces
 }
 
+# alternatively (for tickable create does> defined words):
+# read function body of function named headersstateless["$lastword"]
+# create (i.e. redefine)function named headersstateless["$lastword"],
+# adding original body, then code extracted from defining word.
+# consider changing detokeiser handler of defining words such that
+# code following does> isn't compiled after return, but instead stored
+# in an array with keys associating records with defining word.
+# that makes extracting unnecessary, simplifies dodoes, and doesn't
+# call for a return after dodoes, as the function will terminated then
+# anyway.
+
 # detokeniser detects and reacts to this "$does" tagged code:
 # after dodoes is a return compiled, to break out of the function.
 # code after does> is then compiled to same function behind return.
@@ -189,6 +200,21 @@ semicolon
 immediate
 
 # ----- defining words ---------------------- #FOLD00
+
+# changes to does> will need to be carried over to array.
+# arrays compile to rather good code, actually. This may look more
+# complex than needed. but this compile time only.
+# actually generated code in a function is something like:
+#     ((s[sp]+=50));   # adds array base address to item index
+colon "array"
+   code 'word'                                                       # parse array name
+   code "create \"\$word\""                                          # no header prefix passed - will get overwritten in next step anyway
+   code 'headers["$word"]="((s[sp]+=$dp))"'                          # rewrite
+   atom 'allot'
+semicolon
+
+
+
 
 # can be factored, but wait until create related to does> has been sorted out.
 colon 'create'
@@ -205,18 +231,6 @@ colon 'variable'
    code 'word'
    code '((m[dp]=0))'
    code 'constant "$word" "$((dp++))"'
-semicolon
-
-
-# arrays compile to rather good code, actually. This may look more
-# complex than needed. but this compile time only.
-# actually generated code in a function is something like:
-#     ((s[-1]+="50"));   # adds array base address to item index
-colon "array"
-   code 'word'                                                       # parse array name
-   code "create \"\$word\""                                          # no header prefix passed - will get overwritten in next step anyway
-   code 'headers["$word"]="((s[sp]+=$dp))"'                          # rewrite
-   atom 'allot'
 semicolon
 
 

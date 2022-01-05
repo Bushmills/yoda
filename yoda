@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda,
@@ -30,7 +30,7 @@
 version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -114,7 +114,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -401,7 +401,7 @@ stateless()   {
 
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -524,7 +524,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -629,7 +629,7 @@ pattern()  {                                                         # pattern i
       [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                      # -1234     negative number
          stateless "((s[++sp]=$((-${radix}#${word:1}&maxuint))))"
          return 0; }
-      [[ ${word:0:1} == [%#$] ]] && {                                # one of $ # %
+      [[ ${word:0:1} == [%\$\#] ]] && {
          radix="${bases[${word:0:1}]}"                               # yes: read radix associated with char
          [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                # remainder of number all legal chars?
             stateless "((s[++sp]=$((${radix}#${word:1}&maxuint))))"  # yes: convert from base and deal with it

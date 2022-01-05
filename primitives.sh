@@ -156,7 +156,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #fold00
+# ----- does> ------------------------------- #FOLD00
 
 
 # compiled before return into compling word.
@@ -172,12 +172,12 @@ inline
 # now get this into a single short awk or sed recipe.
 dodoes()  {
    headersstateless["$lastword"]+=";
- $(type "${FUNCNAME[1]}"|sed -n '/^[ \t]/p'|awk '/dodoes;/{getline;getline;p=1}p{$1=$1; print}')"
+$(type "${FUNCNAME[1]}"|sed -n '/^[ \t]/p'|awk '/dodoes;/{getline;getline;p=1}p{$1=$1;print}')"
 # output only lines from dodoes+2 to end while removing leading spaces
 }
 
-# detokeniser detects this.
-# at dodoes, a return is compiled, breaking out of the function.
+# detokeniser detects and reacts to this "$does" tagged code:
+# after dodoes is a return compiled, to break out of the function.
 # code after does> is then compiled to same function behind return.
 # dodoes extracts that code and inlines it into the word created by
 # the defining word containing does>.
@@ -188,53 +188,23 @@ colon 'does>'
 semicolon
 immediate
 
-# ----- defining words ---------------------- #fold00
+# ----- defining words ---------------------- #FOLD00
 
-# alternative data creation, intended to make data tickable.
-#use()  {
-#  - create a function with name of $lastword
-#  - function body is composed of $*
-#  - mark function as inline
-# this is going to break above dodoes, which relies on being able
-# to append to header[$lastword], but for which a similar procedure
-# can be used.
-#}
-
-use()  {
-   headers["$word"]="$1"                                               # replace name with code :)  replaced code pushed this to stack.
-}
-
-data()  {
-   word                                                                # parse name of new word
-   create "$word"  "$header_code"
-   use "s[++sp]=${s[sp--]}"
-}
-
-# this bit about "replacing name with code" may be confusing. it is. what
-# happens there is:
-# "name" is, in case of headers, a function name. when compiling, name gets
-# simply written to a new function, and is called when that function is executed.
-# During interpretation, the name is also simply executed, resulting in calling
-# the function.
-# Therefore can the name be replaced by code, which will the, during
-# compilation, get compiled to new functions, instead of the former, now
-# overwritten, name. Very similar at interpret time.
-# One gotcha was that instead of passing the command string for immediate
-# execution to interpreter, an "eval" statement was needed there.
-# That eval has been added to yoda() function, in the execute branch.
-
+# can be factored, but wait until create related to does> has been sorted out.
 colon 'create'
-   atom 'here'
-   code 'data'
-semicolon
-
-colon 'variable'
-   code '((s[++sp]=dp++))'
-   code 'data'
+   code 'word'
+   code 'constant "$word" "$dp"'
 semicolon
 
 colon 'constant'
-   code 'data'
+   code 'word'
+   code 'constant "$word" "${s[sp--]}"'
+semicolon
+
+colon 'variable'
+   code 'word'
+   code '((m[dp]=0))'
+   code 'constant "$word" "$((dp++))"'
 semicolon
 
 
@@ -323,6 +293,73 @@ semicolon
 colon 'name'
    code 'ss+=("${names[s[sp--]]}")'
 semicolon
+
+# set header flag for inline compilation
+# can be used after a colon definition
+colon 'inline'
+   code 'inline'
+semicolon
+
+colon 'resolve'
+   code 'resolve'
+semicolon
+inline
+
+colon '.unresolved'
+   code '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'
+semicolon
+inline
+
+colon '#unresolved'
+   code '((s[++sp]=${#headersunresolved[@]}))'
+semicolon
+inline
+
+# use recurse instead of word name to recurse into, as being
+# able to refer to itself by name in a definition is due to change.
+colon 'recurse'
+   code 'code "${headersstateless["$lastword"]}"'
+semicolon
+immediate
+
+
+
+# ----- environment-------------------------- #fold00
+# read number from environment variable with name on string stack
+# ( -- x )  ( string:  $1 -- )
+colon 'env'
+   code '((s[++sp]=${!ss[-1]}))'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+inout 0 1
+
+# store $1 in bash environment variable with name $2
+# ( x -- ) ( string:  $1 -- )
+colon '>env'
+   code 'eval "${ss[-1]}=$((s[sp--]))"'
+   code 'unset "ss[-1]"'
+semicolon
+inout 1 0
+
+
+# read string from environment variable with name on string stack
+# ( string:  $1 -- $2 )
+colon 'env$'
+   code 'ss[-1]="${!ss[-1]}"'
+semicolon
+inline
+inout 0 0
+
+# store string $1 in bash environment variable with name $2
+# ( string:  $1 $2 -- )
+colon '>env$'
+   code 'eval "${ss[-1]}=${ss[-2]}"'
+   code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
+semicolon
+inout 0 0
+
 
 
 # ----- misc -------------------------------- #fold00
@@ -1213,6 +1250,18 @@ colon 'many'
 semicolon
 
 
+colon 'warm'
+   code 'warm'
+semicolon
+
+colon 'boot'
+   code 'word'
+   code 'need "$word"'                                               # cold entry may come from postlib
+   code 'resolve'                                                    # in which case we want it now
+   code 'coldvector="${headersstateless["$word"]}"'                  # because writing it to cold start vector
+semicolon                                                            # this way cold start entry points can be forward referenced
+
+
 colon 'bye'
    code 'exit 0'
 semicolon
@@ -1223,6 +1272,18 @@ colon 'exit'
 semicolon
 inline
 immediate
+
+# ( err -- )
+colon 'abort'
+   code 'abort "${s[sp--]}"'
+semicolon
+
+# ( f err -- )
+colon '?abort'
+   code '((s[sp-1]))&&abort "${s[sp]}"'
+   atom 'drop'
+   atom 'drop'
+semicolon
 
 
 # ----- conditional compilation-------------- #fold00
@@ -1485,11 +1546,25 @@ evaluate ': #>       #>$ here here unpack$ ;'      ;         inout 1 2    # ( x 
 evaluate ': .padded  dup$ count$ - spaces type$ ;' ;         inout 1 0    # ( u -- ) (string: $1 -- )
 evaluate ': uconvert <# #s #>$ ;'                  ; inline; inout 1 0    # ( u -- ) (string: -- $1 )
 evaluate ': convert  dup abs uconvert sign ;'      ;         inout 1 0    # ( u -- ) (string: -- $1 )
-evaluate ': .r       swap  convert .padded ;'      ;         inout 2 0    # ( n u -- )
-evaluate ': u.r      swap uconvert .padded ;'      ;         inout 2 0    # ( u1 u2 -- )
+evaluate ': .r       >r convert  r> .padded ;'     ;         inout 2 0    # ( n u -- )
+evaluate ': u.r      >r uconvert r> .padded ;'     ;         inout 2 0    # ( u1 u2 -- )
 evaluate ': .        0  .r space ;'                ; inline; inout 1 0    # ( n -- )
 evaluate ': u.       0 u.r space ;'                ; inline; inout 1 0    # ( u -- )
 evaluate 'trash .padded'
+
+
+# convert a string representation of a number
+# or arithmetic expression to an integer
+# respects base
+# ( -- x ) (string: $1 -- )
+colon 'convert$'
+   code '((s[++sp]=${m[base]}#${ss[-1]}))'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+inout 0 1
+
+
 
 # ----- documentation ----------------------- #fold00
 
@@ -1624,6 +1699,12 @@ colon 'list'
    code '((s1))&&cat "${files[s1-1]}"'
 semicolon
 
+# a microseconds epoch, used for benchmarking
+colon 'realtime'
+   code '((s[++sp]=${EPOCHREALTIME//,/}))'
+semicolon
+inline
+inout 0 1
 
 # ----- experimental ------------------------ #fold00
 
@@ -1655,106 +1736,3 @@ semicolon
 
 # ----- unsorted ---------------------------- #fold00
 
-colon 'warm'
-   code 'warm'
-semicolon
-
-colon 'boot'
-   code 'word'
-   code 'need "$word"'                                               # cold entry may come from postlib
-   code 'resolve'                                                    # in which case we want it now
-   code 'coldvector="${headersstateless["$word"]}"'                  # because writing it to cold start vector
-semicolon                                                            # this way cold start entry points can be forward referenced
-
-# set header flag for inline compilation
-# can be used after a colon definition
-colon 'inline'
-   code 'inline'
-semicolon
-
-colon 'resolve'
-   code 'resolve'
-semicolon
-inline
-
-colon '.unresolved'
-   code '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'
-semicolon
-inline
-
-colon '#unresolved'
-   code '((s[++sp]=${#headersunresolved[@]}))'
-semicolon
-inline
-
-# read number from environment variable with name on string stack
-# ( -- x )  ( string:  $1 -- )
-colon 'env'
-   code '((s[++sp]=${!ss[-1]}))'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-inout 0 1
-
-# store $1 in bash environment variable with name $2
-# ( x -- ) ( string:  $1 -- )
-colon '>env'
-   code 'eval "${ss[-1]}=$((s[sp--]))"'
-   code 'unset "ss[-1]"'
-semicolon
-inout 1 0
-
-
-# read string from environment variable with name on string stack
-# ( string:  $1 -- $2 )
-colon 'env$'
-   code 'ss[-1]="${!ss[-1]}"'
-semicolon
-inline
-inout 0 0
-
-# store string $1 in bash environment variable with name $2
-# ( string:  $1 $2 -- )
-colon '>env$'
-   code 'eval "${ss[-1]}=${ss[-2]}"'
-   code 'unset "ss[-1]"'
-   code 'unset "ss[-1]"'
-semicolon
-inout 0 0
-
-# convert a string representation of a number
-# or arithmetic expression to an integer
-# respects base
-# ( -- x ) (string: $1 -- )
-colon 'convert$'
-   code '((s[++sp]=${m[base]}#${ss[-1]}))'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-inout 0 1
-
-# ( err -- )
-colon 'abort'
-   code 'abort "${s[sp--]}"'
-semicolon
-
-# ( f err -- )
-colon '?abort'
-   code '((s[sp-1]))&&abort "${s[sp]}"'
-   atom 'drop'
-   atom 'drop'
-semicolon
-
-# use recurse instead of word name to recurse into, as being
-# able to refer to itself by name in a definition is due to change.
-colon 'recurse'
-   code 'code "${headersstateless["$lastword"]}"'
-semicolon
-immediate
-
-# a microseconds epoch, used for benchmarking
-colon 'realtime'
-   code '((s[++sp]=${EPOCHREALTIME//,/}))'
-semicolon
-inline
-inout 0 1

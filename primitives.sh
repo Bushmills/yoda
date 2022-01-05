@@ -169,12 +169,12 @@ inline
 # following the call to itself from defining
 # word into lastword, which at that point consists
 # of a stack push of its creation address only.
+# now get this into a single short awk or sed recipe.
 dodoes()  {
    headersstateless["$lastword"]+=";
-$(type "${FUNCNAME[1]}"|                                             # decompile function which called dodoes
-   sed -n '/^[ \t]/p'|                                               # retain only indented lines
-   awk '/dodoes;/{getline;getline;p=1}p{$1=$1; print}')"             # output only lines from dodoes+2 to end while removing leading spaces
-}  # now get this into a single awk or sed recipe.
+ $(type "${FUNCNAME[1]}"|sed -n '/^[ \t]/p'|awk '/dodoes;/{getline;getline;p=1}p{$1=$1; print}')"
+# output only lines from dodoes+2 to end while removing leading spaces
+}
 
 # detokeniser detects this.
 # at dodoes, a return is compiled, breaking out of the function.

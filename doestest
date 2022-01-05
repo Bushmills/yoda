@@ -7,6 +7,14 @@ see myarr
 
 cr
 
-: emitter  create  , does> @ emit ;
-'* emitter star
-see star
+: star '*' emit ;
+
+: plural
+   create ,
+   does>  @ swap for
+      dup >r execute r>
+   next drop ;
+
+' star plural stars
+see stars
+

@@ -171,25 +171,23 @@ inline
 # of a stack push of its creation address only.
 dodoes()  {
    headersstateless["$lastword"]+=";
-$(type "${FUNCNAME[1]}"|                                         # decompile function which called dodoes
-  sed -n '/^ /p'|                                                # retain indented lines
-  sed -n '/dodoes;/,$p'|                                         # drop everything up do "dodoes" plus next line
-  sed 's/^ *//;1,2d')"
-}
+$(type "${FUNCNAME[1]}"|                                             # decompile function which called dodoes
+  sed -n 's/^[ \t]//p'|                                              # retain indented lines
+  sed '0,/dodoes;/d'|                                                # drop everything up do "dodoes" plus next line
+  sed '1d')"
+}  # now get this into a single sed recipe.
 
 # detokeniser detects this.
-# at dummy, a return is compiled, breaking out of the function.
+# at dodoes, a return is compiled, breaking out of the function.
 # code after does> is then compiled to same function behind return.
+# dodoes extracts that code and inlines it into the word created by
+# the defining word containing does>.
+# Though slightly Rube-Goldbergish, it's simpler than the other
+# approaches which I was thinking of.
 colon 'does>'
    code 'code "dodoes" "$does"'
 semicolon
 immediate
-
-#evaluate ": foo create , does> @ . ;"
-#evaluate "11 foo bar"
-# bar pushes the create address
-# missing:  calling code behind return
-
 
 # ----- defining words ---------------------- #fold00
 
@@ -711,7 +709,7 @@ colon 'pack$'
    code 'ss+=("$tmp")'
 semicolon
 
-# ----- bit logic --------------------------- #FOLD00
+# ----- bit logic --------------------------- #fold00
 
 colon 'and'
    code '((s[sp-1]&=s[sp--]))'

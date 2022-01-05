@@ -2,7 +2,6 @@
 - ticking a word with headers in more than one context vocabulary allows
   no control nor test over which version was ticked.
 - better support for unsigned
-- does>  tricky. consider detokeniser intervention
 - add context vocabularies to selected searches (only undoc remaining)
 
 --- general todos, improvements, fancyness

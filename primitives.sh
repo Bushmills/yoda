@@ -172,10 +172,9 @@ inline
 dodoes()  {
    headersstateless["$lastword"]+=";
 $(type "${FUNCNAME[1]}"|                                             # decompile function which called dodoes
-  sed -n 's/^[ \t]//p'|                                              # retain indented lines
-  sed '0,/dodoes;/d'|                                                # drop everything up do "dodoes" plus next line
-  sed '1d')"
-}  # now get this into a single sed recipe.
+   sed -n '/^[ \t]/p'|                                               # retain only indented lines
+   awk '/dodoes;/{getline;getline;p=1}p{$1=$1; print}')"             # output only lines from dodoes+2 to end while removing leading spaces
+}  # now get this into a single awk or sed recipe.
 
 # detokeniser detects this.
 # at dodoes, a return is compiled, breaking out of the function.

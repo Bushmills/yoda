@@ -53,3 +53,8 @@ In some respects does yoda differ from Forth:
   within another <# ... #> block), but doesn't expect a double length number.
   Each started conversion allocates a string stack item as output buffer.
   Some of those choice may not be permanent, but on a "for the time being" base.
+  
+- "execution tokens" are extracted from function name associated with a word. Vice versa, 
+  executing code associated with execution token modifies latter to yield a function name.  
+  function names have numerical components for this purpose, therefore are execution tokens
+  still represented by integers.

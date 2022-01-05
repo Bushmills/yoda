@@ -156,7 +156,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #FOLD00
+# ----- does> ------------------------------- #fold00
 
 
 # compiled before return into compling word.
@@ -181,8 +181,8 @@ dodoes()  {
 # code after does> is then compiled to same function behind return.
 # dodoes extracts that code and inlines it into the word created by
 # the defining word containing does>.
-# Though slightly Rube-Goldbergish, it's simpler than the other
-# approaches which I was thinking of.
+# Though somewhat Rube-Goldbergish, it's simpler than the other
+# approaches I was thinking of.
 colon 'does>'
    code 'code "dodoes" "$does"'
 semicolon
@@ -190,12 +190,26 @@ immediate
 
 # ----- defining words ---------------------- #fold00
 
-# actually works: defining word builder
-data()  {
-   word                                                              # parse name of new word
-   create "$word"                                                    # create header. no header prefix passed - will get overwritten anyway.
-   headers["$word"]="s[++sp]=${s[sp--]}"                             # replace name with code :)  replaced code pushed this to stack.
+# alternative data creation, intended to make data tickable.
+#use()  {
+#  - create a function with name of $lastword
+#  - function body is composed of $*
+#  - mark function as inline
+# this is going to break above dodoes, which relies on being able
+# to append to header[$lastword], but for which a similar procedure
+# can be used.
+#}
+
+use()  {
+   headers["$word"]="$1"                                               # replace name with code :)  replaced code pushed this to stack.
 }
+
+data()  {
+   word                                                                # parse name of new word
+   create "$word"  "$header_code"
+   use "s[++sp]=${s[sp--]}"
+}
+
 # this bit about "replacing name with code" may be confusing. it is. what
 # happens there is:
 # "name" is, in case of headers, a function name. when compiling, name gets
@@ -303,6 +317,11 @@ semicolon
 colon 'trash'
    code 'word'
    code 'unset "headersstateless[$word]"'
+semicolon
+
+# ( xt -- ) ( string: -- $1 )
+colon 'name'
+   code 'ss+=("${names[s[sp--]]}")'
 semicolon
 
 

@@ -82,6 +82,7 @@ declare -n headers="headersstateless"                                # headers i
 for tmp in "${headerslistlist[@]}"; do
    declare -A "$tmp"
 done
+declare -a names
 declare -A headersunresolved                                         # forward referenced. Not searched.
 declare -A where                                                     # source file, line
 
@@ -316,7 +317,6 @@ optimise()  {                                                        # run code 
       elif (( bodyflag & literalnumber )); then                      # number literal: generate code pushing the number
          targetline="((s[++sp]=$bodyline))"
       elif (( bodyflag & does )); then                               # does>
-#         echo "detokeniser cme across does> while building defining word $lastword"
          targetline="${body[tmp]}; return"
       fi
       target+=("$targetline")
@@ -424,6 +424,7 @@ literal()  {
 
 create()  {
    [[ -z "$1" ]] && emptyname
+   names[nextname]="$1"
    name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
    header "$1" "$name"
 
@@ -441,6 +442,7 @@ create()  {
 colon()  {
    [[ -z "$1" ]] && emptyname
    if [[ -z "${headersunresolved["$1"]}" ]]; then                    # check whether word is an unresolved forward reference
+      names[nextname]="$1"
       name="${header_code}_$((nextname++))"                          # prefix function names will avoid effect described on next line
    else                                                              # created word will resolve forward reference(s)
       name="${headersunresolved[$1]}"                                # as word name use name of forward reference
@@ -755,6 +757,7 @@ invoke() {
 # now unused arg2 passes referer
 forwardref()  {
    [[ -z ${headersunresolved["$word"]} ]] && {                       # don't re-forwardref and already forward ref'ed word
+      names[nextname]="$1"
       headersunresolved["$1"]="${header_code}_$((nextname++))"       # create unresolved header with new name, associate with word
       log "new forw: $1"
    }

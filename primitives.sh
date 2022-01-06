@@ -91,7 +91,7 @@ colon 'immediate'                                                    # move head
 semicolon
 
 
-# ----- diagnostics ------------------------- #FOLD00
+# ----- diagnostics ------------------------- #fold00
 
 words()	{
    local headers
@@ -158,14 +158,6 @@ inline
 
 # ----- does> ------------------------------- #FOLD00
 
-# rewrite run time semantic of most recently defined word
-# arg1: new run time code.
-use()  {
-# factor with compile
-   name="${headersstateless["$lastword"]}"                        # rewrites function "$name",
-   eval "$name() { $(printf '%s\n' "$1"); }"                      # using instructions received as arguments
-}
-
 # compiled before return into compling word.
 # will therefore be called by create part.
 # will consequently know who its caller is
@@ -192,7 +184,7 @@ colon 'does>'
 semicolon
 immediate
 
-# ----- defining words ---------------------- #FOLD00
+# ----- defining words ---------------------- #fold00
 
 
 # can be factored, but wait until create related to does> has been sorted out.
@@ -219,7 +211,7 @@ colon "array"
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
 
-# ----- compiler and word search related ---- #FOLD00
+# ----- compiler and word search related ---- #fold00
 
 # ( -- 0 | a )
 exists() {
@@ -719,6 +711,7 @@ semicolon
 
 # "nice"    "this is a very *** foo"   "***" replace$    ->   "this is a very nice foo"
 # "nope"    "this is a very *** foo"   "?" replace$      ->   "this is a very *** foo"
+# "123"     "abcd" 1 insert$  -> "a123bcd"
 
 asc()  {
    if [[ -z "${ss[-1]}" ]]; then
@@ -1284,7 +1277,7 @@ colon '?abort'
 semicolon
 
 
-# ----- conditional compilation-------------- #FOLD00
+# ----- conditional compilation-------------- #fold00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -1313,7 +1306,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #FOLD00
+# ----- i/o --------------------------------- #fold00
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -1564,7 +1557,7 @@ inout 0 1
 
 
 
-# ----- documentation ----------------------- #FOLD00
+# ----- documentation ----------------------- #fold00
 
 
 undoc_template()  {

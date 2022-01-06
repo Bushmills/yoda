@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda,
@@ -114,7 +114,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- state variables, switches, globals, static etc --- #fold00
+# ----- state variables, switches, globals, static etc --- #FOLD00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -177,7 +177,7 @@ logminus() { ((logindent+=-2)); log "$@"; }
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- compiler muting ---------------------------------- #fold00
+# ----- compiler muting ---------------------------------- #FOLD00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   {
@@ -191,7 +191,7 @@ restricted() {                                                       # flag curr
 }
 derestrict
 
-# ----- ANSI/VT100 attributes ---------------------------- #fold00
+# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
 
 # use in error and prompt.
 # for use in programs, library ansi has been supplied
@@ -334,7 +334,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -392,11 +392,17 @@ codebody()  {                                                        # inline co
    done < <(type "$1")
 }
 
+# rewrite run time semantics of most recently defined word
+# arg1: new run time code.
+use()  {
+   name="${headersstateless["$lastword"]}"                           # rewrites function "$name",
+   eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
+}
+
 compile()  {                                                         # build new function from code in body array
    restricted || {
       optimise                                                       # here's the proper place for static code evaluation.
-      name="${headersstateless["$lastword"]}"                        #   but code needs to provide more clues about its semantics
-      eval "$name() { $(printf '%s\n' "${target[@]}"); }"            #   to aid both coding and optimising.
+      use "${target[@]}"
    }
 }
 
@@ -644,8 +650,7 @@ pattern()  {                                                         # pattern i
          radix="${bases[${word:0:1}]}"                               # yes: read radix associated with char
          [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                # remainder of number all legal chars?
             stateless "((s[++sp]=$((${radix}#${word:1}&maxuint))))"  # yes: convert from base and deal with it
-            return 0
-         }
+            return 0; }
       }
       [[ ${word} == \'? || ${word} == \'?\' ]] && {                  # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
          read -r tmp < <(printf "%d" "'${word:1:1}'")
@@ -704,7 +709,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -780,7 +785,7 @@ forwardref()  {
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
-trace "line=[$line]"
+   trace "line=[$line]"
    until [[ -z "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
       ((error))&&break
       ((sp<0))&&break
@@ -835,7 +840,7 @@ trace "line=[$line]"
    ((sp<0))&&stackunderflow
 }
 
-# ----- read source -------------------------------------- #fold00
+# ----- read source -------------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.

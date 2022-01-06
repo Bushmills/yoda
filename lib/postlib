@@ -11,6 +11,14 @@ u: quit  ( -- )
 
 u: epoch    ( -- u ) "EPOCHSECONDS" env  ;
 
+\ inserts dictionary pointer ("here") at the begin of a linked list,
+\ anchored at a
+u: link     ( a -- )
+   here
+   swap exchange
+   ,  ;
+
+
 needed  dump lest from dump
 needed wdump lest from wdump
 needed fg needed bg or needed attr or lest from ansi

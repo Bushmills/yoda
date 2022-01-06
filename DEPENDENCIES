@@ -1,0 +1,12 @@
+Occasionally does yoda use an external program for its operations.
+Those are, apart from bash:
+        sed         # used by dodoes, topics
+        sort        # used by crossref
+
+further programs, optional:
+a supported editor. "Support" means, an editor which can, after opening
+the file, move the cursor to a position as specified on command line.
+Ideally to column and row, but just to row is ok too.
+For two handfuls of editors, supporting code has been added and can
+be found in the file libs/fix. Using those definitions it shouldn't be
+too hard to add support for other editors not listed there.

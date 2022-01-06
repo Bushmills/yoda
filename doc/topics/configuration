@@ -1,1 +1,38 @@
 TOPIC: configuration
+
+Adjusting yoda to your personal preferences can largely be done in
+the file yoda.conf.  That files resides in the same directory where
+yoda is found, and is included during launch.
+For all settings, reasonable or at least hopefully functioning defaults
+have been set. Change those as needed. 0 turns them off, other values
+enable them, unless text is expected as paramter.
+
+trace=0                       # 1: become more chatty during execution
+log=0                         # 1: writes execution of some actions to a log file
+codedump=0
+break=2                       # what do to after Ctrl-C: 0:return 1:exit 2:execute cold
+clean=1                       # 1: clean stacks on error
+callstack=0                   # 0: disable call stack print on error. n: show n items
+
+editor="vi"                   # editors run in console, not backgrounded
+xeditor="featherpad"          # xeditors open window and are backgrounded
+
+doc="$mydir/doc"              # mydir is where yoda has determined to reside itself. set doc root
+topicdoc="$doc/topics"        # where are topics stored
+worddoc_prefix="word"         # each word doc file uses this string as base name
+worddoc="$doc/words/$worddoc_prefix"      # set directory and word doc prefix
+
+primitives="primitives.sh"    # name of primitives file, loaded at launch
+prelib="prelib"               # source library included before main program
+postlib="postlib"             # source librery included after main program
+libdirs+="..."                # add another directory to list where yoda looks for library files
+libdirs+=("$PWD")             # example: add current directory
+libdirs+=("$mydir")           # example: add directory where yoda resides
+libdirs+=("/usr/local/lib/yoda")       # example: add literal directory path
+
+bits=n                        # set cell width. 16..63 are reasonable.
+                              # be aware that 16 is a tad small for epoch or
+                              # higher resolution time measurements.
+header_code="function"        # leading part of function names
+nextname="1000"               # functions are numbered, starting with this number.
+

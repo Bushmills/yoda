@@ -158,6 +158,11 @@ inline
 
 # ----- does> ------------------------------- #FOLD00
 
+use()  {
+# factor with compile
+   name="${headersstateless["$lastword"]}"                        # rewrites function "$name",
+   eval "$name() { $(printf '%s\n' "$1"); }"                      # using instructions received as arguments
+}
 
 # compiled before return into compling word.
 # will therefore be called by create part.
@@ -170,13 +175,11 @@ inline
 # word into lastword, which at that point consists
 # of a stack push of its creation address only.
 # now get this into a single short awk or sed recipe.
-dodoes()  {
-   tmp="$(type ${headersstateless[$lastword]}|sed '0,/^{/d;$d')
+dodoes()  {                                                          # append does> part to original address pushing create semantics
+   use  "$(type ${headersstateless[$lastword]}|sed '0,/^{/d;$d')
         ${doescode[${FUNCNAME[1]}]}"
-# factor with compile
-   name="${headersstateless["$lastword"]}"                        #   but code needs to provide more clues about its semantics
-   eval "$name() { $(printf '%s\n' "$tmp"); }"     #   to aid both coding and optimising.
 }
+
 
 # alternatively (for tickable create does> defined words):
 # read function body of function named headersstateless["$lastword"]
@@ -203,19 +206,6 @@ immediate
 
 # ----- defining words ---------------------- #FOLD00
 
-# changes to does> will need to be carried over to array.
-# arrays compile to rather good code, actually. This may look more
-# complex than needed. but this compile time only.
-# actually generated code in a function is something like:
-#     ((s[sp]+=50));   # adds array base address to item index
-colon "array"
-   code 'word'                                                       # parse array name
-   code "create \"\$word\""                                          # no header prefix passed - will get overwritten in next step anyway
-   code 'headers["$word"]="((s[sp]+=$dp))"'                          # rewrite
-   atom 'allot'
-semicolon
-
-
 
 
 # can be factored, but wait until create related to does> has been sorted out.
@@ -231,10 +221,17 @@ semicolon
 
 colon 'variable'
    code 'word'
-   code '((m[dp]=0))'
-   code 'constant "$word" "$((dp++))"'
+   code '((m[dp]=0))'                                                # initialise new variable
+   code 'constant "$word" "$((dp++))"'                               # variable is a constant allocating its data and pushing its address
 semicolon
 
+# factor with compile, create
+colon "array"
+   code 'word'                                                       # parse array name
+   code 'create "$word"  "$header_code"'                             # create header
+   code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
+   code "((dp+=s[sp--]))"                                            # allocate
+semicolon
 
 # ----- compiler and word search related ---- #FOLD00
 
@@ -1301,7 +1298,7 @@ colon '?abort'
 semicolon
 
 
-# ----- conditional compilation-------------- #fold00
+# ----- conditional compilation-------------- #FOLD00
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their

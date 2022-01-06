@@ -91,7 +91,7 @@ colon 'immediate'                                                    # move head
 semicolon
 
 
-# ----- diagnostics ------------------------- #fold00
+# ----- diagnostics ------------------------- #FOLD00
 
 words()	{
    local headers
@@ -1581,7 +1581,7 @@ inout 0 1
 
 
 
-# ----- documentation ----------------------- #fold00
+# ----- documentation ----------------------- #FOLD00
 
 
 undoc_template()  {
@@ -1645,18 +1645,18 @@ semicolon
 helptext() {
 cat << EOT
    Information is available on selected topics.
-   To see a list of topics, execute:      topics
-   to read about first topic, execute:    1 topic
+   To see a list of topics, execute:            topics
+   to read about first topic, execute:          1 topic
    Any other listed topic can be opened
    by using the number next to it,
    in place for 1
 
    A list of included source files can be
-   shown by executing:                    files
+   shown by executing:                          files
    These too are numbered. Use that
    number with commands like list and
-   edit:                                  1 list
-                                          2 edit
+   edit:                                        1 list
+                                                2 edit
    "edit" assumes that yoda knows how to
    open a properly working editor on your
    system. Read topic "configuration" to
@@ -1664,13 +1664,22 @@ cat << EOT
    your preferred editor.
 
    A list of words understood by yoda
-   can be seen by executing:              words
-   Another list shows when entering:      crossref
+   can be seen by executing:                    words
+   Another list shows when entering:            crossref
 
    Documentation about those words can
-   be opened by executing:                doc name
+   be opened by executing:                      doc name
    where "name" is the name of the word
    you want information about.
+
+   With a configured editor, opening the
+   source file of any word and jumping
+   to the line with the definition to UTSL
+   is done with:                                review name
+   I am tempted drop the doc feature
+   entirely, move docs to source files and
+   suggest to use review instead of doc.
+   review complements see, which decompiles:    see name
 EOT
 }
 colon 'help'

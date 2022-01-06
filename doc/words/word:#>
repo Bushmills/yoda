@@ -1,0 +1,18 @@
+name:                #>
+stack:               ( x -- a u )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+category:            pictured number conversion, I/O
+input stream:
+
+decription:          meant to be used between at the end of a <# ... sequence, its operation
+                     is part of converting an integer to a string of characters, stored in
+                     memory (contrasting with "a string stored on string stack"). #> will
+                     finalise conversion, then unpack string to a list of ASCII values, stored
+                     in consecutive memory locations.
+contexts:            interpreting, compiling
+example:             none
+notes:               mostly added to maintain compatibility with standards and provide
+                     the closing to a symmetric <# ... #>, the alternatives #>$ and
+                     #>type are more efficient, due to not needing to unpack the string to
+                     a list of ASCIIs in consecutive memory locations.

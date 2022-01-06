@@ -1,0 +1,20 @@
+name:                coproc
+stack:               ( xt -- )
+return stack:        ( -- )
+string stack:        ( -- )
+
+category:            experimental
+
+decription:          launches the word with execution token xt as coproc, that is, running
+                     it as sub process, with I/O detached, wasn't it for that this word
+                     "coproc" then redirects input and output to the sub process.
+                     This is a remainder of my attempts to achieve real warm start capability
+                     in error, abort or break (Ctrl-C) case.
+                     While coproc wasn't the solution, I kept it nevertheless in case it
+                     may be useful for another purpose.
+                     Also see "wait" for the word launching the coproc to synchronise with it
+                     finishing.
+
+contexts:            interpreting, compiling
+example:             none
+notes:               none

@@ -1,0 +1,11 @@
+name:                alias
+stack:               ( xt -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:
+input stream:        name of alias
+
+decription:          create an additional header for xt semantics, for an alternative name
+
+contexts:            interpreting
+example:             ' lshift alias <<

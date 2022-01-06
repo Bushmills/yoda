@@ -171,9 +171,8 @@ inline
 # of a stack push of its creation address only.
 # now get this into a single short awk or sed recipe.
 dodoes()  {
-   tmp="$(
-      type ${headersstateless[$lastword]}|sed '0,/^{/d;$d')
-      ${doescode[${FUNCNAME[1]}]}"
+   tmp="$(type ${headersstateless[$lastword]}|sed '0,/^{/d;$d')
+        ${doescode[${FUNCNAME[1]}]}"
 # factor with compile
    name="${headersstateless["$lastword"]}"                        #   but code needs to provide more clues about its semantics
    eval "$name() { $(printf '%s\n' "$tmp"); }"     #   to aid both coding and optimising.
@@ -237,7 +236,7 @@ colon 'variable'
 semicolon
 
 
-# ----- compiler and word search related ---- #fold00
+# ----- compiler and word search related ---- #FOLD00
 
 # ( -- 0 | a )
 exists() {
@@ -296,10 +295,9 @@ semicolon
 immediate
 
 colon 'execute'
-   atom 's1'
-   atom 'drop'
-   code "${header_code}_\${s1}"
+   code "${header_code}_\${s[sp--]}"
 semicolon
+inline
 
 colon 'trash'
    code 'word'
@@ -1332,7 +1330,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #fold00
+# ----- i/o --------------------------------- #FOLD00
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'

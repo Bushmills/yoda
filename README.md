@@ -48,13 +48,16 @@ In some respects does yoda differ from Forth:
   cmforth.
 
 - not fully adhering to standard by sometimes deviating choice of word names.
-  so is "read-file" called "from", "evaluate" evaluates from tib, not from
-  addr/cnt, "list" isn't a word from the blocks word set (and doesn't behave
+  so is "read-file" called "from", "evaluate" evaluates from an environment
+  variable named tib, not from addr/cnt (that may change), but a word
+  "evaluate$" exists, using top string stack items as input.  
+  "list" isn't a word from the blocks word set (yet) (and doesn't behave
   like it), pictured number conversion is nestable (that is, <# ...  #> may
-  appear within another <# ...  #> block), but doesn't expect a double
-  length number.  Each started conversion allocates a string stack item as
-  output buffer.  Some of those choice may not be permanent, but on a "for
-  the time being" base.
+  appear within another <# ...  #> block), but expects only a single length
+  number.  Each started conversion allocates a string stack item as output
+  buffer.  
+  Some of those choice may not be permanent, but on a "for the time being"
+  base.
   
 - "execution tokens" are extracted from function name associated with a
   word.  Vice versa, executing code associated with execution token modifies

@@ -52,7 +52,7 @@ settings may need adjustment (editor defaults to vi, and can be changed
 in yoda.conf)
 
 4. editor can also be used to open included libraries. 
-Currently 5 libraries will show when runing "files":
+Currently 5 libraries will show when running "files":
 primitives.sh, prelib, quit, fix and postlib.
 Like "topics", these are numbered. Use the number with "edit"
 to open, view and edit the chosen library.

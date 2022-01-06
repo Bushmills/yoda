@@ -50,7 +50,7 @@ In some respects does yoda differ from Forth:
 - not fully adhering to standard by sometimes deviating choice of word names.
   so is "read-file" called "from", "evaluate" evaluates from an environment
   variable named tib, not from addr/cnt (that may change), but a word
-  "evaluate$" exists, using top string stack items as input.  
+  "evaluate$" exists, using top string stack item as input.  
   "list" isn't a word from the blocks word set (yet) (and doesn't behave
   like it), pictured number conversion is nestable (that is, <# ...  #> may
   appear within another <# ...  #> block), but expects only a single length

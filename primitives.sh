@@ -158,6 +158,8 @@ inline
 
 # ----- does> ------------------------------- #FOLD00
 
+# rewrite run time semantic of most recently defined word
+# arg1: new run time code.
 use()  {
 # factor with compile
    name="${headersstateless["$lastword"]}"                        # rewrites function "$name",
@@ -170,33 +172,19 @@ use()  {
 # (function name).  Will also know, by virtue
 # of $lastword, what function to add code to.
 # (or rather, instruct detokeniser to add code
-# to). will inline all code behind the return
-# following the call to itself from defining
-# word into lastword, which at that point consists
-# of a stack push of its creation address only.
-# now get this into a single short awk or sed recipe.
+# to). Appends all defining word associated code
+# portion of does> to the original address push
+# compiled by create.
 dodoes()  {                                                          # append does> part to original address pushing create semantics
    use  "$(type ${headersstateless[$lastword]}|sed '0,/^{/d;$d')
         ${doescode[${FUNCNAME[1]}]}"
 }
 
-
-# alternatively (for tickable create does> defined words):
-# read function body of function named headersstateless["$lastword"]
-# create (i.e. redefine)function named headersstateless["$lastword"],
-# adding original body, then code extracted from defining word.
-# consider changing detokeiser handler of defining words such that
-# code following does> isn't compiled after return, but instead stored
-# in an array with keys associating records with defining word.
-# that makes extracting unnecessary, simplifies dodoes, and doesn't
-# call for a return after dodoes, as the function will terminated then
-# anyway.
-
 # detokeniser detects and reacts to this "$does" tagged code:
-# after dodoes is a return compiled, to break out of the function.
-# code after does> is then compiled to same function behind return.
-# dodoes extracts that code and inlines it into the word created by
-# the defining word containing does>.
+# code after does> is removed from defining wird and written to
+# an array item associated with it.
+# dodoes then uses that code to rewrite run time semantics of
+# defined word.
 # Though somewhat Rube-Goldbergish, it's simpler than the other
 # approaches I was thinking of.
 colon 'does>'
@@ -205,7 +193,6 @@ semicolon
 immediate
 
 # ----- defining words ---------------------- #FOLD00
-
 
 
 # can be factored, but wait until create related to does> has been sorted out.
@@ -225,7 +212,6 @@ colon 'variable'
    code 'constant "$word" "$((dp++))"'                               # variable is a constant allocating its data and pushing its address
 semicolon
 
-# factor with compile, create
 colon "array"
    code 'word'                                                       # parse array name
    code 'create "$word"  "$header_code"'                             # create header

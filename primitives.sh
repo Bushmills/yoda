@@ -99,7 +99,7 @@ words()	{
       declare -n headers="$tmp"
 	   (( ${#headers[@]} )) && {
          printf '%s\n' "--- ${tmp#"headers"} ---"
-   	   printf  "%s " "${!headers[@]}"
+   	   printf  "%s  " "${!headers[@]}"
          printf '\n\n'
       }
    done

@@ -27,12 +27,12 @@ In some respects does yoda differ from Forth:
 
 - Due to its forward referencing capability does yoda not need all of
   the functionality necessary for compiling a program already prior to
-  beginning of compilation. Instead can it resolve those after compilation
-  on a need-to-include base. This allows for a more automatic and
-  comfortable library inclusion management. The library "postlib",
-  referenced during resolve passes, exists for this purpose: compile
-  nothing from it, unless needed.
-  Another library, prelib, is included before main source compilation.
+  beginning of compilation.  Instead can it resolve those after compilation
+  on a need-to-include base.  This allows for a more automatic and
+  comfortable library inclusion management.  The library "postlib",
+  referenced during resolve passes, exists for this purpose: compile nothing
+  from it, unless needed.  This mechanism is similar to Tom Almy's cforth. 
+  Another library, prelib, is included before main source compilation. 
   prelib is unsuited for resolving forward referenced words.
 
 - yoda has no built-in interactive interpreter, but compiles an interpreter
@@ -41,20 +41,23 @@ In some respects does yoda differ from Forth:
 - yoda has now eliminated immediate words. While the word "immediate"
   still exists and is used, its semantics are different: it causes moving
   the header of last word into the compiler context vocabulary, rather than
-  marking the word as state smart. Such a word doesn't have interpret time
-  semantics (and can't be found when not compiling). For interpret time
+  marking the word as state smart.  Such a word doesn't have interpret time
+  semantics (and can't be found when not compiling).  For interpret time
   semantics of such a word, create it again with identical name, and specify
-  only those.
+  only those.  This mechanism is similar to what's used in Chuck Moore's
+  cmforth.
 
 - not fully adhering to standard by sometimes deviating choice of word names.
-  so is "read-file" called "from", "evaluate" evaluates from tib, not from addr/cnt,
-  "list" isn't a word from the blocks word set (and doesn't behave like it),
-  pictured number conversion is nestable (that is,  <# ... #>  may appear
-  within another <# ... #> block), but doesn't expect a double length number.
-  Each started conversion allocates a string stack item as output buffer.
-  Some of those choice may not be permanent, but on a "for the time being" base.
+  so is "read-file" called "from", "evaluate" evaluates from tib, not from
+  addr/cnt, "list" isn't a word from the blocks word set (and doesn't behave
+  like it), pictured number conversion is nestable (that is, <# ...  #> may
+  appear within another <# ...  #> block), but doesn't expect a double
+  length number.  Each started conversion allocates a string stack item as
+  output buffer.  Some of those choice may not be permanent, but on a "for
+  the time being" base.
   
-- "execution tokens" are extracted from function name associated with a word. Vice versa, 
-  executing code associated with execution token modifies latter to yield a function name.  
-  function names have numerical components for this purpose, therefore are execution tokens
-  still represented by integers.
+- "execution tokens" are extracted from function name associated with a
+  word.  Vice versa, executing code associated with execution token modifies
+  latter to yield a function name.  function names have numerical components
+  for this purpose, therefore are execution tokens still represented by
+  integers.

@@ -246,7 +246,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -271,12 +271,14 @@ analyserflag()  {
 }
 
 
+declare -A doescode
+
 # doesn't actually do any optimizing at this point.
 # Function is now limited to expanding atom, generating code pushing literals
 optimise()  {                                                        # run code generator on ${analyser[@]} data, as provided by primitives.
    ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
-
    target=()
+   dodoes_at=0
 #   corresponding=()                                                 # index array source line to target line.
 
    ((codedump))&& {
@@ -317,10 +319,15 @@ optimise()  {                                                        # run code 
       elif (( bodyflag & literalnumber )); then                      # number literal: generate code pushing the number
          targetline="((s[++sp]=$bodyline))"
       elif (( bodyflag & does )); then                               # does>
-         targetline="${body[tmp]}; return"
+         targetline="${body[tmp]}"                                   # compile dodoes call
+         dodoes_at="$((${#target[@]}+1))"                            # remember end of target
       fi
-      target+=("$targetline")
+      [[ -z "$targetline" ]] || target+=("$targetline")
    done
+   ((dodoes_at)) && {
+      doescode[${headersstateless[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
+      target=("${target[@]:0:$dodoes_at}")
+   }
 }
 
 # ----- line parser -------------------------------------- #fold00
@@ -358,7 +365,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # atoms may be:
 #  - micro instructions

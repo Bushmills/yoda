@@ -171,9 +171,12 @@ inline
 # of a stack push of its creation address only.
 # now get this into a single short awk or sed recipe.
 dodoes()  {
-   headersstateless["$lastword"]+=";
-$(type "${FUNCNAME[1]}"|sed -n '/^[ \t]/p'|awk '/dodoes;/{getline;getline;p=1}p{$1=$1;print}')"
-# output only lines from dodoes+2 to end while removing leading spaces
+   tmp="$(
+      type ${headersstateless[$lastword]}|sed '0,/^{/d;$d')
+      ${doescode[${FUNCNAME[1]}]}"
+# factor with compile
+   name="${headersstateless["$lastword"]}"                        #   but code needs to provide more clues about its semantics
+   eval "$name() { $(printf '%s\n' "$tmp"); }"     #   to aid both coding and optimising.
 }
 
 # alternatively (for tickable create does> defined words):

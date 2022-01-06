@@ -1,0 +1,26 @@
+
+variable vars               \ link anchor as base of linked list through variables
+
+need link
+: var ( create: -- )  ( run: -- a )
+    vars link               \ add linked list item
+    "nextname" env ,        \ add execution token to item (for name)
+    create  0 ,  ;          \ create variable, allocate and init to zero
+
+\ variables are created like this:
+\ var foo
+\ var bar
+
+\ output name and value of a single variable
+: .var ( a -- )
+    skim name dup$ type$
+    @ 16 count$ - .r  
+    cr  ;
+
+\ produce a table of variables and their current values
+: .vars  ( -- )
+    vars                    \ begin at link anchor
+    begin @                 \ move to next variable
+    ?dup while              \ unless there isn't any next variable
+       dup cell+ .var       \ output name and value of variable
+    repeat ;

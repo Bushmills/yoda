@@ -242,9 +242,9 @@ semicolon
 
 # NOTE: tick and execute need names to look like foobar_4711
 colon "'"
-   code 'local headers'                                                     # meant to spare me from saving and restoring vectored headers variable
+   code 'local headers'                                              # meant to spare me from saving and restoring vectored headers variable
    code 'exists'
-   code '((s[sp])) || notfound "$word"'                                     # none left -> all searched, but not found.
+   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
 semicolon
 
 colon "[']"
@@ -522,7 +522,8 @@ inout 0 1
 
 colon 'rdepth'
    code '((s[++sp]=rp))'
-semicolon                                                               ; inout 0 1
+semicolon
+inout 0 1
 inline
 
 # ----- string stack ------------------------ #fold00
@@ -793,12 +794,12 @@ evaluate "' rshift alias >>"
 # ----- comparison -------------------------- #fold00
 
 colon '0='
-   code '((s[sp]=s[sp]?0:maxuint))'                                  #&msb: 0->maxuint  x->0
+   code '((s[sp]=s[sp]?0:maxuint))'                                  # &msb: 0->maxuint  x->0
 semicolon
 inline
 
 colon '0<'
-   code '((s[sp]=s[sp]&msb?maxuint:0))'                              #&msb: 0->0   msb->maxuint
+   code '((s[sp]=s[sp]&msb?maxuint:0))'                              # &msb: 0->0   msb->maxuint
 semicolon
 inline
 
@@ -811,6 +812,18 @@ inline
 colon '<>'
    code '((s1=s[sp--]))'
    code '((s[sp]=(s[sp])==(s1)?0:maxuint))'
+semicolon
+inline
+
+colon 'u<'
+   code '((s1=s[sp--]&maxuint))'
+   code '((s[sp]=(s[sp]&maxuint)<(s1)?maxuint:0))'
+semicolon
+inline
+
+colon 'u>'
+   code '((s1=s[sp--]&maxuint))'
+   code '((s[sp]=(s[sp]&maxuint)>(s1)?maxuint:0))'
 semicolon
 inline
 
@@ -1025,7 +1038,7 @@ colon 'fill'
    code '((s2=s[sp--]))'
    code '((s3=s[sp--]))'
    code 'for ((;s2--;)); do'
-   code '((m[s3++] = s1))'                                     # c -> m[a++],  u times
+   code '((m[s3++] = s1))'                                           # c -> m[a++],  u times
    code 'done'
 semicolon
 inout 3 0
@@ -1329,7 +1342,7 @@ inline
 inout 2 0
 
 colon 'emit'
-   code 'printf "%c" "${char[s[sp--]&255]}"'                           # given an ASCII, print the character
+   code 'printf "%c" "${char[s[sp--]&255]}"'                         # given an ASCII, print the character
 semicolon
 inline
 inout 1 0

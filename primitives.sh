@@ -827,19 +827,32 @@ colon 'u>'
 semicolon
 inline
 
-# broken. only valid for numbers 0..maxint
 colon '<'
-   code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp])<(s1)?maxuint:0))'
+   code '((s1=s[sp--]&maxuint))'
+   code '((sign=((s1^s[sp])&msb)?1:0))'                                # set bit 0 if signs differ
+   code '((s[sp]=((s1>s[sp]&maxuint)^sign)?maxuint:0))'
 semicolon
 inline
 
-# broken. only valid for numbers 0..maxint
 colon '>'
-   code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp])>(s1)?maxuint:0))'
+   code '((s1=s[sp--]&maxuint))'
+   code '((sign=((s1^s[sp])&msb)?1:0))'                                # set bit 0 if signs differ
+   code '((s[sp]=((s1<s[sp]&maxuint)^sign)?maxuint:0))'
 semicolon
 inline
+
+#    flag
+#   s2 < s1        sign           result
+#   0 (true)       0   (same)     maxuint
+#   1 (false)      0   (same)     0
+#   0 (true)       msb (diff)     0
+#   1 (false)      msb (diff)     maxuint
+
+#  flag  sign      result
+#  0     0         maxuint
+#  1     0         0
+#  0     $xxx1     0
+#  1     $xxx1     maxuint
 
 # ----- arithmetics ------------------------- #fold00
 

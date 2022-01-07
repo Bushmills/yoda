@@ -1,0 +1,70 @@
+variable scr
+variable blk
+
+#64 constant c/l
+#16 constant l/s
+c/l l/s * constant b/blk
+
+2 constant #buffers
+#buffers array buffer
+
+#buffers times   4 allot   here i  buffer !  b/blk allot
+
+\ buffer layout:
+\   -2   -1    0 ... b/blk-1
+\   blk dirty  data
+
+\ empty-buffers
+\ save-buffer
+\ flush        #buffers 0 do i buffer @ >dirty @ if ... save-buffer then loop
+
+
+: >dirty       1-  ;
+: >blk         1- 1- ;
+
+: buffer ;
+
+\ given block u, return address of a buffer containing block
+: block  ( u -- a )
+  -1                                \ indicates "no buffer (yet)"
+
+\  block already in mem?
+      #buffers for
+         over i buffer @ >blk @ =
+         if                         \ found a buffer already containing block
+            drop i leave            \ replace no buffer flag against buffer indexx
+         then
+      next                          \ blk -1 | blk buffer (0..#buffers-1)
+
+\ block found: promote; exit
+
+      #buffers for
+         i buffer @ >blk @ 0=       \ free buffer found
+         if                         \ found a buffer already containing block
+            drop i leave            \ replace no buffer flag against buffer indexx
+         then
+      next                          \ blk -1 | blk buffer (0..#buffers-1)
+
+\ free block found: read, associate, promote; exit
+
+      drop #buffers 1-              \ pick LRU buffer
+      dup buffer @ >dirty @         \ buffer dirty?
+      if ( ... save-buffer )
+      then
+
+\ read, associate, promote, exit
+
+
+
+
+
+: update       blk @ >dirty on ;
+: list         block l/s for dup c/l pack$ type$ cr c/l + next drop ;
+: load         scr !
+               l/s 0 do
+                  scr @ block
+                  i c/l * +
+                  c/l pack$ evaluate$
+               loop ;
+: copy         swap block swap block b/blk move update ;
+: erase        block b/blk bl fill ;

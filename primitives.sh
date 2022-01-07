@@ -1664,7 +1664,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #fold00
+# ----- convenience ------------------------- #FOLD00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=() sp=0'
@@ -1691,7 +1691,7 @@ semicolon
 
 colon 'edit'
    code '((s1=s[sp--]))'
-   code '((s1))&&editor "${files[s1]-1]}"'
+   code '((s1))&&editor "${files[s1-1]}"'
 semicolon
 
 colon 'list'
@@ -1734,5 +1734,5 @@ colon 'wait'
    code 'echo "wait pid=$pid"'
 semicolon
 
-# ----- unsorted ---------------------------- #fold00
+# ----- unsorted ---------------------------- #FOLD00
 

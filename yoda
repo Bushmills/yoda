@@ -531,7 +531,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -607,6 +607,7 @@ newerror "unbalancedstack" "unbalanced stack in file"
 newerror "unstructured"    "unstructured:"
 newerror "abort"           "abort"
 newerror "shellerror"      "shell returned"
+newerror "filenotfound"    "file not found:"
 
 
 ctrl-c()  {

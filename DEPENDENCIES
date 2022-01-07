@@ -1,5 +1,9 @@
 yoda relies on these external program for execution of few words:
 
+      realpath    # used in yoda for finding the directory where yoda resides,
+                  # and to create unique paths for list of files even when
+                  # path specification differs (relative vs. absolute, symlinks etc)
+
       sed         # used by dodoes, topics
                   # changing topics to not depend on sed should be easy, but
                   # seems needless as long as the dodoes dependency still exists.

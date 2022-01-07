@@ -1,0 +1,11 @@
+name:                split$
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 $3 )
+category:            strings
+
+decription:          split string $1 at position u into two strings, returned as
+                     $2 which are the first u chars of $1, and $3, which is the
+                     rest of $1.
+
+contexts:            interpreting, compiling

@@ -1,0 +1,16 @@
+name:                esc[
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+
+category:            I/O
+
+input stream:
+decription:          output an escape character, followed by a left square bracket.
+                     This character sequence marks the start of an ANSI/VT52/VT100
+                     terminal control sequence which is supported by about any terminal
+                     yoda is likely to run under.
+                     These sequences are used for changing screen attributes of output,
+                     setting output position and some more.
+
+contexts:            interpreting, compiling

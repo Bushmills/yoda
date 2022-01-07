@@ -1,0 +1,15 @@
+name:                j
+stack:               ( -- x )
+return stack:        ( x -- x )
+string stack:        ( -- )
+
+category:            flow control
+
+decription:          return the loop index of loop enclosing the innermost loop.
+                     If there's no such loop, the returned value is meaningless.
+                     j works with do ... loop type loops, and also with for ... next
+                     loops, including different type of loops for innermost and surrounding
+                     loops.
+                     j also works with nested interpreted "times" style loops.
+
+contexts:            interpreting, compiling

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda,
@@ -27,10 +27,11 @@
 # SC2154 "(warning): base is referenced but not assigned."
 #        is assigned, but shellcheck can't see how
 
-version=0  subversion=2    # 2021dec29,16:04
+version=0  subversion=3    # 2022jan07,22:31    any data item can be ticked now, so can words create by defining word using create ... does>
+#version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -48,7 +49,7 @@ prelib="prelib"                                                      # yoda sour
 postlib="postlib"                                                    # forth source for resolving possible forward references
 
 read -r tmp _ < <(realpath "$0")
-read -r mydir _ < <(dirname "$tmp")
+mydir="${tmp%/*}"
 
 doc="$mydir/doc"                                                     # documentation base directory
 worddoc_prefix="word"                                                # used as part of file names, prevents files to go hidden by leading period
@@ -114,7 +115,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings. populated in primitives.sh
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -152,7 +153,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -177,40 +178,33 @@ logminus() { ((logindent+=-2)); log "$@"; }
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- compiler muting ---------------------------------- #FOLD00
+# ----- compiler muting ---------------------------------- #fold00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
-restrict()   {
-   derestricted=0
-}
-derestrict() {
-   derestricted=1
-}
-restricted() {                                                       # flag current state
-   return "$derestricted"
-}
+restrict()   { derestricted=0; }
+derestrict() { derestricted=1; }
+restricted() { return "$derestricted"; }                             # flag current state
 derestrict
 
-# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
+# ----- ANSI/VT100 attributes ---------------------------- #fold00
 
 # use in error and prompt.
-# for use in programs, library ansi has been supplied
    red='1'
    green='2'
-
    normal='0'
 #   italics='3'
 #   underscore='4'
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
 setheaderflag()  {                                                   # where against this form has no problem with those,
    flags["$lastword"]="$(( ${flags["$lastword"]} | "$1" ))"
 }
+
 inline()     { setheaderflag "$inline" ; }
 
 # move header to compiler context vocabulary
@@ -246,7 +240,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -274,7 +268,10 @@ analyserflag()  {
 declare -A doescode
 
 # doesn't actually do any optimizing at this point.
-# Function is now limited to expanding atom, generating code pushing literals
+# Function is now limited to:
+# - expanding atoms
+# - generating code pushing literals
+# - dealing with does>
 optimise()  {                                                        # run code generator on ${analyser[@]} data, as provided by primitives.
    ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
    target=()
@@ -334,7 +331,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -355,21 +352,14 @@ word()  {
 # read string from line and remove it, also remove delimiter.
 # delimiter passed as argument.
 # leading spaces aren't removed from remainder of line.
-# failed when ASCII 0 char was specified as terminator. As
-# it's rather common with Forth to use asc 0 to represent end
-# of line, it receives special treatment here
 parse()  {
-   [[ -z "$1" ]] && {
-      word="$line"
-      line=""
-      return
-   }
    word="${line%%"${1}"*}"
-   line="${line#"${word}"}"                                            # " unconfuse efte syntax highlighting
+   [[ -z "$1" ]] && word="$line"
+   line="${line#"${word}"}"                                          # " unconfuse efte syntax highlighting
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # atoms may be:
 #  - micro instructions
@@ -417,8 +407,7 @@ stateless()   {
 }
 
 
-
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -519,7 +508,7 @@ constant()  {
 variable()  {
    (( "$1"="$dp" ))
    m[dp]="${2:-0}"
-   constant "$1"  "$((dp++))"
+   constant "$1" "$((dp++))"
 }
 
 
@@ -536,12 +525,13 @@ constant 'cell'               "1"
 constant 'true'               "$maxuint"
 constant 'false'              "0"
 constant '0'                  "0"
+constant 'esc'                "27"
 constant 'bl'                 "32"
 constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -550,25 +540,24 @@ warm()  {
    error=0
    derestrict                                                        # turn off code suppressing
    r=() rp=0
-   ((sp<0))&&s=() sp=0                                               # always clear stack underflow
-   ((clean))&&s=() ss=() sp=0                                        # empty stacks
+   ((sp<0)) &&s=() sp=0                                              # always clear stack underflow
+   ((clean))&&s=() sp=0 ss=()                                        # empty stacks
    m[base]="10"                                                      # set decimal if base exists
 }
 
 coldvector=""                                                        # colon word "boot" assigns coldvector. started when compilation completed.
 cold()  {                                                            # also by running cold. error restarts interpreter at cold
    [[ -z "$coldvector" ]] && exit 1
-   warm
-   $coldvector
+   warm; $coldvector
 }
 
 callstack()  {
    printf "%s: " "Call stack"
-   printf "%s " "${FUNCNAME[@]:5:${m[callstack]}}"                        # remove callstack and error from output
+   printf "%s " "${FUNCNAME[@]:5:${m[callstack]}}"                   # remove callstack and error from output
    printf "\n"
 }
 
-errormessage()  {                                                           # Zeile mit fehlerwort ANSI markieren
+errormessage()  {                                                    # Zeile mit fehlerwort ANSI markieren
 #         >--<              >--<   >--------------------------<                                >-----<     begin and end of line
 #                  >--<                                                    >----<                          error word
 #            >-----<  >----<                                      >---<              >------<              ANSI sequences
@@ -591,9 +580,7 @@ declare -a errortext
 nexterror=0
 
 # preparing for throw / catch
-error()  {
-   errormessage "$@"
-}
+error()  { errormessage "$@"; }
 
 errornr()   {
    error="$1"
@@ -624,15 +611,15 @@ newerror "shellerror"      "shell returned"
 
 ctrl-c()  {
    printf "%s\n" "break"
-   ((break == 1)) && exit 1
-   ((m[callstack]))&&callstack
-   ((break == 2)) && cold
+   ((break == 1))  && exit 1
+   ((m[callstack]))&& callstack
+   ((break == 2))  && cold
 }
 trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -655,7 +642,7 @@ pattern()  {                                                         # pattern i
       [[ ${word} == \'? || ${word} == \'?\' ]] && {                  # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
          read -r tmp < <(printf "%d" "'${word:1:1}'")
          stateless "s[++sp]=\"$tmp\""; return 0; }
-      [[ ${word} == ^[a-z] ]] && {                                   # ^X        return control char
+      [[ ${word} == ^[a-zA-Z\[] ]] && {                              # ^X        return control char
          read -r tmp < <(printf "%d" "'${word:1:1}")
          stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
    }
@@ -709,17 +696,18 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
 # will be repeated.
 totalheaders()  {
-   totalheaders=$((     ${#headersstateless[@]}
-                     +  ${#headerscompileonly[@]}
-                     +  ${#headersinterpretonly[@]}
-                     +  ${#headersunresolved[@]}
-                  ))
+   totalheaders=$((
+      ${#headersstateless[@]}
+   +  ${#headerscompileonly[@]}
+   +  ${#headersinterpretonly[@]}
+   +  ${#headersunresolved[@]}
+   ))
 }
 
 resolving=0
@@ -748,7 +736,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #FOLD00
+# ----- line interpreter --------------------------------- #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -757,16 +745,9 @@ resolve()  {
 # arg1: word
 # arg2: name found
 invoke() {
-   tmp="${flags[$1]}"
-   (( compiling )) || {
-      $2
-      return                                                         # which doesn't matter during compilation. But to execution at interpret time,
-   }                                                                 # the eval is needed for some operations.
-   (( tmp & inline )) && {                                           # compiling: inline compilable?
-      codebody "$2"                                                  # yes: compile function body
-      return
-   }
-   code "$2"                                                         # no: compile call to function
+   ((compiling)) || { $2;  return; }                                 # not compiling: execute function
+   ((${flags["$1"]}&inline)) && { codebody "$2"; return;  }          # inline:     compile function body
+   code "$2"                                                         # not inline: compile call to function
 }
 
 # create a forward ref by the name of arg1
@@ -781,7 +762,7 @@ forwardref()  {
 
 # interpret/compile the line passed as argument
 # in here most compiling and interpreting work is done.
-# split this thing up.
+# time to split this thing up.
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
@@ -840,7 +821,7 @@ evaluate()  {
    ((sp<0))&&stackunderflow
 }
 
-# ----- read source -------------------------------------- #FOLD00
+# ----- read source -------------------------------------- #fold00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -855,10 +836,7 @@ from()  {
       file="$1"
    else
       for dir in "${libdirs[@]}"; do
-         [[ -f "$dir/$1" ]] && {
-            file="$dir/$1"                                           # search through lib dirs
-            break                                                    # break when/if found
-         }
+         [[ -f "$dir/$1" ]] && { file="$dir/$1"; break; }            # search through lib dirs, break when/if found
       done
    fi
    [[ -f "$file" ]] || return 1                                      # not found

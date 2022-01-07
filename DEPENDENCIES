@@ -1,12 +1,44 @@
-Occasionally does yoda use an external program for its operations.
-Those are, apart from bash:
-        sed         # used by dodoes, topics
-        sort        # used by crossref
+yoda relies on these external program for execution of few words:
 
-further programs, optional:
-a supported editor. "Support" means, an editor which can, after opening
+      sed         # used by dodoes, topics
+                  # changing topics to not depend on sed should be easy, but
+                  # seems needless as long as the dodoes dependency still exists.
+
+      sort        # used by crossref.
+                  # As I may remove crossref, this dependency may get dropped
+
+No test for their presence is performed, as both are considered pretty standard
+on any system able to run bash.
+
+Optionally, a supported editor is used by:
+
+      topic
+      edit
+      doc
+      undoc
+(these are all related to viewing and editing documentation files)
+
+      fix
+      reveal
+(in library file "fix")
+
+"Support" means, an editor which can, after opening
 the file, move the cursor to a position as specified on command line.
 Ideally to column and row, but just to row is ok too.
-For two handfuls of editors, supporting code has been added and can
-be found in the file libs/fix. Using those definitions it shouldn't be
+For two handfuls of editors, supporting code has been added, and can be
+found in the file libs/fix. Using those definitions it shouldn't be
 too hard to add support for other editors not listed there.
+The editors for which support has been preconfigured are:
+
+      nano
+      mcedit
+      jupp
+      joe
+      vi
+      emacs
+      featherpad
+      mousepad
+      efte
+      gedit
+
+Any of those can be specified in yoda.conf configuration file.

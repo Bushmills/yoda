@@ -114,6 +114,14 @@ receive some suggestions here for what to do as second first steps:
          opens, reads and compiles that file. It also runs and decompiles the generated
          code.
 
+         Loading and executing a file doesn't need interactive mode ("quit"). Instead it
+         is just as possible to load, compile and run a source file from command line,
+         then returning to it after execution:
+
+         (again assuming the current directory is where yoda is located:)
+         yoda from tests/fibo
+
+
 5. looking at loaded / compiled files:
          for a list of already loaded files, execute
 	       files

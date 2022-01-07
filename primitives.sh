@@ -156,7 +156,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #FOLD00
+# ----- does> ------------------------------- #fold00
 
 # compiled before return into compling word.
 # will therefore be called by create part.
@@ -1590,14 +1590,20 @@ colon 'undoc'
    code 'undoc'
 semicolon
 
-doc()       {
-   name="$worddoc:${1/\//U+0002F;}"
-   editor "$name"
-}
+# factor
+doc()       { editor "$worddoc:${1/\//U+0002F;}"; }
+about()     { cat    "$worddoc:${1/\//U+0002F;}"; }
+
 colon 'doc'
    code 'word'
    code 'doc "$word"'
 semicolon
+
+colon 'about'
+   code 'word'
+   code 'about "$word"'
+semicolon
+
 
 # topics
 # n topic
@@ -1664,7 +1670,7 @@ semicolon
 
 
 
-# ----- convenience ------------------------- #FOLD00
+# ----- convenience ------------------------- #fold00
 # TODO: optimiser: invalidate all stack register contents
 colon 'empty'
    code 's=() sp=0'
@@ -1734,5 +1740,39 @@ colon 'wait'
    code 'echo "wait pid=$pid"'
 semicolon
 
-# ----- unsorted ---------------------------- #FOLD00
+
+if false; then             ä# don't want this
+
+# trying autoresolving word stubs. Eventually created using a
+# defining word, these are hand contructed for testing purposes:
+# Upon execution, resolve word from library, then execute it.
+autoresolvingwordstub()  {
+   unset "headersstateless[$1]"
+   need "$1"
+   resolve
+   [[ -z ${headersstateless["$1"]} ]]||
+   ${headersstateless["$1"]}
+}
+
+colon 'hello'           # should resolve from postlib, then execute
+   code "autoresolvingwordstub \"$lastword\""
+semicolon
+
+colon 'nothello'        # not resolving. test error case
+   code "autoresolvingwordstub \"$lastword\""
+semicolon
+
+# approach isn't ideal: while apparently working, even in this
+# case of ...
+#   : foo hello ;
+#   hello
+#   foo foo foo
+# ... this hides the problem that every time foo is executed,
+# hello header is trashed, then resolved from library another time.
+# using "use" should be a better approach, as it keeps word name
+# steady, but redefines the function with the same name.
+
+fi
+
+# ----- unsorted ---------------------------- #fold00
 

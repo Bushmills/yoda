@@ -52,13 +52,13 @@ receive some suggestions here for what to do as second first steps:
    at the same time, both can be used to augment each other.
    Try, for an example, this:
            shell on
-           many  3 secs  page  df
+           many  3 secs page free
    What this will do is:
            many                      -  repeat remainder of the line until key pressed
 
                  3 secs              -  pause for 3 seconds
                          page        -  wipe screen and place cursor at start of screen
-                               df    -  execute OS command to show device use
+                               free  -  execute OS command to show memory use
 
 
    Note that OS commands can also be executed while shell is off. But as those won't get

@@ -158,8 +158,8 @@ inline
 
 # ----- does> ------------------------------- #fold00
 
-# compiled before return into compling word.
-# will therefore be called by create part.
+# compiled to the end of a defining word,
+# is therefore called by create part, and
 # will consequently know who its caller is
 # (function name).  Will also know, by virtue
 # of $lastword, what function to add code to.
@@ -173,7 +173,7 @@ dodoes()  {                                                          # append do
 }
 
 # detokeniser detects and reacts to this "$does" tagged code:
-# code after does> is removed from defining wird and written to
+# code after does> is removed from defining word and written to
 # an array item associated with it.
 # dodoes then uses that code to rewrite run time semantics of
 # defined word.
@@ -379,7 +379,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #fold00
+# ----- parameter stack --------------------- #FOLD00
 
 
 colon 'dup'
@@ -414,8 +414,7 @@ inline
 inout 2 4
 
 colon '2drop'
-   atom 'drop'
-   atom 'drop'
+   code '((sp-=2))'
 semicolon
 inline
 inout 2 0
@@ -494,7 +493,7 @@ colon 'pick'
 semicolon
 inline
 
-# ----- return stack ------------------------ #fold00
+# ----- return stack ------------------------ #FOLD00
 
 colon 'r@'
    atom 'r@'
@@ -519,6 +518,25 @@ colon 'r>'
 semicolon
 inline
 inout 0 1
+
+# ( x1 x2 -- )  ( return: -- x1 x2 )
+colon '2>r'
+   code '((r[++rp]=s[sp-1]))'
+   code '((r[++rp]=s[sp--]))'
+   atom 'drop'
+semicolon
+inline
+inout 1 0
+
+# ( -- x1 x2 )  ( return: x1 x2 -- )
+colon '2r>'
+   code '((s[++sp]=r[rp-1]))'
+   code '((s[++sp]=r[rp--]))'
+   code '((rp--))'
+semicolon
+inline
+inout 0 1
+
 
 colon 'rdepth'
    code '((s[++sp]=rp))'
@@ -959,13 +977,54 @@ semicolon
 inline
 inout 3 2
 
-# ----- memory ------------------------------ #fold00
+# ----- memory ------------------------------ #FOLD00
 
 colon '@'
    atom '@'
 semicolon
 inline
 inout 1 1
+
+colon '!'
+   code '((m[s[sp--]]=s[sp-1]))'
+   atom 'drop'
+semicolon
+inline
+inout 2 0
+
+colon 'c@'
+   code '((s[sp]=m[s[sp]]&255))'
+semicolon
+inline
+inout 1 1
+
+colon 'c!'
+   code '((m[s[sp--]]=s[sp-1]&255))'
+   atom 'drop'
+semicolon
+inline
+inout 2 0
+
+
+# ( a -- [a+cell] [a] )
+colon '2@'
+   atom 's1'
+   code '((s[sp++]=m[s1+1]))'
+   code '((s[sp]=m[s1]))'
+semicolon
+inline
+inout 1 2
+
+
+# ( [a+cell] [a] a -- )
+colon '2!'
+   code 's1=s[sp--]'
+   code '((m[s1++]=s[sp--]))'
+   code '((m[s1]=s[sp--]))'
+semicolon
+inline
+inout 3 0
+
 
 colon 'skim'
    code '((s[++sp]=m[s[sp]++]))'
@@ -979,12 +1038,6 @@ semicolon
 inline
 inout 1 2
 
-colon '!'
-   code '((m[s[sp--]]=s[sp-1]))'
-   atom 'drop'
-semicolon
-inline
-inout 2 0
 
 colon '<-'                       # swap !
    code '((m[s[sp]]="s[sp--]"))'
@@ -1083,7 +1136,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------ #fold00
+# ----- flow control ------------------------ #FOLD00
 
 remagic
 
@@ -1182,8 +1235,8 @@ remagic
 dodo()  {
    ((r[++rp]=ibar))
    ((r[++rp]=i))
-   ((i=s[sp--]))
-   ((ibar=s[sp--]))
+   ((i=s[sp--]&maxuint))
+   ((ibar=s[sp--]&maxuint))
 }
 
 colon 'do'
@@ -1193,9 +1246,22 @@ colon 'do'
 semicolon
 immediate
 
+colon '?do'
+   code 'code "dodo"'
+   code 'code "while :;do"'
+   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
+   code 'code "((i==ibar))&&break"'
+semicolon
+immediate
+
 colon 'loop'
    code "((s[sp--] == $magic))|| { unstructured 'no do'; return; }"
-   code 'code "((++i < ibar))||break"'
+
+#   code 'code "((i++))"'
+#   code 'code "((i&maxuint == ibar))&&break"'
+   code 'code "((i=(i+1)&maxuint))"'
+   code 'code "((i == ibar))&&break"'
+
    code 'code "done"'
    code "code '((i=r[rp--]))'"
    code "code '((ibar=r[rp--]))'"

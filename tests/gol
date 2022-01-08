@@ -68,8 +68,7 @@ table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
    arena 2@ drop
    ydim for  ""                           \ for each line:
       xdim for
-         count deadoralive
-         char$ join$                      \ bulding whole line first, then
+         count deadoralive append$        \ bulding whole line first, then
       next                                \ output whole line as single string
       type$ cr                            \ is minimally faster than outputting
    next drop ;                            \ each character one by one.

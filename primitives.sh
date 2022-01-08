@@ -544,7 +544,7 @@ semicolon
 inout 0 1
 inline
 
-# ----- string stack ------------------------ #fold00
+# ----- string stack ------------------------ #FOLD00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -630,6 +630,10 @@ colon '-rot$'
 semicolon
 inline
 
+# results may not be what is expected: this removes *all* white space,
+# not just leading and trailing white space. Actually a mistake, which
+# I'll now try to sell as feature.
+# ( string: $1 -- $2 )
 colon 'trim$'
    code 'ss[-1]="${ss[-1]//[[:space:]]/}"'
 semicolon
@@ -645,7 +649,6 @@ semicolon
 
 # count substring occurances
 # : #substrings  swap$ 0 begin over$ cut$ while 1+ repeat 2drop$ ;
-
 # -leading$:  ${myVar##*( )}
 # -trailing$: ${myVar%%*( )}
 
@@ -732,6 +735,9 @@ semicolon
 # "nope"    "this is a very *** foo"   "?" replace$      ->   "this is a very *** foo"
 # "123"     "abcd" 1 insert$  -> "a123bcd"
 
+
+
+# --- mixed mode operations, exchanges between stack and string stack ---
 asc()  {
    if [[ -z "${ss[-1]}" ]]; then
       ((s[++sp]=0))
@@ -773,6 +779,13 @@ colon 'pack$'
    code 'for ((; s1--; )); do tmp+="${char[m[s2++]]}"; done'
    code 'ss+=("$tmp")'
 semicolon
+inout 2 0
+
+# ( c -- ) ( string: $1 -- $2 )
+colon 'append$'
+   code 'ss[-1]+="${char[s[sp--]]}"'
+semicolon
+
 
 # ----- bit logic --------------------------- #fold00
 

@@ -886,6 +886,18 @@ semicolon
 inline
 inout 1 1
 
+colon '2+'
+   code '((s[sp]=(s[sp]+2)&maxuint))'
+semicolon
+inline
+inout 1 1
+
+colon '2-'
+   code '((s[sp]=(s[sp]-2)&maxuint))'
+semicolon
+inline
+inout 1 1
+
 colon '2*'
    atom '2*'
 semicolon
@@ -1771,6 +1783,25 @@ semicolon
 inline
 inout 0 1
 
+# ( -- u )        15 bits random number
+colon 'random'
+   code '((s[++sp]=RANDOM))'
+semicolon
+inline
+inout 0 1
+
+# x1 x2 -- x1+x2 x1
+# : bounds   over + swap ;
+colon 'bounds'
+   atom 's1'
+   atom 's2'
+   code '((s[sp-1]+=s1))'
+   code '((s[sp]=s2))'
+semicolon
+inline
+inout 2 2
+
+
 # ----- experimental ------------------------ #fold00
 
 # leftovers from running quit as coproc, exiting by error and
@@ -1835,3 +1866,13 @@ fi
 
 # ----- unsorted ---------------------------- #fold00
 
+# : d=     ( x1 x2 x3 x4 -- f )   rot = >r = r> and ;
+# ( x1 x2 x3 x4 -- 0 | -1 )
+colon 'd='
+   code '((s1=s[sp--]))'
+   code '((s2=s[sp--]))'
+   code '((s3=s[sp--]))'
+   code '((s[sp]=(s1==s3&s2==s[sp])?maxuint:0))'
+semicolon
+inline
+inout 4 1

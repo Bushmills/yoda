@@ -1,0 +1,137 @@
+40 constant xdim
+15 constant ydim
+
+\ ----------- missing words -----------
+: home  ( -- )  "H" esc[  ;               \ VT100/ANSI terminal control: cursor home
+: table create does> + @ ;
+
+
+\ ----------- data and allocation --------------
+
+\ order of allocation has considerable effect on execution time.
+xdim ydim * constant population
+create arena   4 allot
+create neighbours1 population 9 * allot
+create neighbours2 population 9 * allot
+create arena1 population allot
+create arena2 population allot
+table alive    0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 0 , 0 ,
+table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
+
+
+\ ----------- setup arena and neighbours relations ----------
+\ done once when initialising neighbour relations in neighbours
+
+: xy>offs ( x y -- offs )
+   ydim + ydim mod
+   xdim * swap
+   xdim + xdim mod +   ;
+
+\ 8 items at neighbours table are filled with alive state addresses of
+\ cells in arena surrounding cell x y. 9th item holds own state.
+: relations1 ( arena neighbours x y -- )
+   dup 1- 3 bounds ?do                    \ for y=relative(-1, 0, 1)
+      over 1- 3 bounds ?do                \ for x=relative(-1, 0, 1)
+         i j 2over 2>r
+         2dup xy>offs >r
+         d= r> 2over drop +
+         swap if                          \ origin item points to address in other arena, stored in item 8 (0-7 are neighbour addresses)
+            over 4 + !                    \ +4 items because currently pointing at neighbour slot 4 already (top 3 and left already done)
+         else
+            over ! 1+                     \ conventional neighbour is stored with pointer increment to next neighbour slot
+         then
+         2r>
+      loop
+   loop
+   2drop 2drop ;
+
+: other ( arena1 -- arena2 )              \ address "other" arena
+   population
+   over arena2 u< 0=
+   ?negate + ;
+
+: relations  ( arena neighbours -- )      \ build neighbourship relations table for whole arena
+   swap other swap
+   ydim 0 do
+      xdim 0 do
+         2dup i j relations1
+         9 +
+      loop
+   loop
+   2drop ;
+
+
+\ ----------- visualisation ----------
+
+: show   ( -- )                           \ output the arena to screen
+   home
+   arena 2@ drop
+   ydim for  ""                           \ for each line:
+      xdim for
+         count deadoralive
+         char$ join$                      \ bulding whole line first, then
+      next                                \ output whole line as single string
+      type$ cr                            \ is minimally faster than outputting
+   next drop ;                            \ each character one by one.
+
+
+\ ----------- here is the real work done -----------
+
+: flip  ( -- arena neighbours )           \ always reading current alive states from one arena,
+   arena 2+ 2@        arena 2@            \ writing new states to other arena. Before next run,
+   arena 2+ 2!  2dup  arena 2!  ;         \ arenas are flipped with this, and new current arena returned
+
+
+: generation ( -- )                       \ corresponding to a convolutions run with neighbour cell weights of 1
+   flip                                   \ arena neighbours
+   population for
+      skim @ >r                           \ state of first neighbour
+      skim @ r> + >r                      \ unrolled loop reads seven more neighbour states,
+      skim @ r> + >r                      \ adds them to first neighbour state,
+      skim @ r> + >r                      \ then addresses next neighbour.
+      skim @ r> + >r                      \ seven times, because there are seven more neighbours.
+      skim @ r> + >r
+      skim @ r> + >r
+      skim @ r> +
+      over @ @ or alive                   \ contents of last "neighbour" is own state
+      rot tuck !                          \ new own state is stored in other arena
+      1+ swap 1+                          \ onwards, next cell, next set of neighbours
+   next
+   2drop ;
+
+\ you may notice that evaluation of one arena takes longer than the other -
+\ that is due to array access times depending on array index: the higher, the slower.
+\ as swapping arena is merely changing pointers, one of every two generations will
+\ predominantly access array items with higher indici. This is also the reason why
+\ sequence of allocation statements near top of the file affects execution times.
+
+
+\ ----------- wrap it up ----------
+
+: neighbours ( -- )                       \ build neighbours relationship tables
+   arena1 neighbours1       arena 2!      \ those tables allow to locate neighbours
+   flip 2drop                             \ by following a link, rather than calculating
+   arena2 neighbours2  2dup arena 2!      \ there locations
+   relations flip relations ;
+
+
+: populate ( -- )                         \ initialize arena with a random pattern
+   arena 2@ drop
+   population bounds do
+      random 1 and i !
+   loop ;
+
+
+: gol  ( -- )
+   "Setting up arenas, hang on..." type$
+   neighbours page
+   begin
+      populate
+      begin
+         realtime >r
+         generation show
+         realtime r> - 1000 / u. "ms" type$ cr
+      key? until                          \ any key aborts current pattern
+   key esc = until ;                      \ but only esc terminates program
+                                          \ other keys restart a new random pattern
+gol

@@ -242,13 +242,13 @@ semicolon
 
 # NOTE: tick and execute need names to look like foobar_4711
 colon "'"
-   code 'local headers'                                              # meant to spare me from saving and restoring vectored headers variable
    code 'exists'
    code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
 semicolon
 
 colon "[']"
-   exec "'"
+   code 'exists'
+   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
    code 'code "((s[++sp]=${s[sp--]}))"'
 semicolon
 immediate
@@ -379,7 +379,7 @@ colon '('
 semicolon
 immediate
 
-# ----- parameter stack --------------------- #FOLD00
+# ----- parameter stack --------------------- #fold00
 
 
 colon 'dup'
@@ -493,7 +493,7 @@ colon 'pick'
 semicolon
 inline
 
-# ----- return stack ------------------------ #FOLD00
+# ----- return stack ------------------------ #fold00
 
 colon 'r@'
    atom 'r@'
@@ -977,7 +977,7 @@ semicolon
 inline
 inout 3 2
 
-# ----- memory ------------------------------ #FOLD00
+# ----- memory ------------------------------ #fold00
 
 colon '@'
    atom '@'
@@ -1136,7 +1136,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------ #FOLD00
+# ----- flow control ------------------------ #fold00
 
 remagic
 
@@ -1565,7 +1565,7 @@ colon 'files'
 semicolon
 
 
-# ----- pictured number conversion ---------- #FOLD00
+# ----- pictured number conversion ---------- #fold00
 
 colon 'decimal'; code 'm[base]="10"'; semicolon; inline; inout 0 0
 colon 'hex'    ; code 'm[base]="16"'; semicolon; inline; inout 0 0

@@ -31,7 +31,7 @@ version=0  subversion=3    # 2022jan07,22:31    any data item can be ticked now,
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -240,7 +240,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -359,7 +359,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # atoms may be:
 #  - micro instructions
@@ -369,7 +369,6 @@ parse()  {
 # enabling it to combine and remove them to target code.
 # in addition are meta directives allowed:
 #  - compile time instructions for word creation, such as header building
-exec()  { code "${headersstateless[$1]}"; }
 
 atom()  {
    [[ -z "${atom[$1]}" ]] && error "no atomic $1"

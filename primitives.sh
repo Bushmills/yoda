@@ -156,7 +156,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #fold00
+# ----- does> ------------------------------- #FOLD00
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -785,6 +785,15 @@ inout 2 0
 colon 'append$'
    code 'ss[-1]+="${char[s[sp--]]}"'
 semicolon
+inline
+inout 1 0
+
+# ( c -- ) ( string: $1 -- $2 )
+colon 'prepend$'
+   code 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'
+semicolon
+inline
+inout 1 0
 
 
 # ----- bit logic --------------------------- #fold00
@@ -1161,7 +1170,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------ #fold00
+# ----- flow control ------------------------ #FOLD00
 
 remagic
 
@@ -1590,7 +1599,7 @@ colon 'files'
 semicolon
 
 
-# ----- pictured number conversion ---------- #fold00
+# ----- pictured number conversion ---------- #FOLD00
 
 colon 'decimal'; code 'm[base]="10"'; semicolon; inline; inout 0 0
 colon 'hex'    ; code 'm[base]="16"'; semicolon; inline; inout 0 0
@@ -1605,13 +1614,7 @@ colon '#'                                                            # : #
 semicolon                                                            # ;
 inout 1 1
 
-# ( asc -- ) ( string: $1 -- $2 )
-colon 'hold'
-   code 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'
-semicolon
-inline
-inout 1 0
-
+evaluate "' prepend$ alias hold"                   ; inline; inout 1 0    # ( c -- ) ( string: $1 -- $2 )
 evaluate ': <#       ""  ;'                        ; inline; inout 0 0    # ( -- ) ( string: -- $2 )
 evaluate ': #s       begin # dup 0= until ;'       ;         inout 1 1    # ( x1 -- x2 ) ( string: $1 -- $2 )
 evaluate ": sign     0< lest '-' hold ;"           ;         inout 1 0    # ( f -- ) ( string: $1 -- $2 )

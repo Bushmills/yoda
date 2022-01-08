@@ -1289,31 +1289,31 @@ colon '?leave'
 semicolon
 immediate
 
-# compiled version: skip until end of word on false
+# compiling version: skip until end of word (i.e. return) when false
 colon 'lest'
    code 'code "((s[sp--]))||return" '
 semicolon
 immediate    # compile only are inherently immediate
 
-# interpreted version: skip rest of line when false
+# interpreting version: skip rest of line when false
 colon 'lest'
    code '((s[sp--]))||line=""'
 semicolon
 interactive
 
-# compiled version: skip until end of word on true
+# compiling version: skip until end of word (i.e. return) when true
 colon 'unless'
    code 'code "((s[sp--]))&&return" '
 semicolon
 immediate    # compile only are inherently immediate
 
-# interpreted version: skip rest of line when true
+# interpreting version: skip rest of line when true
 colon 'unless'
    code '((s[sp--]))&&line=""'
 semicolon
 interactive
 
-# evaluate input line until end u times
+# interpreting versiob: u times repeat evaluation of input line remainder
 colon 'times'
    code '((r[++rp]=i))'
    code '((i=s[sp--]))'
@@ -1337,6 +1337,7 @@ colon 'warm'
    code 'warm'
 semicolon
 
+
 colon 'boot'
    code 'word'
    code 'need "$word"'                                               # cold entry may come from postlib
@@ -1356,10 +1357,12 @@ semicolon
 inline
 immediate
 
+
 # ( err -- )
 colon 'abort'
    code 'abort "${s[sp--]}"'
 semicolon
+
 
 # ( f err -- )
 colon '?abort'
@@ -1562,51 +1565,19 @@ colon 'files'
 semicolon
 
 
-# ----- pictured number conversion ---------- #fold00
+# ----- pictured number conversion ---------- #FOLD00
 
-
-colon 'decimal'
-   code 'm[base]="10"'
-semicolon
-inline
-inout 0 0
-
-colon 'hex'
-   code 'm[base]="16"'
-semicolon
-inline
-inout 0 0
-
-colon 'binary'
-   code 'm[base]="2"'
-semicolon
-inline
-inout 0 0
-
-# ( string: -- $1 )
-colon '<#'
-   code 'ss+=("")'
-semicolon
-inline
-inout 0 0
-
+colon 'decimal'; code 'm[base]="10"'; semicolon; inline; inout 0 0
+colon 'hex'    ; code 'm[base]="16"'; semicolon; inline; inout 0 0
+colon 'binary' ; code 'm[base]="2"' ; semicolon; inline; inout 0 0
 
 # ( x1 -- x2 ) ( string: $1 -- $2 )
-colon '#'
-   code '((radix=m[base]))'
-   code '((s1=s[sp]&maxuint, s[sp]=s1/radix, tmp=s1%radix+48))'
-   code '((tmp>57))&&((tmp+=39))'
-   code 'ss[-1]="${char[tmp]}${ss[-1]}"'
-semicolon
-inout 1 1
-
-# ( x1 -- x2 ) ( string: $1 -- $2 )
-colon '#s'
-   code 'while :; do'
-   code '${headersstateless["#"]}'
-   code '((s[sp]))||break'
-   code 'done'
-semicolon
+colon '#'                                                            # : #
+   code '((radix=m[base]))'                                          # base @
+   code '((s1=s[sp]&maxuint, s[sp]=s1/radix, tmp=s1%radix+48))'      # /mod swap '0 +
+   code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
+   code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
+semicolon                                                            # ;
 inout 1 1
 
 # ( asc -- ) ( string: $1 -- $2 )
@@ -1616,23 +1587,19 @@ semicolon
 inline
 inout 1 0
 
-# ( n -- ) ( string: $1 -- $2 )
-colon 'sign'
-  code '((s[sp--]&msb))&&ss[-1]="-${ss[-1]}"'
-semicolon
-inline
-inout 1 0
-
+evaluate ': <#       ""  ;'                        ; inline; inout 0 0    # ( -- ) ( string: -- $2 )
+evaluate ': #s       begin # dup 0= until ;'       ;         inout 1 1    # ( x1 -- x2 ) ( string: $1 -- $2 )
+evaluate ": sign     0< lest '-' hold ;"           ;         inout 1 0    # ( f -- ) ( string: $1 -- $2 )
 evaluate ': #>$      drop ;'                       ; inline; inout 1 0    # ( x -- )
 evaluate ': #>type   #>$ type$ ;'                  ; inline; inout 1 0    # ( x -- ) ( string:  $1 -- )
 evaluate ': #>       #>$ here here unpack$ ;'      ;         inout 1 2    # ( x -- a n ) ( string:  $1 -- )
-evaluate ': .padded  dup$ count$ - spaces type$ ;' ;         inout 1 0    # ( u -- ) (string: $1 -- )
 evaluate ': uconvert <# #s #>$ ;'                  ; inline; inout 1 0    # ( u -- ) (string: -- $1 )
 evaluate ': convert  dup abs uconvert sign ;'      ;         inout 1 0    # ( u -- ) (string: -- $1 )
-evaluate ': .r       >r convert  r> .padded ;'     ;         inout 2 0    # ( n u -- )
+evaluate ': .         convert type$ space ;'       ; inline; inout 1 0    # ( n -- )
+evaluate ': u.       uconvert type$ space ;'       ; inline; inout 1 0    # ( u -- )
+evaluate ': .padded  dup$ count$ - spaces type$ ;' ;         inout 1 0    # ( u -- ) (string: $1 -- )
+evaluate ': .r       >r  convert r> .padded ;'     ;         inout 2 0    # ( n u -- )
 evaluate ': u.r      >r uconvert r> .padded ;'     ;         inout 2 0    # ( u1 u2 -- )
-evaluate ': .        0  .r space ;'                ; inline; inout 1 0    # ( n -- )
-evaluate ': u.       0 u.r space ;'                ; inline; inout 1 0    # ( u -- )
 evaluate 'trash .padded'
 
 

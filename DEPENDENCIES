@@ -23,7 +23,7 @@ Optionally, a supported editor is used by:
 (these are all related to viewing and editing documentation files)
 
       fix
-      reveal
+      review
 (in library file "fix")
 
 "Support" means, an editor which can, after opening

@@ -9,33 +9,46 @@ yoda.conf, and the subdirectories doc and lib.
 Further instructions assume presence of files prelib
 and postlib in the lib directory:
 
-For an initial run, change to the directory which contains
-the files yoda, primitives.sh and the lib subdirectory with
-files prelib, postlib, quit and fix in it, and run there:
-bash yoda from quit
 
-This requires that you have bash installed on your system.
+For an initial test run, change to the directory which
+contains the files yoda, primitives.sh and the subdirecty
+"lib" with at least files prelib, postlib, quit and fix in
+it, and run there:
+
+   bash yoda words
+
+If a list of words is shown, then control returned to shell,
+inclusion of primitives.sh was successful, which means that
+loading a library file might do too. This tests whether yoda
+was able to search its library directories for files:
+
+   bash yoda from quit
 
 Should you be greeted with a "Yoda shell" message, your
 setup appears to be fine. Verify by tapping the "Enter"
 key: an " ok" message should be produced.
 
-Next steps could be to:
-1. create symlink to yoda in a directory which
+Now proceed with finalising the installation:
+1. create a symlink to yoda in a directory which
    is in your PATH.  /usr/local/bin may be a good candidate.
 
-   create a symlink to quit in the lib directory, also
+   create a symlink to the quit library file, also
    in your PATH, to launch directly into the interpreter.
+   quit starts with a hashbang, specifying /usr/local/bin/yoda
+   as its interpreter. Should your yoda symlink reside elsewhere,
+   you may want to change quit accordingly.
 
-Now you should be able to launch quit or yoda from anywhere.
+As result of the above step should you now be able to launch
+quit or yoda from anywhere.
 While yoda, the compiler, has no interactive command line or
 shell itself, it is capable of compiling one when needed.
 This is what you do by specifying "from quit" as argument to
-yoda.
+yoda, or running "quit" directly
 Yoda will exit after running, unless it was instructed in the
 file it loaded, or on command line, to not do so (and instead
 run a word it had just compiled).
-quit implements a simple interactive mode loop.
+quit implements a simple interactive mode loop, which keeps
+yoda running.
 
 2. edit and customise, if appropriate, the file yoda.conf.
 All settings should have been set to reasonable defaults,
@@ -53,10 +66,10 @@ settings may need adjustment (editor defaults to vi, and can be changed
 in yoda.conf)
 
 4. editor can also be used to open included libraries. 
-Currently 5 libraries will show when running "files":
+Currently 5 libraries will show when executing "files":
 primitives.sh, prelib, quit, fix and postlib.
 Like "topics", these are numbered. Use the number with "edit"
 to open, view and edit the chosen library.
 
-Similar first instructions can be obtained by executing "help" in the "quit"
-shell.
+Similar first instructions can be obtained by executing "help" in
+the "quit" shell.

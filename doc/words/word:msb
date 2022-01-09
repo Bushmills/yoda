@@ -1,0 +1,11 @@
+name:                msb
+stack:               ( -- x )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            constants
+
+decription:          returns the value of the number which only has the most
+                     significant bit set. This value depends on the number of
+                     bits chosen for cell width.
+
+contexts:            interpreting, compiling

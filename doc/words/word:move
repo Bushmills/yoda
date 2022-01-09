@@ -1,0 +1,12 @@
+name:                move
+stack:               ( a1 a2 u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            memory
+
+decription:          copy u memory items contents beginning at a1 to the
+                     memory region beginning at a2.
+                     move takes care of choosing proper copying order when
+                     source and target overlap.
+
+contexts:            interpreting, compiling

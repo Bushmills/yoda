@@ -1,0 +1,10 @@
+name:                words
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            dictionary
+
+decription:          shows a listing of all known named words in sections of all
+                     populated vocabularies.
+
+contexts:            interpreting, compiling

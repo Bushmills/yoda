@@ -494,7 +494,7 @@ colon 'pick'
 semicolon
 inline
 
-# ----- return stack ------------------------ #fold00
+# ----- return stack ------------------------ #FOLD00
 
 colon 'r@'
    atom 'r@'
@@ -1439,7 +1439,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o --------------------------------- #fold00
+# ----- i/o --------------------------------- #FOLD00
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -1516,6 +1516,7 @@ query()  {
 colon 'query'
    code 'query'
 semicolon
+inline
 inout 0 0
 
 colon 'evaluate'
@@ -1603,7 +1604,7 @@ colon 'files'
 semicolon
 
 
-# ----- pictured number conversion ---------- #fold00
+# ----- pictured number conversion ---------- #FOLD00
 
 colon 'decimal'; code 'm[base]="10"'; semicolon; inline; inout 0 0
 colon 'hex'    ; code 'm[base]="16"'; semicolon; inline; inout 0 0

@@ -10,7 +10,8 @@ Further instructions assume presence of files prelib
 and postlib in the lib directory:
 
 For an initial run, change to the directory which contains
-the files yoda, primitives.sh and quit, and run there:
+the files yoda, primitives.sh and the lib subdirectory with
+files prelib, postlib, quit and fix in it, and run there:
 bash yoda from quit
 
 This requires that you have bash installed on your system.

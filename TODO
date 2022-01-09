@@ -1,4 +1,8 @@
 --- todos solving problems, shortcomings, quirks
+- review opens wrong file with those few variables and constants defined
+  in yoda (base, dp, msb, maxint...). As yoda doesn't even show in files
+  listing, review finds it of course hard to choose it. Still, it's a
+  quirk which needs to be addressed.
 - ticking a word with headers in more than one context vocabulary allows
   no control nor test over which version was ticked.
 - better support for unsigned

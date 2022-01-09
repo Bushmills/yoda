@@ -714,19 +714,22 @@ semicolon
 inline
 
 colon '$='
-   code '[[ ${ss[-1]} != ${ss[-2]} ]];s[++sp]="-$?"'
+   code '[[ ${ss[-1]} != ${ss[-2]} ]]'
+   code '((s[++sp]=(-$?)&maxuint))'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$<'
-   code '[[ ${ss[-1]} > ${ss[-2]} ]];((s[++sp]=$?-1))'
+   code '[[ ${ss[-1]} > ${ss[-2]} ]]'
+   code '((s[++sp]=($?-1)&maxuint))'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$>'
-   code '[[ ${ss[-1]} < ${ss[-2]} ]];((s[++sp]=$?-1))'
+   code '[[ ${ss[-1]} < ${ss[-2]} ]]'
+   code '((s[++sp]=($?-1)&maxuint))'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon

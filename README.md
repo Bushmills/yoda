@@ -7,7 +7,7 @@ an interpreter which runs them, and a base vocabulary of useful functions, stron
 what a common Forth interpreter offers. It can be used to augment bash, can serve as shell, or as Forthish
 coding environment.
 
-In some respects does yoda differ from Forth:
+In some respects does yoda differ from Forth. Some example code, giving more tangible clues where and how yoda differs from Forth can be reached from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)
 
 - forward referencing of words, either only those compiled to new
   words, or also those called upon while interpreting. Feature can

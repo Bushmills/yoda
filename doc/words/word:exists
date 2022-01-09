@@ -1,0 +1,21 @@
+name:                exists
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+
+category:            dictionary, conditional compilation
+
+input stream:        word name
+
+decription:          looks up word name in dictionary, returns 0 for word not found/
+                     undefined, or the execution token associated with word.
+
+contexts:            interpreting, compiling
+
+notes:               similar to ' , but doesn't throw an error if word not found.
+                     This makes it useful for conditional compilation, where a
+                     decision must be taken depending on whether a word exists.
+
+                     Not really happy about the name, it kind of reads funny, and
+                     may therefore eventually get renamed.   found or have may be
+                     better choices.

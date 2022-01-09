@@ -1,0 +1,20 @@
+name:                base
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            number conversion
+
+decription:          a variable, containing the radix ("number base") applied when
+                     converting integers to strings or vice versa. Any value from
+                     2 to 36 is considered a valid radix.
+                     words decimal, hex and binary have been defined for setting
+                     contents of base to commonly used values.
+
+contexts:            interpreting, compiling
+
+notes:               for number input, a leading base indicator can be used without the
+                     need to change base:  $ for hex,  # for decimal and % for binary.
+                     $ff, #255 and %11111111 will be evaluated as (identical) numbers
+                     of their respective radix, regardless of the value base has been
+                     set to.
+

@@ -1,0 +1,9 @@
+name:                empty
+stack:               ( ??? -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            stack
+
+decription:          empties stack
+
+contexts:            interpreting, compiling

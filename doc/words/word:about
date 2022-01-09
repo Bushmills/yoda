@@ -1,0 +1,20 @@
+name:                about
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:
+input stream:        word name
+
+decription:          reads a word from input stream, which is appended to
+                     a (currently hardcoded) dir $doc, then used as path/file
+                     of a file whose contents are displayed. Ideally "word" is
+                     the name of an existing yoda word, which has already been
+                     described ("documemented"), in which case will the displayed
+                     file containing some informative descriptions.
+
+contexts:            interpreting, compiling
+
+example:             about about
+
+notes:               similar do doc, with the difference that file isn't opened in
+                     an editor, but its contents merely displayed.

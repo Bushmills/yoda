@@ -1,0 +1,12 @@
+name:                esc
+stack:               ( -- c )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            constants
+
+decription:          a constant returning the ASCII value of Escape character.
+
+contexts:            interpreting, compiling
+
+notes:               same as ^[
+

@@ -156,7 +156,7 @@ inline
 
 
 
-# ----- does> ------------------------------- #FOLD00
+# ----- does> ------------------------------- #fold00
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -237,6 +237,7 @@ colon 'alias'
    code 'where["$word"]="$filenr $linenr"'                           # remember file and line nr
    code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
    code 'flags["$word"]="0"'                                         # default to no flags
+   code 'lastword="$word"'
 semicolon
 
 
@@ -544,7 +545,7 @@ semicolon
 inout 0 1
 inline
 
-# ----- string stack ------------------------ #FOLD00
+# ----- string stack ------------------------ #fold00
 
 colon 'depth$'
    code 's+=("${#ss[@]}")'
@@ -1173,7 +1174,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------ #FOLD00
+# ----- flow control ------------------------ #fold00
 
 remagic
 
@@ -1602,7 +1603,7 @@ colon 'files'
 semicolon
 
 
-# ----- pictured number conversion ---------- #FOLD00
+# ----- pictured number conversion ---------- #fold00
 
 colon 'decimal'; code 'm[base]="10"'; semicolon; inline; inout 0 0
 colon 'hex'    ; code 'm[base]="16"'; semicolon; inline; inout 0 0

@@ -1,0 +1,10 @@
+name:                u>
+stack:               ( u1 u2 -- f )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            compare
+
+decription:          return true if unsigned u1 is larger than unsigner u2,
+                     otherwise false is returned
+
+contexts:            interpreting, compiling

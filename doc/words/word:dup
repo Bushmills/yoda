@@ -1,0 +1,9 @@
+name:                dup
+stack:               ( x -- x x )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            stack
+
+decription:          duplicate top stack item
+
+contexts:            interpreting, compiling

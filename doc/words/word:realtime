@@ -1,0 +1,18 @@
+name:                realtime
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            time
+
+decription:          return the number of microseconds elapsed since 1970jan1.
+                     Similar to epoch, but with higher resolution.
+
+contexts:            interpreting, compiling
+
+notes:               chosen arithmetic model (bit per cell) must be large enough
+                     for an integer to hold a number of this size (51 bits), or it
+                     will get truncated. It will still be possible to use that
+                     number for some tasks, for example measurement of elapsed time,
+                     but be aware that the fewer bits are available, the more frequently
+                     an overflow and consequently numeric wraparound takes place - more
+                     than 15 times per second when a 16 bit model was chosen.

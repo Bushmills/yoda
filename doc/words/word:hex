@@ -1,0 +1,10 @@
+name:                hex
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            number conversion
+
+decription:          change radix ("number base") to 16, affecting numeric in- and
+                     output
+
+contexts:            interpreting, compiling

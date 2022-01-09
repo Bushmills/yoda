@@ -1,0 +1,9 @@
+name:                drop$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+category:            strings
+
+decription:          discard top string stack item
+
+contexts:            interpreting, compiling

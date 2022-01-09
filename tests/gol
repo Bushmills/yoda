@@ -2,7 +2,7 @@
 15 constant ydim
 
 \ ----------- missing words -----------
-: home  ( -- )  "H" esc[  ;               \ VT100/ANSI terminal control: cursor home
+: home  ( -- )  "H" esc[  ;     inline        \ VT100/ANSI terminal control: cursor home
 : table create does> + @ ;
 
 
@@ -15,8 +15,8 @@ create neighbours1 population 9 * allot
 create neighbours2 population 9 * allot
 create arena1 population allot
 create arena2 population allot
-table alive    0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 0 , 0 ,
-table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
+table  alive    0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 0 , 0 ,
+table  deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 
 
 \ ----------- setup arena and neighbours relations ----------
@@ -51,11 +51,11 @@ table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
    ?negate + ;
 
 : relations  ( arena neighbours -- )      \ build neighbourship relations table for whole arena
-   swap other swap
+   >r other r>
    ydim 0 do
       xdim 0 do
          2dup i j relations1
-         9 +
+         9 +                              \ next set of neighbours
       loop
    loop
    2drop ;
@@ -63,16 +63,18 @@ table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 
 \ ----------- visualisation ----------
 
+\ building whole line first, then outputting whole line as single string
+\ is minimally faster than outputting characters one by one.
 : show   ( -- )                           \ output the arena to screen
    home
    arena 2@ drop
-   ydim for  ""                           \ for each line:
+   ydim for                               \ for each line:
+      ""                                  \ start with empty line
       xdim for
-         count deadoralive append$        \ bulding whole line first, then
-      next                                \ output whole line as single string
-      type$ cr                            \ is minimally faster than outputting
-   next drop ;                            \ each character one by one.
-
+         skim deadoralive append$         \ add state of each cell
+      next
+      type$ cr                            \ output whole line when done
+   next drop ;                            \ repeat for all lines
 
 \ ----------- here is the real work done -----------
 
@@ -84,14 +86,14 @@ table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 : generation ( -- )                       \ corresponding to a convolutions run with neighbour cell weights of 1
    flip                                   \ arena neighbours
    population for
-      skim @ >r                           \ state of first neighbour
-      skim @ r> + >r                      \ unrolled loop reads seven more neighbour states,
-      skim @ r> + >r                      \ adds them to first neighbour state,
-      skim @ r> + >r                      \ then addresses next neighbour.
-      skim @ r> + >r                      \ seven times, because there are seven more neighbours.
-      skim @ r> + >r
-      skim @ r> + >r
-      skim @ r> +
+         skim @                           \ state of first neighbour
+      >r skim @ r> +                      \ unrolled loop reads seven more neighbour states,
+      >r skim @ r> +                      \ adds them to first neighbour state,
+      >r skim @ r> +                      \ then addresses next neighbour.
+      >r skim @ r> +                      \ seven times, because there are seven more neighbours.
+      >r skim @ r> +                      \ measuring against a looping version shows that
+      >r skim @ r> +                      \ unrolling doesn't gain much, only about 5...6% of
+      >r skim @ r> +                      \ total time for a generation plus output.
       over @ @ or alive                   \ contents of last "neighbour" is own state
       rot tuck !                          \ new own state is stored in other arena
       1+ swap 1+                          \ onwards, next cell, next set of neighbours
@@ -103,6 +105,7 @@ table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 \ as swapping arena is merely changing pointers, one of every two generations will
 \ predominantly access array items with higher indici. This is also the reason why
 \ sequence of allocation statements near top of the file affects execution times.
+\ the array in question is emulated memory, with index being the address.
 
 
 \ ----------- wrap it up ----------
@@ -129,7 +132,7 @@ table deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
       begin
          realtime >r
          generation show
-         realtime r> - 1000 / u. "ms" type$ cr
+         realtime r> - 1000 / u. "ms " type$ cr
       key? until                          \ any key aborts current pattern
    key esc = until ;                      \ but only esc terminates program
                                           \ other keys restart a new random pattern

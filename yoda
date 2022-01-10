@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda.
@@ -30,7 +30,7 @@ version=0  subversion=4     # 2022jan10,04:13    pulled yoda and primitives toge
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -112,7 +112,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings.
 
-# ----- state variables, switches, globals, static etc --- #fold00
+# ----- state variables, switches, globals, static etc --- #FOLD00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -150,7 +150,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -175,7 +175,7 @@ logminus() { ((logindent+=-2)); log "$@"; }
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- compiler muting ---------------------------------- #fold00
+# ----- compiler muting ---------------------------------- #FOLD00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   { derestricted=0; }
@@ -183,7 +183,7 @@ derestrict() { derestricted=1; }
 restricted() { return "$derestricted"; }                             # flag current state
 derestrict
 
-# ----- ANSI/VT100 attributes ---------------------------- #fold00
+# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
 
 # use in error and prompt.
    red='1'
@@ -194,7 +194,7 @@ derestrict
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #fold00
+# ----- headers ------------------------------------------ #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -237,7 +237,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -328,7 +328,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -356,7 +356,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # atoms may be:
 #  - micro instructions
@@ -407,7 +407,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -456,6 +456,17 @@ colon()  {
       log "resolving: $1"
    fi
    header "$1" "$name"
+
+
+# primitive wordname  functionname
+primitive()  {
+   [[ -z "$1" ]] && emptyname
+   names[nextname]="$1"
+   name="${header_code}_$((nextname++))"                             # prefix function names will avoid effect described on next line
+   header "$1" "$name"
+   use "$2"
+}
+
 
 # -- hack alert:
 # source location isn't recorded properly when definition is
@@ -534,7 +545,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -623,7 +634,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -700,7 +711,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -740,7 +751,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -829,7 +840,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #fold00
+# ----- load source files -------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -871,8 +882,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
-# ----- populating detokeniser --------------------------- #fold01
+# ----- primitives --------------------------------------- #FOLD00
+# ----- populating detokeniser --------------------------- #FOLD01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -927,7 +938,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #fold01
+# ----- colon/semicolon ---------------------------------- #FOLD01
 
 colon ';'      # semicolon
    code "(( s[sp--] == $magic )) || { unstructured 'no :'; return; }"  # check the magic left by :
@@ -954,14 +965,8 @@ colon 'u:'      # ucolon
 semicolon
 interactive
 
-colon 'interactive'                                                  # move header to interpreter context vocabulary
-   code 'interactive'
-semicolon
-
-colon 'immediate'                                                    # move header to compiler context vocabulary
-   code 'immediate'
-semicolon
-
+primitive 'interactive'  'interactive'                               # move header to interpreter context vocabulary
+primitive 'immediate'    'immediate'                                 # move header to compiler context vocabulary
 
 # ----- diagnostics -------------------------
 
@@ -991,10 +996,7 @@ crossref()  {
 }
 
 # crossref lists name to word associations.
-colon 'crossref'
-   code 'crossref'
-semicolon
-inline
+primitive 'crossref' 'crossref'; inline
 
 # TODO: factor context voc search.  see also  tick, undoc, forward refs
 see()  {
@@ -1016,19 +1018,11 @@ see()  {
 }
 
 # see word  "decompiles" and shows word.
-colon 'see'
-   code 'see'
-semicolon
-inline
-
-colon '.s'
-   code '((sp))&&printf "%s " "${s[@]:0:$sp}"'
-semicolon
-inline
+primitive 'see' 'see'; inline
+primitive '.s' '((sp))&&printf "%s " "${s[@]:0:$sp}"'; inline
 
 
-
-# ----- does> -------------------------------------------- #fold01
+# ----- does> -------------------------------------------- #FOLD01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1051,12 +1045,9 @@ dodoes()  {                                                          # append do
 # defined word.
 # Though somewhat Rube-Goldbergish, it's simpler than the other
 # approaches I was thinking of.
-colon 'does>'
-   code 'code "dodoes" "$does"'
-semicolon
-immediate
+primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #fold01
+# ----- defining words ----------------------------------- #FOLD01
 
 
 # can be factored, but wait until create related to does> has been sorted out.
@@ -1083,7 +1074,7 @@ colon "array"
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
 
-# ----- compiler and word search related ----------------- #fold01
+# ----- compiler and word search related ----------------- #FOLD01
 
 # ( -- 0 | a )
 exists() {
@@ -1126,14 +1117,8 @@ colon "[']"
 semicolon
 immediate
 
-colon '['
-   code 'restricted||compiling=0'                                    # don't allow to suspend compilation when compilation is muted
-semicolon                                                            # consequence of above is that any immediate word which modifies stack if not paired
-immediate                                                            # must be forbidden to so so by checking restricted state, literal is an example for such a word.
-
-colon ']'
-   code 'compiling=1'
-semicolon
+primitive '[' 'restricted||compiling=0'; immediate                   # don't allow to suspend compilation when compilation is muted
+primitive ']' 'compiling=1'
 
 colon 'literal'
    code 'restricted || {'
@@ -1142,52 +1127,34 @@ colon 'literal'
 semicolon
 immediate
 
-colon 'execute'
-   code "${header_code}_\${s[sp--]}"
-semicolon
-inline
 
 colon 'trash'
    code 'word'
    code 'unset "headersstateless[$word]"'
 semicolon
 
-# ( xt -- ) ( string: -- $1 )
-colon 'name'
-   code 'ss+=("${names[s[sp--]]}")'
-semicolon
+primitive 'execute' "${header_code}_\${s[sp--]}"; inline
+primitive 'name'    'ss+=("${names[s[sp--]]}")'                         # ( xt -- ) ( string: -- $1 )
+primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                   # ( xt -- )
 
 # set header flag for inline compilation
 # can be used after a colon definition
-colon 'inline'
-   code 'inline'
-semicolon
-
-colon 'resolve'
-   code 'resolve'
-semicolon
-inline
+primitive 'inline'  'inline';  inline
+primitive 'resolve' 'resolve'; inline
 
 colon '.unresolved'
    code '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'
 semicolon
 inline
 
-colon '#unresolved'
-   code '((s[++sp]=${#headersunresolved[@]}))'
-semicolon
-inline
+primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'; inline
 
 # use recurse instead of word name to recurse into, as being
 # able to refer to itself by name in a definition is due to change.
-colon 'recurse'
-   code 'code "${headersstateless["$lastword"]}"'
-semicolon
-immediate
+primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate
 
 
-
-# ----- environment--------------------------------------- #fold01
+# ----- environment--------------------------------------- #FOLD01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
@@ -1208,11 +1175,7 @@ inout 1 0
 
 # read string from environment variable with name on string stack
 # ( string:  $1 -- $2 )
-colon 'env$'
-   code 'ss[-1]="${!ss[-1]}"'
-semicolon
-inline
-inout 0 0
+primitive 'env$' 'ss[-1]="${!ss[-1]}"'; inline; inout 0 0
 
 # store string $1 in bash environment variable with name $2
 # ( string:  $1 $2 -- )
@@ -1225,34 +1188,17 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #fold01
+# ----- misc --------------------------------------------- #FOLD01
 
-colon 'noop'
-   code ':'
-semicolon
-inline
+primitive 'noop' ':'; inline
+primitive "\\"   'line=""';   immediate                              # single quoted single backslash because
+primitive "\\"   'line=""';   interactive                            # double quoted escaped backslash rather than
+                                                                     # efte syntax highlighting gets confused
+primitive '('    "parse ')'"; immediate
+primitive '('    "parse ')'"; interactive
 
-colon "\\"                                                           # double quoted escaped backslash rather than
-   code 'line=""'                                                    # single quoted single backslash because
-semicolon                                                            # efte syntax highlighting gets confused
-interactive
 
-colon "\\"                                                           # double quoted escaped backslash rather than
-   code 'line=""'                                                    # single quoted single backslash because
-semicolon                                                            # efte syntax highlighting gets confused
-immediate
-
-colon '('
-   code "parse ')'"
-semicolon
-interactive
-
-colon '('
-   code "parse ')'"
-semicolon
-immediate
-
-# ----- parameter stack ---------------------------------- #fold01
+# ----- parameter stack ---------------------------------- #FOLD01
 
 
 colon 'dup'
@@ -1286,11 +1232,7 @@ semicolon
 inline
 inout 2 4
 
-colon '2drop'
-   code '((sp-=2))'
-semicolon
-inline
-inout 2 0
+primitive '2drop' '((sp-=2))'; inline; inout 2 0
 
 colon '2over'
    code '((s[++sp]=s[sp-3]))'
@@ -1356,17 +1298,10 @@ colon '?dup'
 semicolon
 inline
 
-colon 'depth'
-   code '((s[++sp]=$sp))'
-semicolon
-inline
+primitive 'depth'  '((s[++sp]=$sp))'; inline
+primitive 'pick'   '((s[++sp]=s[sp-s[sp]]))'; inline
 
-colon 'pick'
-   code '((s[++sp]=s[sp-s[sp]]))'
-semicolon
-inline
-
-# ----- return stack ------------------------------------- #fold01
+# ----- return stack ------------------------------------- #FOLD01
 
 colon 'r@'
    atom 'r@'
@@ -1411,53 +1346,18 @@ inline
 inout 0 1
 
 
-colon 'rdepth'
-   code '((s[++sp]=rp))'
-semicolon
-inout 0 1
-inline
+primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1; inline
 
-# ----- string stack ------------------------------------- #fold01
+# ----- string stack ------------------------------------- #FOLD01
 
-colon 'depth$'
-   code 's+=("${#ss[@]}")'
-semicolon
-inline
-
-colon 'empty$'
-   code 'ss=()'
-semicolon
-inline
-
-colon 'dup$'
-   code 'ss+=("${ss[-1]}")'
-semicolon
-inline
-
-colon '?dup$'
-   code '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'
-semicolon
-inline
-
-colon 'drop$'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-
-colon 'over$'
-   code 'ss+=("${ss[-2]}")'
-semicolon
-inline
-
-colon 'pluck$'
-   code 'ss+=("${ss[-3]}")'
-semicolon
-inline
-
-colon 'pick$'
-   code 'ss+=("${ss[-s[sp--]-1]}")'
-semicolon
-inline
+primitive 'depth$'   's+=("${#ss[@]}")'; inline
+primitive 'empty$'   'ss=()'; inline
+primitive 'dup$'     'ss+=("${ss[-1]}")'; inline
+primitive '?dup$'    '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'; inline
+primitive 'drop$'    'unset "ss[-1]"'; inline
+primitive 'over$'    'ss+=("${ss[-2]}")'; inline
+primitive 'pluck$'   'ss+=("${ss[-3]}")'; inline
+primitive 'pick$'    'ss+=("${ss[-s[sp--]-1]}")'; inline
 
 colon '2dup$'
    code 'ss+=("${ss[-2]}")'
@@ -1507,10 +1407,7 @@ inline
 # not just leading and trailing white space. Actually a mistake, which
 # I'll now try to sell as feature.
 # ( string: $1 -- $2 )
-colon 'trim$'
-   code 'ss[-1]="${ss[-1]//[[:space:]]/}"'
-semicolon
-inline
+primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'; inline
 
 # ( -- u )  string: ( $1 $2 -- $3 )     remove  $2* from $1, return removed chars count
 colon 'cut$'
@@ -1560,15 +1457,8 @@ semicolon
 # "abcdefgh"   2 split$  type$      ab cdefgh         "split at left"
 # "abcdefgh"  -2 split$  type$      abcdef gh         "split at right"
 
-colon 'left$'
-   code 'ss[-1]=${ss[-1]:0:s[sp--]}'
-semicolon
-inline
-
-colon 'right$'
-   code 'ss[-1]=${ss[-1]:0-s[sp--]}'
-semicolon
-inline
+primitive 'left$'  'ss[-1]=${ss[-1]:0:s[sp--]}'; inline
+primitive 'right$' 'ss[-1]=${ss[-1]:0-s[sp--]}'; inline
 
 colon 'mid$'
    code 'ss[-1]=${ss[-1]:s[sp-1]:s[sp--]}'
@@ -1623,13 +1513,8 @@ asc()  {
    fi
 }
 
-colon 'asc'
-   code 'asc'
-semicolon
-
-colon 'char$'
-   code 'ss+=("${char[s[sp--]]}")'
-semicolon
+primitive  'asc'    'asc'; inline
+primitive  'char$'  'ss+=("${char[s[sp--]]}")'; inline
 
 # $ -> a -- n
 unpackstring()  {
@@ -1641,9 +1526,8 @@ unpackstring()  {
    done
    ((s[sp]="$len"))
 }
-colon 'unpack$'
-   code 'unpackstring'
-semicolon
+
+primitive 'unpack$' 'unpackstring'; inline
 
 # ( a n -- ) ( string: -- $ )
 colon 'pack$'
@@ -1657,57 +1541,23 @@ colon 'pack$'
 semicolon
 inout 2 0
 
-# ( c -- ) ( string: $1 -- $2 )
-colon 'append$'
-   code 'ss[-1]+="${char[s[sp--]]}"'
-semicolon
-inline
-inout 1 0
-
-# ( c -- ) ( string: $1 -- $2 )
-colon 'prepend$'
-   code 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'
-semicolon
-inline
-inout 1 0
+primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inline; inout 1 0  # ( c -- ) ( string: $1 -- $2 )
+primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
+inline; inout 1 0
 
 
-# ----- bit logic ---------------------------------------- #fold01
+# ----- bit logic ---------------------------------------- #FOLD01
 
-colon 'and'
-   code '((s[sp-1]&=s[sp--]))'
-semicolon
-inline
-
-colon 'or'
-   code '((s[sp-1]|=s[sp--]))'
-semicolon
-inline
-
-colon 'xor'
-   code '((s[sp-1]^=s[sp--]))'
-semicolon
-inline
-
-colon 'invert'
-   atom 'invert'
-semicolon
-inline
-
-colon lshift
-   code '((s[sp]=(s[sp-1]<<s[sp--])&maxuint))'
-semicolon
-inline
-
-colon rshift
-   code '((s[sp-1]>>=s[sp--]))'
-semicolon
-inline
-
+primitive 'and'     '((s[sp-1]&=s[sp--]))'; inline
+primitive 'or'      '((s[sp-1]|=s[sp--]))'; inline
+primitive 'xor'     '((s[sp-1]^=s[sp--]))'; inline
+primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&maxuint))'; inline
+primitive 'rshift'  '((s[sp-1]>>=s[sp--]))'; inline
 evaluate "' lshift alias <<"
 evaluate "' rshift alias >>"
+colon    'invert';  atom 'invert'; semicolon; inline
 
-# ----- comparison --------------------------------------- #fold01
+# ----- comparison --------------------------------------- #FOLD01
 
 colon '0='
    code '((s[sp]=s[sp]?0:maxuint))'                                  # &msb: 0->maxuint  x->0
@@ -1782,7 +1632,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -1899,7 +1749,7 @@ semicolon
 inline
 inout 3 2
 
-# ----- memory ------------------------------------------- #fold01
+# ----- memory ------------------------------------------- #FOLD01
 
 colon '@'
    atom '@'
@@ -2058,7 +1908,7 @@ semicolon
 inline
 inout 3 0
 
-# ----- flow control ------------------------------------- #fold01
+# ----- flow control ------------------------------------- #FOLD01
 
 remagic
 
@@ -2294,7 +2144,7 @@ colon '?abort'
 semicolon
 
 
-# ----- conditional compilation--------------------------- #fold01
+# ----- conditional compilation--------------------------- #FOLD01
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -2323,7 +2173,7 @@ colon 'exists'
    code 'exists'
 semicolon
 
-# ----- i/o ---------------------------------------------- #fold01
+# ----- i/o ---------------------------------------------- #FOLD01
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -2363,6 +2213,7 @@ colon 'parse'
    code 'ss+=("$word")'
 semicolon
 
+evaluate ': word  bl parse ;  inline'
 
 keybuf=""
 colon 'key'
@@ -2473,8 +2324,7 @@ colon 'from$'
 semicolon
 inline
 
-evaluate ': from bl parse from$ ;'
-
+evaluate ': from word from$ ;'
 
 colon '#files'
    code '((s[++sp]=${#files[@]}))'
@@ -2533,7 +2383,7 @@ inout 0 1
 
 
 
-# ----- documentation ------------------------------------ #fold01
+# ----- documentation ------------------------------------ #FOLD01
 
 
 undoc_template()  {
@@ -2566,7 +2416,7 @@ colon 'undoc'
    code 'undoc'
 semicolon
 
-# factor
+# candidates for $command further down
 doc()       { editor "$worddoc:${1/\//U+0002F;}"; }
 about()     { cat    "$worddoc:${1/\//U+0002F;}"; }
 
@@ -2640,18 +2490,13 @@ cat << EOT
    review complements see, which decompiles:    see name
 EOT
 }
-colon 'help'
-   code 'helptext'
-semicolon
+
+primitive 'help' 'helptext'
 
 
-
-# ----- convenience -------------------------------------- #fold01
+# ----- convenience -------------------------------------- #FOLD01
 # TODO: optimiser: invalidate all stack register contents
-colon 'empty'
-   code 's=() sp=0'
-semicolon
-inline
+primitive empty  's=() sp=0'; inline
 
 # empty stack and string stack
 # since warm doesn't empty them any longer, a convenient
@@ -2662,38 +2507,24 @@ colon '_'
 semicolon
 inline
 
-colon 'secs'
-	code 'sleep "${s[sp--]}"'
-semicolon
-inline
+primitive 'secs' 'sleep "${s[sp--]}"'; inline
+primitive 'words' 'words'
 
-colon 'words'
-   code "words"
-semicolon
-
-colon 'edit'
-   code '((s1=s[sp--]))'
-   code '((s1))&&editor "${files[s1-1]}"'
+# execute shell command "$2" with args "$1"
+colon 'command$'
+   code '${ss[-2]} "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
 semicolon
 
-colon 'list'
-   code '((s1=s[sp--]))'
-   code '((s1))&&cat "${files[s1-1]}"'
-semicolon
+primitive 'file$' 'ss+=("${files[s[sp--]-1]}")'; inline              # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
+evaluate ': edit  "editor" file$  command$ ;'
+evaluate ': list  "cat"    file$  command$ ;'
 
-# a microseconds epoch, used for benchmarking
-colon 'realtime'
-   code '((s[++sp]=${EPOCHREALTIME//,/}))'
-semicolon
-inline
-inout 0 1
+primitive 'random' '((s[++sp]=RANDOM))'; inline; inout 0 1           # ( -- u )        15 bits random number
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}))'              # a microseconds epoch, used for benchmarking
+inline; inout 0 1
 
-# ( -- u )        15 bits random number
-colon 'random'
-   code '((s[++sp]=RANDOM))'
-semicolon
-inline
-inout 0 1
 
 # x1 x2 -- x1+x2 x1
 # : bounds   over + swap ;
@@ -2707,7 +2538,7 @@ inline
 inout 2 2
 
 
-# ----- experimental ------------------------------------- #fold01
+# ----- experimental ------------------------------------- #FOLD01
 
 # leftovers from running quit as coproc, exiting by error and
 # therefore having a word - the word calling quit - as outermost
@@ -2738,7 +2569,7 @@ semicolon
 
 
 # trying autoresolving word stubs. Eventually created using a
-# defining word, these are hand contructed for testing purposes:
+# defining word, these are hand constructed for testing purposes:
 # Upon execution, resolve word from library, then execute it.
 #autoresolvingwordstub()  {
 #   unset "headersstateless[$1]"
@@ -2748,7 +2579,7 @@ semicolon
 #   ${headersstateless["$1"]}
 #}
 
-#colon 'hello'           # should resolve from postlib, then execute
+#colon 'hello'           # should resolve from postlib, then executed
 #   code "autoresolvingwordstub \"$lastword\""
 #semicolon
 
@@ -2767,10 +2598,10 @@ semicolon
 # steady, but redefines the function with the same name.
 
 
-# ----- unsorted ----------------------------------------- #fold01
+# ----- unsorted ----------------------------------------- #FOLD01
 
 
-# ----- evaluate command line----------------------------- #fold00
+# ----- evaluate command line----------------------------- #FOLD00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 [[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides

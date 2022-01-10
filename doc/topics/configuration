@@ -22,8 +22,6 @@ topicdoc="$doc/topics"        # where are topics stored
 worddoc_prefix="word"         # each word doc file uses this string as base name
 worddoc="$doc/words/$worddoc_prefix"      # set directory and word doc prefix
 
-primitives="primitives.sh"    # name of primitives file, loaded at launch
-prelib="prelib"               # source library included before main program
 postlib="postlib"             # source librery included after main program
 libdirs+="..."                # add another directory to list where yoda looks for library files
 libdirs+=("$PWD")             # example: add current directory

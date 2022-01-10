@@ -31,9 +31,7 @@ In some respects does yoda differ from Forth. Some example code, giving more tan
   on a need-to-include base.  This allows for a more automatic and
   comfortable library inclusion management.  The library "postlib",
   referenced during resolve passes, exists for this purpose: compile nothing
-  from it, unless needed.  This mechanism is similar to Tom Almy's cforth. 
-  Another library, prelib, is included before main source compilation. 
-  prelib is unsuited for resolving forward referenced words.
+  from it, unless needed.  This mechanism is similar to Tom Almy's cforth.
 
 - yoda has no built-in interactive interpreter, but compiles an interpreter
   from library when needed (forward referenced). Its name is "quit".
@@ -50,15 +48,15 @@ In some respects does yoda differ from Forth. Some example code, giving more tan
 - not fully adhering to standard by sometimes deviating choice of word names.
   so is "read-file" called "from", "evaluate" evaluates from an environment
   variable named tib, not from addr/cnt (that may change), but a word
-  "evaluate$" exists, using top string stack item as input.  
+  "evaluate$" exists, using top string stack item as input.
   "list" isn't a word from the blocks word set (yet) (and doesn't behave
   like it), pictured number conversion is nestable (that is, <# ...  #> may
   appear within another <# ...  #> block), but expects only a single length
   number.  Each started conversion allocates a string stack item as output
-  buffer.  
+  buffer.
   Some of those choice may not be permanent, but on a "for the time being"
   base.
-  
+
 - "execution tokens" are extracted from function name associated with a
   word.  Vice versa, executing code associated with execution token modifies
   latter to yield a function name.  function names have numerical components

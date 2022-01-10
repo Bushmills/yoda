@@ -83,17 +83,38 @@ table  deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
    arena 2+ 2!  2dup  arena 2!  ;         \ arenas are flipped with this, and new current arena returned
 
 
+\ "code level" optimisation for inner loop
+: >r_skim_@_r>_+   
+      >((s[sp]+=m[m[s[sp-1]++]]))
+;  inline
+
 : generation ( -- )                       \ corresponding to a convolutions run with neighbour cell weights of 1
    flip                                   \ arena neighbours
    population for
          skim @                           \ state of first neighbour
-      >r skim @ r> +                      \ unrolled loop reads seven more neighbour states,
-      >r skim @ r> +                      \ adds them to first neighbour state,
-      >r skim @ r> +                      \ then addresses next neighbour.
-      >r skim @ r> +                      \ seven times, because there are seven more neighbours.
-      >r skim @ r> +                      \ measuring against a looping version shows that
-      >r skim @ r> +                      \ unrolling doesn't gain much, only about 5...6% of
-      >r skim @ r> +                      \ total time for a generation plus output.
+
+\ with hi level compiled code, one generation
+\ takes around 300 ms on my laptop
+\      >r skim @ r> +                      \ unrolled loop reads seven more neighbour states,
+\      >r skim @ r> +                      \ adds them to first neighbour state,
+\      >r skim @ r> +                      \ then addresses next neighbour.
+\      >r skim @ r> +                      \ seven times, because there are seven more neighbours.
+\      >r skim @ r> +                      \ measuring against a looping version shows that
+\      >r skim @ r> +                      \ unrolling doesn't gain much, only about 5...6% of
+\      >r skim @ r> +                      \ total time for a generation plus output.
+
+\ inner loop unrolled and "optimised"
+\ with this "code level" optimisatiom, processing
+\ time is down to around 250 ms
+\ total gain in single generation is around 15%
+       >r_skim_@_r>_+
+       >r_skim_@_r>_+
+       >r_skim_@_r>_+
+       >r_skim_@_r>_+
+       >r_skim_@_r>_+
+       >r_skim_@_r>_+
+       >r_skim_@_r>_+
+
       over @ @ or alive                   \ contents of last "neighbour" is own state
       rot tuck !                          \ new own state is stored in other arena
       1+ swap 1+                          \ onwards, next cell, next set of neighbours

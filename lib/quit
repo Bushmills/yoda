@@ -12,3 +12,4 @@
 from fix                   ( include fix and review. Not required but useful )
 boot quit                  ( "boot" sets the cold entry word )
 "Yoda shell" type$ cr      ( rather chatty today, aren't we? )
+prompt

@@ -1,0 +1,6 @@
+name:                query$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+
+decription:          prompt for a line of input, store it as top string stack item

@@ -4,8 +4,8 @@ return stack:        ( ??? -- )
 string stack:        ( ??? -- )
 category:            interpreter
 
-decription:          a loop, providing yoda with an interactive mode for entering
-                     input and executing it. Not part of yoda, but compiled from lib
-                     when requested.
+decription:          a loop, providing yoda an interactive mode for entering input
+                     and executing it. Not part of yoda, but compiled from lib on
+                     request.
 
 contexts:            interpreting, compiling

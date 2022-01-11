@@ -18,7 +18,7 @@ receive some suggestions here for what to do as second first steps:
    An ever popular sophisticated tool of computer science is called "hello world".
    It outputs a specific text to console. With yoda this is one way how this can
    be achieved:
-         : hello  "Hello, world!" type$ ;
+         : hello  "Hello, world!" type$ cr ;
    After entering and successful compilation (indicated by no error message, instead
    an "ok" prompt shown), this just compiled word can be decompiled for viewing,
    and executed. To decompile, enter:
@@ -98,28 +98,27 @@ receive some suggestions here for what to do as second first steps:
 
 
 4. loading a from file:
-         the word "from" is used for reading yoda source. Contrary to inclusion of
-         libraries does "from" not search through a list of directories. Instead it
-         must be provided the accurate location of the file to load.
+         the word "from" is used for reading yoda source. When not loading a library,
+         "from" must be told where to load the file from, as accurate location of the
+         file to load.
 
          assuming that our current directory (that is, the directory we were in when
-         quit was launched) is writable, we can create a source file here. To get to
-         know the current directory, execute
-              >pwd          ( execute OS command "pwd" which prints current directory )
-         assuming that our current directory is the directory with yoda in it, there's
-         probably a subdirectory named "tests", which contains, among others, a recursive
-         function to calculate fibonacci numbers. That function is commonly used for
-         demonstration and testing because of its simplicity.
+         quit was launched) is "yoda", there's probably a subdirectory named "tests"
+         in it which contains, among others, a recursive function to calculate fibonacci
+         numbers. That function is commonly used for demonstration and testing because
+         of its simplicity. To load that file, specifying its location, enter:
+
                from tests/fibo
-         opens, reads and compiles that file. It also runs and decompiles the generated
-         code.
 
-         Loading and executing a file doesn't need interactive mode ("quit"). Instead it
+         It will load, compile, and run, resulting in the output of some fibonacci numbers
+         followed by a decompiles listing of the code it generated.
+
+         Loading and executing a file doesn't need interactive mode. Instead it
          is just as possible to load, compile and run a source file from command line,
-         then returning to it after execution:
+         then returning to it after execution (again assuming the current directory is
+         where yoda is located):
 
-         (again assuming the current directory is where yoda is located:)
-         yoda from tests/fibo
+               yoda from tests/fibo
 
 
 5. looking at loaded / compiled files:

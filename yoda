@@ -186,8 +186,10 @@ derestrict
 # ----- ANSI/VT100 attributes ---------------------------- #FOLD00
 
 # use in error and prompt.
-   red='1'
-   green='2'
+   redfg='31'
+   redbg='41'
+   greenfg='32'
+   greenbg='42'
    normal='0'
 #   italics='3'
 #   underscore='4'
@@ -572,11 +574,11 @@ callstack()  {
    printf "\n"
 }
 
-errormessage()  {                                                    # Zeile mit fehlerwort ANSI markieren
+error()  {                                                           # Zeile mit fehlerwort ANSI markieren
 #         >--<              >--<   >--------------------------<                                >-----<     begin and end of line
 #                  >--<                                                    >----<                          error word
 #            >-----<  >----<                                      >---<              >------<              ANSI sequences
-   printf "%s\e[4%sm%s\e[%sm %s\n" "${tib%"${word}"*"${line}"}" "${red}" "${word}" "${normal}" "$line"
+   printf "%s\e[%dm%s\e[%sm %s\n" "${tib%"${word}"*"${line}"}" "${redbg}" "${word}" "${normal}" "$line"
    printf 'ERROR: %s\n' "$@"
    row=$((${#tib}-${#line}-${#word}))
    lasterror=("$file" "$linenr" "$row")
@@ -593,9 +595,6 @@ errormessage()  {                                                    # Zeile mit
 
 declare -a errortext
 nexterror=0
-
-# preparing for throw / catch
-error()  { errormessage "$@"; }
 
 errornr()   {
    error="$1"
@@ -619,7 +618,7 @@ newerror "stackunderflow"  "stack underflow"
 newerror "notfound"        "not found:"
 newerror "stillcompiling"  "still compiling after"
 newerror "unbalancedstack" "unbalanced stack in file"
-newerror "unstructured"    "unstructured:"
+newerror "unstructured"    "unstructured: missing"
 newerror "abort"           "abort"
 newerror "shellerror"      "shell returned"
 newerror "filenotfound"    "file not found:"
@@ -849,7 +848,7 @@ evaluate()  {
 # Callers did a check prior to calling.
 from()  {
    [[ -z "$1" ]] && return 2                                         # no file
-   local line lines linenr file filenr word                          # must protect for nested froms.
+   local line lines linenr file filenr word                          # must protect for nested includes.
    local stackeffect="$sp"                                           # included files must have net stack effect of 0
    file=""
    if [[ "$1" == */* ]]; then                                        # file contains slash(es): don't search
@@ -870,7 +869,7 @@ from()  {
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
       evaluate "$line"                                               # process next line
       ((error))&&break
-      ((linenr < 0))&&break                                          # source can flag "stop execution" with negative linenr (warm does so)
+      ((linenr < 0))&&break                                          # source can flag "stop loading" with negative linenr (warm does so)
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
@@ -942,7 +941,7 @@ atom["here"]='((s[++sp]=dp))'
 # ----- colon/semicolon ---------------------------------- #FOLD01
 
 colon ';'      # semicolon
-   code "(( s[sp--] == $magic )) || { unstructured 'no :'; return; }"  # check the magic left by :
+   code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"  # check the magic left by :
    code '(( ${s[sp--]} == ${#body[@]} )) && code ":"'                # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
@@ -1050,27 +1049,28 @@ primitive 'does>'  'code "dodoes" "$does"';   immediate
 
 # ----- defining words ----------------------------------- #FOLD01
 
-
-# can be factored, but wait until create related to does> has been sorted out.
-colon 'create'
+# essentially a constant with yet to be specified source for its
+# value and overwritable run time semantics (push value by default)
+define()  {
    code 'word'
-   code 'constant "$word" "$dp"'
+   code "constant \"\$word\" \"$1\""                                 # not using single quotes because want $1 to expand
+}
+
+colon 'create'
+    define '$dp'
 semicolon
 
 colon 'constant'
-   code 'word'
-   code 'constant "$word" "${s[sp--]}"'
+   define '${s[sp--]}'
 semicolon
 
 colon 'variable'
-   code 'word'
-   code '((m[dp]=0))'                                                # initialise new variable
-   code 'constant "$word" "$((dp++))"'                               # variable is a constant allocating its data and pushing its address
+   define '$((dp))'
+   code '((m[dp++]=0))'                                              # allocate and initialise
 semicolon
 
 colon "array"
-   code 'word'                                                       # parse array name
-   code 'create "$word"  "$header_code"'                             # create header
+   define '$header_code'
    code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
@@ -1128,31 +1128,21 @@ colon 'literal'
 semicolon
 immediate
 
-
 colon 'trash'
    code 'word'
    code 'unset "headersstateless[$word]"'
 semicolon
 
-primitive 'execute' "${header_code}_\${s[sp--]}"
-primitive 'name'    'ss+=("${names[s[sp--]]}")'                         # ( xt -- ) ( string: -- $1 )
-primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                   # ( xt -- )
+primitive 'execute' "${header_code}_\${s[sp--]}"                     # ( xt -- )
+primitive 'name'    'ss+=("${names[s[sp--]]}")'                      # ( xt -- ) ( string: -- $1 )
+primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
-# set header flag for inline compilation
 # can be used after a colon definition
-primitive 'inline'  'inline'
-primitive 'resolve' 'resolve'
-
-colon '.unresolved'
-   code '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'
-semicolon
-inline
-
-primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'
-
-# use recurse instead of word name to recurse into, as being
-# able to refer to itself by name in a definition is due to change.
-primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate
+primitive 'inline'  'inline'                                         # ( -- )    set header flag for inline compilation
+primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
+primitive '.unresolved'  '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'   # print unresolved
+primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
+primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -- )
 
 
 # ----- environment--------------------------------------- #FOLD01
@@ -1855,7 +1845,7 @@ semicolon
 immediate
 
 colon 'else'
-   code "(( s[sp]++ == \"$magic\" )) || { unstructured 'no if'; return; }"
+   code "(( s[sp]++ == \"$magic\" )) || { unstructured 'if'; return; }"
    code '(( s[sp-1] == ${#body[@]} )) && code ":"'
    code 'code "else"'
    code '((s[sp-1]=${#body[@]}))'
@@ -1863,7 +1853,7 @@ semicolon
 immediate
 
 colon 'then'
-   code "(( s[sp] == $magic ||  s[sp] == $((magic+1)) )) || { unstructured 'no if or else'; return; }"
+   code "(( s[sp] == $magic ||  s[sp] == $((magic+1)) )) || { unstructured 'if or else'; return; }"
    atom 'drop'
    code '(( s[sp--] == ${#body[@]} )) && code ":"'
    code 'code "fi"'
@@ -1882,14 +1872,14 @@ immediate
 
 
 colon 'again'
-   code "(( s[sp--] == \"$magic\" )) || { unstructured 'no begin'; return; }"
+   code "(( s[sp--] == \"$magic\" )) || { unstructured 'begin'; return; }"
    code '(( s[sp--] == ${#body[@]} )) && code ":"'
    code 'code "done"'
 semicolon
 immediate
 
 colon 'until'
-   code "(( s[sp--] == \"$magic\" )) || { unstructured 'no begin'; return; }"
+   code "(( s[sp--] == \"$magic\" )) || { unstructured 'begin'; return; }"
    code 'code "((s[sp--]))&&break"'
    atom 'drop'
    code 'code "done"'
@@ -1897,13 +1887,13 @@ semicolon
 immediate
 
 colon 'while'
-   code "(( s[sp]++ == $magic )) || { unstructured 'no begin'; return; }"
+   code "(( s[sp]++ == $magic )) || { unstructured 'begin'; return; }"
    code 'code "((s[sp--]))||break"'
 semicolon
 immediate
 
 colon 'repeat'
-   code "(( s[sp--] == $((magic+1)) )) || { unstructured 'no while'; return; }"
+   code "(( s[sp--] == $((magic+1)) )) || { unstructured 'while'; return; }"
    atom 'drop'
    code 'code "done"'
 semicolon
@@ -1924,7 +1914,7 @@ primitive 'i' '((s[++sp]=i))'; inout 0 1
 evaluate ': j r@ ;'   ;  inout 0 1
 
 colon 'next'
-   code "((s[sp--] == $magic))|| { unstructured 'no for'; return; }"
+   code "((s[sp--] == $magic))|| { unstructured 'for'; return; }"
    code '((s[sp--] == ${#body[@]})) && code ":"'
    code 'code "done"'
    code "code '((i=r[rp--]))'"
@@ -1937,8 +1927,8 @@ remagic
 dodo()  {
    ((r[++rp]=ibar))
    ((r[++rp]=i))
-   ((i=s[sp--]&maxuint))
-   ((ibar=s[sp--]&maxuint))
+   ((i=s[sp--]))
+   ((ibar=s[sp--]))
 }
 
 colon 'do'
@@ -1951,13 +1941,13 @@ immediate
 colon '?do'
    code 'code "dodo"'
    code 'code "while :;do"'
-   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
    code 'code "((i==ibar))&&break"'
+   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
 semicolon
 immediate
 
 colon 'loop'
-   code "((s[sp--] == $magic))|| { unstructured 'no do'; return; }"
+   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
    code 'code "((i=(i+1)&maxuint))"'
    code 'code "((i == ibar))&&break"'
    code 'code "done"'
@@ -1967,7 +1957,7 @@ semicolon
 immediate
 
 colon '+loop'
-   code "((s[sp--] == $magic))|| { unstructured 'no do'; return; }"
+   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
    code 'code "((s1=s[sp--]))"'
    code 'code "((i+=s1))"'
    code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
@@ -1977,16 +1967,12 @@ colon '+loop'
 semicolon
 immediate
 
-primitive 'leave'   'code "break"'; immediate
-primitive '?leave'   'code "((s[sp--]))&&break"'; immediate
-# compiling version: skip until end of word (i.e. return) when false
-primitive 'lest'  'code "((s[sp--]))||return"'; immediate    # compile only are inherently immediate
-# interpreting version: skip rest of line when false
-primitive 'lest'   '((s[sp--]))||line=""'; interactive
-# compiling version: skip until end of word (i.e. return) when true
-primitive 'unless'  'code "((s[sp--]))&&return" '; immediate    # compile only are inherently immediate
-# interpreting version: skip rest of line when true
-primitive  'unless' '((s[sp--]))&&line=""'; interactive
+primitive 'leave'  'code "break"'; immediate                         # break out of loop
+primitive '?leave' 'code "((s[sp--]))&&break"'; immediate            # break out of loop when false
+primitive 'lest'   'code "((s[sp--]))||return"'; immediate           # interpreting version: skip rest of line when false
+primitive 'lest'   '((s[sp--]))||line=""'; interactive               # compiling version: skip until end of word (i.e. return) when true
+primitive 'unless' 'code "((s[sp--]))&&return" '; immediate          # interpreting version: skip rest of line when true
+primitive 'unless' '((s[sp--]))&&line=""'; interactive               # compiling version: skip rest of word when false
 
 # interpreting versiob: u times repeat evaluation of input line remainder
 colon 'times'
@@ -2007,8 +1993,6 @@ colon 'many'
    code 'line=""'
 semicolon
 
-primitive  'warm'  'warm'
-
 colon 'boot'
    code 'word'
    code 'need "$word"'                                               # cold entry may come from postlib
@@ -2016,12 +2000,10 @@ colon 'boot'
    code 'coldvector="${headersstateless["$word"]}"'                  # because writing it to cold start vector
 semicolon                                                            # this way cold start entry points can be forward referenced
 
+primitive 'warm'  'warm'
 primitive 'bye'  'exit 0'
 primitive 'exit'  'return'; immediate
-
-# ( err -- )
-primitive 'abort'  'abort "${s[sp--]}"'
-
+primitive 'abort'  'abort "${s[sp--]}"'                              # ( err -- )
 
 # ( f err -- )
 colon '?abort'
@@ -2036,17 +2018,17 @@ semicolon
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
 # dependencies) be picked from forward lib.
-# arg1: name of needed word,  arg2; referrer
+# arg1: name of needed word,  arg2; referer
 need()  {                                                            # only ask for forward if word isn't in any context voc
    [[ -z "${headersstateless[$1]}" ]] || return
    [[ -z "${headersinterpretonly[$1]}" ]] || return
    [[ -z "${headerscompileonly[$1]}" ]] || return
-   forwardref "$1"  "$2"
+   forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
 }
 
 colon 'need'
    code 'word'
-   code 'need "$word" ""'                                            # empty arg indicates explicit need, no referrer
+   code 'need "$word" ""'                                            # empty arg indicates explicit need, no referer
 semicolon
 
 # ( -- f )     check unresolved status of word
@@ -2120,14 +2102,11 @@ inout 0 1
 # read line into tib
 # TODO: configurable ANSI sequences
 query()  {
-   printf '\e[3%sm' "$green"
+   printf '\e[%dm' "$greenfg"
    IFS="" read -er -i "$keybuf" tib                                  # key? may have put chars into keybuf
    keybuf=""
-   printf '\e[%sm' "$normal"
+   printf '\e[%dm' "$normal"
 }
-
-primitive 'query'     'query';  inout 0 0
-primitive 'evaluate'  'evaluate "$tib"'
 
 colon 'evaluate$'
    code 'local tib="${ss[-1]}"'
@@ -2136,16 +2115,17 @@ colon 'evaluate$'
 semicolon
 inline
 
-primitive 'cr' 'printf "\n"'; inout 0 0
-primitive 'space'  'printf " "';inout 0 0
-
 colon 'spaces'
    code '((s1=s[sp--]))'
    code '((s1&msb))||printf "%${s1}s" ""'
 semicolon
 inout 1 0
 
-primitive 'page' 'clear'; inout 0 0
+primitive 'query'     'query';           inout 0 0
+primitive 'evaluate'  'evaluate "$tib"'
+primitive 'cr'        'printf "\n"';     inout 0 0
+primitive 'space'     'printf " "';      inout 0 0
+primitive 'page'      'clear';           inout 0 0
 
 prompt()  {
    ((error)) && {
@@ -2183,10 +2163,6 @@ primitive 'files'  'printf "%s\n" "${files[@]}"|nl'                             
 
 # ----- pictured number conversion ----------
 
-primitive 'decimal'  'm[base]="10"'; inout 0 0
-primitive 'hex'      'm[base]="16"'; inout 0 0
-primitive 'binary'   'm[base]="2"';  inout 0 0
-
 # ( x1 -- x2 ) ( string: $1 -- $2 )
 colon '#'                                                            # : #
    code '((radix=m[base]))'                                          # base @
@@ -2211,6 +2187,10 @@ evaluate ': .padded  dup$ count$ - spaces type$ ;' ; inout 1 0       # ( u -- ) 
 evaluate ': .r       >r  convert r> .padded ;'     ; inout 2 0       # ( n u -- )
 evaluate ': u.r      >r uconvert r> .padded ;'     ; inout 2 0       # ( u1 u2 -- )
 evaluate 'trash .padded'
+
+primitive 'decimal'  'm[base]="10"'; inout 0 0
+primitive 'hex'      'm[base]="16"'; inout 0 0
+primitive 'binary'   'm[base]="2"';  inout 0 0
 
 
 # convert a string representation of a number
@@ -2274,7 +2254,6 @@ semicolon
 
 # topics
 # n topic
-
 colon 'topics'
    code 'unset "GLOBIGNORE"'
    code 'printf "%s\n" "$topicdoc"/* | sed "s/.*\///" | nl'
@@ -2337,30 +2316,25 @@ primitive 'help' 'helptext'
 
 # ----- convenience -------------------------------------- #FOLD01
 # TODO: optimiser: invalidate all stack register contents
-primitive empty  's=() sp=0'
-
-# empty stack and string stack
-# since warm doesn't empty them any longer, a convenient
-# way to do so manually was needed.
-evaluate ': _  empty empty$  ;'; inline
-primitive 'secs' 'sleep "${s[sp--]}"'
-primitive 'words' 'words'
-
 # execute shell command "$2" with args "$1"
 colon 'command$'
    code '${ss[-2]} "${ss[-1]}"'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
+primitive empty  's=() sp=0'
 
-primitive 'file$' 'ss+=("${files[s[sp--]-1]}")'              # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
+# empty stack and string stack
+# since warm doesn't empty them any longer, a convenient
+# way to do so manually was needed.
+evaluate ': _  empty empty$  ;'; inline
+primitive 'words' 'words'
+primitive 'random' '((s[++sp]=RANDOM))'; inout 0 1                   # ( -- u )        15 bits random number
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}))'; inout 0 1   # a microseconds epoch, used for benchmarking
+primitive 'secs' 'sleep "${s[sp--]}"'
+primitive 'file$' 'ss+=("${files[s[sp--]-1]}")'                      # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
 evaluate ': edit  "editor" file$  command$ ;'
 evaluate ': list  "cat"    file$  command$ ;'
-
-primitive 'random' '((s[++sp]=RANDOM))'; inout 0 1           # ( -- u )        15 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}))'              # a microseconds epoch, used for benchmarking
-inout 0 1
-
 
 # x1 x2 -- x1+x2 x1
 # : bounds   over + swap ;

@@ -1621,7 +1621,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'
@@ -2045,7 +2045,7 @@ semicolon
 
 primitive 'exists'   'exists'
 
-# ----- i/o ---------------------------------------------- #fold01
+# ----- i/o ---------------------------------------------- #FOLD01
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -2129,6 +2129,8 @@ colon 'spaces'
 semicolon
 inout 1 0
 
+evaluate ': ltype$ dup$ type$ count$ - spaces ;'; inout 1 0          # ( u -- ) (string: $1 -- )
+evaluate ': rtype$ dup$ count$ - spaces type$ ;'; inout 1 0          # ( u -- ) (string: $1 -- )
 primitive 'query$'    'query';           inout 0 0
 primitive 'cr'        'printf "\n"';     inout 0 0
 primitive 'space'     'printf " "';      inout 0 0
@@ -2178,21 +2180,19 @@ colon '#'                                                            # : #
 semicolon                                                            # ;
 inout 1 1
 
-evaluate "' prepend$ alias hold"                   ; inline; inout 1 0       # ( c -- ) ( string: $1 -- $2 )
-evaluate ': <#       ""  ;'                        ; inline; inout 0 0       # ( -- ) ( string: -- $2 )
-evaluate ': #s       begin # dup 0= until ;'       ; inout 1 1       # ( x1 -- x2 ) ( string: $1 -- $2 )
-evaluate ": sign     0< lest '-' hold ;"           ; inout 1 0       # ( f -- ) ( string: $1 -- $2 )
-evaluate ': #>$      drop ;'                       ; inline; inout 1 0       # ( x -- )
-evaluate ': #>type   #>$ type$ ;'                  ; inline; inout 1 0       # ( x -- ) ( string:  $1 -- )
-evaluate ': #>       #>$ here here unpack$ ;'      ; inout 1 2       # ( x -- a n ) ( string:  $1 -- )
-evaluate ': uconvert <# #s #>$ ;'                  ; inout 1 0       # ( u -- ) (string: -- $1 )
-evaluate ': convert  dup abs uconvert sign ;'      ; inout 1 0       # ( u -- ) (string: -- $1 )
-evaluate ': .         convert type$ space ;'       ; inout 1 0       # ( n -- )
-evaluate ': u.       uconvert type$ space ;'       ; inout 1 0       # ( u -- )
-evaluate ': .padded  dup$ count$ - spaces type$ ;' ; inout 1 0       # ( u -- ) (string: $1 -- )
-evaluate ': .r       >r  convert r> .padded ;'     ; inout 2 0       # ( n u -- )
-evaluate ': u.r      >r uconvert r> .padded ;'     ; inout 2 0       # ( u1 u2 -- )
-evaluate 'trash .padded'
+evaluate "' prepend$ alias hold"             ; inline; inout 1 0     # ( c -- ) ( string: $1 -- $2 )
+evaluate ': <#       ""  ;'                  ; inline; inout 0 0     # ( -- ) ( string: -- $2 )
+evaluate ': #s       begin # dup 0= until ;' ; inout 1 1             # ( x1 -- x2 ) ( string: $1 -- $2 )
+evaluate ": sign     0< lest '-' hold ;"     ; inout 1 0             # ( f -- ) ( string: $1 -- $2 )
+evaluate "' drop alias #>$"                  ; inline; inout 1 0     # ( x -- )
+evaluate ': #>type   #>$ type$ ;'            ; inline; inout 1 0     # ( x -- ) ( string:  $1 -- )
+evaluate ': #>       #>$ here here unpack$ ;'; inout 1 2             # ( x -- a n ) ( string:  $1 -- )
+evaluate ': uconvert <# #s #>$ ;'            ; inout 1 0             # ( u -- ) (string: -- $1 )
+evaluate ': convert  dup abs uconvert sign ;'; inout 1 0             # ( u -- ) (string: -- $1 )
+evaluate ': .         convert type$ space ;' ; inout 1 0             # ( n -- )
+evaluate ': u.       uconvert type$ space ;' ; inout 1 0             # ( u -- )
+evaluate ': .r       >r  convert r> rtype$ ;'; inout 2 0             # ( n u -- )
+evaluate ': u.r      >r uconvert r> rtype$ ;'; inout 2 0             # ( u1 u2 -- )
 
 primitive 'decimal'  'm[base]="10"'; inout 0 0
 primitive 'hex'      'm[base]="16"'; inout 0 0
@@ -2200,7 +2200,7 @@ primitive 'binary'   'm[base]="2"';  inout 0 0
 
 
 # convert a string representation of a number
-# or arithmetic expression to an integer
+# or arithmetic expression to an integer.
 # respects base
 # ( -- x ) (string: $1 -- )
 colon 'convert$'

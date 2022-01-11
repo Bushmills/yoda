@@ -1,0 +1,11 @@
+name:                where$
+stack:               ( -- u1 u2 )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+category:            dictionary
+
+decription:          expects a word name as $1 on string stack, returns
+                     file and line number of its source location, which
+                     are returned as u1 and u2
+
+contexts:            interpreting, compiling

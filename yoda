@@ -874,7 +874,7 @@ from()  {
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
       evaluate "$line"                                               # process next line
       ((error))&&break
-      ((linenr < 0))&&break                                          # source can flag "stop loading" with negative linenr (warm does so)
+      ((linenr < 0))&&break                                          # source can flag "stop loading" with negative linenr (warm and done do so)
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
@@ -1621,7 +1621,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -1676,8 +1676,8 @@ colon '*/mod'
    code '((s2&msb&&(s2=-s2&maxuint)))'                               # abs s2
    code '((s3&msb&&(s3=-s3&maxuint)))'                               # abs s3
    code '((tmp=s2*s3))'
-   code '((s[sp-1]=(signr&msb?-tmp%s1:tmp%s1)))'
-   code '((s[sp]=(signq&msb?-tmp/s1:tmp/s1)))'
+   code '((s[sp-1]=(signr&msb?(-tmp%s1)&maxuint:tmp%s1)))'
+   code '((s[sp]=(signq&msb?-(tmp/s1)&maxuint:tmp/s1)))'
 semicolon
 inout 3 2
 
@@ -2320,7 +2320,7 @@ EOT
 primitive 'help' 'helptext'
 
 
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 # TODO: optimiser: invalidate all stack register contents
 # execute shell command "$2" with args "$1"
 colon 'command$'
@@ -2355,6 +2355,12 @@ inout 2 2
 
 
 # ----- experimental ------------------------------------- #fold01
+
+# stop loading file
+colon 'done'
+   code 'linenr="-1"'
+semicolon
+
 
 # leftovers from running quit as coproc, exiting by error and
 # therefore having a word - the word calling quit - as outermost
@@ -2429,7 +2435,7 @@ evaluate ': where (where) swap file$ type$ [char] : emit  u. ;'
 # steady, but redefines the function with the same name.
 
 
-# ----- evaluate command line----------------------------- #FOLD00
+# ----- evaluate command line----------------------------- #fold00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 [[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides

@@ -30,10 +30,9 @@ trash used   \ used is a too common word to waste it for this: discard header
 : review
    bl parse                            \ parse name of word to review
    "where[${ss[-2]}]" env$ nip$        \ line number and file word is in
-   chop$ 2 = if                        \ only valid if two args
+   chop$ 2 = lest                      \ only valid if two args
       "lasterror[1]" >env$             \ store line number
       1 "lasterror[2]" >env            \ store column number (always 1)
       "${files[${ss[-3]}]}"            \ convert file number to file name
       "lasterror[0]" >env$             \ store file name
-      drop$ fix                        \ call fix on review pretending to be an error
-   then ;
+      drop$ fix ;                      \ call fix on review pretending to be an error

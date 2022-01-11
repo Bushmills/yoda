@@ -1,8 +1,15 @@
- 10  20  30 */mod . .  cr
- 10  20 -30 */mod . .  cr
- 10 -20  30 */mod . .  cr
- 10 -20 -30 */mod . .  cr
--10  20  30 */mod . .  cr
--10  20 -30 */mod . .  cr
--10 -20  30 */mod . .  cr
--10 -20 -30 */mod . .  cr
+#!/usr/local/bin/yoda
+need check
+resolve
+"*/mod tests: " type$
+
+  10  20  30 */mod   6 expected  20 expected
+  10  20 -30 */mod  -6 expected  20 expected
+  10 -20  30 */mod  -6 expected -20 expected
+  10 -20 -30 */mod   6 expected -20 expected
+ -10  20  30 */mod  -6 expected -20 expected
+ -10  20 -30 */mod   6 expected -20 expected
+ -10 -20  30 */mod   6 expected  20 expected
+ -10 -20 -30 */mod  -6 expected  20 expected
+
+check

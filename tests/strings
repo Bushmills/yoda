@@ -1,15 +1,7 @@
 #!/usr/local/bin/yoda
+need check
+resolve
 "String comparison tests: " type$
-
-create errors 0 ,
-: check    ( -- )
-        errors @ ?dup
-        if . "errors"
-        else  "No errors"
-        then type$ cr  ;
-
-: expected ( x1 x2 -- )
-        = 1+ errors +! ;
 
 "abc" "abc"
         2dup$ $=     true expected

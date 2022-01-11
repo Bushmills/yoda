@@ -18,7 +18,8 @@ u: link     ( a -- )
    swap exchange
    ,  ;
 
-
+\ a shotcut for loading from files named same as referenced word may be nice
+needed check lest from check
 needed  dump lest from dump
 needed wdump lest from wdump
 needed fg needed bg or needed attr or lest from ansi

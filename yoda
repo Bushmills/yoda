@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -62,7 +62,7 @@ libdirs+=("$mydir")                                                  # look in d
 logfile="$mydir/yoda.log"
 rm -f "$logfile"                                                     # each run starts with a fresh log
 
-header_code="function"                                               # prefix to bash function names,  _${nextname} will be appended upon header creation
+header_code="yoda"                                                   # prefix to bash function names,  _${nextname} will be appended upon header creation
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
 
 declare -ai r=() s=() m=()
@@ -76,14 +76,17 @@ headerslistlist=(
          "headersstateless"                                          # searched during both interpreting and compiling
          "headersinterpretonly"                                      # searched during compiling only
          "headerscompileonly")                                       # searched during interpreting only
+
 declare -n headers="headersstateless"                                # headers is a vector- or pointer variable.
 for tmp in "${headerslistlist[@]}"; do
    declare -A "$tmp"
 done
-declare -a names
+
+declare -a names                                                     # function name -> word name lookup
 declare -A headersunresolved                                         # forward referenced. Not searched.
 declare -A where                                                     # source file, line
-
+declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
+                                                                     # following does> to make it more easily available to dodoes
 declare -a lasterror
 lasterror=("" "-1" "0")
 
@@ -150,7 +153,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -222,8 +225,10 @@ interactive()   {
 # create header, but don't compile, and don't generate function yet.
 # compiling (that is, creating a bash function) is left to semicolon, calling compile
 # won't detect redefinition if word was moved to context vocabulary
-# arg1: word
-# arg2: name
+# arg1: word name
+# arg2: function name
+# not allowed to generate function names because some names want to be
+# determined by caller
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
    (( linenr < 0 )) ||                                               # not entered at keyboard
@@ -239,7 +244,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -264,7 +269,6 @@ analyserflag()  {
 }
 
 
-declare -A doescode
 
 # doesn't actually do any optimizing at this point.
 # Function is now limited to:
@@ -358,7 +362,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # atoms may be:
 #  - micro instructions
@@ -430,10 +434,13 @@ literal()  {
 }
 
 
+# quite some factoring possible in this section
+# arg1: word name
 create()  {
+   [[ -z "$2" ]] || echo "still passing arg2=$2 to create"
    [[ -z "$1" ]] && emptyname
    names[nextname]="$1"
-   name="${2}_$((nextname++))"                                       # prefix function names will avoid effect described on next line
+   name="${header_code}_$((nextname++))"
    header "$1" "$name"
 
 #   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
@@ -462,15 +469,9 @@ colon()  {
 
 # primitive wordname  functionname
 primitive()  {
-   create "$1" "${header_code}"
-#   [[ -z "$1" ]] && emptyname
-#   names[nextname]="$1"
-#   name="${header_code}_$((nextname++))"                             # prefix function names will avoid effect described on next line
-#   header "$1" "$name"
-
+   create "$1"
    [[ -z "$linenr" ]] &&
       where["$lastword"]="0 ${BASH_LINENO[0]}"                       # remember file and line number
-
    inline
    use "$2"
 }
@@ -2161,7 +2162,6 @@ colon 'from$'
    code 'unset "ss[-1]"'
    code 'from "$file"||filenotfound "$file"'
 semicolon
-inline
 
 evaluate ': from word from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1

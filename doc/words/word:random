@@ -1,0 +1,9 @@
+name:                random
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+category:
+
+decription:          produce a 15 bit random number (0...32767)
+
+contexts:            interpreting, compiling

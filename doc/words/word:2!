@@ -1,0 +1,9 @@
+name:                2!
+stack:               ( x1 x2 a -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            memory
+
+decription:          stores two stack items x1 and x2 at address a
+
+contexts:            interpreting, compiling

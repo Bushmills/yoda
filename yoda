@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda.
@@ -30,7 +30,7 @@ version=0  subversion=4     # 2022jan10,04:13    pulled yoda and primitives toge
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -112,7 +112,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings.
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -150,7 +150,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -175,7 +175,7 @@ logminus() { ((logindent+=-2)); log "$@"; }
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- compiler muting ---------------------------------- #FOLD00
+# ----- compiler muting ---------------------------------- #fold00
 
 derestricted=1                                                       # conditional compilation can turn off code generation
 restrict()   { derestricted=0; }
@@ -183,7 +183,7 @@ derestrict() { derestricted=1; }
 restricted() { return "$derestricted"; }                             # flag current state
 derestrict
 
-# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
+# ----- ANSI/VT100 attributes ---------------------------- #fold00
 
 # use in error and prompt.
    redfg='31'
@@ -196,7 +196,7 @@ derestrict
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -239,7 +239,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -330,7 +330,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -358,7 +358,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # atoms may be:
 #  - micro instructions
@@ -409,7 +409,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -462,10 +462,15 @@ colon()  {
 
 # primitive wordname  functionname
 primitive()  {
-   [[ -z "$1" ]] && emptyname
-   names[nextname]="$1"
-   name="${header_code}_$((nextname++))"                             # prefix function names will avoid effect described on next line
-   header "$1" "$name"
+   create "$1" "${header_code}"
+#   [[ -z "$1" ]] && emptyname
+#   names[nextname]="$1"
+#   name="${header_code}_$((nextname++))"                             # prefix function names will avoid effect described on next line
+#   header "$1" "$name"
+
+   [[ -z "$linenr" ]] &&
+      where["$lastword"]="0 ${BASH_LINENO[0]}"                       # remember file and line number
+
    inline
    use "$2"
 }
@@ -548,7 +553,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -634,7 +639,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -711,7 +716,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -751,7 +756,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #FOLD00
+# ----- line interpreter --------------------------------- #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -840,7 +845,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -882,8 +887,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
-# ----- populating detokeniser --------------------------- #FOLD01
+# ----- primitives --------------------------------------- #fold00
+# ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -938,7 +943,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #FOLD01
+# ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'      # semicolon
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"  # check the magic left by :
@@ -1022,7 +1027,7 @@ primitive 'see' 'see'
 primitive '.s' '((sp))&&printf "%s " "${s[@]:0:$sp}"'
 
 
-# ----- does> -------------------------------------------- #FOLD01
+# ----- does> -------------------------------------------- #fold01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1047,7 +1052,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1075,7 +1080,7 @@ colon "array"
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
 
-# ----- compiler and word search related ----------------- #FOLD01
+# ----- compiler and word search related ----------------- #fold01
 
 # ( -- 0 | a )
 exists() {
@@ -1145,7 +1150,7 @@ primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
 primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -- )
 
 
-# ----- environment--------------------------------------- #FOLD01
+# ----- environment--------------------------------------- #fold01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
@@ -1179,7 +1184,7 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #FOLD01
+# ----- misc --------------------------------------------- #fold01
 
 primitive 'noop' ':'
 primitive "\\"   'line=""';   immediate                              # single quoted single backslash because
@@ -1189,7 +1194,7 @@ primitive '('    "parse ')'"; immediate
 primitive '('    "parse ')'"; interactive
 
 
-# ----- parameter stack ---------------------------------- #FOLD01
+# ----- parameter stack ---------------------------------- #fold01
 
 
 colon 'dup'
@@ -1292,7 +1297,7 @@ inline
 primitive 'depth'  '((s[++sp]=$sp))'
 primitive 'pick'   '((s[++sp]=s[sp-s[sp]]))'
 
-# ----- return stack ------------------------------------- #FOLD01
+# ----- return stack ------------------------------------- #fold01
 
 colon 'r@'
    atom 'r@'
@@ -1339,7 +1344,7 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #FOLD01
+# ----- string stack ------------------------------------- #fold01
 
 primitive 'depth$'   's+=("${#ss[@]}")'
 primitive 'empty$'   'ss=()'
@@ -1537,7 +1542,7 @@ primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) 
 inout 1 0
 
 
-# ----- bit logic ---------------------------------------- #FOLD01
+# ----- bit logic ---------------------------------------- #fold01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
@@ -1548,7 +1553,7 @@ evaluate "' lshift alias <<"
 evaluate "' rshift alias >>"
 colon    'invert';  atom 'invert'; semicolon; inline
 
-# ----- comparison --------------------------------------- #FOLD01
+# ----- comparison --------------------------------------- #fold01
 
 primitive '0='   '((s[sp]=s[sp]?0:maxuint))'                         # &msb: 0->maxuint  x->0
 primitive '0<'   '((s[sp]=s[sp]&msb?maxuint:0))'                     # &msb: 0->0   msb->maxuint
@@ -1616,7 +1621,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'
@@ -1709,7 +1714,7 @@ semicolon
 inline
 inout 3 2
 
-# ----- memory ------------------------------------------- #FOLD01
+# ----- memory ------------------------------------------- #fold01
 
 colon '@'
    atom '@'
@@ -1833,7 +1838,7 @@ move()  {                                                            # deals wit
 # ( a1 a2 u -- )
 primitive 'move'   'move'; inout 3 0
 
-# ----- flow control ------------------------------------- #FOLD01
+# ----- flow control ------------------------------------- #fold01
 
 remagic
 
@@ -2013,7 +2018,7 @@ colon '?abort'
 semicolon
 
 
-# ----- conditional compilation--------------------------- #FOLD01
+# ----- conditional compilation--------------------------- #fold01
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -2040,7 +2045,7 @@ semicolon
 
 primitive 'exists'   'exists'
 
-# ----- i/o ---------------------------------------------- #FOLD01
+# ----- i/o ---------------------------------------------- #fold01
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -2206,7 +2211,7 @@ inout 0 1
 
 
 
-# ----- documentation ------------------------------------ #FOLD01
+# ----- documentation ------------------------------------ #fold01
 
 
 undoc_template()  {
@@ -2314,7 +2319,7 @@ EOT
 primitive 'help' 'helptext'
 
 
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 # TODO: optimiser: invalidate all stack register contents
 # execute shell command "$2" with args "$1"
 colon 'command$'
@@ -2348,7 +2353,7 @@ inline
 inout 2 2
 
 
-# ----- experimental ------------------------------------- #FOLD01
+# ----- experimental ------------------------------------- #fold01
 
 # leftovers from running quit as coproc, exiting by error and
 # therefore having a word - the word calling quit - as outermost
@@ -2376,6 +2381,21 @@ colon 'wait'
    code 'echo "wait pid=$pid"'
 semicolon
 
+colon '(where)'
+   code 'word'
+   code 's[++sp]="${where[$word]%% *}"'
+   code 's[++sp]="${where[$word]#* }"'
+semicolon
+
+# duplicating 'char functionality because quoting in evaluate
+# becomes sometimes hard when using ' ' for characters' ASCIIs
+colon '[char]'
+   code 'word'
+   code 'stateless "s[++sp]=\"${asc[${word:0:1}]}\""'
+semicolon
+immediate
+
+evaluate ': where (where) swap file$ type$ [char] : emit  u. ;'
 
 
 # trying autoresolving word stubs. Eventually created using a
@@ -2408,7 +2428,7 @@ semicolon
 # steady, but redefines the function with the same name.
 
 
-# ----- evaluate command line----------------------------- #FOLD00
+# ----- evaluate command line----------------------------- #fold00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 [[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides

@@ -464,6 +464,7 @@ primitive()  {
    names[nextname]="$1"
    name="${header_code}_$((nextname++))"                             # prefix function names will avoid effect described on next line
    header "$1" "$name"
+   inline
    use "$2"
 }
 
@@ -996,7 +997,7 @@ crossref()  {
 }
 
 # crossref lists name to word associations.
-primitive 'crossref' 'crossref'; inline
+primitive 'crossref' 'crossref'
 
 # TODO: factor context voc search.  see also  tick, undoc, forward refs
 see()  {
@@ -1018,8 +1019,8 @@ see()  {
 }
 
 # see word  "decompiles" and shows word.
-primitive 'see' 'see'; inline
-primitive '.s' '((sp))&&printf "%s " "${s[@]:0:$sp}"'; inline
+primitive 'see' 'see'
+primitive '.s' '((sp))&&printf "%s " "${s[@]:0:$sp}"'
 
 
 # ----- does> -------------------------------------------- #FOLD01
@@ -1133,21 +1134,21 @@ colon 'trash'
    code 'unset "headersstateless[$word]"'
 semicolon
 
-primitive 'execute' "${header_code}_\${s[sp--]}"; inline
+primitive 'execute' "${header_code}_\${s[sp--]}"
 primitive 'name'    'ss+=("${names[s[sp--]]}")'                         # ( xt -- ) ( string: -- $1 )
 primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                   # ( xt -- )
 
 # set header flag for inline compilation
 # can be used after a colon definition
-primitive 'inline'  'inline';  inline
-primitive 'resolve' 'resolve'; inline
+primitive 'inline'  'inline'
+primitive 'resolve' 'resolve'
 
 colon '.unresolved'
    code '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'
 semicolon
 inline
 
-primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'; inline
+primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'
 
 # use recurse instead of word name to recurse into, as being
 # able to refer to itself by name in a definition is due to change.
@@ -1175,7 +1176,7 @@ inout 1 0
 
 # read string from environment variable with name on string stack
 # ( string:  $1 -- $2 )
-primitive 'env$' 'ss[-1]="${!ss[-1]}"'; inline; inout 0 0
+primitive 'env$' 'ss[-1]="${!ss[-1]}"'; inout 0 0
 
 # store string $1 in bash environment variable with name $2
 # ( string:  $1 $2 -- )
@@ -1190,7 +1191,7 @@ inout 0 0
 
 # ----- misc --------------------------------------------- #FOLD01
 
-primitive 'noop' ':'; inline
+primitive 'noop' ':'
 primitive "\\"   'line=""';   immediate                              # single quoted single backslash because
 primitive "\\"   'line=""';   interactive                            # double quoted escaped backslash rather than
                                                                      # efte syntax highlighting gets confused
@@ -1232,7 +1233,7 @@ semicolon
 inline
 inout 2 4
 
-primitive '2drop' '((sp-=2))'; inline; inout 2 0
+primitive '2drop' '((sp-=2))'; inout 2 0
 
 colon '2over'
    code '((s[++sp]=s[sp-3]))'
@@ -1298,8 +1299,8 @@ colon '?dup'
 semicolon
 inline
 
-primitive 'depth'  '((s[++sp]=$sp))'; inline
-primitive 'pick'   '((s[++sp]=s[sp-s[sp]]))'; inline
+primitive 'depth'  '((s[++sp]=$sp))'
+primitive 'pick'   '((s[++sp]=s[sp-s[sp]]))'
 
 # ----- return stack ------------------------------------- #FOLD01
 
@@ -1346,18 +1347,18 @@ inline
 inout 0 1
 
 
-primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1; inline
+primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
 # ----- string stack ------------------------------------- #FOLD01
 
-primitive 'depth$'   's+=("${#ss[@]}")'; inline
-primitive 'empty$'   'ss=()'; inline
-primitive 'dup$'     'ss+=("${ss[-1]}")'; inline
-primitive '?dup$'    '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'; inline
-primitive 'drop$'    'unset "ss[-1]"'; inline
-primitive 'over$'    'ss+=("${ss[-2]}")'; inline
-primitive 'pluck$'   'ss+=("${ss[-3]}")'; inline
-primitive 'pick$'    'ss+=("${ss[-s[sp--]-1]}")'; inline
+primitive 'depth$'   's+=("${#ss[@]}")'
+primitive 'empty$'   'ss=()'
+primitive 'dup$'     'ss+=("${ss[-1]}")'
+primitive '?dup$'    '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'
+primitive 'drop$'    'unset "ss[-1]"'
+primitive 'over$'    'ss+=("${ss[-2]}")'
+primitive 'pluck$'   'ss+=("${ss[-3]}")'
+primitive 'pick$'    'ss+=("${ss[-s[sp--]-1]}")'
 
 colon '2dup$'
    code 'ss+=("${ss[-2]}")'
@@ -1407,7 +1408,7 @@ inline
 # not just leading and trailing white space. Actually a mistake, which
 # I'll now try to sell as feature.
 # ( string: $1 -- $2 )
-primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'; inline
+primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'
 
 # ( -- u )  string: ( $1 $2 -- $3 )     remove  $2* from $1, return removed chars count
 colon 'cut$'
@@ -1457,8 +1458,8 @@ semicolon
 # "abcdefgh"   2 split$  type$      ab cdefgh         "split at left"
 # "abcdefgh"  -2 split$  type$      abcdef gh         "split at right"
 
-primitive 'left$'  'ss[-1]=${ss[-1]:0:s[sp--]}'; inline
-primitive 'right$' 'ss[-1]=${ss[-1]:0-s[sp--]}'; inline
+primitive 'left$'  'ss[-1]=${ss[-1]:0:s[sp--]}'
+primitive 'right$' 'ss[-1]=${ss[-1]:0-s[sp--]}'
 
 colon 'mid$'
    code 'ss[-1]=${ss[-1]:s[sp-1]:s[sp--]}'
@@ -1513,8 +1514,8 @@ asc()  {
    fi
 }
 
-primitive  'asc'    'asc'; inline
-primitive  'char$'  'ss+=("${char[s[sp--]]}")'; inline
+primitive  'asc'    'asc'
+primitive  'char$'  'ss+=("${char[s[sp--]]}")'
 
 # $ -> a -- n
 unpackstring()  {
@@ -1527,7 +1528,7 @@ unpackstring()  {
    ((s[sp]="$len"))
 }
 
-primitive 'unpack$' 'unpackstring'; inline
+primitive 'unpack$' 'unpackstring'
 
 # ( a n -- ) ( string: -- $ )
 colon 'pack$'
@@ -1541,33 +1542,26 @@ colon 'pack$'
 semicolon
 inout 2 0
 
-primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inline; inout 1 0  # ( c -- ) ( string: $1 -- $2 )
+primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0  # ( c -- ) ( string: $1 -- $2 )
 primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
-inline; inout 1 0
+inout 1 0
 
 
 # ----- bit logic ---------------------------------------- #FOLD01
 
-primitive 'and'     '((s[sp-1]&=s[sp--]))'; inline
-primitive 'or'      '((s[sp-1]|=s[sp--]))'; inline
-primitive 'xor'     '((s[sp-1]^=s[sp--]))'; inline
-primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&maxuint))'; inline
-primitive 'rshift'  '((s[sp-1]>>=s[sp--]))'; inline
+primitive 'and'     '((s[sp-1]&=s[sp--]))'
+primitive 'or'      '((s[sp-1]|=s[sp--]))'
+primitive 'xor'     '((s[sp-1]^=s[sp--]))'
+primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&maxuint))'
+primitive 'rshift'  '((s[sp-1]>>=s[sp--]))'
 evaluate "' lshift alias <<"
 evaluate "' rshift alias >>"
 colon    'invert';  atom 'invert'; semicolon; inline
 
 # ----- comparison --------------------------------------- #FOLD01
 
-colon '0='
-   code '((s[sp]=s[sp]?0:maxuint))'                                  # &msb: 0->maxuint  x->0
-semicolon
-inline
-
-colon '0<'
-   code '((s[sp]=s[sp]&msb?maxuint:0))'                              # &msb: 0->0   msb->maxuint
-semicolon
-inline
+primitive '0='   '((s[sp]=s[sp]?0:maxuint))'                         # &msb: 0->maxuint  x->0
+primitive '0<'   '((s[sp]=s[sp]&msb?maxuint:0))'                     # &msb: 0->0   msb->maxuint
 
 colon '='
    code '((s1=s[sp--]))'
@@ -1646,17 +1640,8 @@ semicolon
 inline
 inout 1 1
 
-colon '2+'
-   code '((s[sp]=(s[sp]+2)&maxuint))'
-semicolon
-inline
-inout 1 1
-
-colon '2-'
-   code '((s[sp]=(s[sp]-2)&maxuint))'
-semicolon
-inline
-inout 1 1
+primitive '2+'   '((s[sp]=(s[sp]+2)&maxuint))'; inout 1 1
+primitive '2-'   '((s[sp]=(s[sp]-2)&maxuint))'; inout 1 1
 
 colon '2*'
    atom '2*'
@@ -1664,27 +1649,12 @@ semicolon
 inline
 inout 1 1
 
-colon '2/'
-   code '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'
-semicolon
-inline
-inout 1 1
-
+primitive '2/'   code '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'; inout 1 1
 evaluate ': cells ;'      ; immediate  ; inout 1 1
 evaluate ': cells ;'      ; interactive; inout 1 1
 evaluate ': cell+ 1+ ;'   ; inline;   inout 1 1
-
-colon '+'
-   code '((s[sp]=(s[sp-1]+s[sp--])&maxuint))'
-semicolon
-inline
-inout 2 1
-
-colon '-'
-   code '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'
-semicolon
-inline
-inout 2 1
+primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&maxuint))'; inout 2 1
+primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
 
 
 
@@ -1764,11 +1734,7 @@ semicolon
 inline
 inout 2 0
 
-colon 'c@'
-   code '((s[sp]=m[s[sp]]&255))'
-semicolon
-inline
-inout 1 1
+primitive 'c@'  '((s[sp]=m[s[sp]]&255))'; inout 1 1
 
 colon 'c!'
    code '((m[s[sp--]]=s[sp-1]&255))'
@@ -1798,18 +1764,8 @@ inline
 inout 3 0
 
 
-colon 'skim'
-   code '((s[++sp]=m[s[sp]++]))'
-semicolon
-inline
-inout 1 2
-
-colon 'count'
-   code '((s[++sp]=m[s[sp]++]&255))'
-semicolon
-inline
-inout 1 2
-
+primitive 'skim'    '((s[++sp]=m[s[sp]++]))'; inout 1 2
+primitive 'count'   '((s[++sp]=m[s[sp]++]&255))'; inout 1 2
 
 colon '<-'                       # swap !
    code '((m[s[sp]]="s[sp--]"))'
@@ -1824,17 +1780,8 @@ semicolon
 inline
 inout 2 0
 
-colon 'on'
-   code '((m[s[sp--]]=maxuint))'
-semicolon
-inline
-inout 1 0
-
-colon 'off'
-   code '((m[s[sp--]]=0))'
-semicolon
-inline
-inout 1 0
+primitive 'on'   '((m[s[sp--]]=maxuint))'; inout 1 0
+primitive 'off'  '((m[s[sp--]]=0))'; inout 1 0
 
 # ( x1 a -- x2 )
 colon 'exchange'
@@ -1856,18 +1803,10 @@ semicolon
 inline
 inout 1 0
 
-colon ','
-   code '((m[dp++]=s[sp--]))'
-semicolon
-inline
-inout 1 0
+primitive ',' '((m[dp++]=s[sp--]))'; inout 1 0
 
 # pad is 256 cells above here.
-colon 'pad'
-   code '((s[++sp]=dp+256))'
-semicolon
-inline
-inout 0 1
+primitive 'pad' '((s[++sp]=dp+256))'; inout 0 1
 
 # c -> m[a++],  u times
 # ( a u c -- )
@@ -1902,11 +1841,7 @@ move()  {                                                            # deals wit
 }
 
 # ( a1 a2 u -- )
-colon 'move'
-   code 'move'
-semicolon
-inline
-inout 3 0
+primitive 'move'   'move'; inout 3 0
 
 # ----- flow control ------------------------------------- #FOLD01
 
@@ -1985,13 +1920,8 @@ colon 'for'
 semicolon
 immediate
 
-colon 'i'
-   code '((s[++sp]=i))'
-semicolon
-inline
-inout 0 1
-
-evaluate ': j r@ ;'   ; inline;  inout 0 1
+primitive 'i' '((s[++sp]=i))'; inout 0 1
+evaluate ': j r@ ;'   ;  inout 0 1
 
 colon 'next'
    code "((s[sp--] == $magic))|| { unstructured 'no for'; return; }"
@@ -2028,12 +1958,8 @@ immediate
 
 colon 'loop'
    code "((s[sp--] == $magic))|| { unstructured 'no do'; return; }"
-
-#   code 'code "((i++))"'
-#   code 'code "((i&maxuint == ibar))&&break"'
    code 'code "((i=(i+1)&maxuint))"'
    code 'code "((i == ibar))&&break"'
-
    code 'code "done"'
    code "code '((i=r[rp--]))'"
    code "code '((ibar=r[rp--]))'"
@@ -2051,39 +1977,16 @@ colon '+loop'
 semicolon
 immediate
 
-colon 'leave'
-   code 'code "break"'
-semicolon
-immediate
-
-colon '?leave'
-   code 'code "((s[sp--]))&&break"'
-semicolon
-immediate
-
+primitive 'leave'   'code "break"'; immediate
+primitive '?leave'   'code "((s[sp--]))&&break"'; immediate
 # compiling version: skip until end of word (i.e. return) when false
-colon 'lest'
-   code 'code "((s[sp--]))||return" '
-semicolon
-immediate    # compile only are inherently immediate
-
+primitive 'lest'  'code "((s[sp--]))||return"'; immediate    # compile only are inherently immediate
 # interpreting version: skip rest of line when false
-colon 'lest'
-   code '((s[sp--]))||line=""'
-semicolon
-interactive
-
+primitive 'lest'   '((s[sp--]))||line=""'; interactive
 # compiling version: skip until end of word (i.e. return) when true
-colon 'unless'
-   code 'code "((s[sp--]))&&return" '
-semicolon
-immediate    # compile only are inherently immediate
-
+primitive 'unless'  'code "((s[sp--]))&&return" '; immediate    # compile only are inherently immediate
 # interpreting version: skip rest of line when true
-colon 'unless'
-   code '((s[sp--]))&&line=""'
-semicolon
-interactive
+primitive  'unless' '((s[sp--]))&&line=""'; interactive
 
 # interpreting versiob: u times repeat evaluation of input line remainder
 colon 'times'
@@ -2104,11 +2007,7 @@ colon 'many'
    code 'line=""'
 semicolon
 
-
-colon 'warm'
-   code 'warm'
-semicolon
-
+primitive  'warm'  'warm'
 
 colon 'boot'
    code 'word'
@@ -2117,23 +2016,11 @@ colon 'boot'
    code 'coldvector="${headersstateless["$word"]}"'                  # because writing it to cold start vector
 semicolon                                                            # this way cold start entry points can be forward referenced
 
-
-colon 'bye'
-   code 'exit 0'
-semicolon
-
-
-colon 'exit'
-   code 'return'
-semicolon
-inline
-immediate
-
+primitive 'bye'  'exit 0'
+primitive 'exit'  'return'; immediate
 
 # ( err -- )
-colon 'abort'
-   code 'abort "${s[sp--]}"'
-semicolon
+primitive 'abort'  'abort "${s[sp--]}"'
 
 
 # ( f err -- )
@@ -2169,9 +2056,7 @@ colon 'needed'
    code '((s[++sp]=${?}?0:maxuint))'
 semicolon
 
-colon 'exists'
-   code 'exists'
-semicolon
+primitive 'exists'   'exists'
 
 # ----- i/o ---------------------------------------------- #FOLD01
 
@@ -2182,11 +2067,7 @@ semicolon
 inline
 inout 1 0
 
-colon 'ansi'
-   code 'printf "\e[%bm" "${s[sp--]}"'
-semicolon
-inline
-inout 1 0
+primitive 'ansi' 'printf "\e[%bm" "${s[sp--]}"'; inout 1 0
 
 colon 'at'
    code '((s1=s[sp--]+1, s2=s[sp--]+1))'
@@ -2195,12 +2076,8 @@ semicolon
 inline
 inout 2 0
 
-colon 'emit'
-   code 'printf "%c" "${char[s[sp--]&255]}"'                         # given an ASCII, print the character
-semicolon
-inline
-inout 1 0
-
+# given an ASCII, print the character
+primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
 evaluate ': type  pack$ type$ ;'  ; inline;  inout 2 0
 
 colon 'parse$'
@@ -2248,16 +2125,9 @@ query()  {
    keybuf=""
    printf '\e[%sm' "$normal"
 }
-colon 'query'
-   code 'query'
-semicolon
-inline
-inout 0 0
 
-colon 'evaluate'
-   code 'evaluate "$tib"'
-semicolon
-inline
+primitive 'query'     'query';  inout 0 0
+primitive 'evaluate'  'evaluate "$tib"'
 
 colon 'evaluate$'
    code 'local tib="${ss[-1]}"'
@@ -2266,17 +2136,8 @@ colon 'evaluate$'
 semicolon
 inline
 
-colon 'cr'
-   code 'printf "\n"'
-semicolon
-inline
-inout 0 0
-
-colon 'space'
-	code 'printf " "'
-semicolon
-inline
-inout 0 0
+primitive 'cr' 'printf "\n"'; inout 0 0
+primitive 'space'  'printf " "';inout 0 0
 
 colon 'spaces'
    code '((s1=s[sp--]))'
@@ -2284,11 +2145,7 @@ colon 'spaces'
 semicolon
 inout 1 0
 
-colon 'page'
-   code 'clear'
-semicolon
-inline
-inout 0 0
+primitive 'page' 'clear'; inout 0 0
 
 prompt()  {
    ((error)) && {
@@ -2311,11 +2168,7 @@ prompt()  {
    printf "\n"                                                       # finalize with linefeed
 }
 
-colon 'prompt'
-   code 'prompt'
-semicolon
-inline
-
+primitive 'prompt' 'prompt'
 
 colon 'from$'
    code 'file="${ss[-1]}"'
@@ -2325,24 +2178,14 @@ semicolon
 inline
 
 evaluate ': from word from$ ;'
-
-colon '#files'
-   code '((s[++sp]=${#files[@]}))'
-semicolon
-inline
-inout 0 1
-
-
-colon 'files'
-   code 'printf "%s\n" "${files[@]}"|nl'                             # show list of already included files
-semicolon
-
+primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
+primitive 'files'  'printf "%s\n" "${files[@]}"|nl'                             # show list of already included files
 
 # ----- pictured number conversion ----------
 
-colon 'decimal'; code 'm[base]="10"'; semicolon; inline; inout 0 0
-colon 'hex'    ; code 'm[base]="16"'; semicolon; inline; inout 0 0
-colon 'binary' ; code 'm[base]="2"' ; semicolon; inline; inout 0 0
+primitive 'decimal'  'm[base]="10"'; inout 0 0
+primitive 'hex'      'm[base]="16"'; inout 0 0
+primitive 'binary'   'm[base]="2"';  inout 0 0
 
 # ( x1 -- x2 ) ( string: $1 -- $2 )
 colon '#'                                                            # : #
@@ -2353,20 +2196,20 @@ colon '#'                                                            # : #
 semicolon                                                            # ;
 inout 1 1
 
-evaluate "' prepend$ alias hold"                   ; inline; inout 1 0    # ( c -- ) ( string: $1 -- $2 )
-evaluate ': <#       ""  ;'                        ; inline; inout 0 0    # ( -- ) ( string: -- $2 )
-evaluate ': #s       begin # dup 0= until ;'       ;         inout 1 1    # ( x1 -- x2 ) ( string: $1 -- $2 )
-evaluate ": sign     0< lest '-' hold ;"           ;         inout 1 0    # ( f -- ) ( string: $1 -- $2 )
-evaluate ': #>$      drop ;'                       ; inline; inout 1 0    # ( x -- )
-evaluate ': #>type   #>$ type$ ;'                  ; inline; inout 1 0    # ( x -- ) ( string:  $1 -- )
-evaluate ': #>       #>$ here here unpack$ ;'      ;         inout 1 2    # ( x -- a n ) ( string:  $1 -- )
-evaluate ': uconvert <# #s #>$ ;'                  ; inline; inout 1 0    # ( u -- ) (string: -- $1 )
-evaluate ': convert  dup abs uconvert sign ;'      ;         inout 1 0    # ( u -- ) (string: -- $1 )
-evaluate ': .         convert type$ space ;'       ; inline; inout 1 0    # ( n -- )
-evaluate ': u.       uconvert type$ space ;'       ; inline; inout 1 0    # ( u -- )
-evaluate ': .padded  dup$ count$ - spaces type$ ;' ;         inout 1 0    # ( u -- ) (string: $1 -- )
-evaluate ': .r       >r  convert r> .padded ;'     ;         inout 2 0    # ( n u -- )
-evaluate ': u.r      >r uconvert r> .padded ;'     ;         inout 2 0    # ( u1 u2 -- )
+evaluate "' prepend$ alias hold"                   ; inline; inout 1 0       # ( c -- ) ( string: $1 -- $2 )
+evaluate ': <#       ""  ;'                        ; inline; inout 0 0       # ( -- ) ( string: -- $2 )
+evaluate ': #s       begin # dup 0= until ;'       ; inout 1 1       # ( x1 -- x2 ) ( string: $1 -- $2 )
+evaluate ": sign     0< lest '-' hold ;"           ; inout 1 0       # ( f -- ) ( string: $1 -- $2 )
+evaluate ': #>$      drop ;'                       ; inline; inout 1 0       # ( x -- )
+evaluate ': #>type   #>$ type$ ;'                  ; inline; inout 1 0       # ( x -- ) ( string:  $1 -- )
+evaluate ': #>       #>$ here here unpack$ ;'      ; inout 1 2       # ( x -- a n ) ( string:  $1 -- )
+evaluate ': uconvert <# #s #>$ ;'                  ; inout 1 0       # ( u -- ) (string: -- $1 )
+evaluate ': convert  dup abs uconvert sign ;'      ; inout 1 0       # ( u -- ) (string: -- $1 )
+evaluate ': .         convert type$ space ;'       ; inout 1 0       # ( n -- )
+evaluate ': u.       uconvert type$ space ;'       ; inout 1 0       # ( u -- )
+evaluate ': .padded  dup$ count$ - spaces type$ ;' ; inout 1 0       # ( u -- ) (string: $1 -- )
+evaluate ': .r       >r  convert r> .padded ;'     ; inout 2 0       # ( n u -- )
+evaluate ': u.r      >r uconvert r> .padded ;'     ; inout 2 0       # ( u1 u2 -- )
 evaluate 'trash .padded'
 
 
@@ -2412,9 +2255,7 @@ undoc()  {
       }
    done
 }
-colon 'undoc'
-   code 'undoc'
-semicolon
+primitive 'undoc' 'undoc'
 
 # candidates for $command further down
 doc()       { editor "$worddoc:${1/\//U+0002F;}"; }
@@ -2496,18 +2337,13 @@ primitive 'help' 'helptext'
 
 # ----- convenience -------------------------------------- #FOLD01
 # TODO: optimiser: invalidate all stack register contents
-primitive empty  's=() sp=0'; inline
+primitive empty  's=() sp=0'
 
 # empty stack and string stack
 # since warm doesn't empty them any longer, a convenient
 # way to do so manually was needed.
-colon '_'
-   code 's=() sp=0'
-   code 'ss=()'
-semicolon
-inline
-
-primitive 'secs' 'sleep "${s[sp--]}"'; inline
+evaluate ': _  empty empty$  ;'; inline
+primitive 'secs' 'sleep "${s[sp--]}"'
 primitive 'words' 'words'
 
 # execute shell command "$2" with args "$1"
@@ -2517,13 +2353,13 @@ colon 'command$'
    code 'unset "ss[-1]"'
 semicolon
 
-primitive 'file$' 'ss+=("${files[s[sp--]-1]}")'; inline              # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
+primitive 'file$' 'ss+=("${files[s[sp--]-1]}")'              # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
 evaluate ': edit  "editor" file$  command$ ;'
 evaluate ': list  "cat"    file$  command$ ;'
 
-primitive 'random' '((s[++sp]=RANDOM))'; inline; inout 0 1           # ( -- u )        15 bits random number
+primitive 'random' '((s[++sp]=RANDOM))'; inout 0 1           # ( -- u )        15 bits random number
 primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}))'              # a microseconds epoch, used for benchmarking
-inline; inout 0 1
+inout 0 1
 
 
 # x1 x2 -- x1+x2 x1
@@ -2596,9 +2432,6 @@ semicolon
 # hello header is trashed, then resolved from library another time.
 # using "use" should be a better approach, as it keeps word name
 # steady, but redefines the function with the same name.
-
-
-# ----- unsorted ----------------------------------------- #FOLD01
 
 
 # ----- evaluate command line----------------------------- #FOLD00

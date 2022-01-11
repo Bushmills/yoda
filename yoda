@@ -434,6 +434,13 @@ literal()  {
 }
 
 
+# --- pending change of "where" ---
+#  file=0:  console
+#  file=1:  first loaded file (yoda)
+#  currently, file 0 refers to yoda, ${files[0]}
+# affects:  file$ where$ #files
+
+
 # quite some factoring possible in this section
 # arg1: word name
 create()  {
@@ -887,7 +894,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1119,7 +1126,7 @@ semicolon
 colon "[']"
    code 'exists'
    code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
-   code 'code "((s[++sp]=${s[sp--]}))"'
+   code 'literal "${s[sp--]}"'
 semicolon
 immediate
 
@@ -1128,7 +1135,7 @@ primitive ']' 'compiling=1'
 
 colon 'literal'
    code 'restricted || {'
-   code 'code "((s[++sp]=${s[sp--]}))"'
+   code 'literal "${s[sp--]}"'
    code '}'
 semicolon
 immediate
@@ -1154,7 +1161,8 @@ primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
-   code '((s[++sp]=${!ss[-1]}))'
+#   code '((s[++sp]=${!ss[-1]}))'
+   literal '${!ss[-1]}'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -1231,8 +1239,8 @@ inout 2 4
 primitive '2drop' '((sp-=2))'; inout 2 0
 
 colon '2over'
-   code '((s[++sp]=s[sp-3]))'
-   code '((s[++sp]=s[sp-3]))'
+   literal 's[sp-3]'
+   literal 's[sp-3]'
 semicolon
 inline
 inout 4 6
@@ -1334,8 +1342,8 @@ inout 1 0
 
 # ( -- x1 x2 )  ( return: x1 x2 -- )
 colon '2r>'
-   code '((s[++sp]=r[rp-1]))'
-   code '((s[++sp]=r[rp--]))'
+   literal 'r[rp-1]'
+   literal 'r[rp--]'
    code '((rp--))'
 semicolon
 inline
@@ -1407,7 +1415,7 @@ primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'
 
 # ( -- u )  string: ( $1 $2 -- $3 )     remove  $2* from $1, return removed chars count
 colon 'cut$'
-   code '((s[++sp]=${#ss[-2]}))'
+   literal '${#ss[-2]}'
    code 'ss[-2]="${ss[-2]%${ss[-1]}*}"'
    code '((s[sp]-=${#ss[-2]}))'
    code 'unset "ss[-1]"'
@@ -1430,7 +1438,7 @@ semicolon
 inline
 
 colon 'count$'
-   code '((s[++sp]=${#ss[-1]}))'
+   literal '${#ss[-1]}'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -1442,7 +1450,7 @@ colon 'chop$'
    code 'unset "ss[-1]"'
    code 's1=("${#ss[@]}")'
    code 'ss+=($tmp)'
-   code '((s[++sp]=${#ss[@]}-s1))'
+   literal '${#ss[@]}-s1'
 semicolon
 
 # ---------- command ---------      - output -        ----- mnemonic -----
@@ -1474,21 +1482,21 @@ inline
 
 colon '$='
    code '[[ ${ss[-1]} != ${ss[-2]} ]]'
-   code '((s[++sp]=(-$?)&maxuint))'
+   literal '(-$?)&maxuint'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$<'
    code '[[ ${ss[-1]} > ${ss[-2]} ]]'
-   code '((s[++sp]=($?-1)&maxuint))'
+   literal '($?-1)&maxuint'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$>'
    code '[[ ${ss[-1]} < ${ss[-2]} ]]'
-   code '((s[++sp]=($?-1)&maxuint))'
+   literal '($?-1)&maxuint'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
@@ -1844,8 +1852,8 @@ remagic
 
 colon 'if'
    code 'code "if ((s[sp--])); then"'
-   code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
-   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
+   literal "\${#body[@]}"                                   # allow check of empty function
+   literal "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1870,8 +1878,8 @@ remagic
 
 colon 'begin'
    code 'code "while :; do"'
-   code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
-   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
+   literal "\${#body[@]}"                                   # allow check of empty function
+   literal "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1910,8 +1918,8 @@ colon 'for'
    code 'code "((r[++rp]=i))"'
    code 'code "((i=s[sp--]))"'
    code 'code "for ((; i--; )); do"'
-   code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
-   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
+   literal "\${#body[@]}"                                   # allow check of empty function
+   literal "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1939,7 +1947,7 @@ dodo()  {
 colon 'do'
    code 'code "dodo"'
    code 'code "while :;do"'
-   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
+   literal "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1947,7 +1955,7 @@ colon '?do'
    code 'code "dodo"'
    code 'code "while :;do"'
    code 'code "((i==ibar))&&break"'
-   code "((s[++sp]=$magic))"                                         # allow check of structure and empty function
+   literal "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -2040,12 +2048,12 @@ semicolon
 colon 'needed'
    code 'word'
    code '[[ "${headersunresolved["$word"]}" ]]'
-   code '((s[++sp]=${?}?0:maxuint))'
+   literal '${?}?0:maxuint'
 semicolon
 
 primitive 'exists'   'exists'
 
-# ----- i/o ---------------------------------------------- #FOLD01
+# ----- i/o ---------------------------------------------- #fold01
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -2087,7 +2095,7 @@ colon 'key'
    code 'fi'
    code 'tmp="${keybuf:0:1}"'                                        # read key from keybuf
    code 'tmp=$(printf "%d" '"\"'""\${tmp}\")"                        # treat ctrls as spaces, convert to ASCII
-   code '((s[++sp]=tmp))'                                            # push ASCII
+   literal 'tmp'                                            # push ASCII
    code 'keybuf="${keybuf:1}"'                                       # strip key from keybuf
 semicolon
 inout 0 1
@@ -2097,10 +2105,10 @@ colon 'key?'
    code 'IFS=""'                                                     # no key in keybuf: poll console
    code 'if read -rsn1 -t0.01 tmp; then'
    code 'keybuf+="$tmp"'                                             # add key to buffer. maybe add space if -z $tmp
-   code '((s[++sp]=maxuint))'
+   literal 'maxuint'
    code 'return'
    code 'fi'
-   code '((s[++sp]=0))'
+   literal '0'
 semicolon
 inout 0 1
 
@@ -2204,7 +2212,7 @@ primitive 'binary'   'm[base]="2"';  inout 0 0
 # respects base
 # ( -- x ) (string: $1 -- )
 colon 'convert$'
-   code '((s[++sp]=${m[base]}#${ss[-1]}))'
+   literal '${m[base]}#${ss[-1]}'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -2388,21 +2396,21 @@ colon 'wait'
    code 'echo "wait pid=$pid"'
 semicolon
 
-colon '(where)'
-   code 'word'
-   code '((s[++sp]="${where[$word]%% *}"+1))'
-   code 's[++sp]="${where[$word]#* }"'
+colon 'where$'
+   literal '${where[${ss[-1]}]%% *}+1'
+   literal '${where[${ss[-1]}]#* }'
+   code 'unset "ss[-1]"'
 semicolon
 
 # duplicating 'char functionality because quoting in evaluate
 # becomes sometimes hard when using ' ' for characters' ASCIIs
 colon '[char]'
    code 'word'
-   code 'stateless "s[++sp]=\"${asc[${word:0:1}]}\""'
+   code 'literal "${asc[${word:0:1}]}"'
 semicolon
 immediate
 
-evaluate ': where (where) swap file$ type$ [char] : emit  u. ;'
+evaluate ': where word where$ swap file$ type$ [char] : emit  u. ;'
 
 
 # trying autoresolving word stubs. Eventually created using a

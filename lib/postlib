@@ -4,8 +4,8 @@ forwardrefs on
 u: quit  ( -- )
    warm
    begin
-      query
-      evaluate
+      query$
+      evaluate$
       prompt
    again ;
 

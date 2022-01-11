@@ -552,7 +552,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -755,7 +755,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -844,7 +844,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #fold00
+# ----- load source files -------------------------------- #FOLD00
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -1541,7 +1541,7 @@ primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) 
 inout 1 0
 
 
-# ----- bit logic ---------------------------------------- #fold01
+# ----- bit logic ---------------------------------------- #FOLD01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
@@ -1620,7 +1620,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -1713,7 +1713,7 @@ semicolon
 inline
 inout 3 2
 
-# ----- memory ------------------------------------------- #fold01
+# ----- memory ------------------------------------------- #FOLD01
 
 colon '@'
    atom '@'
@@ -1837,7 +1837,7 @@ move()  {                                                            # deals wit
 # ( a1 a2 u -- )
 primitive 'move'   'move'; inout 3 0
 
-# ----- flow control ------------------------------------- #fold01
+# ----- flow control ------------------------------------- #FOLD01
 
 remagic
 
@@ -2044,7 +2044,7 @@ semicolon
 
 primitive 'exists'   'exists'
 
-# ----- i/o ---------------------------------------------- #fold01
+# ----- i/o ---------------------------------------------- #FOLD01
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -2107,7 +2107,10 @@ inout 0 1
 # TODO: configurable ANSI sequences
 query()  {
    printf '\e[%dm' "$greenfg"
-   IFS="" read -er -i "$keybuf" tib                                  # key? may have put chars into keybuf
+#   IFS="" read -er -i "$keybuf" tib                                  # key? may have put chars into keybuf
+   ss+=("")
+   IFS="" read -er -i "$keybuf" ss[-1]                                # key? may have put chars into keybuf
+
    keybuf=""
    printf '\e[%dm' "$normal"
 }
@@ -2125,8 +2128,7 @@ colon 'spaces'
 semicolon
 inout 1 0
 
-primitive 'query'     'query';           inout 0 0
-primitive 'evaluate'  'evaluate "$tib"'
+primitive 'query$'    'query';           inout 0 0
 primitive 'cr'        'printf "\n"';     inout 0 0
 primitive 'space'     'printf " "';      inout 0 0
 primitive 'page'      'clear';           inout 0 0

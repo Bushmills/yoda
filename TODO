@@ -5,6 +5,7 @@
 - add context vocabularies to selected searches (only undoc remaining)
 
 --- general todos, improvements, fancyness
+- input line history would be nice
 - while "review" is functional, its implementation is a bit messy,
   specifically the way primitives store their location information.
 - a "needed" for testing a list of words rather than just a single word

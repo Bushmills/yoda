@@ -1,4 +1,4 @@
-name:                exists
+name:                have
 stack:               ( -- u )
 return stack:        ( -- )
 string stack:        ( -- )
@@ -16,6 +16,4 @@ notes:               similar to ' , but doesn't throw an error if word not found
                      This makes it useful for conditional compilation, where a
                      decision must be taken depending on whether a word exists.
 
-                     Not really happy about the name, it kind of reads funny, and
-                     may therefore eventually get renamed.   found or have may be
-                     better choices.
+                     Renamed former "exists" to have, as I wasn't really happy with former name.

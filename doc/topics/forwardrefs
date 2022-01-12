@@ -98,8 +98,8 @@ For managing conditional compilation, these words exist:
       need
       needed
       resolve
-      exists
-
+      have
+      lack
 
 u:       is almost identical with : but compiles the following word only if it's
          an unresolved forward reference (i.e. only when needed)
@@ -113,7 +113,8 @@ need     creates a forward reference explicitely. Rather than forward references
          created by unknown words in code, these may have better use for signalling
          to postlib.
 
-exists   check whether a word exists, return a flag reflecting this.
+have     check whether a word exists, return execution token or 0
+lack     check whether a word exists, return flag (logical not of result from have)
 
 resolve  resolve against postlib. Don't wait for implicite resolving at the
          end of program loading, but do it now. This may be done multiple times,

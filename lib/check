@@ -1,5 +1,7 @@
-\ if already loaded: don't reload, but reset error log
-exists check lest   errors off  testcount off   done	
+( tools for automated test suite )
+
+have testcount lest   errors off  testcount off   done
+\ already loaded? don't reload, reset error log instead
 
 need link
 create errors 0 ,
@@ -10,16 +12,17 @@ create testcount 0 ,
         errors
         begin @
         ?dup while
-           dup cell+ @ .
+           dup cell+ @ u.
         repeat  ;
 
-: check    ( -- )         
-        errors @ if
-           report
-        else
-           "No errors" type$
-        then cr   ;
+: check    ( -- )
+        errors @
+        if    report
+        else  "No errors" type$
+        then  cr   ;
 
 : expected ( x1 x2 -- )
-        1 testcount +!
-        = unless errors link testcount @ ,  ;
+        testcount inc
+        = unless
+           errors link
+           testcount @ ,  ;

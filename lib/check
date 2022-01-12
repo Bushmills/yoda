@@ -1,4 +1,25 @@
-exists check lest done		\ don't reload
+\ if already loaded: don't reload, but reset error log
+exists check lest   errors off  testcount off   done	
+
+need link
 create errors 0 ,
-: check    ( -- )         errors @ . "errors" type$ cr ;
-: expected ( x1 x2 -- )   = 1+ errors +! ;
+create testcount 0 ,
+
+: report  ( -- )
+        "failed test(s) " type$
+        errors
+        begin @
+        ?dup while
+           dup cell+ @ .
+        repeat  ;
+
+: check    ( -- )         
+        errors @ if
+           report
+        else
+           "No errors" type$
+        then cr   ;
+
+: expected ( x1 x2 -- )
+        1 testcount +!
+        = unless errors link testcount @ ,  ;

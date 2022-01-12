@@ -30,7 +30,7 @@ version=0  subversion=4     # 2022jan10,04:13    pulled yoda and primitives toge
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -244,7 +244,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -413,7 +413,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -429,7 +429,7 @@ code()  {                                                            # literal c
    analyser+=("${2:-0}")                                             # default to no optimiser intervention
 }
 
-literal()  {
+push()  {
    code "$1"   "$literalnumber"                                      # leave it to detokeniser to generate code
 }
 
@@ -524,7 +524,7 @@ semicolon()  {
 
 constant()  {
    colon "$1"
-   literal "$2"
+   push "$2"
    semicolon
    inline
    inout 0 1
@@ -646,7 +646,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -894,7 +894,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1087,7 +1087,7 @@ colon "array"
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
 
-# ----- compiler and word search related ----------------- #fold01
+# ----- compiler and word search related ----------------- #FOLD01
 
 # ( -- 0 | a )
 exists() {
@@ -1126,7 +1126,7 @@ semicolon
 colon "[']"
    code 'exists'
    code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
-   code 'literal "${s[sp--]}"'
+   code 'push "${s[sp--]}"'
 semicolon
 immediate
 
@@ -1135,7 +1135,7 @@ primitive ']' 'compiling=1'
 
 colon 'literal'
    code 'restricted || {'
-   code 'literal "${s[sp--]}"'
+   code 'push "${s[sp--]}"'
    code '}'
 semicolon
 immediate
@@ -1157,12 +1157,12 @@ primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
 primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -- )
 
 
-# ----- environment--------------------------------------- #fold01
+# ----- environment--------------------------------------- #FOLD01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
 #   code '((s[++sp]=${!ss[-1]}))'
-   literal '${!ss[-1]}'
+   push '${!ss[-1]}'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -1202,7 +1202,7 @@ primitive '('    "parse ')'"; immediate
 primitive '('    "parse ')'"; interactive
 
 
-# ----- parameter stack ---------------------------------- #fold01
+# ----- parameter stack ---------------------------------- #FOLD01
 
 
 colon 'dup'
@@ -1239,8 +1239,8 @@ inout 2 4
 primitive '2drop' '((sp-=2))'; inout 2 0
 
 colon '2over'
-   literal 's[sp-3]'
-   literal 's[sp-3]'
+   push 's[sp-3]'
+   push 's[sp-3]'
 semicolon
 inline
 inout 4 6
@@ -1305,7 +1305,7 @@ inline
 primitive 'depth'  '((s[++sp]=$sp))'
 primitive 'pick'   '((s[++sp]=s[sp-s[sp]]))'
 
-# ----- return stack ------------------------------------- #fold01
+# ----- return stack ------------------------------------- #FOLD01
 
 colon 'r@'
    atom 'r@'
@@ -1342,8 +1342,8 @@ inout 1 0
 
 # ( -- x1 x2 )  ( return: x1 x2 -- )
 colon '2r>'
-   literal 'r[rp-1]'
-   literal 'r[rp--]'
+   push 'r[rp-1]'
+   push 'r[rp--]'
    code '((rp--))'
 semicolon
 inline
@@ -1352,7 +1352,7 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #fold01
+# ----- string stack ------------------------------------- #FOLD01
 
 primitive 'depth$'   's+=("${#ss[@]}")'
 primitive 'empty$'   'ss=()'
@@ -1410,12 +1410,17 @@ inline
 # results may not be what is expected: this removes *all* white space,
 # not just leading and trailing white space. Actually a mistake, which
 # I'll now try to sell as feature.
+# or not. too specific, I better add some more general replace$ function
 # ( string: $1 -- $2 )
 primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'
 
+#primitive '-leading$'  'ss[-1]="${ss[-1]//^[[:space:]]*/}"'
+#primitive '-trailing$'  'ss[-1]="${ss[-1]//[[:space:]]*$/}"'
+#evaluate ': trim$  -leading$ -trailing$ ;'
+
 # ( -- u )  string: ( $1 $2 -- $3 )     remove  $2* from $1, return removed chars count
 colon 'cut$'
-   literal '${#ss[-2]}'
+   push '${#ss[-2]}'
    code 'ss[-2]="${ss[-2]%${ss[-1]}*}"'
    code '((s[sp]-=${#ss[-2]}))'
    code 'unset "ss[-1]"'
@@ -1438,7 +1443,7 @@ semicolon
 inline
 
 colon 'count$'
-   literal '${#ss[-1]}'
+   push '${#ss[-1]}'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -1450,7 +1455,7 @@ colon 'chop$'
    code 'unset "ss[-1]"'
    code 's1=("${#ss[@]}")'
    code 'ss+=($tmp)'
-   literal '${#ss[@]}-s1'
+   push '${#ss[@]}-s1'
 semicolon
 
 # ---------- command ---------      - output -        ----- mnemonic -----
@@ -1464,11 +1469,14 @@ semicolon
 primitive 'left$'  'ss[-1]=${ss[-1]:0:s[sp--]}'
 primitive 'right$' 'ss[-1]=${ss[-1]:0-s[sp--]}'
 
+# remove u1 chars from the left, return u2 chars from what remains
+# ( u1 u2 -- ) ( $1 -- $2 )
 colon 'mid$'
    code 'ss[-1]=${ss[-1]:s[sp-1]:s[sp--]}'
    atom 'drop'
 semicolon
 
+# ( u -- ) ( $1 -- $2 $3 )
 colon 'split$'
    code 'ss+=("${ss[-1]:s[sp]}")'
    code 'ss[-2]="${ss[-2]:0:s[sp--]}"'
@@ -1482,21 +1490,21 @@ inline
 
 colon '$='
    code '[[ ${ss[-1]} != ${ss[-2]} ]]'
-   literal '(-$?)&maxuint'
+   push '(-$?)&maxuint'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$<'
    code '[[ ${ss[-1]} > ${ss[-2]} ]]'
-   literal '($?-1)&maxuint'
+   push '($?-1)&maxuint'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$>'
    code '[[ ${ss[-1]} < ${ss[-2]} ]]'
-   literal '($?-1)&maxuint'
+   push '($?-1)&maxuint'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
@@ -1537,8 +1545,7 @@ primitive 'unpack$' 'unpackstring'
 colon 'pack$'
    atom 's1'
    atom 's2'
-   atom 'drop'
-   atom 'drop'
+   code '((sp-=2))'
    code 'tmp=""'
    code 'for ((; s1--; )); do tmp+="${char[m[s2++]]}"; done'
    code 'ss+=("$tmp")'
@@ -1846,14 +1853,14 @@ move()  {                                                            # deals wit
 # ( a1 a2 u -- )
 primitive 'move'   'move'; inout 3 0
 
-# ----- flow control ------------------------------------- #fold01
+# ----- flow control ------------------------------------- #FOLD01
 
 remagic
 
 colon 'if'
    code 'code "if ((s[sp--])); then"'
-   literal "\${#body[@]}"                                   # allow check of empty function
-   literal "$magic"                                         # allow check of structure and empty function
+   push "\${#body[@]}"                                   # allow check of empty function
+   push "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1878,8 +1885,8 @@ remagic
 
 colon 'begin'
    code 'code "while :; do"'
-   literal "\${#body[@]}"                                   # allow check of empty function
-   literal "$magic"                                         # allow check of structure and empty function
+   push "\${#body[@]}"                                   # allow check of empty function
+   push "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1918,8 +1925,8 @@ colon 'for'
    code 'code "((r[++rp]=i))"'
    code 'code "((i=s[sp--]))"'
    code 'code "for ((; i--; )); do"'
-   literal "\${#body[@]}"                                   # allow check of empty function
-   literal "$magic"                                         # allow check of structure and empty function
+   push "\${#body[@]}"                                   # allow check of empty function
+   push "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1947,7 +1954,7 @@ dodo()  {
 colon 'do'
    code 'code "dodo"'
    code 'code "while :;do"'
-   literal "$magic"                                         # allow check of structure and empty function
+   push "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1955,7 +1962,7 @@ colon '?do'
    code 'code "dodo"'
    code 'code "while :;do"'
    code 'code "((i==ibar))&&break"'
-   literal "$magic"                                         # allow check of structure and empty function
+   push "$magic"                                         # allow check of structure and empty function
 semicolon
 immediate
 
@@ -2026,7 +2033,7 @@ colon '?abort'
 semicolon
 
 
-# ----- conditional compilation--------------------------- #fold01
+# ----- conditional compilation--------------------------- #FOLD01
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -2048,12 +2055,12 @@ semicolon
 colon 'needed'
    code 'word'
    code '[[ "${headersunresolved["$word"]}" ]]'
-   literal '${?}?0:maxuint'
+   push '${?}?0:maxuint'
 semicolon
 
 primitive 'exists'   'exists'
 
-# ----- i/o ---------------------------------------------- #fold01
+# ----- i/o ---------------------------------------------- #FOLD01
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -2095,7 +2102,7 @@ colon 'key'
    code 'fi'
    code 'tmp="${keybuf:0:1}"'                                        # read key from keybuf
    code 'tmp=$(printf "%d" '"\"'""\${tmp}\")"                        # treat ctrls as spaces, convert to ASCII
-   literal 'tmp'                                            # push ASCII
+   push 'tmp'                                            # push ASCII
    code 'keybuf="${keybuf:1}"'                                       # strip key from keybuf
 semicolon
 inout 0 1
@@ -2105,10 +2112,10 @@ colon 'key?'
    code 'IFS=""'                                                     # no key in keybuf: poll console
    code 'if read -rsn1 -t0.01 tmp; then'
    code 'keybuf+="$tmp"'                                             # add key to buffer. maybe add space if -z $tmp
-   literal 'maxuint'
+   push 'maxuint'
    code 'return'
    code 'fi'
-   literal '0'
+   push '0'
 semicolon
 inout 0 1
 
@@ -2212,7 +2219,7 @@ primitive 'binary'   'm[base]="2"';  inout 0 0
 # respects base
 # ( -- x ) (string: $1 -- )
 colon 'convert$'
-   literal '${m[base]}#${ss[-1]}'
+   push '${m[base]}#${ss[-1]}'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -2362,7 +2369,7 @@ inline
 inout 2 2
 
 
-# ----- experimental ------------------------------------- #fold01
+# ----- experimental ------------------------------------- #FOLD01
 
 # stop loading file
 colon 'done'
@@ -2397,8 +2404,8 @@ colon 'wait'
 semicolon
 
 colon 'where$'
-   literal '${where[${ss[-1]}]%% *}+1'
-   literal '${where[${ss[-1]}]#* }'
+   push '${where[${ss[-1]}]%% *}+1'
+   push '${where[${ss[-1]}]#* }'
    code 'unset "ss[-1]"'
 semicolon
 
@@ -2406,7 +2413,7 @@ semicolon
 # becomes sometimes hard when using ' ' for characters' ASCIIs
 colon '[char]'
    code 'word'
-   code 'literal "${asc[${word:0:1}]}"'
+   code 'push "${asc[${word:0:1}]}"'
 semicolon
 immediate
 

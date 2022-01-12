@@ -127,9 +127,9 @@ receive some suggestions here for what to do as second first steps:
          if you have included the fibo file above, it will be shown too, with a number
          on its left. That number is the "handle" which can be used to refer to this
          file. Say it is 4, then this will display the contents of that file:
-               4 list
+               3 list
          Should you want to open it in the configured editor, enter:
-               4 edit
+               3 edit
          Any word compiled from file can be opened in the editor:
                review boot    ( or whatever word you may be interested in instead )
 

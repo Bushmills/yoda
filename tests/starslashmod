@@ -1,7 +1,7 @@
 #!/usr/local/bin/yoda
 need check
 resolve
-"*/mod tests: " type$
+"*/mod: " type$
 
   10  20  30 */mod   6 expected  20 expected
   10  20 -30 */mod  -6 expected  20 expected

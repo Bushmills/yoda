@@ -1,7 +1,7 @@
 #!/usr/local/bin/yoda
 need check
 resolve
-"u< tests: " type$
+"u<: " type$
 
  0  0 u<   false expected
  2  2 u<   false expected

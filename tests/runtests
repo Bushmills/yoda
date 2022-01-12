@@ -1,0 +1,7 @@
+#!/bin/bash
+
+grep -l --exclude $0 "need check" ./* |
+while read f; do
+   yoda from "$f"
+done
+

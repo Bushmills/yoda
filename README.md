@@ -41,9 +41,6 @@ from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)
   referenced during resolve passes, exists for this purpose: compile nothing
   from it, unless needed.  This mechanism is similar to Tom Almy's cforth.
 
-- yoda has no built-in interactive interpreter, but compiles an interpreter
-  from library when needed (forward referenced). Its name is "quit".
-
 - yoda has now eliminated immediate words. While the word "immediate"
   still exists and is used, its semantics are different: it causes moving
   the header of last word into the compiler context vocabulary, rather than

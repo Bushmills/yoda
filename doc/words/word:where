@@ -1,0 +1,11 @@
+name:                where
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            dictionary
+input stream:        word name
+
+decription:          reads a word name from input stream, looks up its source
+                     location and outputs it as dirs/file:line
+
+contexts:            interpreting, compiling

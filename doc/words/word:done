@@ -1,0 +1,13 @@
+name:                done
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:
+input stream:
+
+decription:          terminates compiling from current file. Akin to treating the
+                     remainder of the currently loaded file as comments.
+
+contexts:            loading from file, interpreting
+notes:               best use is in conjunction with interpretative conditionals,
+                     like lest or unless.

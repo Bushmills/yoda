@@ -1,3 +1,19 @@
-#!/bin/bash
-# a shell script to launch yoda autotesting
-yoda from ./autotest
+#!/usr/local/bin/yoda from
+( yoda source file: load to execute all *.auto tests )
+
+from check
+
+\ quite a mix of shell commands and yoda words
+: runtests
+   >tests=($(realpath $(find -maxdepth 1 -type f -name *.auto)))
+   >s[++sp]="${#tests[@]}"
+   0 do
+      >ss+=(${tests[i]})
+      dup$  
+      >ss[-1]="${ss[-1]##*/}"
+       ": " join$ 20 ltype$
+      tests from$ check
+   loop 
+ ;
+
+runtests

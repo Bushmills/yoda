@@ -1037,7 +1037,7 @@ see()  {
 
 # see word  "decompiles" and shows word.
 primitive 'see' 'see'
-primitive '.s' '((sp))&&printf "%s " "${s[@]:0:$sp}"'
+primitive '.s' '((sp))&&printf "%s " "${s[@]:1:$sp}"'
 
 
 # ----- does> -------------------------------------------- #fold01

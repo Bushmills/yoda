@@ -16,4 +16,4 @@ aspects, described [here](https://github.com/Bushmills/yoda/wiki/Explore)
 In some respects does yoda differ from Forth.  Some example code, giving
 more tangible clues where and how yoda differs from Forth can be reached
 from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)  
-Differences are listed and commented on the [Differences wiki page)(https://github.com/Bushmills/yoda/wiki/Differences)
+Differences are listed and commented on the [Differences wiki page](https://github.com/Bushmills/yoda/wiki/Differences)

@@ -1,5 +1,3 @@
-need check
-resolve
 
 : plural        ( xt -- )
    create ,

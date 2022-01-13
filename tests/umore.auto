@@ -1,6 +1,3 @@
-#!/usr/local/bin/yoda
-need check
-resolve
 
 tests
     0  0 u>   false expected

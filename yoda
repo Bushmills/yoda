@@ -533,7 +533,8 @@ constant()  {
    semicolon
    inline
    inout 0 1
-   where["$lastword"]="0 ${BASH_LINENO[0]}"
+   [[ -z "$linenr" ]] &&
+      where["$lastword"]="0 ${BASH_LINENO[0]}"                       # remember file and line number
 }
 
 
@@ -542,7 +543,8 @@ variable()  {
    (( "$1"="$dp" ))
    m[dp]="${2:-0}"
    constant "$1" "$((dp++))"
-   where["$lastword"]="0 ${BASH_LINENO[0]}"
+   [[ -z "$linenr" ]] &&
+      where["$lastword"]="0 ${BASH_LINENO[0]}"                       # remember file and line number
 }
 
 

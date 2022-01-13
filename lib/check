@@ -15,6 +15,10 @@ create testcount 0 ,
            dup cell+ @ u.
         repeat  ;
 
+: tests    ( -- )
+        errors off
+        testcount off ;
+
 : check    ( -- )
         errors @
         if    report

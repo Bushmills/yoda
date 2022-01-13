@@ -1,7 +1,3 @@
 #!/bin/bash
-
-grep -l --exclude $0 "need check" ./* |
-while read f; do
-   yoda from "$f"
-done
-
+# a shell script to launch yoda autotesting
+yoda from ./autotest

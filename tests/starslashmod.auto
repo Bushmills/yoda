@@ -1,0 +1,14 @@
+#!/usr/local/bin/yoda
+need check
+resolve
+
+tests
+    10  20  30 */mod   6 expected  20 expected
+    10  20 -30 */mod  -6 expected  20 expected
+    10 -20  30 */mod  -6 expected -20 expected
+    10 -20 -30 */mod   6 expected -20 expected
+   -10  20  30 */mod  -6 expected -20 expected
+   -10  20 -30 */mod   6 expected -20 expected
+   -10 -20  30 */mod   6 expected  20 expected
+   -10 -20 -30 */mod  -6 expected  20 expected
+check

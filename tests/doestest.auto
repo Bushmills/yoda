@@ -1,0 +1,20 @@
+need check
+resolve
+
+: plural        ( xt -- )
+   create ,
+   does> @       ( u -- )
+   swap for
+      >r r@ execute r>
+   next drop ;
+
+: n+
+   create , 
+   does> @ + ;
+
+10 n+ ten+
+' ten+ plural *ten+
+
+tests
+   5 3 *ten+ 35 expected
+check

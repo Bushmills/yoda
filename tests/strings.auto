@@ -1,0 +1,20 @@
+#!/usr/local/bin/yoda
+need check
+resolve
+
+tests
+   "abc" "abc"
+      2dup$ $=     true expected
+      2dup$ $<    false expected
+            $>    false expected
+
+   "abc" "abd"
+      2dup$ $=    false expected
+      2dup$ $<     true expected
+            $>    false expected
+
+   "abd" "abc"
+      2dup$ $=    false expected
+      2dup$ $<    false expected
+            $>     true expected
+check

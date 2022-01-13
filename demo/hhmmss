@@ -1,0 +1,9 @@
+need epoch
+resolve
+
+: hexal     6 base ! ;
+: :##       decimal # hexal # ': hold  ;
+: hh:mm:ss  <#  :## :## decimal # # #>  type ;
+
+epoch 86400 mod 
+hh:mm:ss  cr

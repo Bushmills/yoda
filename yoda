@@ -2217,9 +2217,9 @@ evaluate ': u.       uconvert type$ space ;' ; inout 1 0             # ( u -- )
 evaluate ': .r       >r  convert r> rtype$ ;'; inout 2 0             # ( n u -- )
 evaluate ': u.r      >r uconvert r> rtype$ ;'; inout 2 0             # ( u1 u2 -- )
 
-primitive 'decimal'  'm[base]="10"'; inout 0 0
-primitive 'hex'      'm[base]="16"'; inout 0 0
-primitive 'binary'   'm[base]="2"';  inout 0 0
+primitive 'decimal'  "m[$base]=10"; inout 0 0
+primitive 'hex'      "m[$base]=16"; inout 0 0
+primitive 'binary'   "m[$base]=2";  inout 0 0
 
 
 # convert a string representation of a number

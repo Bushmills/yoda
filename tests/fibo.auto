@@ -1,0 +1,11 @@
+( probably testing recurse and lest )
+
+: fibo ( u -- u2 )         \ fibo(u+1) =
+      1- dup 1 > lest      \ bottom out
+      dup 1- recurse       \    fibo(u-1)
+      swap recurse +       \    + fibo(u)
+   ;
+
+
+10 fibo   34 expected
+12 fibo   89 expected

@@ -4,11 +4,13 @@ have testcount lest   errors off  testcount off   done
 \ already loaded? don't reload, reset error log instead
 
 need link
+from ansi
 create errors 0 ,
 create testcount 0 ,
+random constant canary
 
 : report  ( -- )
-        "failed test(s) " type$
+        "failed test(s): " type$
         errors
         begin @
         ?dup while
@@ -21,7 +23,7 @@ create testcount 0 ,
 
 : check    ( -- )
         errors @
-        if    report
+        if     red bg report normal attr
         else  "No errors" type$
         then  cr   ;
 

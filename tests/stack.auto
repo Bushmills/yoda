@@ -1,0 +1,8 @@
+( empty depth dup drop          more to come )
+empty  depth 0 expected
+canary depth 1 expected
+2 dup 2 expected 2 expected 
+
+
+1 drop
+canary expected

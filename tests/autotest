@@ -10,8 +10,8 @@ from check
       >ss+=(${tests[i]})
       dup$  
       >ss[-1]="${ss[-1]##*/}"
-       ": " join$  type$
-      from$
+       ": " join$ type$
+      tests from$ check
    loop 
  ;
 

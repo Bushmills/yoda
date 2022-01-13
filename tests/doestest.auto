@@ -13,6 +13,4 @@
 10 n+ ten+
 ' ten+ plural *ten+
 
-tests
-   5 3 *ten+ 35 expected
-check
+5 3 *ten+ 35 expected

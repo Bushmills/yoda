@@ -1,5 +1,4 @@
 
-tests
     0  0 u<   false expected
     2  2 u<   false expected
    -3 -3 u<   false expected
@@ -13,4 +12,3 @@ tests
    -3  2 u<   false expected
     3 -2 u<   true expected
    -3 -2 u<   true expected
-check

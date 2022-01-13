@@ -1,5 +1,4 @@
 
-tests
    "abc" "abc"
       2dup$ $=     true expected
       2dup$ $<    false expected
@@ -14,4 +13,3 @@ tests
       2dup$ $=    false expected
       2dup$ $<    false expected
             $>     true expected
-check

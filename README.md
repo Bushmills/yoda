@@ -15,55 +15,5 @@ aspects, described [here](https://github.com/Bushmills/yoda/wiki/Explore)
 
 In some respects does yoda differ from Forth.  Some example code, giving
 more tangible clues where and how yoda differs from Forth can be reached
-from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)
-
-- forward referencing of words, either only those compiled to new
-  words, or also those called upon while interpreting. Feature can
-  be enabled and disabled any time (disabled by default)
-
-- strings. An additional string stack has been added, entering strings
-  doesn't go through  s"  word. Instead are strings recognised and dealt
-  with by a pattern matching mechanism, invoked on words not found in
-  the dictionary. Literal numbers, ASCII values of single characters,
-  shell commands are subject to the same mechanism.
-
-- there is no virtual machine. Compiling a word creates a bash function,
-  containing, from a bash viewpoint, "native code". The yoda interpreter
-  operates within the same shell environment as the functions its
-  compiler generates - yoda doesn't shell (unless bash does for invoking
-  an external command).
-
-- Due to its forward referencing capability does yoda not need all of
-  the functionality necessary for compiling a program already prior to
-  beginning of compilation.  Instead can it resolve those after compilation
-  on a need-to-include base.  This allows for a more automatic and
-  comfortable library inclusion management.  The library "postlib",
-  referenced during resolve passes, exists for this purpose: compile nothing
-  from it, unless needed.  This mechanism is similar to Tom Almy's cforth.
-
-- yoda has now eliminated immediate words. While the word "immediate"
-  still exists and is used, its semantics are different: it causes moving
-  the header of last word into the compiler context vocabulary, rather than
-  marking the word as state smart.  Such a word doesn't have interpret time
-  semantics (and can't be found when not compiling).  For interpret time
-  semantics of such a word, create it again with identical name, and specify
-  only those.  This mechanism is similar to what's used in Chuck Moore's
-  cmforth.
-
-- not fully adhering to standard by sometimes deviating choice of word names.
-  so is "read-file" called "from", "evaluate" evaluates from an environment
-  variable named tib, not from addr/cnt (that may change), but a word
-  "evaluate$" exists, using top string stack item as input.
-  "list" isn't a word from the blocks word set (yet) (and doesn't behave
-  like it), pictured number conversion is nestable (that is, <# ...  #> may
-  appear within another <# ...  #> block), but expects only a single length
-  number.  Each started conversion allocates a string stack item as output
-  buffer.
-  Some of those choice may not be permanent, but on a "for the time being"
-  base.
-
-- "execution tokens" are extracted from function name associated with a
-  word.  Vice versa, executing code associated with execution token modifies
-  latter to yield a function name.  function names have numerical components
-  for this purpose, therefore are execution tokens still represented by
-  integers.
+from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)  
+Differences are listed and commented on the [Differences wiki page)(https://github.com/Bushmills/yoda/wiki/Differences)

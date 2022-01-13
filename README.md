@@ -11,9 +11,9 @@ Forth interpreter offers.  It can be used to augment bash, can serve as
 shell, or as Forthish coding environment.
 
 yoda facilitates exploring it, by providing words for examining misc
-aspects, described [here](https://github.com/Bushmills/yoda/wiki/Explore)
+aspects, described on the [Explore wiki page](https://github.com/Bushmills/yoda/wiki/Explore).
 
 In some respects does yoda differ from Forth.  Some example code, giving
 more tangible clues where and how yoda differs from Forth can be reached
 from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)  
-Differences are listed and commented on the [Differences wiki page](https://github.com/Bushmills/yoda/wiki/Differences)
+Differences are listed and commented on the [Differences wiki page](https://github.com/Bushmills/yoda/wiki/Differences).

@@ -5,7 +5,6 @@ string stack:        ( ??? -- )
 category:            interpreter
 
 decription:          a loop, providing yoda an interactive mode for entering input
-                     and executing it. Not part of yoda, but compiled from lib on
-                     request.
+                     and executing it.
 
 contexts:            interpreting, compiling

@@ -5,6 +5,7 @@
 - add context vocabularies to selected searches (only undoc remaining)
 
 --- general todos, improvements, fancyness
+- let yoda choose editor or xeditor according the environment it runs in.
 - input line history would be nice
 - while "review" is functional, its implementation is a bit messy,
   specifically the way primitives store their location information.

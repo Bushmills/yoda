@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -33,7 +33,7 @@ subsubversion=1             #                   early version of automated testi
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -89,6 +89,7 @@ declare -a names                                                     # function 
 declare -A headersunresolved                                         # forward referenced. Not searched.
 declare -A where                                                     # source file, line
 declare -a files
+declare -a loaded
 files[0]="tty"
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
                                                                      # following does> to make it more easily available to dodoes
@@ -122,7 +123,7 @@ declare -A atom                                                      # a table w
 
 default='from fix  boot quit  "yoda shell" type$ cr  prompt'          # what to execute when no command line args given
 
-# ----- state variables, switches, globals, static etc --- #fold00
+# ----- state variables, switches, globals, static etc --- #FOLD00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -252,7 +253,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -342,7 +343,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -370,7 +371,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # atoms may be:
 #  - micro instructions
@@ -421,7 +422,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -568,7 +569,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -655,7 +656,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -732,7 +733,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -772,7 +773,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter --------------------------------- #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -861,7 +862,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #fold00
+# ----- load source files -------------------------------- #FOLD00
 
 # return filenr pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -897,10 +898,8 @@ from()  {
    [[ -f "$file" ]] || return 1                                      # not found
    file="$(realpath "$file")"                                        # canonical or original name of file
 
-   loaded "$file"                                                    # need not for check, but for filenr
-
-# mark  (headers counts of all vocabularies)
-# error must  forget (reset to last mark)
+   loaded "$file" ||                                                 # need not for check, but for filenr
+      files[filenr]="$file"                                          # first time inclusion: add to files array
 
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
@@ -910,18 +909,8 @@ from()  {
       ((linenr < 0))&&break                                          # source can flag "stop loading" with negative linenr (warm and done do so)
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
-   (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
-
-# mark (thereby fixing what was compiled)
-# reason is that only now, after no error occured, while
-# file handle of source file actually be introduced.
-
-# this should for now have some adverse effects on words
-# compiled from files with errors. They may, for example,
-# point to wrong or non-existing source file.
-# echo "from:  filenr=$filenr, file=$file"
-   (( filenr < ${#files[@]} )) || { files[filenr]="$file"; }       # first time inclusion: add to files array
-
+   ((stackeffect == sp)) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
+   ((loaded[filenr]++))                                              # load counter/mark as loaded
 
    (( ${#headersunresolved[@]} )) && {                               # any forward references created?
       log "$1"
@@ -932,7 +921,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -2380,7 +2369,7 @@ primitive 'help' 'helptext'
 
 evaluate ': quit warm begin query$ evaluate$ prompt again ;'
 
-# ----- convenience -------------------------------------- #fold01
+# ----- convenience -------------------------------------- #FOLD01
 # TODO: optimiser: invalidate all stack register contents
 # execute shell command "$2" with args "$1"
 colon 'command$'
@@ -2428,12 +2417,14 @@ semicolon
 inline
 inout 0 1
 
-evaluate ': loaded  ( -- f )  source file$ count$ 0<> ;'
+# ( -- f )
+colon 'loaded'
+   push 'loaded[filenr]'
+semicolon
 
 # $file may contain non-canonical or relative file names here. filename$ isn't
 # very useful as long as this hasn't been changed.
-#primitive 'filename$'  'ss+=("$file")'
-
+evaluate ': thisfile$  source file$ ;'
 
 
 # ----- experimental ------------------------------------- #fold01

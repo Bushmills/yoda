@@ -2498,17 +2498,28 @@ colon 'remotepage'
    code 'unset "ss[-1]"'
 semicolon
 
+
+# live   missing
+# false  false                       show local
+# false   true    download > local,  show local
+#  true  false    download > local,  show local
+#  true   true    download > local,  show local
+
+# remote plain text only needs a simple web file transfer utility, currently using curl
+# caching:  .. live  missing or  if  remotetext > localtext  then  show
 colon 'remotetext'
    code 'echo "${ss[-1]}"'
    code 'curl --raw -n "${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
 
-
 # view a raw markdown page loaded from github wiki
 # ( $1 -- )       example:  ""Examples" wikipage
 evaluate ': wikipage  "https://raw.githubusercontent.com/wiki/Bushmills/yoda/" swap$ ".md" join$ join$ remotepage ;'
-evaluate ': remotetopic "https://raw.githubusercontent.com/Bushmills/yoda.docs/main/topics/" swap$ join$ remotetext ;'
+
+# view a raw text file loaded from github wiki (ignoring that same file is already present in the doc/topic directory)
+# ( $1 -- )       example:  ""Examples" wikipage
+evaluate ': remotetopic "https://raw.githubusercontent.com/Bushmills/yoda/main/doc/topics/" swap$ join$ remotetext ;'
 evaluate ': topic1  "configuration" remotetopic ;'
 
 

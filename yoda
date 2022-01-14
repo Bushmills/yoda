@@ -231,6 +231,11 @@ interactive()   {
    unset -v 'headersstateless["$lastword"]'
 }
 
+where()  {                                                           # remember source location
+   wherefile["$1"]="$2"                                              # remember file handle
+   whereline["$1"]="$3"                                              # remember line nr
+}
+
 
 # create header, but don't compile, and don't generate function yet.
 # compiling (that is, creating a bash function) is left to semicolon, calling compile
@@ -242,8 +247,7 @@ interactive()   {
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
    (( linenr < 0 )) ||                                               # not entered at keyboard
-      wherefile["$lastword"]="$((filehandle))"                       # remember file
-      whereline["$lastword"]="$((linenr))"                           # remember line nr
+      where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
    [[ -z "${headersstateless["$1"]}" ]] ||  {
       [[ ${headersstateless["$1"]} == "${header_code}_"* ]] &&
          echo "redefining $1"
@@ -445,11 +449,6 @@ push()  {
 }
 
 
-where()  {
-   wherefile["$1"]="$2"                                              # remember file
-   whereline["$1"]="$3"                                              # remember line nr
-}
-
 # quite some factoring possible in this section
 # arg1: word name
 create()  {
@@ -466,7 +465,7 @@ create()  {
 #   analyser=()                                                      # reinitialise code tags for analyser
 
    [[ -z "$linenr" ]] &&
-      where "$lastword" "1" "$((BASH_LINENO[0]))"
+      where "$lastword" "1" "$((BASH_LINENO[0]))"                    # remember source location
 }
 
 
@@ -475,7 +474,7 @@ create()  {
 primitive()  {
    create "$1"
    [[ -z "$linenr" ]] &&
-      where "$lastword" "1" "$((BASH_LINENO[0]))"                    # remember line nr
+      where "$lastword" "1" "$((BASH_LINENO[0]))"                    # remember source location
    inline
    use "$2"
 }
@@ -510,7 +509,7 @@ colon()  {
 #      echo "-- ${FUNCNAME[@]:0:4}"
       [[ "${FUNCNAME[2]}" == "evaluate" ]] &&
          tmp="${BASH_LINENO[2]}"
-      where "$lastword" "1"  "$tmp"
+      where "$lastword" "1"  "$tmp"                                  # remember source location
    }
 
 #   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
@@ -530,12 +529,6 @@ semicolon()  {
 }                                                                    # a function created from contents of array.
 
 
-# should be possible to save several where[]=... assignments by calling a
-# single common word, rather than a chain of nested calls.
-# may also simplify to use two hashes, wherefile and whereline, rather than
-# storing a data pair per item, as it becomes easier to deal with each data
-# portion individually
-
 constant()  {
    colon "$1"
    push "$2"
@@ -543,7 +536,7 @@ constant()  {
    inline
    inout 0 1
    [[ -z "$linenr" ]] &&
-      where "$lastword" "1" "$((BASH_LINENO[0]))"
+      where "$lastword" "1" "$((BASH_LINENO[0]))"                    # remember source location
 }
 
 
@@ -553,7 +546,7 @@ variable()  {
    m[dp]="${2:-0}"
    constant "$1" "$((dp++))"
    [[ -z "$linenr" ]] &&
-      where "$lastword" "1"  "$((BASH_LINENO[0]))"
+      where "$lastword" "1"  "$((BASH_LINENO[0]))"                   # remember source location
 }
 
 
@@ -929,7 +922,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1128,7 +1121,7 @@ semicolon
 colon 'alias'
    define '0'
    code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
-   code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'
+   code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'         # correct source line number for aliases in this file
 semicolon
 
 
@@ -2467,7 +2460,7 @@ semicolon
 
 primitive 'version$'  'ss+=("$version.$subversion.$subsubversion")'
 
-# ----- experimental ------------------------------------- #fold01
+# ----- experimental ------------------------------------- #FOLD01
 
 
 # leftovers from running quit as coproc, exiting by error and
@@ -2495,6 +2488,19 @@ colon 'wait'
    code 'echo "wait return value=$ret"'
    code 'echo "wait pid=$pid"'
 semicolon
+
+# with pandoc installed, wiki pages - or remote documents in general - can be downloaded,
+# converted to plain text and displayed by yoda.
+# $1 is the URL of a remote markdown page
+# ( $1 -- )
+colon 'remotepage'
+   code 'pandoc -f markdown -t plain "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+
+# view a raw markdown page loaded from github wiki
+# ( $1 -- )       example:  ""Examples" wikipage
+evaluate ': wikipage  "https://raw.githubusercontent.com/wiki/Bushmills/yoda/" swap$ ".md" join$ join$ remotepage ;'
 
 # ----- evaluate command line----------------------------- #fold00
 

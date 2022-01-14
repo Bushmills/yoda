@@ -26,8 +26,10 @@
 #        is assigned, but shellcheck can't see how
 
 
-version=0  subversion=4     # 2022jan12,04:03   converted many colon to primitive. literal became push.
-subsubversion=1             #                   early version of automated testing.
+version=0  subversion=4
+subsubversion=2             # 2022jan14,14:47   one based files with tty as 0
+subsubversion=1             # 2022jan12,04:03   early version of automated testing.
+                            #                   converted many colon to primitive. literal became push.
 #version=0  subversion=4    # 2022jan10,04:13   pulled yoda and primitives together into a single file
 #version=0  subversion=3    # 2022jan07,22:31   any data item can be ticked now, so can words create by defining word using create ... does>
 #version=0  subversion=2    # 2021dec29,16:04
@@ -86,7 +88,8 @@ done
 
 declare -a names                                                     # function name -> word name lookup
 declare -A headersunresolved                                         # forward referenced. Not searched.
-declare -A where                                                     # source file, line
+declare -A wherefile                                                 # source file
+declare -A whereline                                                 # source line
 declare -a files
 declare -a loaded
 files[0]="tty"
@@ -239,7 +242,8 @@ interactive()   {
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
    (( linenr < 0 )) ||                                               # not entered at keyboard
-      where["$lastword"]="${filehandle:-1} $linenr"                  # remember file and line nr
+      wherefile["$lastword"]="$((filehandle))"                       # remember file
+      whereline["$lastword"]="$((linenr))"                           # remember line nr
    [[ -z "${headersstateless["$1"]}" ]] ||  {
       [[ ${headersstateless["$1"]} == "${header_code}_"* ]] &&
          echo "redefining $1"
@@ -441,6 +445,11 @@ push()  {
 }
 
 
+where()  {
+   wherefile["$1"]="$2"                                              # remember file
+   whereline["$1"]="$3"                                              # remember line nr
+}
+
 # quite some factoring possible in this section
 # arg1: word name
 create()  {
@@ -457,7 +466,18 @@ create()  {
 #   analyser=()                                                      # reinitialise code tags for analyser
 
    [[ -z "$linenr" ]] &&
-      where["$lastword"]="1 ${BASH_LINENO[0]}"                       # remember file and line number
+      where "$lastword" "1" "$((BASH_LINENO[0]))"
+}
+
+
+
+# primitive wordname  functionname
+primitive()  {
+   create "$1"
+   [[ -z "$linenr" ]] &&
+      where "$lastword" "1" "$((BASH_LINENO[0]))"                    # remember line nr
+   inline
+   use "$2"
 }
 
 
@@ -472,17 +492,6 @@ colon()  {
       log "resolving: $1"
    fi
    header "$1" "$name"
-
-
-# primitive wordname  functionname
-primitive()  {
-   create "$1"
-   [[ -z "$linenr" ]] &&
-      where["$lastword"]="1 ${BASH_LINENO[0]}"                       # remember file and line number
-   inline
-   use "$2"
-}
-
 
 # -- hack alert:
 # source location isn't recorded properly when definition is
@@ -501,7 +510,7 @@ primitive()  {
 #      echo "-- ${FUNCNAME[@]:0:4}"
       [[ "${FUNCNAME[2]}" == "evaluate" ]] &&
          tmp="${BASH_LINENO[2]}"
-      where["$lastword"]="1 $tmp"
+      where "$lastword" "1"  "$tmp"
    }
 
 #   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
@@ -534,7 +543,7 @@ constant()  {
    inline
    inout 0 1
    [[ -z "$linenr" ]] &&
-      where["$lastword"]="1 ${BASH_LINENO[0]}"                       # remember file and line number
+      where "$lastword" "1" "$((BASH_LINENO[0]))"
 }
 
 
@@ -544,7 +553,7 @@ variable()  {
    m[dp]="${2:-0}"
    constant "$1" "$((dp++))"
    [[ -z "$linenr" ]] &&
-      where["$lastword"]="1 ${BASH_LINENO[0]}"                       # remember file and line number
+      where "$lastword" "1"  "$((BASH_LINENO[0]))"
 }
 
 
@@ -1114,6 +1123,15 @@ colon "array"
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
 
+# factor code common with header
+# ' foo alias bar
+colon 'alias'
+   define '0'
+   code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
+   code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'
+semicolon
+
+
 # ----- compiler and word search related ----------------- #fold01
 
 # ( -- 0 | a )
@@ -1131,17 +1149,6 @@ have() {
    done                                                              # go on search next voc
    ((s[++sp]=0))
 }
-
-
-# factor code common with header
-# ' foo alias bar
-colon 'alias'
-   code 'word'
-   code 'where["$word"]="$filehandle $linenr"'                       # remember file and line nr
-   code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
-   code 'flags["$word"]="0"'                                         # default to no flags
-   code 'lastword="$word"'
-semicolon
 
 
 # NOTE: tick and execute need names to look like foobar_4711
@@ -2442,16 +2449,23 @@ semicolon
 evaluate ': thisfile$  source filename$ ;'
 
 colon 'where$'
-    code 'tmp="${ss[-1]}"'
-    code '[[ -z $tmp ]]&&emptyname'
-    code 'tmp1="${where[$tmp]}"'
-    code '[[ -z $tmp1 ]]&&notfound "$tmp"'
-    push '${where[${ss[-1]}]%% *}'
-    push '${where[${ss[-1]}]#* }'
+    code 'tmp="${ss[-1]}"'                                           # name of word to look up
+    code 'unset "ss[-1]"'
+    code '[[ -z $tmp ]]&&emptyname'                                  # no name given
+    code '((wherefile[$tmp]))||notfound "$tmp"'                      # file handle empty or 0: no source available
+    push '${wherefile[$tmp]}'
+    push '${whereline[$tmp]}'
 semicolon
 
-evaluate ': where word where$ swap filename$ type$ [char] : emit  u. ;'
+evaluate ': where word where$ swap filename$ type$ [char] : emit u. ;'
 
+colon 'version'
+   push '$version'
+   push '$subversion'
+   push '$subsubversion'
+semicolon
+
+primitive 'version$'  'ss+=("$version.$subversion.$subsubversion")'
 
 # ----- experimental ------------------------------------- #fold01
 

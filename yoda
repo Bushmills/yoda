@@ -922,7 +922,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -2460,7 +2460,7 @@ semicolon
 
 primitive 'version$'  'ss+=("$version.$subversion.$subsubversion")'
 
-# ----- experimental ------------------------------------- #FOLD01
+# ----- experimental ------------------------------------- #fold01
 
 
 # leftovers from running quit as coproc, exiting by error and
@@ -2498,9 +2498,19 @@ colon 'remotepage'
    code 'unset "ss[-1]"'
 semicolon
 
+colon 'remotetext'
+   code 'echo "${ss[-1]}"'
+   code 'curl --raw -n "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+
+
 # view a raw markdown page loaded from github wiki
 # ( $1 -- )       example:  ""Examples" wikipage
 evaluate ': wikipage  "https://raw.githubusercontent.com/wiki/Bushmills/yoda/" swap$ ".md" join$ join$ remotepage ;'
+evaluate ': remotetopic "https://raw.githubusercontent.com/Bushmills/yoda.docs/main/topics/" swap$ join$ remotetext ;'
+evaluate ': topic1  "configuration" remotetopic ;'
+
 
 # ----- evaluate command line----------------------------- #fold00
 

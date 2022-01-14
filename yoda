@@ -55,7 +55,6 @@ doc="$mydir/doc"                                                     # documenta
 worddoc_prefix="word"                                                # used as part of file names, prevents files to go hidden by leading period
 worddoc="$doc/words/$worddoc_prefix"                                 # directory of words documentation, also first part of word doc file name
 topicdoc="$doc/topics"                                               # directory containing files describing topics
-#[[ -d $topicdoc ]] || trace "topics dir $topicdoc missing"
 
 libdirs=()                                                           # array of possible library paths
 libdirs+=("$mydir")                                                  # look in directory where yoda resides
@@ -121,7 +120,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings.
 
-default='from fix  boot quit  "yoda shell" type$ cr  prompt'          # what to execute when no command line args given
+default='from fix  boot quit  "yoda shell" type$ cr  prompt'         # what to execute when no command line args given
 
 # ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
@@ -240,8 +239,7 @@ interactive()   {
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
    (( linenr < 0 )) ||                                               # not entered at keyboard
-      where["$lastword"]="${filehandle:-1} $linenr"                           # remember file and line nr
-# echo "header $1: filehandle=${filehandle:-1}"
+      where["$lastword"]="${filehandle:-1} $linenr"                  # remember file and line nr
    [[ -z "${headersstateless["$1"]}" ]] ||  {
       [[ ${headersstateless["$1"]} == "${header_code}_"* ]] &&
          echo "redefining $1"
@@ -874,7 +872,7 @@ evaluate()  {
 loaded()  {
    local file="$1"
    for ((filehandle=1; filehandle<${#files[@]}; filehandle++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
-      [[ "${files[filehandle]}" == "$file" ]] && break                   # so when already recorded, break out
+      [[ "${files[filehandle]}" == "$file" ]] && break               # so when already recorded, break out
    done
    return $(( filehandle >= ${#files[@]}))
 }
@@ -886,7 +884,7 @@ loaded()  {
 # Callers did a check prior to calling.
 from()  {
    [[ -z "$1" ]] && return 2                                         # no file
-   local line lines linenr file filehandle word                          # must protect for nested includes.
+   local line lines linenr file filehandle word                      # must protect for nested includes.
    local stackeffect="$sp"                                           # included files must have net stack effect of 0
    file=""
    if [[ "$1" == */* ]]; then                                        # file contains slash(es): don't search
@@ -900,7 +898,7 @@ from()  {
    file="$(realpath "$file")"                                        # canonical or original name of file
 
    loaded "$file" ||                                                 # need not for check, but for filehandle
-      files[filehandle]="$file"                                          # first time inclusion: add to files array
+      files[filehandle]="$file"                                      # first time inclusion: add to files array
 
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
@@ -910,8 +908,8 @@ from()  {
       ((linenr < 0))&&break                                          # source can flag "stop loading" with negative linenr (warm and done do so)
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
-   ((stackeffect == sp)) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
-   ((loaded[filehandle]++))                                              # load counter/mark as loaded
+   ((stackeffect == sp)) || unbalancedstack "$1"                     # demanding stack clean files with net effect zero.
+   ((loaded[filehandle]++))                                          # load counter/mark as loaded
 
    (( ${#headersunresolved[@]} )) && {                               # any forward references created?
       log "$1"
@@ -981,13 +979,13 @@ atom["here"]='((s[++sp]=dp))'
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'      # semicolon
-   code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"  # check the magic left by :
+   code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
    code '(( ${s[sp--]} == ${#body[@]} )) && code ":"'                # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
 immediate
 
-colon ':'      # colon
+colon ':'
    code 'word'                                                       # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
@@ -996,9 +994,10 @@ colon ':'      # colon
 semicolon
 interactive
 
-colon 'u:'      # ucolon
+colon 'u:'
    code 'word'                                                       # parse space delimited word from input stream
-   code '[[ -z "${headersunresolved["$word"]}" ]] && restrict || colon "$word"'
+   code '[[ -z "${headersunresolved["$word"]}" ]] &&'
+   code ' restrict || colon "$word"'
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
    code "((s[++sp]=$magic))"                                         # allow check of structure
    code 'compiling=1'
@@ -1138,7 +1137,7 @@ have() {
 # ' foo alias bar
 colon 'alias'
    code 'word'
-   code 'where["$word"]="$filehandle $linenr"'                           # remember file and line nr
+   code 'where["$word"]="$filehandle $linenr"'                       # remember file and line nr
    code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
    code 'flags["$word"]="0"'                                         # default to no flags
    code 'lastword="$word"'
@@ -1189,7 +1188,6 @@ primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
-#   code '((s[++sp]=${!ss[-1]}))'
    push '${!ss[-1]}'
    code 'unset "ss[-1]"'
 semicolon
@@ -1581,7 +1579,7 @@ colon 'pack$'
 semicolon
 inout 2 0
 
-primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0  # ( c -- ) ( string: $1 -- $2 )
+primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0          # ( c -- ) ( string: $1 -- $2 )
 primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
 inout 1 0
 
@@ -1610,7 +1608,7 @@ evaluate "' lshift alias <<"
 evaluate "' rshift alias >>"
 colon    'invert';  atom 'invert'; semicolon; inline
 
-# ----- comparison --------------------------------------- #fold01
+# ----- numeric comparison ------------------------------- #fold01
 
 primitive '0='   '((s[sp]=s[sp]?0:maxuint))'                         # 0->maxuint  x->0
 primitive '0<>'  '((s[sp]=s[sp]?maxuint:0))'                         # 0->0   x->maxuint
@@ -1642,14 +1640,14 @@ inline
 
 colon '<'
    code '((s1=s[sp--]&maxuint))'
-   code '((sign=((s1^s[sp])&msb)?1:0))'                                # set bit 0 if signs differ
+   code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
    code '((s[sp]=((s1>s[sp]&maxuint)^sign)?maxuint:0))'
 semicolon
 inline
 
 colon '>'
    code '((s1=s[sp--]&maxuint))'
-   code '((sign=((s1^s[sp])&msb)?1:0))'                                # set bit 0 if signs differ
+   code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
    code '((s[sp]=((s1<s[sp]&maxuint)^sign)?maxuint:0))'
 semicolon
 inline
@@ -1702,12 +1700,13 @@ semicolon
 inline
 inout 1 1
 
-primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'; inout 1 1
-evaluate ': cells ;'      ; immediate  ; inout 1 1
-evaluate ': cells ;'      ; interactive; inout 1 1
-evaluate ': cell+ 1+ ;'   ; inline;   inout 1 1
+primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
 primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&maxuint))'; inout 2 1
 primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
+
+evaluate ': cells ;'      ; immediate  ; inout 1 1
+evaluate ': cells ;'      ; interactive; inout 1 1
+evaluate ': cell+ 1+ ;'   ; inline;      inout 1 1
 
 
 
@@ -1770,8 +1769,7 @@ colon 'u/mod'		# u1 u2 -- rem quot
    code '((s1=s[sp]&maxuint, s2=s[sp-1]&maxuint, s[sp]=s2/s1, s[sp-1]=s2%s1))'
 semicolon
 inline
-inout 3 2
-
+inout 2 2
 
 
 # ----- memory ------------------------------------------- #fold01
@@ -1822,7 +1820,7 @@ inout 3 0
 primitive 'skim'    '((s[++sp]=m[s[sp]++]))'; inout 1 2
 primitive 'count'   '((s[++sp]=m[s[sp]++]&255))'; inout 1 2
 
-colon '<-'                       # swap !
+colon '<-'                                                           # ( a x -- )   swap !
    code '((m[s[sp]]="s[sp--]"))'
    atom 'drop'
 semicolon
@@ -1835,10 +1833,10 @@ semicolon
 inline
 inout 2 0
 
-primitive 'on'   '((m[s[sp--]]=maxuint))'; inout 1 0
-primitive 'off'  '((m[s[sp--]]=0))'; inout 1 0
-primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&maxuint))'; inout 1 0
-primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&maxuint))'; inout 1 0
+primitive 'on'   '((m[s[sp--]]=maxuint))';               inout 1 0
+primitive 'off'  '((m[s[sp--]]=0))';                     inout 1 0
+primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&maxuint))';  inout 1 0
+primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&maxuint))';  inout 1 0
 
 # ( x1 a -- x2 )
 colon 'exchange'
@@ -1860,27 +1858,19 @@ semicolon
 inline
 inout 1 0
 
-primitive ',' '((m[dp++]=s[sp--]))'; inout 1 0
-
-# pad is 256 cells above here.
-primitive 'pad' '((s[++sp]=dp+256))'; inout 0 1
+primitive ',' '((m[dp++]=s[sp--]))';  inout 1 0
+primitive 'pad' '((s[++sp]=dp+256))'; inout 0 1                      # pad is 256 cells above here.
 
 # c -> m[a++],  u times
 # ( a u c -- )
 colon 'fill'
-   code '((s1=s[sp--]))'
-   code '((s2=s[sp--]))'
-   code '((s3=s[sp--]))'
-   code 'for ((;s2--;)); do'
-   code '((m[s3++] = s1))'                                           # c -> m[a++],  u times
-   code 'done'
+   code '((s1=s[sp--], s2=s[sp--], s3=s[sp--]))'
+   code 'for ((;s2--;)); do ((m[s3++] = s1)); done'                  # c -> m[a++],  u times
 semicolon
 inout 3 0
 
-
-# 0 -> m[a++],  u times
 # ( a u -- )
-evaluate ': erase   0 fill ;'    ; inline; inout 2 0
+evaluate ': erase   0 fill ;'    ; inline; inout 2 0                 # 0 -> m[a++],  u times
 
 # ( a1 a2 u -- )
 move()  {                                                            # deals with destination overlapping source
@@ -1906,8 +1896,8 @@ remagic
 
 colon 'if'
    code 'code "if ((s[sp--])); then"'
-   push "\${#body[@]}"                                   # allow check of empty function
-   push "$magic"                                         # allow check of structure and empty function
+   push "\${#body[@]}"                                               # allow check of empty function
+   push "$magic"                                                     # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1932,8 +1922,8 @@ remagic
 
 colon 'begin'
    code 'code "while :; do"'
-   push "\${#body[@]}"                                   # allow check of empty function
-   push "$magic"                                         # allow check of structure and empty function
+   push "\${#body[@]}"                                               # allow check of empty function
+   push "$magic"                                                     # allow check of structure and empty function
 semicolon
 immediate
 
@@ -1972,8 +1962,8 @@ colon 'for'
    code 'code "((r[++rp]=i))"'
    code 'code "((i=s[sp--]))"'
    code 'code "for ((; i--; )); do"'
-   push "\${#body[@]}"                                   # allow check of empty function
-   push "$magic"                                         # allow check of structure and empty function
+   push "\${#body[@]}"                                               # allow check of empty function
+   push "$magic"                                                     # allow check of structure and empty function
 semicolon
 immediate
 
@@ -2001,7 +1991,7 @@ dodo()  {
 colon 'do'
    code 'code "dodo"'
    code 'code "while :;do"'
-   push "$magic"                                         # allow check of structure and empty function
+   push "$magic"                                                     # allow check of structure and empty function
 semicolon
 immediate
 
@@ -2009,7 +1999,7 @@ colon '?do'
    code 'code "dodo"'
    code 'code "while :;do"'
    code 'code "((i==ibar))&&break"'
-   push "$magic"                                         # allow check of structure and empty function
+   push "$magic"                                                     # allow check of structure and empty function
 semicolon
 immediate
 
@@ -2041,7 +2031,7 @@ primitive 'lest'   '((s[sp--]))||line=""'; interactive               # compiling
 primitive 'unless' 'code "((s[sp--]))&&return" '; immediate          # interpreting version: skip rest of line when true
 primitive 'unless' '((s[sp--]))&&line=""'; interactive               # compiling version: skip rest of word when false
 
-# interpreting versiob: u times repeat evaluation of input line remainder
+# interpreting version: u times repeat evaluation of input line remainder
 colon 'times'
    code '((r[++rp]=i))'
    code '((i=s[sp--]))'
@@ -2158,7 +2148,7 @@ colon 'key'
    code 'fi'
    code 'tmp="${keybuf:0:1}"'                                        # read key from keybuf
    code 'tmp=$(printf "%d" '"\"'""\${tmp}\")"                        # treat ctrls as spaces, convert to ASCII
-   push 'tmp'                                            # push ASCII
+   push 'tmp'                                                        # push ASCII
    code 'keybuf="${keybuf:1}"'                                       # strip key from keybuf
 semicolon
 inout 0 1
@@ -2179,9 +2169,8 @@ inout 0 1
 # TODO: configurable ANSI sequences
 query()  {
    printf '\e[%dm' "$greenfg"
-#   IFS="" read -er -i "$keybuf" tib                                  # key? may have put chars into keybuf
    ss+=("")
-   IFS="" read -er -i "$keybuf" "ss[-1]"                              # key? may have put chars into keybuf
+   IFS="" read -er -i "$keybuf" "ss[-1]"                             # key? may have put chars into keybuf
 
    keybuf=""
    printf '\e[%dm' "$normal"
@@ -2402,12 +2391,12 @@ primitive empty  's=() sp=0'
 # way to do so manually was needed.
 evaluate ': _  empty empty$  ;'; inline
 primitive 'words' 'words'
-primitive 'random' '((s[++sp]=RANDOM&maxuint))'; inout 0 1                 # ( -- u )        15 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&maxuint))'; inout 0 1 # a microseconds epoch, used for benchmarking
+primitive 'random' '((s[++sp]=RANDOM&maxuint))'; inout 0 1           # ( -- u )        15 bits random number
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&maxuint))';     # a microseconds epoch, used for benchmarking
 primitive 'secs' 'sleep "${s[sp--]}"'
 
 colon 'filename$'
-   code 'ss+=("${files[s[sp--]]}")'                            # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
+   code 'ss+=("${files[s[sp--]]}")'                                  # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
 semicolon
 
 evaluate ': edit  "editor" filename$  command$ ;'
@@ -2424,8 +2413,9 @@ semicolon
 inline
 inout 2 2
 
-# return handle of source.   0=console, >0 correspond to number in files
-# allows words to check whether they're executed while loaded from file or console.
+# return handle of source. 0=console, >0 correspond files number
+# allows words to check whether they're executed while loaded
+# from file or console.
 # ( -- u )
 colon 'source'
    push '${filehandle:-"0"}'

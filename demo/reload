@@ -1,0 +1,8 @@
+thisfile$            type$
+" has been loaded "  type$
+loaded . "times"     type$ cr
+
+loaded lest done
+
+: foo ;   ( for testing "where" )
+"first time load has compiled contents" type$ cr

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # I think we're about ready for approaching version 1.0, so lets start counting.
 # date is post-gregorian Sol3, time is UTC
 # invoke shellcheck with:    shellcheck -x yoda.
@@ -33,7 +33,7 @@ subsubversion=1             #                   early version of automated testi
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -120,7 +120,7 @@ declare -A atom                                                      # a table w
 
 default='from fix  boot quit  "yoda shell" type$ cr  prompt'          # what to execute when no command line args given
 
-# ----- state variables, switches, globals, static etc --- #fold00
+# ----- state variables, switches, globals, static etc --- #FOLD00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -249,7 +249,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -339,7 +339,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -367,7 +367,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 # atoms may be:
 #  - micro instructions
@@ -418,7 +418,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -567,7 +567,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -654,7 +654,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -731,7 +731,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -860,7 +860,18 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #fold00
+# ----- load source files -------------------------------- #FOLD00
+
+# return filenr pointing to matching file in array files,
+# or to end of array where new file will be added if no
+# matching file was found
+loaded()  {
+   local file="$1"
+   for ((filenr=0; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
+      [[ "${files[filenr]}" == "$file" ]] && break                   # so when already recorded, break out
+   done
+}
+
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -880,10 +891,12 @@ from()  {
    fi
    [[ -f "$file" ]] || return 1                                      # not found
    file="$(realpath "$file")"                                        # canonical or original name of file
-   for ((filenr=0; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
-      [[ "${files[filenr]}" == "$file" ]] && break                   # so when already recorded, break out
-   done
-   (( filenr < ${#files[@]} )) || { files+=("$file"); }              # first time inclusion: add to files array
+
+   loaded "$file"
+
+# mark  (headers counts of all vocabularies)
+# error must  forget (reset to last mark)
+
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
@@ -893,6 +906,17 @@ from()  {
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    (( stackeffect == sp )) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
+
+# mark (thereby fixing what was compiled)
+# reason is that only now, after no error occured, while
+# file handle of source file actually be introduced.
+
+# this should for now have some adverse effects on words
+# compiled from files with errors. They may, for example,
+# point to wrong or non-existing source file.
+   (( filenr < ${#files[@]} )) || { files+=("$file"); }              # first time inclusion: add to files array
+
+
    (( ${#headersunresolved[@]} )) && {                               # any forward references created?
       log "$1"
       resolve                                                        # try to resolve those right now
@@ -902,7 +926,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1042,7 +1066,7 @@ primitive 'see' 'see'
 primitive '.s' '((sp))&&printf "%s " "${s[@]:1:$sp}"'
 
 
-# ----- does> -------------------------------------------- #fold01
+# ----- does> -------------------------------------------- #FOLD01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1067,7 +1091,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #fold01
+# ----- defining words ----------------------------------- #FOLD01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1095,7 +1119,7 @@ colon "array"
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
 
-# ----- compiler and word search related ----------------- #fold01
+# ----- compiler and word search related ----------------- #FOLD01
 
 # ( -- 0 | a )
 have() {
@@ -1165,7 +1189,7 @@ primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
 primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -- )
 
 
-# ----- environment--------------------------------------- #fold01
+# ----- environment--------------------------------------- #FOLD01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
@@ -1210,7 +1234,7 @@ primitive '('    "parse ')'"; immediate
 primitive '('    "parse ')'"; interactive
 
 
-# ----- parameter stack ---------------------------------- #fold01
+# ----- parameter stack ---------------------------------- #FOLD01
 
 
 colon 'dup'
@@ -1313,7 +1337,7 @@ inline
 primitive 'depth'  '((s[++sp]=$sp))'
 primitive 'pick'   '((s[++sp]=s[sp-s[sp]]))'
 
-# ----- return stack ------------------------------------- #fold01
+# ----- return stack ------------------------------------- #FOLD01
 
 colon 'r@'
    atom 'r@'
@@ -1360,7 +1384,7 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #fold01
+# ----- string stack ------------------------------------- #FOLD01
 
 primitive 'depth$'   's+=("${#ss[@]}")'
 primitive 'empty$'   'ss=()'
@@ -1576,9 +1600,10 @@ evaluate "' lshift alias <<"
 evaluate "' rshift alias >>"
 colon    'invert';  atom 'invert'; semicolon; inline
 
-# ----- comparison --------------------------------------- #fold01
+# ----- comparison --------------------------------------- #FOLD01
 
-primitive '0='   '((s[sp]=s[sp]?0:maxuint))'                         # &msb: 0->maxuint  x->0
+primitive '0='   '((s[sp]=s[sp]?0:maxuint))'                         # 0->maxuint  x->0
+primitive '0<>'  '((s[sp]=s[sp]?maxuint:0))'                         # 0->0   x->maxuint
 primitive '0<'   '((s[sp]=s[sp]&msb?maxuint:0))'                     # &msb: 0->0   msb->maxuint
 
 colon '='
@@ -1644,7 +1669,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -1667,7 +1692,7 @@ semicolon
 inline
 inout 1 1
 
-primitive '2/'   code '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'; inout 1 1
+primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'; inout 1 1
 evaluate ': cells ;'      ; immediate  ; inout 1 1
 evaluate ': cells ;'      ; interactive; inout 1 1
 evaluate ': cell+ 1+ ;'   ; inline;   inout 1 1
@@ -1863,7 +1888,7 @@ move()  {                                                            # deals wit
 # ( a1 a2 u -- )
 primitive 'move'   'move'; inout 3 0
 
-# ----- flow control ------------------------------------- #fold01
+# ----- flow control ------------------------------------- #FOLD01
 
 remagic
 
@@ -2043,7 +2068,7 @@ colon '?abort'
 semicolon
 
 
-# ----- conditional compilation--------------------------- #fold01
+# ----- conditional compilation--------------------------- #FOLD01
 
 # need can create forward ref even though forward refs are turned off.
 # resolving will still be done, that way can specific words (and their
@@ -2070,7 +2095,7 @@ semicolon
 
 primitive 'have'   'have'
 evaluate ': lack  have 0= ;'
-# ----- i/o ---------------------------------------------- #fold01
+# ----- i/o ---------------------------------------------- #FOLD01
 
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
@@ -2237,7 +2262,7 @@ inout 0 1
 
 
 
-# ----- documentation ------------------------------------ #fold01
+# ----- documentation ------------------------------------ #FOLD01
 
 
 undoc_template()  {
@@ -2349,7 +2374,7 @@ primitive 'help' 'helptext'
 
 evaluate ': quit warm begin query$ evaluate$ prompt again ;'
 
-# ----- convenience -------------------------------------- #fold01
+# ----- convenience -------------------------------------- #FOLD01
 # TODO: optimiser: invalidate all stack register contents
 # execute shell command "$2" with args "$1"
 colon 'command$'
@@ -2364,10 +2389,20 @@ primitive empty  's=() sp=0'
 # way to do so manually was needed.
 evaluate ': _  empty empty$  ;'; inline
 primitive 'words' 'words'
-primitive 'random' '((s[++sp]=RANDOM))'; inout 0 1                   # ( -- u )        15 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}))'; inout 0 1   # a microseconds epoch, used for benchmarking
+primitive 'random' '((s[++sp]=RANDOM&maxuint))'; inout 0 1                 # ( -- u )        15 bits random number
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&maxuint))'; inout 0 1 # a microseconds epoch, used for benchmarking
 primitive 'secs' 'sleep "${s[sp--]}"'
-primitive 'file$' 'ss+=("${files[s[sp--]-1]}")'                      # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
+
+# sort out file handles to make 1+ / 1- offsetting unnecessary
+colon 'file$'
+   code '((tmp=s[sp--]))'
+   code 'if ((tmp)); then'
+   code 'ss+=("${files[tmp-1]}")'                            # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
+   code 'else'
+   code 'ss+=("")'                                           # ( u -- ) not sure what to do with console
+   code 'fi'
+semicolon
+
 evaluate ': edit  "editor" file$  command$ ;'
 evaluate ': list  "cat"    file$  command$ ;'
 
@@ -2382,8 +2417,26 @@ semicolon
 inline
 inout 2 2
 
+# return handle of source.   0=console, >0 correspond to number in files
+# allows words to check whether they're executed while loaded from file or console.
+# currently not usable as originally intended, to check while loading from file
+# whether it was loaded already, to conditionally end loading (through done)
+# ( -- u )
+colon 'source'
+   push '${filenr:-"-1"}+1'
+semicolon
+inline
+inout 0 1
 
-# ----- experimental ------------------------------------- #fold01
+evaluate ': loaded  ( -- f )  source file$ count$ 0<> ;'
+
+# $file may contain non-canonical or relative file names here. filename$ isn't
+# very useful as long as this hasn't been changed.
+#primitive 'filename$'  'ss+=("$file")'
+
+
+
+# ----- experimental ------------------------------------- #FOLD01
 
 # stop loading file
 colon 'done'

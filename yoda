@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -33,7 +33,7 @@ subsubversion=1             #                   early version of automated testi
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -123,7 +123,7 @@ declare -A atom                                                      # a table w
 
 default='from fix  boot quit  "yoda shell" type$ cr  prompt'          # what to execute when no command line args given
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -240,8 +240,8 @@ interactive()   {
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
    (( linenr < 0 )) ||                                               # not entered at keyboard
-      where["$lastword"]="${filenr:-1} $linenr"                           # remember file and line nr
-# echo "header $1: filenr=${filenr:-1}"
+      where["$lastword"]="${filehandle:-1} $linenr"                           # remember file and line nr
+# echo "header $1: filehandle=${filehandle:-1}"
    [[ -z "${headersstateless["$1"]}" ]] ||  {
       [[ ${headersstateless["$1"]} == "${header_code}_"* ]] &&
          echo "redefining $1"
@@ -253,7 +253,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -343,7 +343,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -371,7 +371,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # atoms may be:
 #  - micro instructions
@@ -422,7 +422,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -569,7 +569,7 @@ constant 'bits'               "$bits"
 
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -602,6 +602,7 @@ error()  {                                                           # Zeile mit
    printf "%s\e[%dm%s\e[%sm %s\n" "${tib%"${word}"*"${line}"}" "${redbg}" "${word}" "${normal}" "$line"
    printf 'ERROR: %s\n' "$@"
    row=$((${#tib}-${#line}-${#word}))
+# passing file name in lasterror - could pass file handle instead
    lasterror=("$file" "$linenr" "$row")
    (( linenr < 0 )) || printf "at %s of %s\n" "$linenr,$row" "$file"
    ((m[callstack]))&&callstack
@@ -656,7 +657,7 @@ trap ctrl-c SIGINT
 
 
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
@@ -733,7 +734,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -773,7 +774,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #FOLD00
+# ----- line interpreter --------------------------------- #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -862,9 +863,9 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 
-# return filenr pointing to matching file in array files,
+# return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
 # matching file was found. Also return a return values (1)
 # if not loaded, return 0 when loaded.
@@ -872,10 +873,10 @@ evaluate()  {
 
 loaded()  {
    local file="$1"
-   for ((filenr=1; filenr<${#files[@]}; filenr++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
-      [[ "${files[filenr]}" == "$file" ]] && break                   # so when already recorded, break out
+   for ((filehandle=1; filehandle<${#files[@]}; filehandle++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
+      [[ "${files[filehandle]}" == "$file" ]] && break                   # so when already recorded, break out
    done
-   return $(( filenr >= ${#files[@]}))
+   return $(( filehandle >= ${#files[@]}))
 }
 
 # nestable source include
@@ -885,7 +886,7 @@ loaded()  {
 # Callers did a check prior to calling.
 from()  {
    [[ -z "$1" ]] && return 2                                         # no file
-   local line lines linenr file filenr word                          # must protect for nested includes.
+   local line lines linenr file filehandle word                          # must protect for nested includes.
    local stackeffect="$sp"                                           # included files must have net stack effect of 0
    file=""
    if [[ "$1" == */* ]]; then                                        # file contains slash(es): don't search
@@ -898,8 +899,8 @@ from()  {
    [[ -f "$file" ]] || return 1                                      # not found
    file="$(realpath "$file")"                                        # canonical or original name of file
 
-   loaded "$file" ||                                                 # need not for check, but for filenr
-      files[filenr]="$file"                                          # first time inclusion: add to files array
+   loaded "$file" ||                                                 # need not for check, but for filehandle
+      files[filehandle]="$file"                                          # first time inclusion: add to files array
 
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
@@ -910,7 +911,7 @@ from()  {
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    ((stackeffect == sp)) || unbalancedstack "$1"                   # demanding stack clean files with net effect zero.
-   ((loaded[filenr]++))                                              # load counter/mark as loaded
+   ((loaded[filehandle]++))                                              # load counter/mark as loaded
 
    (( ${#headersunresolved[@]} )) && {                               # any forward references created?
       log "$1"
@@ -921,7 +922,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1137,7 +1138,7 @@ have() {
 # ' foo alias bar
 colon 'alias'
    code 'word'
-   code 'where["$word"]="$filenr $linenr"'                           # remember file and line nr
+   code 'where["$word"]="$filehandle $linenr"'                           # remember file and line nr
    code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
    code 'flags["$word"]="0"'                                         # default to no flags
    code 'lastword="$word"'
@@ -1555,6 +1556,7 @@ asc()  {
 primitive  'asc'    'asc'
 primitive  'char$'  'ss+=("${char[s[sp--]]}")'
 
+
 # $ -> a -- n
 unpackstring()  {
    string="${ss[-1]}"
@@ -1582,6 +1584,19 @@ inout 2 0
 primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0  # ( c -- ) ( string: $1 -- $2 )
 primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
 inout 1 0
+
+# convert a string representation of a number
+# or arithmetic expression to an integer.
+# respects base
+# ( -- x ) (string: $1 -- )
+colon 'convert$'
+   push '${m[base]}#${ss[-1]}'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+inout 0 1
+
+
 
 
 # ----- bit logic ---------------------------------------- #fold01
@@ -1756,6 +1771,8 @@ colon 'u/mod'		# u1 u2 -- rem quot
 semicolon
 inline
 inout 3 2
+
+
 
 # ----- memory ------------------------------------------- #fold01
 
@@ -2124,6 +2141,15 @@ semicolon
 
 evaluate ': word  bl parse ;  inline'
 
+# duplicating 'char functionality because quoting in evaluate
+# becomes sometimes hard when using ' ' for characters' ASCIIs
+colon '[char]'
+   code 'word'
+   code 'push "${asc[${word:0:1}]}"'
+semicolon
+immediate
+
+
 keybuf=""
 colon 'key'
    code 'if [[ -z "$keybuf" ]]; then'                                # key? may have put chars into keybuf
@@ -2193,7 +2219,7 @@ prompt()  {
    }
    printf " %s" "ok"                                                 # ok prompt
    ((${#s[@]})) &&  {                                                # stack depth > 0?
-      tmp=".........+"                                               # yes: print a dot for each item
+      tmp=".........>"                                               # yes: print a dot for each item
       printf " %s" "${tmp:0:$sp}"                                    # but not more than in $tmp
    }
    ((${#headersunresolved[@]})) &&  {                                # unresolved words > 0?
@@ -2204,15 +2230,19 @@ prompt()  {
 
 primitive 'prompt' 'prompt'
 
+# load file whose name is given on string stack
+# ( -- ) ( string: $1 -- )
 colon 'from$'
    code 'file="${ss[-1]}"'
    code 'unset "ss[-1]"'
    code 'from "$file"||filenotfound "$file"'
 semicolon
 
+# load file whose name is parsed from input
+# ( -- ) ( input: parse word )
 evaluate ': from word from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
-primitive 'files'  'printf "%s\n" "${files[@]}"|nl -v 0'                             # show list of already included files
+primitive 'files'  'printf "%s\n" "${files[@]}"|nl -v 0'; inout 0 0  # show list of already included files
 
 # ----- pictured number conversion ----------
 
@@ -2242,18 +2272,6 @@ evaluate ': u.r      >r uconvert r> rtype$ ;'; inout 2 0             # ( u1 u2 -
 primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
-
-
-# convert a string representation of a number
-# or arithmetic expression to an integer.
-# respects base
-# ( -- x ) (string: $1 -- )
-colon 'convert$'
-   push '${m[base]}#${ss[-1]}'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-inout 0 1
 
 
 
@@ -2369,7 +2387,7 @@ primitive 'help' 'helptext'
 
 evaluate ': quit warm begin query$ evaluate$ prompt again ;'
 
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 # TODO: optimiser: invalidate all stack register contents
 # execute shell command "$2" with args "$1"
 colon 'command$'
@@ -2388,12 +2406,12 @@ primitive 'random' '((s[++sp]=RANDOM&maxuint))'; inout 0 1                 # ( -
 primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&maxuint))'; inout 0 1 # a microseconds epoch, used for benchmarking
 primitive 'secs' 'sleep "${s[sp--]}"'
 
-colon 'file$'
+colon 'filename$'
    code 'ss+=("${files[s[sp--]]}")'                            # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
 semicolon
 
-evaluate ': edit  "editor" file$  command$ ;'
-evaluate ': list  "cat"    file$  command$ ;'
+evaluate ': edit  "editor" filename$  command$ ;'
+evaluate ': list  "cat"    filename$  command$ ;'
 
 # x1 x2 -- x1+x2 x1
 # : bounds   over + swap ;
@@ -2408,32 +2426,44 @@ inout 2 2
 
 # return handle of source.   0=console, >0 correspond to number in files
 # allows words to check whether they're executed while loaded from file or console.
-# currently not usable as originally intended, to check while loading from file
-# whether it was loaded already, to conditionally end loading (through done)
 # ( -- u )
 colon 'source'
-   push '${filenr:-"0"}'
+   push '${filehandle:-"0"}'
 semicolon
 inline
 inout 0 1
 
+# check whether current source was had already been compiled before.
+# most useful when used interpretatively in a file, for testing whether
+# it will be or has been reloaded, such as with "loaded lest done"
 # ( -- f )
 colon 'loaded'
-   push 'loaded[filenr]'
+   push 'loaded[filehandle]'
 semicolon
-
-# $file may contain non-canonical or relative file names here. filename$ isn't
-# very useful as long as this hasn't been changed.
-evaluate ': thisfile$  source file$ ;'
-
-
-# ----- experimental ------------------------------------- #fold01
 
 # stop loading file
 colon 'done'
-   code 'line=""'
-   code 'linenr="-1"'
+   code 'line=""'                                                    # nothing more to process on current line
+   code 'linenr="-1"'                                                # signal "all done" to from
 semicolon
+
+# produce name of currently loaded file
+# ( string: -- $1 )
+evaluate ': thisfile$  source filename$ ;'
+
+colon 'where$'
+    code 'tmp="${ss[-1]}"'
+    code '[[ -z $tmp ]]&&emptyname'
+    code 'tmp1="${where[$tmp]}"'
+    code '[[ -z $tmp1 ]]&&notfound "$tmp"'
+    push '${where[${ss[-1]}]%% *}'
+    push '${where[${ss[-1]}]#* }'
+semicolon
+
+evaluate ': where word where$ swap filename$ type$ [char] : emit  u. ;'
+
+
+# ----- experimental ------------------------------------- #fold01
 
 
 # leftovers from running quit as coproc, exiting by error and
@@ -2441,7 +2471,7 @@ semicolon
 # error handler. While this works, it suffers from that along
 # with the quit session (which gets terminated) also all compiled
 # words go bust. That behavior is a tad harsh for dealing with
-# errors which may simply be a typo. But leeping them in, who knows
+# errors which may simply be a typo. But keeping them in, who knows
 # what else they may come in handy with.
 # similar to execute, but seperate process
 colon 'coproc'
@@ -2461,25 +2491,6 @@ colon 'wait'
    code 'echo "wait return value=$ret"'
    code 'echo "wait pid=$pid"'
 semicolon
-
-colon 'where$'
-    code 'tmp="${ss[-1]}"'
-    code '[[ -z $tmp ]]&&emptyname'
-    code 'tmp1="${where[$tmp]}"'
-    code '[[ -z $tmp1 ]]&&notfound "$tmp"'
-    push '${where[${ss[-1]}]%% *}'
-    push '${where[${ss[-1]}]#* }'
-semicolon
-
-# duplicating 'char functionality because quoting in evaluate
-# becomes sometimes hard when using ' ' for characters' ASCIIs
-colon '[char]'
-   code 'word'
-   code 'push "${asc[${word:0:1}]}"'
-semicolon
-immediate
-
-evaluate ': where word where$ swap file$ type$ [char] : emit  u. ;'
 
 # ----- evaluate command line----------------------------- #fold00
 

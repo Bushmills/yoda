@@ -3,32 +3,33 @@
       <# # # #>type space ;
 
 : .bytes ( a u -- )           \ output u hex bytes at a
-        for
-           count .byte
-        next drop ;
+      for
+        count .byte
+      next drop ;
 
-: emitsave ( c -- )           \ output single char. replace non-printables against dot
-        dup
-        bl < if
-           drop '.'
-        then emit ;
+: safe ( c1 -- c2 )           \ replace nonprintable chars against .
+      dup bl u<
+      over $7e u> or
+      lest drop '.' ;
 
 : .chars ( a u -- )           \ output u chars at a. "type" isn't control char safe
-        for
-           count emitsave
-        next drop ;
+      for
+         count safe emit
+      next drop ;
+
+trash safe  ( allow reuse of this versatile word )
 
 : dumpline ( a1 u -- a2 )     \ single line hexdump of u bytes at a.
-        over u. 2 spaces
-        2dup .bytes space
-        2dup .chars +  ;
+      over 4 u.r 2 spaces
+      2dup .bytes space
+      2dup .chars +  ;
 
 : dump  ( a n -- )
-        base @ >r hex                \ save current number base, change to hex
-        >r dup $f invert and         \ let address begin at 16 byte boundary
-        tuck - r> +                  \ correct count of bytes to output accordingly
-        #15 + #16 /                  \ determine number of lines to output
-        for
-           #16 dumpline cr           \ loop through lines
-        next drop
-        r> base !  ;                 \ restore former number base
+      base @ >r hex                \ save current number base, change to hex
+      >r dup $f invert and         \ let address begin at 16 byte boundary
+      tuck - r> +                  \ correct count of bytes to output accordingly
+      #15 + #16 /                  \ determine number of lines to output
+      for
+         #16 dumpline cr           \ loop through lines
+      next drop
+      r> base !  ;                 \ restore former number base

@@ -1,0 +1,20 @@
+name:                loaded
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            files
+
+decription:          returns a file load counter u. first time a file is loaded the
+                     counter contains 0, which gets increment each time the file is
+                     loaded, therefore can this value be used as flag for initial loading
+                     vs reload detection.
+                     To protect against reloading, the file may contain a line like
+                        loaded lest done
+                     for an action to take place only first time a file is loaded, but
+                     proceed with loading in any case, use
+                        loaded unless  "first time loading" type$ cr
+
+contexts:            interpreting, loading
+
+notes:               using "loaded" only makes sense with words which execute while
+                     loading from file.

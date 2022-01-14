@@ -1,0 +1,9 @@
+name:                dec
+stack:               ( a -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            arithmetic, memory
+
+decription:          decrement memory contents at address a by 1
+
+contexts:            interpreting, compiling

@@ -28,7 +28,7 @@ trash used   \ used is a too common word to waste it for this: discard header
 
 \ much less not pretty now, and still useful
 : review
-   bl parse where$                     \ parse name of word to review, retrieve source location
+   word$ where$                        \ parse name of word to review, retrieve source location
    "lasterror[1]" >env                 \ store line number in parameterrecord for fix
    1 "lasterror[2]" >env               \ store column number (always 1) in parameter record for fix
    filename$                           \ convert file handle to file name

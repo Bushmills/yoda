@@ -774,7 +774,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter --------------------------------- #fold00
+# ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -806,10 +806,9 @@ evaluate()  {
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
    trace "line=[$line]"
    until [[ -z "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
-      ((error))&&break
-      ((sp<0))&&break
+      ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
-      [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
+#      [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
       [[ -z "${headersstateless["$word"]}" ]] || {                   # word found in stateless dictionary
          invoke "$word" "${headersstateless["$word"]}"               # compile or execute
          continue
@@ -819,7 +818,7 @@ evaluate()  {
             ${headerscompileonly["$word"]}                           # word in there are inherently "immediate", therefore they're executed here
             continue                                                 #     because that also deals with inline compilation.
          }
-         [[ -z "${headersunresolved["$word"]}" ]] || {               # found in in unresolved while compiling
+         [[ -z "${headersunresolved["$word"]}" ]] || {               # found in unresolved while compiling
             code "${headersunresolved[$word]}"                       # compile it
             continue
          }
@@ -871,9 +870,11 @@ evaluate()  {
 # if not loaded, return 0 when loaded.
 # (seems twisted but allows condition  "if loaded; then ..."
 
+# return filehandle as result, and return value
+# indicating first time load or reload
 loaded()  {
    local file="$1"
-   for ((filehandle=1; filehandle<${#files[@]}; filehandle++)); do               # while multiple inclusion is allowed, those files won't be recorded multiple times
+   for ((filehandle=1; filehandle<${#files[@]}; filehandle++)); do   # while multiple inclusion is allowed, those files won't be recorded multiple times
       [[ "${files[filehandle]}" == "$file" ]] && break               # so when already recorded, break out
    done
    return $(( filehandle >= ${#files[@]}))
@@ -896,23 +897,18 @@ from()  {
          [[ -f "$dir/$1" ]] && { file="$dir/$1"; break; }            # search through lib dirs, break when/if found
       done
    fi
-   [[ -f "$file" ]] || return 1                                      # not found
+   [[ -f "$file" ]] || return 1                                      # file not found
    file="$(realpath "$file")"                                        # canonical or original name of file
-
-   loaded "$file" ||                                                 # need not for check, but for filehandle
-      files[filehandle]="$file"                                      # first time inclusion: add to files array
-
+   loaded "$file" || files[filehandle]="$file"                       # first time inclusion: add to files array
    readarray -t lines < "$file"                                      # read whole source into lines array
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
-      line="${lines[linenr++]}"                                      #   source can change line numbers for jumping (but isn't used)
+      line="${lines[linenr++]}"                                      #   source can change line numbers for jumping
       evaluate "$line"                                               # process next line
-      ((error))&&break
-      ((linenr < 0))&&break                                          # source can flag "stop loading" with negative linenr (warm and done do so)
-   done
+      ((error | (linenr < 0)))&&break                                # source can flag "stop loading" with negative linenr
+   done                                                              #   (warm and done do so)
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    ((stackeffect == sp)) || unbalancedstack "$1"                     # demanding stack clean files with net effect zero.
-   ((loaded[filehandle]++))                                          # load counter/mark as loaded
-
+   ((loaded[filehandle]++))                                          # increment load counter, mark as loaded
    (( ${#headersunresolved[@]} )) && {                               # any forward references created?
       log "$1"
       resolve                                                        # try to resolve those right now
@@ -1074,6 +1070,12 @@ primitive '.s' '((sp))&&printf "%s " "${s[@]:1:$sp}"'
 # to). Appends all defining word associated code
 # portion of does> to the original address push
 # compiled by create.
+
+# I may be able to get rid of the sed part:  as it's
+# only extracting the address push portion from defined
+# word, I may as well just execute that word, then pull
+# the address from stack, and compile another push first,
+# before adding doescode[].
 dodoes()  {                                                          # append does> part to original address pushing create semantics
    use  "$(type "${headersstateless[$lastword]}"|sed '0,/^{/d;$d')
         ${doescode[${FUNCNAME[1]}]}"
@@ -2119,17 +2121,21 @@ inout 2 0
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
 evaluate ': type  pack$ type$ ;'  ; inline;  inout 2 0
 
-colon 'parse$'
-   code 'parse "${ss[-1]}"'
-   code 'ss[-1]="$word"'
-semicolon
+# parse input for string delimited by string on string stack
+# may be removed, and next word "parse" inheriting its name,
+# following a suggestion of ruv
+#colon 'parse$'
+#   code 'parse "${ss[-1]}"'
+#   code 'ss[-1]="$word"'
+#semicolon
 
-colon 'parse'
+# parse input for string delimited by character specified by ASCII value on stack
+colon 'parse$'
    code 'parse "${char[s[sp--]]}"'
    code 'ss+=("$word")'
 semicolon
 
-evaluate ': word  bl parse ;  inline'
+evaluate ': word$  bl parse$ ;  inline'
 
 # duplicating 'char functionality because quoting in evaluate
 # becomes sometimes hard when using ' ' for characters' ASCIIs
@@ -2229,7 +2235,7 @@ semicolon
 
 # load file whose name is parsed from input
 # ( -- ) ( input: parse word )
-evaluate ': from word from$ ;'
+evaluate ': from word$ from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
 primitive 'files'  'printf "%s\n" "${files[@]}"|nl -v 0'; inout 0 0  # show list of already included files
 
@@ -2450,7 +2456,7 @@ colon 'where$'
     push '${whereline[$tmp]}'
 semicolon
 
-evaluate ': where word where$ swap filename$ type$ [char] : emit u. ;'
+evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
 
 colon 'version'
    push '$version'
@@ -2488,39 +2494,6 @@ colon 'wait'
    code 'echo "wait return value=$ret"'
    code 'echo "wait pid=$pid"'
 semicolon
-
-# with pandoc installed, wiki pages - or remote documents in general - can be downloaded,
-# converted to plain text and displayed by yoda.
-# $1 is the URL of a remote markdown page
-# ( $1 -- )
-colon 'remotepage'
-   code 'pandoc -f markdown -t plain "${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-
-
-# live   missing
-# false  false                       show local
-# false   true    download > local,  show local
-#  true  false    download > local,  show local
-#  true   true    download > local,  show local
-
-# remote plain text only needs a simple web file transfer utility, currently using curl
-# caching:  .. live  missing or  if  remotetext > localtext  then  show
-colon 'remotetext'
-   code 'echo "${ss[-1]}"'
-   code 'curl --raw -n "${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-
-# view a raw markdown page loaded from github wiki
-# ( $1 -- )       example:  ""Examples" wikipage
-evaluate ': wikipage  "https://raw.githubusercontent.com/wiki/Bushmills/yoda/" swap$ ".md" join$ join$ remotepage ;'
-
-# view a raw text file loaded from github wiki (ignoring that same file is already present in the doc/topic directory)
-# ( $1 -- )       example:  ""Examples" wikipage
-evaluate ': remotetopic "https://raw.githubusercontent.com/Bushmills/yoda/main/doc/topics/" swap$ join$ remotetext ;'
-evaluate ': topic1  "configuration" remotetopic ;'
 
 
 # ----- evaluate command line----------------------------- #fold00

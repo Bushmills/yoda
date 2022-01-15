@@ -4,12 +4,10 @@ yoda relies on these external program for execution of few words:
                   # and to create unique paths for list of files even when
                   # path specification differs (relative vs. absolute, symlinks etc)
 
-      sed         # used by dodoes, topics
-                  # changing topics to not depend on sed should be easy, but
-                  # seems needless as long as the dodoes dependency still exists.
-
       sort        # used by crossref.
                   # As I may remove crossref, this dependency may get dropped
+
+      nl          # currently used to number listed items in files and topics
 
 No test for their presence is performed, as both are considered pretty standard
 on any system able to run bash.

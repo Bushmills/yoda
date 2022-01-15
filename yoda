@@ -1070,15 +1070,10 @@ primitive '.s' '((sp))&&printf "%s " "${s[@]:1:$sp}"'
 # to). Appends all defining word associated code
 # portion of does> to the original address push
 # compiled by create.
-
-# I may be able to get rid of the sed part:  as it's
-# only extracting the address push portion from defined
-# word, I may as well just execute that word, then pull
-# the address from stack, and compile another push first,
-# before adding doescode[].
 dodoes()  {                                                          # append does> part to original address pushing create semantics
-   use  "$(type "${headersstateless[$lastword]}"|sed '0,/^{/d;$d')
-        ${doescode[${FUNCNAME[1]}]}"
+   ${headersstateless[$lastword]}
+   use  "s[++sp]=${s[sp--]}
+         ${doescode[${FUNCNAME[1]}]}"
 }
 
 # detokeniser detects and reacts to this "$does" tagged code:
@@ -2320,7 +2315,7 @@ semicolon
 # n topic
 colon 'topics'
    code 'unset "GLOBIGNORE"'
-   code 'printf "%s\n" "$topicdoc"/* | sed "s/.*\///" | nl'
+   code 'cat "$topicdoc/topics" | nl'
    code 'GLOBIGNORE="*:?"'
 semicolon
 

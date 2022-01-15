@@ -1,5 +1,4 @@
-# yoda  -  don't pull right now, seems that floored/truncating changes broke
-a few things.
+# yoda
 
 yoda is an acronym of Yet Onather Delirious Application, and does
 naturally not refer to any greenish midget with pointy ears, albeit it had

@@ -1,0 +1,10 @@
+name:                tuck$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 $2 -- $2 $1 $2 )
+category:            strings
+
+decription:          insert a copy of top of string stack underneath
+                     the second item of string stack
+
+contexts:            interpreting, compiling

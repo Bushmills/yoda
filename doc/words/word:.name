@@ -1,0 +1,12 @@
+name:                .name
+stack:               ( xt -- )
+return stack:        ( -- )
+string stack:        ( -- )
+
+category:            dictionary
+
+decription:          outputs name of word corresponding with execution token xt
+
+contexts:            interpreting, compiling
+
+notes:               just a shortcut for  name type$

@@ -13,13 +13,21 @@ create stringvariables  0 ,               \ index into string array
 \ push string array item u to string stack
 : $@ ( u -- ) ( -- $1 )
    >ss+=("${strings[s[sp--]]}")
-;
+;  inline
 
 : $variable                               \ a string variable is just like
    stringvariables                        \ a constant producing the index into
    dup @ constant                         \ strings array it was defined with,
    inc                                    \ and increments that index.
 ;
+
+: $constant
+   create               ( $1 -- )
+      stringvariables
+      dup @
+      dup , $!
+      inc
+   does> @ $@  ;        ( -- $1 )
 
 done                                      \ end compilation. only comments follow
 
@@ -33,3 +41,5 @@ $variable bar$
 foo$ $@ type$ cr                          \ read and output string variables contents
 bar$ $@ type$ cr
 
+"foo" $constant foo$
+foo$ type$

@@ -1,0 +1,9 @@
+name:                <>
+stack:               ( x1 x2 -- f )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            comparison
+
+decription:          compares x1 with x2, returns true if identical, false otherwise
+
+contexts:            interpreting, compiling

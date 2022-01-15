@@ -1,0 +1,11 @@
+name:                false
+stack:               ( -- f )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            constants, logic
+
+decription:          returns a flag representing false
+
+contexts:            interpreting, compiling
+notes:               integer numbers are used to personate flags,
+                     with zero representing false.

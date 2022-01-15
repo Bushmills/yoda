@@ -1,0 +1,9 @@
+name:                *
+stack:               ( n1 n2 -- n3 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            arithmetics
+
+decription:          multiply signed integers n1 and n2, return product n3
+
+contexts:            interpreting, compiling

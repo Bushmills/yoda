@@ -1,0 +1,9 @@
+name:                depth
+stack:               ( ??? -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            stack
+
+decription:          returns number of stack items (exclusive u)
+
+contexts:            interpreting, compiling

@@ -1,0 +1,14 @@
+name:                #>type
+stack:               ( x -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+category:            number conversion, I/O
+
+decription:          completes a pictured number conversion sequence, by
+                     finalising the buffered converted number, outputting
+                     it, and cleaning up stacks.
+                     meant to be used in conjunction with <#
+
+contexts:            interpreting, compiling
+example:             <ä # # #>type
+notes:               functional equivalent to "#> type", but more efficient.

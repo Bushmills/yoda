@@ -1,0 +1,12 @@
+name:                <<
+stack:               ( u1 u2 -- u3 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            arithmetics, bit logic
+
+decription:          logical shift left of u1 by u2 positions,
+                     yielding u3 as result
+
+contexts:            interpreting, compiling
+example:             none
+notes:               << is an alias of lshift

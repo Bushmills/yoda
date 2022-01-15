@@ -1709,7 +1709,7 @@ primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
 colon  '2/'
    atom 's1'
    code 'if ((s1&msb)); then'
-   code '((s[sp]=-((-s1&maxuint)>>1)))'
+   code '((s[sp]=-((-s1&maxint)>>1)&maxuint))'
    code 'return; fi'
    code '((s[sp]=s1>>1))'
 semicolon

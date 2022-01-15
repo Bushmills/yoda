@@ -4,7 +4,8 @@ from stringvars
 create onlinedocs             \ set on or off for switching between online and offline docs
 false ,
 
-: remotetext ( -- $1 )  "curl --raw -n" ;
+\ : remotetext ( -- $1 )  "curl --raw -n" ;
+: remotetext ( -- $1 )  "GET" ;        \ GET from libwww-perl
 : localtext  ( -- $1 )  "cat"  ;
 
 : cat ( $1 -- )
@@ -18,6 +19,16 @@ $constant remotepath
 
 "topicdoc" env$  "/" join$
 $constant localpath
+
+\ retrieves topic $1 from github, regardless of onlinedocs setting,
+\ and writes it to local topic directory. It's assumed that directory
+\ exists and is writable. Possibly existing topic file will be overwritten
+: cache  ( $1 -- )
+         remotepath over$ join$
+         localpath  rot$ join$
+         >GET ${ss[-2]} > ${ss[-1]}
+         2drop$
+ ;
 
 : topic ( $1 -- )
       onlinedocs @

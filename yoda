@@ -808,7 +808,7 @@ evaluate()  {
    until [[ -z "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
-#      [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
+      [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
       [[ -z "${headersstateless["$word"]}" ]] || {                   # word found in stateless dictionary
          invoke "$word" "${headersstateless["$word"]}"               # compile or execute
          continue
@@ -1702,7 +1702,7 @@ primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&maxuint))'; inout 2 1
 primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
 
 # floored 2/
-# primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
+#primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
 
 colon  '2/'
    atom 's1'

@@ -1072,7 +1072,7 @@ primitive '.s' '((sp))&&printf "%s " "${s[@]:1:$sp}"'
 # compiled by create.
 dodoes()  {                                                          # append does> part to original address pushing create semantics
    ${headersstateless[$lastword]}
-   use  "s[++sp]=${s[sp--]}
+   use  "s[++sp]=\"${s[sp--]}\"
          ${doescode[${FUNCNAME[1]}]}"
 }
 
@@ -1697,9 +1697,12 @@ semicolon
 inline
 inout 1 1
 
-primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
+
 primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&maxuint))'; inout 2 1
 primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
+
+# floored 2/
+# primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
 
 evaluate ': cells ;'      ; immediate  ; inout 1 1
 evaluate ': cells ;'      ; interactive; inout 1 1
@@ -1734,12 +1737,12 @@ colon '*/mod'
    code '((s[sp]=(signq&msb?-(tmp/s1)&maxuint:tmp/s1)))'
 semicolon
 inout 3 2
-
 evaluate ': */     */mod nip ;'         ; inline; inout 3 1
-evaluate ': /mod   1 -rot  */mod  ;'    ; inline; inout 2 2
+evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2
 evaluate ': *      1 */    ;'           ; inline; inout 2 1
 evaluate ': /      /mod nip  ;'         ; inline; inout 2 1
 evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1
+evaluate ': 2/   2 / ;'                 ; inline; inout 1 1
 
 colon 'negate'
    atom 'negate'

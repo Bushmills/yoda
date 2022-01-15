@@ -267,10 +267,12 @@ header()  {
 #    which generates a bash function from body.
 #    first thing compile does is calling optimise, which visits
 #    all items in body, potentially modifies or substitutes them
-#    before writing then to array target.
+#    while transferring to an array named target.
 #    compile then creates the bash function from target, which
 #    at that point is expected to contain literal code only.
-
+#    Compiling words which add to body array can tag entries,
+#    informing optimiser/detokeniser about their nature, so it
+#    can respond in an appropriate way to body array entries.
 
 # sets analyser flag(s) arg1 for last code/atom compiled instruction.
 # something tricky with setting analyser flags when an inlinable word
@@ -335,8 +337,8 @@ optimise()  {                                                        # run code 
          targetline="((s[++sp]=$bodyline))"
       elif (( bodyflag & does )); then                               # does>
          targetline="${body[tmp]}"                                   # compile dodoes call
-         dodoes_at="$((${#target[@]}+1))"                            # remember end of target
-      fi                                                             # for splitting code
+         dodoes_at="$((${#target[@]}+1))"                            # remember end of target for splitting code (but only when whole word
+      fi                                                             #   was compiled - we want to rip out all the run time code, after all.
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
    ((dodoes_at)) && {
@@ -1707,7 +1709,7 @@ primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
 colon  '2/'
    atom 's1'
    code 'if ((s1&msb)); then'
-   code '((s[sp]=-((-s1&maxint)>>1)&maxuint))'
+   code '((s[sp]=-((-s1&maxuint)>>1)))'
    code 'return; fi'
    code '((s[sp]=s1>>1))'
 semicolon

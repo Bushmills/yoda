@@ -918,7 +918,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1674,7 +1674,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -1703,6 +1703,15 @@ primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
 
 # floored 2/
 # primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
+
+colon  '2/'
+   atom 's1'
+   code 'if ((s1&msb)); then'
+   code '((s[sp]=-((-s1&maxint)>>1)))'
+   code 'return; fi'
+   code '((s[sp]=s1>>1))'
+semicolon
+inout 1 1
 
 evaluate ': cells ;'      ; immediate  ; inout 1 1
 evaluate ': cells ;'      ; interactive; inout 1 1
@@ -1742,7 +1751,7 @@ evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2
 evaluate ': *      1 */    ;'           ; inline; inout 2 1
 evaluate ': /      /mod nip  ;'         ; inline; inout 2 1
 evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1
-evaluate ': 2/   2 / ;'                 ; inline; inout 1 1
+
 
 colon 'negate'
    atom 'negate'

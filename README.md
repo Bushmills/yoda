@@ -1,4 +1,6 @@
-# yoda
+# yoda  -  don't pull right now, seems that floored/truncating changes broke
+a few things.
+
 yoda is an acronym of Yet Onather Delirious Application, and does
 naturally not refer to any greenish midget with pointy ears, albeit it had
 been said that reading yoda source aloud sounds like the very same midget

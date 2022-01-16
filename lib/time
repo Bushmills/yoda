@@ -1,5 +1,6 @@
 \ use:   time command(s)
 \ measures and outputs time to execute command(s), unit is microseconds.
+provides: time
 : time  ( -- )
         0 parse$              \ read rest of input line
         realtime >r           \ remember time now
@@ -8,6 +9,7 @@
         u. ;                  \ output
 
 \ measures time to run word with execution token on stack. microseconds
+provides: exectime
 : exectime ( xt -- u )
       realtime >r
       execute

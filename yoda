@@ -776,8 +776,18 @@ resolve()  {
          totalheaders                                                # total headers count now, after inclusion
       done
    }
+# NOTE: factor with satisfy
+   ((${#headersunresolved[@]})) && {                                 # more unresolved left:
+#echo "resolve has unresolved headers"
+      ((s[++sp]=m[forwardrefs]))
+      ((m[forwardrefs]=-1))
+      for word in ${!headersunresolved[@]}; do
+         read -r _ tmp < <(awk -v word="$word" '$1 == word' "$dependencies")
+         [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
+      done
+      ((m[forwardrefs]=s[sp--]))
+   }
 }
-
 
 # ----- line interpreter, evaluate------------------------ #fold00
 
@@ -837,6 +847,7 @@ evaluate()  {
       restricted && continue                                         # muted code generation: don't go through forward refs, but silently
                                                                      #     assume "word found", as it will be ignored anyway.
                                                                      # can't do that with patterns above - those may consume multi word strings.
+
       (( m[forwardrefs] )) && {                                      #     and forward references enabled ...
          restricted || {                                             #     don't create forward refs during suppressed compilation phases
             ((compiling)) && {                                       # still not successfully dealt with word. last resolve: in case of compiling ...
@@ -2563,26 +2574,23 @@ dependencies()  {                                                    # libary in
 primitive 'dependencies' 'dependencies'
 
 
-# attempt to resolve $1 from dependency file
-#satisfystring()  {
-#   [[ -z "${headersstateless[${ss[-1]}]}" ]] || return
-#   read -r _ tmp < <(grep "^${ss[-1]} " "$dependencies")
-#   unset "ss[-1]"
-#   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
-#}
-#primitive 'satisfy$' 'satisfystring'
-
-
-# attempt to resolve all words in input stream line from dependency file
+# turns on forward refs, parses input line and tries to resolve all
+# words given checking whether they don't exist in the dictionary,
+# then looking them up in dependencies, loading corresponding source
+# file, and restores previously saved forward refs status again.
 satisfy()  {
+   ((s[++sp]=m[forwardrefs]))
+   ((m[forwardrefs]=-1))
    until [[ -z "$line" ]]; do
       word
       [[ -z "${headersstateless[$word]}" ]] || continue
       read -r _ tmp < <(awk -v word="$word" '$1 == word' "$dependencies")
       [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
    done
+   ((m[forwardrefs]=s[sp--]))
 }
-primitive 'satisfy' 'satisfy'
+primitive 'needs:' 'satisfy'        # more symmetric with "provided:"
+primitive 'satisfy' 'satisfy'       # nice for interactive use
 
 
 # ----- evaluate command line----------------------------- #fold00

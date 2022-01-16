@@ -1,0 +1,2 @@
+provides: epoch
+: epoch    ( -- u ) "EPOCHSECONDS" env  ;

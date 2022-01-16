@@ -1,2 +1,5 @@
 provides: hello
-: hello   "Hello, world!" type$ cr ;
+
+: hello   
+   page     \ comes from dependancy based resolving, added for testing
+   "Hello, world!" type$ cr  ;

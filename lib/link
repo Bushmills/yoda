@@ -1,0 +1,5 @@
+provides: link
+
+\ inserts dictionary pointer ("here") at the begin of a linked list, anchored at a
+: link     ( a -- )
+   here swap exchange  ,  ;

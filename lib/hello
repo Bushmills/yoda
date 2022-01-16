@@ -1,0 +1,2 @@
+provides: hello
+: hello   "Hello, world!" type$ cr ;

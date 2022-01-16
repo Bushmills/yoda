@@ -1,3 +1,4 @@
+loaded lest done
 from stringvars
 
 \ non compliant tput command builder:
@@ -61,13 +62,13 @@ from stringvars
 \ ( u1 u2 -- )
 "cup"      tput2 at                    \ move cursor to column u1 line u2
 
+\ doesn't belong here, but currently only used in this place
+: enum ( -- )  ( stream: names )
+   0 parse$
+   chop$ for 
+     i "constant " swap$ join$
+     evaluate$
+   next ;
+
 \ colours for using with fg and bg
-0 constant black
-1 constant red
-2 constant green
-3 constant orange
-3 constant yellow
-4 constant blue
-5 constant magenta
-6 constant cyan
-7 constant white
+enum black red green yellow blue magenta cyan white

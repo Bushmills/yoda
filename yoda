@@ -658,7 +658,9 @@ ctrl-c()  {
 }
 trap ctrl-c SIGINT
 
-
+# may come in handy with tput
+# resized()  { echo "resized"; }
+# trap foo SIGWINCH
 
 # ----- patterns ----------------------------------------- #fold00
 
@@ -2108,6 +2110,7 @@ primitive 'have'   'have'
 evaluate ': lack  have 0= ;'
 # ----- i/o ---------------------------------------------- #fold01
 
+# fade out in favour of lib/tput
 colon 'esc['
    code 'printf "\e[%s" "${ss[-1]}"'
    code 'unset "ss[-1]"'
@@ -2116,13 +2119,6 @@ inline
 inout 1 0
 
 primitive 'ansi' 'printf "\e[%bm" "${s[sp--]}"'; inout 1 0
-
-colon 'at'
-   code '((s1=s[sp--]+1, s2=s[sp--]+1))'
-   code 'printf "\e[%b" "${s1};${s2}H"'
-semicolon
-inline
-inout 2 0
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2207,7 +2203,6 @@ evaluate ': rtype$ dup$ count$ - spaces type$ ;'; inout 1 0          # ( u -- ) 
 primitive 'query$'    'query';           inout 0 0
 primitive 'cr'        'printf "\n"';     inout 0 0
 primitive 'space'     'printf " "';      inout 0 0
-primitive 'page'      'clear';           inout 0 0
 
 prompt()  {
    ((error)) && {

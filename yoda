@@ -35,7 +35,7 @@ subsubversion=1             # 2022jan12,04:03   early version of automated testi
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -163,7 +163,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -430,7 +430,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -739,7 +739,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -752,6 +752,19 @@ totalheaders()  {
    +  ${#headersunresolved[@]}
    ))
 }
+dependencies="$mydir/dependencies"
+
+# satisfy one single reference, passed as arg1
+satisfy1()  {
+   local word="$1"
+   local forwarding="$((m[forwardrefs]))"
+   ((m[forwardrefs]=-1))                                             # turn on forward references
+   read -r _ tmp < <(
+       awk -v word="$word" '$1 == word' "$dependencies"              # search dependency database
+   )
+   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"                       # source found: load
+   ((m[forwardrefs]=forwarding))                                     # restore forward refs status
+}
 
 resolving=0
 # loop through postlib inclusion until total header count stabilises.
@@ -762,31 +775,9 @@ resolve()  {
    ((resolving)) && return                                           # nesting into resolve doesn't get any more work done -
    local file                                                        #   we'll resolve anything open, or we don't, no matter
    local resolving=1                                                 #   how often resolve calls itself. This would only slow down
-   for dir in "${libdirs[@]}"; do
-      file="$dir/$postlib"                                           # search for postlib in libdir[@] directories
-      [[ -f "$file" ]] && break                                      # break when/if found
+   for word in "${!headersunresolved[@]}"; do
+      satisfy1 "$word"
    done
-   [[ -f "$file" ]] && {                                             # postlib was found: will be repeatedly included until header count stabilises
-      previousheaders="-1"
-      totalheaders                                                   # total headers count before inclusion
-      until (( totalheaders == previousheaders )); do                # loop until header count stabilises
-         previousheaders="$totalheaders"
-         from "$file"                                                # include postlib
-         ((${#headersunresolved[@]})) || break                       # no more forwardrefs: done
-         totalheaders                                                # total headers count now, after inclusion
-      done
-   }
-# NOTE: factor with satisfy
-   ((${#headersunresolved[@]})) && {                                 # more unresolved left:
-#echo "resolve has unresolved headers"
-      ((s[++sp]=m[forwardrefs]))
-      ((m[forwardrefs]=-1))
-      for word in ${!headersunresolved[@]}; do
-         read -r _ tmp < <(awk -v word="$word" '$1 == word' "$dependencies")
-         [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
-      done
-      ((m[forwardrefs]=s[sp--]))
-   }
 }
 
 # ----- line interpreter, evaluate------------------------ #fold00
@@ -934,7 +925,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -990,7 +981,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #fold01
+# ----- colon/semicolon ---------------------------------- #FOLD01
 
 colon ';'      # semicolon
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
@@ -2479,7 +2470,7 @@ semicolon
 
 primitive 'version$'  'ss+=("$version.$subversion.$subsubversion")'
 
-# ----- experimental ------------------------------------- #fold01
+# ----- experimental ------------------------------------- #FOLD01
 
 
 # leftovers from running quit as coproc, exiting by error and
@@ -2534,18 +2525,13 @@ semicolon
 #     This build the dependencies "database", and needs only done when
 #     dependencies are outdated, stale or missing.
 #
-#  satisfy$
-#     takes a string from string stack (the name of a needed word), locates
-#     the library file containing it (by searching dependencies file) and
-#     includes that file, thereby satisfying the forward reference.
-#
 #  satisfy
-#     similar to satisfy$, but word names are parsed from input stream
-#     whole line is parsed, each space delimited string used as word name
-#     therefore, like with provides:, a whole list of words can be specified.
+#     turns forward refs on, parses space delimited strings from input
+#     line (the name of needed words). For each word is the library
+#     file containing word's source located by searching the dependencies
+#     file, the source is included from file, thereby satisfying the
+#     forward reference. When done is old forward refs state restored.
 #
-#  idea is to run satisfy on all words in unresolved vocabulary at the
-#  end of compilation, or possibly with each resolve run.
 #  Purpose is to allow library inclusion with much finer granulation than
 #  what is possible with including library files which unconditionally
 #  include heaps of words, without the need to restructure the libraries
@@ -2555,42 +2541,31 @@ semicolon
 #  it is likely to remain in "experimental" for a while.
 
 
-dependencies="$mydir/dependencies"
-primitive "provides:"   'line=""';   interactive                     # double quoted escaped backslash rather than
-
-
-# "Double quote to prevent globbing and word splitting."
-# I actually *want* word splitting here, for fprint to produce one line per word
-# shellcheck disable=SC2086
 dependencies()  {                                                    # libary inclusion dependency file builder
    for dir in "${libdirs[@]}"; do
      grep -r "^provides:" "$dir"
    done | sort -u |
    while read -r file words; do
       file="${file%:provides:}"
+# "Double quote to prevent globbing and word splitting."
+# I actually *want* word splitting here, for fprint to produce one line per word
+# shellcheck disable=SC2086
       printf "%-31s $file\n" $words
    done > "$dependencies"
 }
-primitive 'dependencies' 'dependencies'
 
-
-# turns on forward refs, parses input line and tries to resolve all
-# words given checking whether they don't exist in the dictionary,
-# then looking them up in dependencies, loading corresponding source
-# file, and restores previously saved forward refs status again.
+# try to resolve all words given on input line.
 satisfy()  {
-   ((s[++sp]=m[forwardrefs]))
-   ((m[forwardrefs]=-1))
    until [[ -z "$line" ]]; do
       word
-      [[ -z "${headersstateless[$word]}" ]] || continue
-      read -r _ tmp < <(awk -v word="$word" '$1 == word' "$dependencies")
-      [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
+      satisfy1 "$word"
    done
-   ((m[forwardrefs]=s[sp--]))
 }
-primitive 'needs:' 'satisfy'        # more symmetric with "provided:"
-primitive 'satisfy' 'satisfy'       # nice for interactive use
+
+primitive 'dependencies' 'dependencies'
+primitive "provides:"   'line=""'        ;   interactive             # double quoted escaped backslash rather than
+primitive 'needs:' 'satisfy'                                         # more symmetric with "provided:"
+primitive 'satisfy' 'satisfy'                                        # nice for interactive use
 
 
 # ----- evaluate command line----------------------------- #fold00

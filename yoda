@@ -2498,6 +2498,73 @@ colon 'wait'
 semicolon
 
 
+
+# complementing existing forward referencing scheme, which could now
+# possibly lose a few support words, from dependency files, which
+# map word names to file names.
+# This allows quickly locating source of required code, and consequently
+# including it.
+
+# experimental early support here consists of 3 words:
+#  provides:
+#     like \ treating rest of line as comment.
+#     purpose is to allow grepping libraries for file names
+#     providing the words listed there, to generate a simple
+#     form of dependency files.
+#     Insert it into library files, listing the words which can
+#     be resolved by library. Idea is to have very short library
+#     files, often just containing a single word.
+#
+#  dependencies
+#     run through library directories and their subdirectories, and
+#     look for lines starting with provides:
+#     extract the list of names, and write names, one per line, followed
+#     by file name, into the "dependencies" file.
+#     This build the dependencies "database", and needs only done when
+#     dependencies are outdated, stale or missing.
+#
+#  satisfy
+#     takes a string from string stack (the name of a needed word), locates
+#     the library file containing it (by searching dependencies file) and
+#     includes that file, thereby satisfying the forward reference.
+#
+#  idea is to run satisfy on all words in unresolved vocabulary at the
+#  end of compilation, or possibly with each resolve run.
+#  Purpose is to allow library inclusion with much finer granulation than
+#  what is possible with including library files which unconditionally
+#  include heaps of words, without the need to restructure the libraries
+#  towards conditional compilation.
+#
+#  How useful this scheme is will still have to be determined, that's why
+#  it is likely to remain in "experimental" for a while.
+
+
+dependencies="$mydir/dependencies"
+primitive "provides:"   'line=""';   interactive                            # double quoted escaped backslash rather than
+
+
+# libary inclusion dependency file builder
+dependencies()  {
+   for dir in "${libdirs[@]}"; do
+     grep -r "^provides:" "$dir"
+   done | sort -u |
+   while read -r file words; do
+      file="${file%:provides:}"
+      printf "%-31s $file\n" $words
+   done > "$dependencies"
+}
+primitive 'dependencies' 'dependencies'
+
+
+# attempt to resolve $1 from dependency file
+satisfy()  {
+   # need "${ss[-1]}"
+   read -r _ tmp < <(grep "^${ss[-1]} " "$dependencies")
+   unset "ss[-1]"
+   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
+}
+primitive 'satisfy' 'satisfy'
+
 # ----- evaluate command line----------------------------- #fold00
 
 

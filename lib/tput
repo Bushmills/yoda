@@ -1,0 +1,69 @@
+from stringvars
+
+\ non compliant tput command builder:
+\ according 200x does does>, when not used in conjunction with create,
+\ yield an ambiguous condition.
+\ tput employs the yoda specific response of using does> in conjunction
+\ with a different defining word here:  constant.
+\ result is merely slightly more efficient code for string retrieval.
+
+: anothertput ( -- )
+         stringvariables dup @
+         dup constant $! inc ;
+
+: tput0   ( $1 -- )
+     anothertput does>    ( -- )
+     >tput "${strings[s[sp--]]}"
+;
+
+: tput1   ( $1 -- )
+   anothertput  does> ( x -- )
+   >tput "${strings[s[sp--]]}" "${s[sp--]}"
+;
+
+: tput2   ( $1 -- )
+   anothertput  does> ( x1 x2 -- )
+   >tput "${strings[s[sp--]]}" "${s[sp--]}" "${s[sp--]}"
+;
+
+: screen  ( -- x y )   "COLUMNS" env  "LINES" env  ;
+
+\ no arguments
+"init"     tput0 terminit
+"bold"     tput0 bold
+"home"     tput0 home
+"clear"    tput0 page
+"longname" tput0 term
+"cud1"     tput0 c-up
+"cuu1"     tput0 c-down
+"smul"     tput0 <ul
+"rmul"     tput0 ul>
+"smso"     tput0 <so
+"rmso"     tput0 so>
+"sgr0"     tput0 normal
+"blink"    tput0 blink
+"rev"      tput0 reverse
+
+"smcup"    tput0 savescreen
+"rmcup"    tput0 restorescreen
+"el"       tput0 eol
+
+"sc"       tput0 save-cursor
+"rc"       tput0 restore-cursor
+
+0 constant black
+1 constant red
+2 constant green
+3 constant orange
+3 constant yellow
+4 constant blue
+5 constant magenta
+6 constant cyan
+7 constant white
+
+\ one argument
+"setaf"    tput1 fg
+"setab"    tput1 bg
+
+\ two arguments
+"cup"   tput2 at

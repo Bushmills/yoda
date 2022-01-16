@@ -2523,10 +2523,15 @@ semicolon
 #     This build the dependencies "database", and needs only done when
 #     dependencies are outdated, stale or missing.
 #
-#  satisfy
+#  satisfy$
 #     takes a string from string stack (the name of a needed word), locates
 #     the library file containing it (by searching dependencies file) and
 #     includes that file, thereby satisfying the forward reference.
+#
+#  satisfy
+#     similar to satisfy$, but word names are parsed from input stream
+#     whole line is parsed, each space delimited string used as word name
+#     therefore, like with provides:, a whole list of words can be specified.
 #
 #  idea is to run satisfy on all words in unresolved vocabulary at the
 #  end of compilation, or possibly with each resolve run.
@@ -2540,11 +2545,13 @@ semicolon
 
 
 dependencies="$mydir/dependencies"
-primitive "provides:"   'line=""';   interactive                            # double quoted escaped backslash rather than
+primitive "provides:"   'line=""';   interactive                     # double quoted escaped backslash rather than
 
 
-# libary inclusion dependency file builder
-dependencies()  {
+# "Double quote to prevent globbing and word splitting."
+# I actually *want* word splitting here, for fprint to produce one line per word
+# shellcheck disable=SC2086
+dependencies()  {                                                    # libary inclusion dependency file builder
    for dir in "${libdirs[@]}"; do
      grep -r "^provides:" "$dir"
    done | sort -u |
@@ -2557,13 +2564,26 @@ primitive 'dependencies' 'dependencies'
 
 
 # attempt to resolve $1 from dependency file
+#satisfystring()  {
+#   [[ -z "${headersstateless[${ss[-1]}]}" ]] || return
+#   read -r _ tmp < <(grep "^${ss[-1]} " "$dependencies")
+#   unset "ss[-1]"
+#   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
+#}
+#primitive 'satisfy$' 'satisfystring'
+
+
+# attempt to resolve all words in input stream line from dependency file
 satisfy()  {
-   # need "${ss[-1]}"
-   read -r _ tmp < <(grep "^${ss[-1]} " "$dependencies")
-   unset "ss[-1]"
-   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
+   until [[ -z "$line" ]]; do
+      word
+      [[ -z "${headersstateless[$word]}" ]] || continue
+      read -r _ tmp < <(awk -v word="$word" '$1 == word' "$dependencies")
+      [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"
+   done
 }
 primitive 'satisfy' 'satisfy'
+
 
 # ----- evaluate command line----------------------------- #fold00
 

@@ -1,8 +1,13 @@
 ( empty depth dup drop          more to come )
-empty  depth 0 expected
-canary depth 1 expected
-2 dup 2 expected 2 expected 
 
+: bottom  ( canary -- canary )  dup canary expected   depth 1 expected ;
 
-1 drop
-canary expected
+empty   depth 0 expected    
+canary  depth 1 expected
+
+( dup )       7  dup     7 expected  7 expected   bottom
+( swap )  10 20  swap   10 expected 20 expected   bottom 
+
+random drop       bottom
+canary  expected
+depth 0 expected

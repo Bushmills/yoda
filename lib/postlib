@@ -1,49 +1,16 @@
-forwardrefs @
-forwardrefs on
+\ for now, until resolve or whatever has been taught to look up dependencies
+\ on its own, they'll be manually listed here, in order to keep forward
+\ referencing of words removed from postlib functional.
+needed link  lest   satisfy link
+needed epoch lest   satisfy epoch
+needed check lest   satisfy check
+needed  dump lest   satisfy dump
+needed wdump lest   satisfy wdump
+needed fg    lest   satisfy fg
+needed bg    lest   satisfy bg
+needed attr  lest   satisfy attr
+needed hello lest   satisfy hello
 
-u: epoch    ( -- u ) "EPOCHSECONDS" env  ;
-
-\ inserts dictionary pointer ("here") at the begin of a linked list,
-\ anchored at a
-u: link     ( a -- )
-   here
-   swap exchange
-   ,  ;
-
-\ a shotcut for loading from files named same as referenced word may be nice
-needed check lest from check
-needed  dump lest from dump
-needed wdump lest from wdump
-needed fg needed bg or needed attr or lest from ansi
-
-
-\ below are only words for forward refs testing
-u: fwd     fwd1         \ depend on words which build forward referencing
-           backw1 ;     \ chains in both directions (u: compiles conditionally,
-                        \ only when a word has been marked as needed)
-
-u: fwd1    fwd2   ;     \ new forward refs are added, but resolved in the same pass
-u: fwd2    fwd3   ;
-u: fwd3    hello  ;
-u: hello   "Hello, world!" type$ cr ;
-u: backw3  hello  ;
-u: backw2  backw3 ;
-u: backw1  backw2 ;     \ resolve must do multiple passes
-
-\ how to test:
-\   try different approaches towards resolving forward references:
-\   1. quasi-manual:
-\               need fwd
-\               resolve
-\               fwd
-\   2. automatic compile time resolving:
-\               forwardrefs on
-\               : foo fwd  ;
-\               foo
-\   3. automatic interpret time resolving
-\               forwardrefs on
-\               instantresolve on
-\               fwd
-\
-
-forwardrefs !
+\ already noticing that postlib doesn't need to know
+\ library file names any longer, which should reduce
+\ maintenance effort.

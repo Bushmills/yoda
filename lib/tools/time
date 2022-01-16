@@ -1,7 +1,6 @@
 provides: time
 \ use:   time command(s)
 \ measures and outputs time to execute command(s), unit is microseconds.
-provides: time
 : time  ( -- )
         0 parse$              \ read rest of input line
         realtime >r           \ remember time now

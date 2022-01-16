@@ -1,0 +1,12 @@
+\ --- example of use ---
+$variable foo$                            \ define two string variables
+$variable bar$
+
+"first string"   foo$  $!                 \ write arbitrary strings to them
+"second string"  bar$  $!
+
+foo$ $@ type$ cr                          \ read and output string variables contents
+bar$ $@ type$ cr
+
+"foo" $constant foo$
+foo$ type$

@@ -1,0 +1,6 @@
+provides: $@
+satisfy stringvariables
+\ push string array item u to string stack
+: $@ ( u -- ) ( -- $1 )
+   >ss+=("${stringvariables[s[sp--]]}")
+;  inline

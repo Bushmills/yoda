@@ -1,0 +1,3 @@
+provides: stringvariables
+>declare -a stringvariables=();           \ an array for strings
+create stringvariables  0 ,               \ index into string array

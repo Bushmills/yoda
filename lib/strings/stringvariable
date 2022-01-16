@@ -1,0 +1,7 @@
+provides: $variable
+satisfy stringvariables
+: $variable                               \ a string variable is just like
+   stringvariables                        \ a constant producing the index into
+   dup @ constant                         \ strings array it was defined with,
+   inc                                    \ and increments that index.
+;

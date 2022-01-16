@@ -1,0 +1,9 @@
+provides: $constant
+satisfy stringvariables $! $@
+: $constant
+   create               ( $1 -- )
+      stringvariables
+      dup @
+      dup , $!
+      inc
+   does> @ $@  ;        ( -- $1 )

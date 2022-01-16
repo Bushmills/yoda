@@ -13,9 +13,13 @@ yoda relies on these external program for execution of few words:
                   # which augments existing forward referencing scheme. Used to
                   # build dependency files by scanning libraries
 
-      awk:        # added to support new experimental dependency based resolving
+      awk         # added to support new experimental dependency based resolving
                   # which augments existing forward referencing scheme. Used to
                   # search dependency file for word to file association.
+
+      sort	  # added to support new experimental dependency based resolving
+                  # which augments existing forward referencing scheme. Used for
+                  # its deduplication feature, to eliminate double entries.
 
 No test for their presence is performed, as both are considered pretty standard
 on any system able to run bash.

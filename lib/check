@@ -4,7 +4,7 @@ have testcount lest   errors off  testcount off   done
 \ already loaded? don't reload, reset error log instead
 
 need link
-from ansi
+from tput
 create errors 0 ,
 create testcount 0 ,
 random constant canary
@@ -23,7 +23,7 @@ random constant canary
 
 : check    ( -- )
         errors @
-        if     red bg report normal attr
+        if     red bg report normal
         else  "No errors" type$
         then  cr   ;
 
@@ -32,3 +32,5 @@ random constant canary
         = unless
            errors link
            testcount @ ,  ;
+
+provides: tests check expected report

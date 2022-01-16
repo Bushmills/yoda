@@ -641,6 +641,7 @@ newerror "noerror"         "no error"
 newerror "emptyname"       "no or empty name"
 newerror "stackunderflow"  "stack underflow"
 newerror "notfound"        "not found:"
+newerror "nosource"        "no source for"
 newerror "stillcompiling"  "still compiling after"
 newerror "unbalancedstack" "unbalanced stack in file"
 newerror "unstructured"    "unstructured: missing"
@@ -920,7 +921,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1676,7 +1677,7 @@ inout 4 1
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'
@@ -2457,7 +2458,7 @@ colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
     code 'unset "ss[-1]"'
     code '[[ -z $tmp ]]&&emptyname'                                  # no name given
-    code '((wherefile[$tmp]))||notfound "$tmp"'                      # file handle empty or 0: no source available
+    code '((${wherefile[$tmp]}))||nosource "$tmp"'                   # file handle empty or 0: no source available
     push '${wherefile[$tmp]}'
     push '${whereline[$tmp]}'
 semicolon

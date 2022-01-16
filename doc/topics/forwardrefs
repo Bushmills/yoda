@@ -35,6 +35,21 @@ indicating that all forward references have been resolved. Executing
 
 confirms this.
 
+
+Rather than creating the forward reference, then resolving it manually, we
+could also have included the word directly, by entering:
+
+   satisfy hello
+
+Using "satisfy" doesn't require an extra resolve run, while with need / resolve,
+marking a word as needed, and compiling it from library is split into two
+events seperated in time. Therefore is "need" also usable for forwardrefs
+which don't yet exist, but still need to be defined later on. "satisfy" on
+the other hand requires that a word source can be found and compiled right away.
+I may silently convert an unsatisfied "satisfy" into a "need" eventually if that
+seems to be of advantage.
+
+
 Resolving also happens automatically sometimes. For example, after including
 a file, using "from", will resolve get executed if any unresolved forward
 references exist, in case the included files created any.
@@ -100,6 +115,8 @@ For managing conditional compilation, these words exist:
       resolve
       have
       lack
+      satisfy, needs:
+      dependencies
 
 u:       is almost identical with : but compiles the following word only if it's
          an unresolved forward reference (i.e. only when needed)
@@ -116,33 +133,24 @@ need     creates a forward reference explicitely. Rather than forward references
 have     check whether a word exists, return execution token or 0
 lack     check whether a word exists, return flag (logical not of result from have)
 
-resolve  resolve against postlib. Don't wait for implicite resolving at the
-         end of program loading, but do it now. This may be done multiple times,
-         and in fact, it often is. For example, conditionally compiled words in
-         postlib may create additional forward references, which are then resolved
-         in an extra resolve pass.
+resolve  tries to locate source files of all remaining forward references and loads
+         them. forwardrefs are turned on, so that forward referenced words can create
+         new forward references as needed. Old forwardrefs status will be restored
+         after resolve.
 
-         Therefore is this case legal:
+provides: followed by one or several space delimited word names. used to building
+         library dependency file, letting the system know which source files provide
+         code for which definitions, so the file path and name can be produces when
+         source of a word needs to be included.
 
-main program:
-               : foo fwd1 ;
-               resolve
-               foo
+satisfy	 these are aliases. The read the remainder of input line and try to immediately
+needs:   resolve each word read from line, without going through forward references.
+         name "needs" is offered as alias because it pairs nicely with "provides:",
+         while "satisfy" may be more suited for interactive use.
 
-postlib:
-               u: fwd3  "Hello, world!" type$  ;
-               u: fwd2  fwd3  ;
-               u: fwd1  fwd2  ;
-
-Compilation may be slowed down slightly with this order of forward references, because
-of the need of multiple inclusions of postlib:  when executing "resolve" in main program,
-postlib will be included first time to resolve "fwd1". By conditionally compiling "fwd1",
-the new forward reference "fwd2" will be created, causing a second inclusion run of
-postlib, which now resolves "fwd2" - and thereby creating "fwd3" forward refernce.
-Consequently will the need of yet another inclusion run be detected, and only after
-this third inclusion will headers count have stabilized.
-Changing the sequence to  fwd1, fwd2, fwd3 results in a single inclusion resolving
-all forward references.
+dependencies:  rebuilds the dependency database. only needs to be done if base doesn't
+         exist or is outdated. base becomes outdated when new library files are added,
+         words moved to other library files, or their name or path changed.
 
 
 Yet another place where forward reference may be created automatically, regardless

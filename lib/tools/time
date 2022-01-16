@@ -1,3 +1,4 @@
+provides: time
 \ use:   time command(s)
 \ measures and outputs time to execute command(s), unit is microseconds.
 provides: time
@@ -7,11 +8,3 @@ provides: time
         evaluate$             \ execute input line
         realtime r> -         \ subtract previously save time from now
         u. ;                  \ output
-
-\ measures time to run word with execution token on stack. microseconds
-provides: exectime
-: exectime ( xt -- u )
-      realtime >r
-      execute
-      realtime r>
-      -  ;

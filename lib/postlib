@@ -1,15 +1,15 @@
 \ for now, until resolve or whatever has been taught to look up dependencies
 \ on its own, they'll be manually listed here, in order to keep forward
 \ referencing of words removed from postlib functional.
-needed link  lest   satisfy link
-needed epoch lest   satisfy epoch
-needed check lest   satisfy check
-needed  dump lest   satisfy dump
-needed wdump lest   satisfy wdump
-needed fg    lest   satisfy fg
-needed bg    lest   satisfy bg
-needed attr  lest   satisfy attr
-needed hello lest   satisfy hello
+needed link  lest   needs: link
+needed epoch lest   needs: epoch
+needed check lest   needs: check
+needed  dump lest   needs: dump
+needed wdump lest   needs: wdump
+needed fg    lest   needs: fg
+needed bg    lest   needs: bg
+needed attr  lest   needs: attr
+needed hello lest   needs: hello
 
 \ already noticing that postlib doesn't need to know
 \ library file names any longer, which should reduce

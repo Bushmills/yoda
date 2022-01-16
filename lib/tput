@@ -8,49 +8,60 @@ from stringvars
 \ result is merely slightly more efficient code for string retrieval.
 
 : anothertput ( -- )
-         stringvariables dup @
-         dup constant $! inc ;
+      stringvariables dup @
+      dup constant $! inc ;
 
 : tput0   ( $1 -- )
-     anothertput does>    ( -- )
-     >tput "${strings[s[sp--]]}"
+      anothertput does>    ( -- )
+      >tput "${strings[s[sp--]]}"
 ;
 
 : tput1   ( $1 -- )
-   anothertput  does> ( x -- )
-   >tput "${strings[s[sp--]]}" "${s[sp--]}"
+      anothertput  does> ( x -- )
+      >tput "${strings[s[sp--]]}" "${s[sp--]}"
 ;
 
 : tput2   ( $1 -- )
-   anothertput  does> ( x1 x2 -- )
-   >tput "${strings[s[sp--]]}" "${s[sp--]}" "${s[sp--]}"
+      anothertput  does> ( x1 x2 -- )
+      >tput "${strings[s[sp--]]}" "${s[sp--]}" "${s[sp--]}"
 ;
 
-: screen  ( -- x y )   "COLUMNS" env  "LINES" env  ;
+: screen  ( -- x y )                   \ return terminal window dimensions
+      "COLUMNS" env
+      "LINES" env  ;
 
-\ no arguments
-"init"     tput0 terminit
-"bold"     tput0 bold
-"home"     tput0 home
-"clear"    tput0 page
-"longname" tput0 term
-"cud1"     tput0 c-up
-"cuu1"     tput0 c-down
-"smul"     tput0 <ul
-"rmul"     tput0 ul>
-"smso"     tput0 <so
-"rmso"     tput0 so>
-"sgr0"     tput0 normal
-"blink"    tput0 blink
-"rev"      tput0 reverse
+\ ( -- )
+"init"     tput0 terminit              \ (re-)initialize terminal
+"longname" tput0 term                  \ print terminal name
+"clear"    tput0 page                  \ wipe screen
+"home"     tput0 home                  \ send cursor home
+"smcup"    tput0 savescreen            \ save screen contents, then wipe screen
+"rmcup"    tput0 restorescreen         \ restore previously save screen contents
+"sc"       tput0 save-cursor           \ save cursor position
+"rc"       tput0 restore-cursor        \ move cursor to previously saved cursor position
+"el"       tput0 eol                   \ delete from cursor to end of line
+"cuu1"     tput0 c-up                  \ move cursor up
+"cud1"     tput0 c-down                \ move cursor down
 
-"smcup"    tput0 savescreen
-"rmcup"    tput0 restorescreen
-"el"       tput0 eol
+"sgr0"     tput0 normal                \ undo attribute changes
+"bold"     tput0 bold                  \ turn on bold
+"smul"     tput0 <ul                   \ start underlining
+"rmul"     tput0 ul>                   \ end underlining
+"smso"     tput0 <so                   \ start "stand out" (reverse)
+"rmso"     tput0 so>                   \ end "stand out"
+"blink"    tput0 blink                 \ set blink attribute
+"rev"      tput0 reverse               \ set reverse video attribute
 
-"sc"       tput0 save-cursor
-"rc"       tput0 restore-cursor
+\ ( u -- )
+"setaf"    tput1 fg                    \ set text colour
+"setab"    tput1 bg                    \ set background colour
+"cuu"      tput1 c-ups                 \ move cursor up by u lines
+"cud"      tput1 c-downs               \ move cursor down by u lines
 
+\ ( u1 u2 -- )
+"cup"      tput2 at                    \ move cursor to column u1 line u2
+
+\ colours for using with fg and bg
 0 constant black
 1 constant red
 2 constant green
@@ -60,10 +71,3 @@ from stringvars
 5 constant magenta
 6 constant cyan
 7 constant white
-
-\ one argument
-"setaf"    tput1 fg
-"setab"    tput1 bg
-
-\ two arguments
-"cup"   tput2 at

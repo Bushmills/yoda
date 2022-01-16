@@ -1,0 +1,3 @@
+provides: eol
+satisfy tput0
+"el"       tput0 eol                   \ delete from cursor to end of line

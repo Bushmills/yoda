@@ -1,0 +1,4 @@
+provides: fg
+\ ( u -- )
+satisfy tput1
+"setaf"    tput1 fg

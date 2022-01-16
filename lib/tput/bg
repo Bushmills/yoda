@@ -1,0 +1,4 @@
+provides: bg
+satisfy tput1
+\ ( u -- )
+"setab"    tput1 bg                    \ set background colour

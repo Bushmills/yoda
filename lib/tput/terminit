@@ -1,0 +1,3 @@
+provides: terminit
+satisfy tput0
+"init"     tput0 terminit              \ (re-)initialize terminal

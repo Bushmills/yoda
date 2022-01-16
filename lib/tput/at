@@ -1,0 +1,4 @@
+provides: at
+satisfy tput2
+\ ( u1 u2 -- )
+"cup"      tput2 at                    \ move cursor to column u1 line u2

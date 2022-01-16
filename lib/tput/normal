@@ -1,0 +1,3 @@
+provides: normal
+satisfy tput0
+"sgr0"     tput0 normal                \ undo attribute changes

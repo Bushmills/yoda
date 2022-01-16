@@ -1,0 +1,24 @@
+
+from stringvars
+
+\ non compliant tput command builder:
+\ according 200x does does>, when not used in conjunction with create,
+\ yield an ambiguous condition.
+\ tput employs the yoda specific response of using does> in conjunction
+\ with a different defining word here:  constant.
+\ result is merely slightly more efficient code for string retrieval.
+
+
+\ ( -- )
+"longname" tput0 term                  \ print terminal name
+"smcup"    tput0 savescreen            \ save screen contents, then wipe screen
+"rmcup"    tput0 restorescreen         \ restore previously save screen contents
+"cuu1"     tput0 c-up                  \ move cursor up
+"cud1"     tput0 c-down                \ move cursor down
+
+"smul"     tput0 <ul                   \ start underlining
+"rmul"     tput0 ul>                   \ end underlining
+"smso"     tput0 <so                   \ start "stand out" (reverse)
+"rmso"     tput0 so>                   \ end "stand out"
+"blink"    tput0 blink                 \ set blink attribute
+"rev"      tput0 reverse               \ set reverse video attribute

@@ -1,0 +1,3 @@
+provides: restore-cursor
+satisfy tput0
+"rc"       tput0 restore-cursor        \ move cursor to previously saved cursor position

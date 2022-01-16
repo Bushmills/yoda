@@ -1,0 +1,3 @@
+provides: page
+satisfy tput0
+"clear"    tput0 page                  \ wipe screen

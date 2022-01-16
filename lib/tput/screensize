@@ -1,0 +1,4 @@
+provides: screensize
+: screensize  ( -- x y )                   \ return terminal window dimensions
+      "COLUMNS" env
+      "LINES" env  ;

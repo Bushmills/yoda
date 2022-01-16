@@ -1,0 +1,6 @@
+provides: tput1
+satisfy anothertput stringvariables
+: tput1   ( $1 -- )
+      anothertput  does> ( x -- )
+      >tput "${stringvariables[s[sp--]]}" "${s[sp--]}"
+;

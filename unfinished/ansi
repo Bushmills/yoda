@@ -21,6 +21,15 @@
 : bg    #40 + ansi ;
 : attr        ansi ;
 
+: c-up    "A" esc[ ;
+: c-down  "B" esc[ ;
+
+: save-cursor     esc emit '7 emit ;
+: restore-cursor  esc emit '8 emit ;
+
+: insert-line     "1L" esc[  ;
+: delete-line     "1M" esc[  ;
+
 
 \ ---- unused: reflect current screen colors and attributes combination in a variable
 \ bits 0..3:    attr

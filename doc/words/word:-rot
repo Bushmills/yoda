@@ -1,0 +1,8 @@
+name:                -rot
+stack:               ( x1 x2 x3 -- x3 x1 x2 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            stack
+input stream:
+decription:          rearrange stack by rotating top element to third of top position
+contexts:            interpreting, compiling

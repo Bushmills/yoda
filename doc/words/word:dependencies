@@ -1,0 +1,24 @@
+name:                dependencies
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            compiler
+
+decription:          scans all files in first defined library directory and its
+                     subdirectories for lines beginning with "provides:". reads
+                     the least of word names following on that line, and creates or
+                     updates a database file with word name to file path and name
+                     relationship.
+                     The compiler consults this file to locate source of forward
+                     resolvable words for inclusion.
+
+contexts:            interpreting, compiling
+notes:               should be executed to build or refresh if one of these
+                     conditions apply:
+                      -  fresh yoda installation
+                      -  library files moved, added, removed, renamed
+                      -  words in library files added, removed, renamed or moved between
+                         library files
+                      -  library base directory changed (first entry in ${libdirs[]} array,
+                         configuration item)
+                      generation of new file may take a few seconds.

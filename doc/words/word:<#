@@ -1,0 +1,14 @@
+created:             auto     (remove line after having checked and revised description)
+name:                <#
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+category:            pictured number conversion
+
+decription:          places an empty string on string stack, which will be used
+                     to buffer converted number output.
+
+contexts:            interpreting, compiling
+notes:               meant to be used in a <# ... #> sequence,  "..." being the
+                     number converting and conversion buffer affecting words.
+                     For those, see # #s sign hold

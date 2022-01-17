@@ -1,4 +1,5 @@
-\ colours for using with fg and bg
 provides: black red green yellow blue magenta cyan white
-satisfy enum
+needs: enum
+
+\ colours for using with fg and bg
 enum black red green yellow blue magenta cyan white

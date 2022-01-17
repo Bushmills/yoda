@@ -1,10 +1,10 @@
+provides: tests check expected report
+
 ( tools for automated test suite )
 
 have testcount lest   errors off  testcount off   done
 \ already loaded? don't reload, reset error log instead
 
-need link
-from tput
 create errors 0 ,
 create testcount 0 ,
 random constant canary
@@ -33,4 +33,3 @@ random constant canary
            errors link
            testcount @ ,  ;
 
-provides: tests check expected report

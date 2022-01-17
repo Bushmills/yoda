@@ -1,5 +1,6 @@
 provides: $@
-satisfy stringvariables
+needs: stringvariables
+
 \ push string array item u to string stack
 : $@ ( u -- ) ( -- $1 )
    >ss+=("${stringvariables[s[sp--]]}")

@@ -1,4 +1,5 @@
 provides: c-ups
-satify tput1
+needs: tput1
+
 \ ( u -- )
 "cuu"      tput1 c-ups                 \ move cursor up by u lines

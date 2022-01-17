@@ -1,5 +1,5 @@
 provides: $constant
-satisfy stringvariables $! $@
+
 : $constant
    create               ( $1 -- )
       stringvariables

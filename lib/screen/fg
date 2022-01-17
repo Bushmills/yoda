@@ -1,4 +1,5 @@
 provides: fg
+needs: tput1
+
 \ ( u -- )
-satisfy tput1
 "setaf"    tput1 fg

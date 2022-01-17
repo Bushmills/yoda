@@ -1,3 +1,4 @@
 provides: home
-satisfy tput0
+needs: tput0
+
 "home"     tput0 home                  \ send cursor home

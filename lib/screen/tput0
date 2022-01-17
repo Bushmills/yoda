@@ -1,0 +1,10 @@
+provides: tput0
+needs: stringvariables anothertput
+\ stringsvariables needs here because those aren't compiled through
+\ forward references. Instead, those are a bash array variable,
+\ supposed to exist when referenced.
+
+: tput0   ( $1 -- )
+      anothertput does>    ( -- )
+      >tput "${stringvariables[s[sp--]]}"
+;

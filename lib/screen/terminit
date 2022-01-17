@@ -1,3 +1,4 @@
 provides: terminit
-satisfy tput0
+needs: tput0
+
 "init"     tput0 terminit              \ (re-)initialize terminal

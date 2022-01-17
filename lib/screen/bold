@@ -1,3 +1,4 @@
 provides: bold
-satisfy tput0
+needs: tput0
+
 "bold"     tput0 bold                  \ turn on bold

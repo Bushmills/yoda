@@ -1,5 +1,5 @@
 provides: anothertput
-satisfy stringvariables $!
+
 : anothertput ( -- )
       stringvariables dup @
       dup constant $! inc ;

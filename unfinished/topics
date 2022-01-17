@@ -1,5 +1,4 @@
-
-from stringvars
+needs: $constant
 
 create onlinedocs             \ set on or off for switching between online and offline docs
 false ,
@@ -17,7 +16,7 @@ false ,
 "https://raw.githubusercontent.com/Bushmills/yoda/main/doc/topics/"
 $constant remotepath
 
-"topicdoc" env$  "/" join$
+"doc" env$ "/topics" join$
 $constant localpath
 
 \ retrieves topic $1 from github, regardless of onlinedocs setting,

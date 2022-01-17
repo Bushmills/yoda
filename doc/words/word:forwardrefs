@@ -11,6 +11,4 @@ contexts:            interpreting, compiling
 
 example:             forwardrefs on
 
-notes:               see topic forwardrefs
-                     see words resolve, instantresolve
-
+notes:               see also resolve, instantresolve

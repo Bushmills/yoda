@@ -1,9 +1,8 @@
+needs: home page
 40 constant xdim
 15 constant ydim
 
-from tput
 \ ----------- missing words -----------
-\ : home  ( -- )  "H" esc[  ;     inline        \ VT100/ANSI terminal control: cursor home
 : table create does> + @ ;
 
 

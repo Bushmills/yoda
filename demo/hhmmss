@@ -1,5 +1,4 @@
-need epoch
-resolve
+needs: epoch
 
 : hexal     6 base ! ;
 : :##       decimal # hexal # ': hold  ;

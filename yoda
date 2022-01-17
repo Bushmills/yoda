@@ -35,7 +35,11 @@
 #v="0.2.0    # 2021dec29,16:04
 #v="0.1.0    # 2021dec20,14:57
 
-IFS="." version=($v)
+tmp="$IFS"
+IFS="."
+version=($v)
+IFS="$tmp"
+
 
 
 # ----- declarations ------------------------------------- #fold00
@@ -189,14 +193,6 @@ logminus() { ((logindent+=-2)); log "$@"; }
 
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
-
-# ----- compiler muting ---------------------------------- #fold00
-
-derestricted=1                                                       # conditional compilation can turn off code generation
-restrict()   { derestricted=0; }
-derestrict() { derestricted=1; }
-restricted() { return "$derestricted"; }                             # flag current state
-derestrict
 
 # ----- ANSI/VT100 attributes ---------------------------- #fold00
 
@@ -415,10 +411,8 @@ use()  {
 }
 
 compile()  {                                                         # build new function from code in body array
-   restricted || {
-      optimise                                                       # here's the proper place for static code evaluation.
-      use "${target[@]}"
-   }
+   optimise                                                          # here's the proper place for static code evaluation.
+   use "${target[@]}"
 }
 
 # execute or compile args. Similar to invoke,
@@ -529,7 +523,6 @@ colon()  {
 semicolon()  {
    compile                                                           # compilation is gathered in an array body. Only
    compiling=0                                                       # when semicolon completes compilation, is
-   derestrict
 }                                                                    # a function created from contents of array.
 
 
@@ -581,7 +574,6 @@ warm()  {
    linenr="-1"                                                       # signal to from to stop sending more lines to evaluate
    compiling=0                                                       # interpret
    error=0
-   derestrict                                                        # turn off code suppressing
    r=() rp=0
    ((sp<0)) &&s=() sp=0                                              # always clear stack underflow
    ((clean))&&s=() sp=0 ss=()                                        # empty stacks
@@ -669,36 +661,27 @@ trap ctrl-c SIGINT
 
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
-   restricted || {
-# some patterns can simply be ignored when code creation is muted
-      ((radix=m[base]))
-      tmp="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
-      [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                       # 1234      unsigned number
-         stateless "((s[++sp]=$((${radix}#${word}&maxuint))))"       # convert signless numbers without special treatment
+   ((radix=m[base]))
+   tmp="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
+   [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                       # 1234      unsigned number
+      stateless "((s[++sp]=$((${radix}#${word}&maxuint))))"       # convert signless numbers without special treatment
+      return 0; }
+   [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                      # -1234     negative number
+      stateless "((s[++sp]=$((-${radix}#${word:1}&maxuint))))"
+      return 0; }
+   [[ ${word:0:1} == [%\$\#] ]] && {
+      radix="${bases[${word:0:1}]}"                               # yes: read radix associated with char
+      [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                # remainder of number all legal chars?
+         stateless "((s[++sp]=$((${radix}#${word:1}&maxuint))))"  # yes: convert from base and deal with it
          return 0; }
-      [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                      # -1234     negative number
-         stateless "((s[++sp]=$((-${radix}#${word:1}&maxuint))))"
-         return 0; }
-      [[ ${word:0:1} == [%\$\#] ]] && {
-         radix="${bases[${word:0:1}]}"                               # yes: read radix associated with char
-         [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                # remainder of number all legal chars?
-            stateless "((s[++sp]=$((${radix}#${word:1}&maxuint))))"  # yes: convert from base and deal with it
-            return 0; }
-      }
-      [[ ${word} == \'? || ${word} == \'?\' ]] && {                  # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
-         read -r tmp < <(printf "%d" "'${word:1:1}'")
-         stateless "s[++sp]=\"$tmp\""; return 0; }
-      [[ ${word} == ^[a-zA-Z\[] ]] && {                              # ^X        return control char
-         read -r tmp < <(printf "%d" "'${word:1:1}")
-         stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
    }
-# other patterns, especially those doing parsing or modifying line, must partially execute
-
-# while only single word, this may not be skipped during
-# code muting, or multi word double quote register a
-# false match and parses to line end.
+   [[ ${word} == \'? || ${word} == \'?\' ]] && {                  # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
+      read -r tmp < <(printf "%d" "'${word:1:1}'")
+      stateless "s[++sp]=\"$tmp\""; return 0; }
+   [[ ${word} == ^[a-zA-Z\[] ]] && {                              # ^X        return control char
+      read -r tmp < <(printf "%d" "'${word:1:1}")
+      stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
    [[ "${word:0:1}${word:0-1}" == '""' ]] && {                       # quoted string, single word
-      restricted && return 0
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
          ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
             code  "ss+=('${word:1:${#word}-2}')"                     # But variable expansion take place in interpreted branch.
@@ -714,13 +697,11 @@ pattern()  {                                                         # pattern i
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
-      restricted || {
          ((compiling)) && {
-            code "ss+=('$tmp $word')"                                # compile: compile code to add string to string stack unless compilation was muted
+            code "ss+=('$tmp $word')"                                # compile: compile code to add string to string stack
             return 0; }
          ss+=("$tmp $word")                                          # interpret push string to string stack
          return 0;
-      }
    }
    [[ "${word:0:1}" == '>' ]] && {                                   # >foo      execute a shell command
       tmp="${word:1}"                                                #           up to ; as args
@@ -730,14 +711,12 @@ pattern()  {                                                         # pattern i
          word="$line"                                                # otherwise is whole line passed as arguments
          line=""                                                     # and removed from further evaluation
       fi
-      restricted || stateless "$tmp $word"                           # execute or compile the parsed shell command
+      stateless "$tmp $word"                                         # execute or compile the parsed shell command
       return 0
    }
    ((m[shell])) || return 1                                          # done unless shell flag was set
-   restricted || {
-      stateless "${word} ${line}" ||                                 # in which case execution as shell command is attempted
-      shellerror "$?"                                                # non-zero exit values of shell commands will be passed on to yoda error handler
-   }
+   stateless "${word} ${line}" ||                                    # in which case execution as shell command is attempted
+   shellerror "$?"                                                   # non-zero exit values of shell commands will be passed on to yoda error handler
    line=""                                                           # assignment sets return value to 0
 }
 
@@ -851,28 +830,22 @@ evaluate()  {
          }
       fi
       pattern "$word" && continue                                    # not found yet: try patterns (numbers, strings, chars, hashbang, shell commands)
-      restricted && continue                                         # muted code generation: don't go through forward refs, but silently
-                                                                     #     assume "word found", as it will be ignored anyway.
-                                                                     # can't do that with patterns above - those may consume multi word strings.
-
       (( m[forwardrefs] )) && {                                      #     and forward references enabled ...
-         restricted || {                                             #     don't create forward refs during suppressed compilation phases
-            ((compiling)) && {                                       # still not successfully dealt with word. last resolve: in case of compiling ...
-               forwardref "$word"  "$lastword"                       #     create a forward reference.
-               code "${headersunresolved["$word"]}"                  #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
-               continue                                              # hope that it will eventually get resolved
+         ((compiling)) && {                                       # still not successfully dealt with word. last resolve: in case of compiling ...
+            forwardref "$word"  "$lastword"                       #     create a forward reference.
+            code "${headersunresolved["$word"]}"                  #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
+            continue                                              # hope that it will eventually get resolved
+         }
+         (( m[instantresolve] )) && {                             # interpret time forward references enables?
+            logplus "instant resolve needs $word"                 # log, then indent
+            need "$word"; resolve                                 # yes: declare need, immediately try to resolve
+            [[ -z "${headersunresolved[$word]}" ]] && {           # if resolved:
+               logminus "executing $word"                         #     unindent, log
+               ${headers["$word"]}                                #     execute
+               continue
             }
-            (( m[instantresolve] )) && {                             # interpret time forward references enables?
-               logplus "instant resolve needs $word"                 # log, then indent
-               need "$word"; resolve                                 # yes: declare need, immediately try to resolve
-               [[ -z "${headersunresolved[$word]}" ]] && {           # if resolved:
-                  logminus "executing $word"                         #     unindent, log
-                  ${headers["$word"]}                                #     execute
-                  continue
-               }
-               logminus "can't resolve $word"                        # else unindent, log,
-               unset -v 'headersunresolved["$word"]'                 # restore former state, proceed with unknown word handling
-            }
+            logminus "can't resolve $word"                        # else unindent, log,
+            unset -v 'headersunresolved["$word"]'                 # restore former state, proceed with unknown word handling
          }
       }
       notfound "$word"                                               # nothing helped. get grouchy.
@@ -1006,16 +979,6 @@ immediate
 colon ':'
    code 'word'                                                       # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
-   code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
-   code "((s[++sp]=$magic))"                                         # allow check of structure
-   code 'compiling=1'
-semicolon
-interactive
-
-colon 'u:'
-   code 'word'                                                       # parse space delimited word from input stream
-   code '[[ -z "${headersunresolved["$word"]}" ]] &&'
-   code ' restrict || colon "$word"'
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
    code "((s[++sp]=$magic))"                                         # allow check of structure
    code 'compiling=1'
@@ -1174,13 +1137,11 @@ colon "[']"
 semicolon
 immediate
 
-primitive '[' 'restricted||compiling=0'; immediate                   # don't allow to suspend compilation when compilation is muted
+primitive '[' 'compiling=0'; immediate
 primitive ']' 'compiling=1'
 
 colon 'literal'
-   code 'restricted || {'
    code 'push "${s[sp--]}"'
-   code '}'
 semicolon
 immediate
 
@@ -1496,7 +1457,7 @@ inline
 colon 'chop$'
    code 'tmp="${ss[-1]}"'
    code 'unset "ss[-1]"'
-   code 's1=("${#ss[@]}")'
+   code '((s1=${#ss[@]}))'
    code 'ss+=($tmp)'
    push '${#ss[@]}-s1'
 semicolon

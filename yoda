@@ -935,7 +935,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -2130,17 +2130,7 @@ semicolon
 
 primitive 'have'   'have'
 evaluate ': lack  have 0= ;'
-# ----- i/o ---------------------------------------------- #fold01
-
-# fade out in favour of lib/tput
-colon 'esc['
-   code 'printf "\e[%s" "${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-inout 1 0
-
-primitive 'ansi' 'printf "\e[%bm" "${s[sp--]}"'; inout 1 0
+# ----- i/o ---------------------------------------------- #FOLD01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0

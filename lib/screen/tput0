@@ -1,4 +1,6 @@
 provides: tput0
+needs: anothertput
+
 
 : tput0   ( $1 -- )
       anothertput does>    ( -- )

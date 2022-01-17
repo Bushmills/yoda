@@ -35,7 +35,7 @@ subsubversion=1             # 2022jan12,04:03   early version of automated testi
 #version=0  subversion=2    # 2021dec29,16:04
 #version=0  subversion=1    # 2021dec20,14:57
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -123,7 +123,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings.
 
-default='from fix  boot quit  "yoda shell" type$ cr  prompt'         # what to execute when no command line args given
+default='boot quit "yoda shell" type$ cr prompt  satisfy fix'        # what to execute when no command line args given
 
 # ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
@@ -163,7 +163,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -430,7 +430,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -484,13 +484,13 @@ primitive()  {
 
 colon()  {
    [[ -z "$1" ]] && emptyname
-   if [[ -z "${headersunresolved["$1"]}" ]]; then                    # check whether word is an unresolved forward reference
+   if [[ -z "${headersunresolved[$1]}" ]]; then                    # check whether word is an unresolved forward reference
       names[nextname]="$1"
       name="${header_code}_$((nextname++))"                          # prefix function names will avoid effect described on next line
    else                                                              # created word will resolve forward reference(s)
       name="${headersunresolved[$1]}"                                # as word name use name of forward reference
-      unset "headersunresolved[$1]"                                  # remove forward reference
-      log "resolving: $1"
+      foo="$1"
+      unset -v 'headersunresolved[$foo]'                               # remove forward reference
    fi
    header "$1" "$name"
 
@@ -739,7 +739,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -756,13 +756,16 @@ dependencies="$mydir/dependencies"
 
 # satisfy one single reference, passed as arg1
 satisfy1()  {
+   [[ -z ${headersstateless[$1]} ]] || return                        # word exists - already satisfied
    local word="$1"
    local forwarding="$((m[forwardrefs]))"
    ((m[forwardrefs]=-1))                                             # turn on forward references
    read -r _ tmp < <(
        awk -v word="$word" '$1 == word' "$dependencies"              # search dependency database
    )
-   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"                       # source found: load
+   [[ -n "$tmp" && -f "$tmp" ]] && {
+      from "$tmp"                                                    # source found: load
+   }
    ((m[forwardrefs]=forwarding))                                     # restore forward refs status
 }
 
@@ -775,10 +778,20 @@ resolve()  {
    ((resolving)) && return                                           # nesting into resolve doesn't get any more work done -
    local file                                                        #   we'll resolve anything open, or we don't, no matter
    local resolving=1                                                 #   how often resolve calls itself. This would only slow down
-   for word in "${!headersunresolved[@]}"; do
-      satisfy1 "$word"
+   previousheaders="-1"
+   totalheaders                                                      # total headers count before inclusion
+   until (( totalheaders == previousheaders )); do                   # loop until header count stabilises
+      previousheaders="$totalheaders"
+      for word in "${!headersunresolved[@]}"; do                     # try to resolve all in unresolved vocabulary
+         satisfy1 "$word"                                            # satisfying a word can create new forward references
+      done
+      ((${#headersunresolved[@]})) || break                          # no forwardrefs left: done
+      totalheaders                                                   # total headers count now, after inclusion
    done
+   sleep 1
 }
+
+
 
 # ----- line interpreter, evaluate------------------------ #fold00
 
@@ -916,16 +929,13 @@ from()  {
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    ((stackeffect == sp)) || unbalancedstack "$1"                     # demanding stack clean files with net effect zero.
    ((loaded[filehandle]++))                                          # increment load counter, mark as loaded
-   (( ${#headersunresolved[@]} )) && {                               # any forward references created?
-      log "$1"
-      resolve                                                        # try to resolve those right now
-   }
+   resolve
    return 0
 }
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -981,7 +991,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #FOLD01
+# ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'      # semicolon
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
@@ -2065,8 +2075,9 @@ semicolon
 
 colon 'boot'
    code 'word'
-   code 'need "$word"'                                               # cold entry may come from postlib
-   code 'resolve'                                                    # in which case we want it now
+#   code 'need "$word"'                                               # cold entry may come from postlib
+#   code 'resolve'                                                    # in which case we want it now
+   code 'satisfy1 "$word"'
    code 'coldvector="${headersstateless["$word"]}"'                  # because writing it to cold start vector
 semicolon                                                            # this way cold start entry points can be forward referenced
 
@@ -2470,7 +2481,7 @@ semicolon
 
 primitive 'version$'  'ss+=("$version.$subversion.$subsubversion")'
 
-# ----- experimental ------------------------------------- #FOLD01
+# ----- experimental ------------------------------------- #fold01
 
 
 # leftovers from running quit as coproc, exiting by error and
@@ -2579,7 +2590,7 @@ files[1]="$(realpath "$0")"
 ((${#args[@]})) || args[0]="$default"
 evaluate "${args[*]}"
 if [[ -n "$coldvector" ]]; then                                      # if cold launch point was specified, try to run.
-   (( ${#headersunresolved[@]} )) && resolve                         # still unresolved words? try to resolve those.
+   resolve                                                           # still unresolved words? try to resolve those.
    if (( ${#headersunresolved[@]} )); then
       printf "%s\n" "unresolved forward references:"                 # still unresolved words
       printf "%s\n" "${!headersunresolved[@]}"

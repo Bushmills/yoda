@@ -1,5 +1,4 @@
 provides: tput1
-needs: stringvariables anothertput
 
 : tput1   ( $1 -- )
       anothertput  does> ( x -- )

@@ -23,10 +23,11 @@ trash used   \ used is a too common word to waste it for this: discard header
 \ in case error occured while not loading from file, number in lasterror[1] (the line number)
 \ will be negative. Therefore will fix refuse to open a file when lasterror[1] is negative.
 
-: fix       "lasterror[1]" env
-            0< if >noerror
-            else  >eval editor "$fixargs" "$lasterror"
-            then  ;
+: fix
+    "lasterror[1]" env
+    0< if "noerror" shell$ exit then
+    >eval editor "$fixargs" "$lasterror"
+;
 
 \ much less not pretty now, and still useful
 : review

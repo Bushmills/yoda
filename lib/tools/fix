@@ -6,6 +6,8 @@ provides: fix review
 \ error line and columns can be passed to editor for moving cursor to error location.
 \ but as editor invocation lines differs, here's a selection of two handfuls:
 
+"less"       used lest >fixargs='+${lasterror[1]}'
+"most"       used lest >fixargs='+${lasterror[1]}'
 "nano"       used lest >fixargs='+${lasterror[1]},${lasterror[2]}'
 "mcedit"     used lest >fixargs='+${lasterror[1]}'
 "jupp"       used lest >fixargs='+${lasterror[1]}'

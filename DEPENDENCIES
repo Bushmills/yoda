@@ -50,6 +50,12 @@ The editors for which support has been preconfigured are:
       efte
       gedit
 
+      less
+      most
+in addition are "less" and "most" supported, but just for viewing,
+not for editing. Those are an alternative to an editor if mostly
+jumping to specific lines for viewing is wanted.
+
 Any of those can be specified in yoda.conf configuration file.
 
 

@@ -51,3 +51,8 @@ The editors for which support has been preconfigured are:
       gedit
 
 Any of those can be specified in yoda.conf configuration file.
+
+
+screen libraries for controlling cursor and attributes rely on
+presence of tput. No yoda internal references to any word 
+depending on it exist.

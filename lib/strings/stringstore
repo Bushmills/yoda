@@ -1,9 +1,0 @@
-provides: $!
-needs: stringvariables
-\ store top of string stack in strings array item u,
-\ then discard top string stack item
-
-: $!  ( u -- )  ( $1 -- )
-   >stringvariables[s[sp--]]="${ss[-1]}"
-   >unset "ss[-1]"
-;

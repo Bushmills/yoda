@@ -20,20 +20,23 @@
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
 #         right, that's the reason for using single quotes there.
-# SC2034  # "appears unused. Verify use (or export if used externally)"
-#         mostly, "appears" is the correct term
+# SC2034  "... appears unused. Verify use (or export if used externally)"
+#         in most cases is "appears" the correct term.
 # SC2154 "(warning): base is referenced but not assigned."
 #        is assigned, but shellcheck can't see how
 
 
-version=0  subversion=4
-subsubversion=2             # 2022jan14,14:47   one based files with tty as 0
-subsubversion=1             # 2022jan12,04:03   early version of automated testing.
-                            #                   converted many colon to primitive. literal became push.
-#version=0  subversion=4    # 2022jan10,04:13   pulled yoda and primitives together into a single file
-#version=0  subversion=3    # 2022jan07,22:31   any data item can be ticked now, so can words create by defining word using create ... does>
-#version=0  subversion=2    # 2021dec29,16:04
-#version=0  subversion=1    # 2021dec20,14:57
+ v="0.5.1"   # 2022jan17,12:25   dependency base resolving. dropped postlib, topics
+#v="0.4.2"   # 2022jan14,14:47   one based files with tty as 0
+#v="0.4.1"   # 2022jan12,04:03   early version of automated testing.
+#                                converted many colon to primitive. literal became push.
+#v="0.4.0    # 2022jan10,04:13   pulled yoda and primitives together into a single file
+#v="0.3.0    # 2022jan07,22:31   any data item can be ticked now, so can words create by defining word using create ... does>
+#v="0.2.0    # 2021dec29,16:04
+#v="0.1.0    # 2021dec20,14:57
+
+IFS="." version=($v)
+
 
 # ----- declarations ------------------------------------- #fold00
 
@@ -760,8 +763,8 @@ satisfy1()  {
    local word="$1"
    local forwarding="$((m[forwardrefs]))"
    ((m[forwardrefs]=-1))                                             # turn on forward references
-   read -r _ tmp < <(
-       awk -v word="$word" '$1 == word' "$dependencies"              # search dependency database
+   read -r tmp < <(
+      awk -v word="$word" '$1 == word { print $2 }' "$dependencies"  # search dependency database
    )
    [[ -n "$tmp" && -f "$tmp" ]] && {
       from "$tmp"                                                    # source found: load
@@ -935,7 +938,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -2130,19 +2133,11 @@ semicolon
 
 primitive 'have'   'have'
 evaluate ': lack  have 0= ;'
-# ----- i/o ---------------------------------------------- #FOLD01
+# ----- i/o ---------------------------------------------- #fold01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
 evaluate ': type  pack$ type$ ;'  ; inline;  inout 2 0
-
-# parse input for string delimited by string on string stack
-# may be removed, and next word "parse" inheriting its name,
-# following a suggestion of ruv
-#colon 'parse$'
-#   code 'parse "${ss[-1]}"'
-#   code 'ss[-1]="$word"'
-#semicolon
 
 # parse input for string delimited by character specified by ASCII value on stack
 colon 'parse$'
@@ -2411,12 +2406,10 @@ semicolon
 evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
 
 colon 'version'
-   push '$version'
-   push '$subversion'
-   push '$subsubversion'
+   push '${version[0]}'
+   push '${version[1]}'
+   push '${version[2]}'
 semicolon
-
-primitive 'version$'  'ss+=("$version.$subversion.$subsubversion")'
 
 # ----- experimental ------------------------------------- #fold01
 

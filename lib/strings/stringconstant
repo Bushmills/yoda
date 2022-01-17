@@ -2,7 +2,7 @@ provides: $constant
 
 : $constant
    create               ( $1 -- )
-      stringvariables
+      nstrings
       dup @
       dup , $!
       inc

@@ -1,5 +1,5 @@
 provides: anothertput
 
 : anothertput ( -- )
-      stringvariables dup @
+      nstrings dup @
       dup constant $! inc ;

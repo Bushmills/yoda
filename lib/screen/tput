@@ -1,6 +1,3 @@
-
-from stringvars
-
 \ non compliant tput command builder:
 \ according 200x does does>, when not used in conjunction with create,
 \ yield an ambiguous condition.

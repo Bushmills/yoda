@@ -3,5 +3,5 @@ needs: anothertput
 
 : tput2   ( $1 -- )
       anothertput  does> ( x1 x2 -- )
-      >tput "${stringvariables[s[sp--]]}" "${s[sp--]}" "${s[sp--]}"
+      >tput "${strings[s[sp--]]}" "${s[sp--]}" "${s[sp--]}"
 ;

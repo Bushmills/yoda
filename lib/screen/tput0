@@ -4,5 +4,5 @@ needs: anothertput
 
 : tput0   ( $1 -- )
       anothertput does>    ( -- )
-      >tput "${stringvariables[s[sp--]]}"
+      >tput "${strings[s[sp--]]}"
 ;

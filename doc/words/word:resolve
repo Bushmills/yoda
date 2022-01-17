@@ -4,13 +4,18 @@ return stack:        ( -- )
 string stack:        ( -- )
 category:            compiler
 
-decription:          performs a resolve run if any unresolved references exist,
-                     attempting to resolve those from postlib by conditional
-                     compilation. resolve may repeat the attempt when new forward
+decription:          performs a resolve run if any unresolved references exist.
+                     resolve may repeat the attempt when new forward
                      references are created as result of resolving others. When
                      no more unresolved references exist, or no more forward
                      references are resolved and no new forward references are
                      introduced, resolve considers its work as done and returns.
+
+                     in order to find source files which contain needed words a
+                     database file is needed which can be generated or refreshed
+                     by executing     yoda dependencies  (or just  dependencies
+                     when in yoda interactive mode)
+
 
 contexts:            interpreting, compiling
 notes:               resolve may be executed whenever it seem appropriate. You may

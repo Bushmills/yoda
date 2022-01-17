@@ -98,15 +98,6 @@ and compiling before being executed is. You possibly noticed a small delay
 between pressing "Enter" and the hex dump showing - that's the time yoda
 needed to find dump, then read and compile it prior to executing it.
 
-
-A library meant for containing potentially unresolved words exists. It is
-named "postlib" and included at the end. Definitions in there should all be
-of conditional nature to avoid redefinitions, as postlib may get read
-several times. Two kind of conditional compilation can be found in there:
-
-- source compiling to code in case they're needed
-- inclusion of other library files if they contain needed source.
-
 For managing conditional compilation, these words exist:
 
       u:
@@ -126,9 +117,11 @@ needed   can be used to test existence of a specific forward reference. A flag
          This flag can be conditionally responded to with flow control constructs
          like "lest" and "unless"
 
-need     creates a forward reference explicitely. Rather than forward references,
-         created by unknown words in code, these may have better use for signalling
-         to postlib.
+need     creates a forward reference explicitely. Execution of resolve will attempt
+         to resolve all forward references.
+         Execute "forwardrefs on" for creating forward refs into compiled words
+         automatically. With forwardrefs on, executing "instantresolve on" will also
+         resolve words entered for instant execution immediately
 
 have     check whether a word exists, return execution token or 0
 lack     check whether a word exists, return flag (logical not of result from have)

@@ -48,8 +48,6 @@ break=2                                                              # break wil
 clean=1                                                              # empty stack on error/ctrl-c
 codedump=0
 
-postlib="postlib"                                                    # forth source for resolving possible forward references
-
 read -r tmp _ < <(realpath "$0")
 mydir="${tmp%/*}"
 
@@ -771,8 +769,8 @@ satisfy1()  {
 }
 
 resolving=0
-# loop through postlib inclusion until total header count stabilises.
-# doing so because resolving forward references from postlib may create
+# looping resolve until header count stabilised.
+# doing so because resolving forward references may create
 # new forward references, which also need resolving.
 resolve()  {
    (( ${#headersunresolved[@]} )) || return                          # only run if unresolved words exist
@@ -2088,8 +2086,6 @@ semicolon
 
 colon 'boot'
    code 'word'
-#   code 'need "$word"'                                               # cold entry may come from postlib
-#   code 'resolve'                                                    # in which case we want it now
    code 'satisfy1 "$word"'
    code 'coldvector="${headersstateless["$word"]}"'                  # because writing it to cold start vector
 semicolon                                                            # this way cold start entry points can be forward referenced

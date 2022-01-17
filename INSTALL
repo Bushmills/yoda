@@ -4,8 +4,8 @@ While yoda will be able to run all alone, you still
 may want to grab the rest, especially yoda.conf, and
 the subdirectories doc and lib.
 
-Further instructions assume presence of file postlib
-in the lib directory:
+Further instructions assume presence of populated lib
+directory:
 
 For an initial test run, change to the directory which
 contains the file yoda and the subdirecty "lib" with at
@@ -29,8 +29,19 @@ which can be found in the same directory where yoda resides.
 All settings should have been set to reasonable defaults,
 but your preferences may differ.
 
-3. Test editor and doc path settings by first launching quit,
-then enter "topics". Of the list of numbered topics, choose one
+3. Test editor and doc path settings by launching yoda, then 
+try to open the definition of a word by entering review followed
+by the name of the word. For example
+
+   review .
+
+should open the definition of .  in the editor. Similarily, the
+definition of "review" itself can be opened too:
+
+   review review
+
+
+ "topics". Of the list of numbered topics, choose one
 which attracts your interest. Open it in the editor by typing the
 number next to it, followed by space, the word "topic" and a tap
 on the "Return" key. The picked topic should open, ready for reading.

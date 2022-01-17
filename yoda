@@ -56,10 +56,12 @@ worddoc_prefix="word"                                                # used as p
 worddoc="$doc/words/$worddoc_prefix"                                 # directory of words documentation, also first part of word doc file name
 topicdoc="$doc/topics"                                               # directory containing files describing topics
 
+# only first added directory - and its subdirectories - can
+# contain forward referencable libs.
 libdirs=()                                                           # array of possible library paths
-libdirs+=("$mydir")                                                  # look in directory where yoda resides
-[[ -d "$mydir/lib" ]] && libdirs+=("$mydir/lib")                     # look in directory "lib" under dir in which yoda resides, if existing
-[[ -d "/usr/local/lib/yoda" ]] && libdirs+=("/usr/local/lib/yoda")   # look in /usr/local/lib/yoda if existing
+for dir in "$mydir/lib" "$mydir" "/usr/local/lib/yoda"; do           # loop through directory candidates
+   [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
+done
 
 logfile="$mydir/yoda.log"
 rm -f "$logfile"                                                     # each run starts with a fresh log
@@ -2546,6 +2548,7 @@ semicolon
 #     dependencies are outdated, stale or missing.
 #
 #  satisfy
+#  needs:
 #     turns forward refs on, parses space delimited strings from input
 #     line (the name of needed words). For each word is the library
 #     file containing word's source located by searching the dependencies
@@ -2561,10 +2564,8 @@ semicolon
 #  it is likely to remain in "experimental" for a while.
 
 
-dependencies()  {                                                    # libary inclusion dependency file builder
-   for dir in "${libdirs[@]}"; do
-     grep -r "^provides:" "$dir"
-   done | sort -u |
+dependencies()  {                                                    # library inclusion dependency file builder
+   grep -r "^provides:" "${libdirs[0]}" |
    while read -r file words; do
       file="${file%:provides:}"
 # "Double quote to prevent globbing and word splitting."

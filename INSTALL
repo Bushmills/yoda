@@ -51,10 +51,12 @@ found and launched from). if no editor is launched, the editor
 settings may need adjustment (editor defaults to vi, and can be changed
 in yoda.conf)
 
-4. editor can also be used to open included libraries.
-Currently 2 files will show when executing "files": yoda and fix.
-Like "topics", these are numbered. Use the number with "edit"
-to open, view and edit the chosen library.
+4. create the file which tells yoda what files to include when
+forward referenced word are needed:
 
-Similar first instructions can be obtained by executing "help" in
-the "quit" shell.
+   dependencies
+
+or, from bash command line when yoda wasn't started:
+
+   yoda dependencies
+ 

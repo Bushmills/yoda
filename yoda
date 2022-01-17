@@ -42,7 +42,7 @@ IFS="$tmp"
 
 
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -50,7 +50,6 @@ GLOBIGNORE='*:?'
 
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
 trace=0                                                              # turn chatty system on
-log=0                                                                # turn logging on
 break=2                                                              # break will return (0), exit (1) or execute coldvector (2)
 clean=1                                                              # empty stack on error/ctrl-c
 codedump=0
@@ -68,9 +67,6 @@ libdirs=()                                                           # array of 
 for dir in "$mydir/lib" "$mydir" "/usr/local/lib/yoda"; do           # loop through directory candidates
    [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
 done
-
-logfile="$mydir/yoda.log"
-rm -f "$logfile"                                                     # each run starts with a fresh log
 
 header_code="yoda"                                                   # prefix to bash function names,  _${nextname} will be appended upon header creation
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
@@ -169,7 +165,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 comp=("" ":")
 trace()  {
@@ -177,19 +173,6 @@ trace()  {
    printf "### %-1s %-20s %s\n" "${comp[compiling & 1]}" "[${FUNCNAME[1]}]" "$@"
 #                                                 ^^^  convert any non-zero to 1, used as array index
 }
-
-logindent=0
-log()  {
-   ((log)) && {
-      tmp="$((${#headersunresolved[@]}))"
-      ((tmp))&&tmp="[$tmp]"||tmp=""
-      printf "%-26s-> %-16s %5s%${logindent}s %s\n" "${FUNCNAME[2]}" "${FUNCNAME[1]}" "$tmp" "" "$@" >> "$logfile"
-   }
-}
-
-logplus()  { log "$@"; ((logindent+=2)) ; }
-logminus() { ((logindent+=-2)); log "$@"; }
-
 
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
@@ -775,7 +758,7 @@ resolve()  {
 
 
 
-# ----- line interpreter, evaluate------------------------ #fold00
+# ----- line interpreter, evaluate------------------------ #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -795,7 +778,6 @@ forwardref()  {
    [[ -z ${headersunresolved["$word"]} ]] && {                       # don't re-forwardref and already forward ref'ed word
       names[nextname]="$1"
       headersunresolved["$1"]="${header_code}_$((nextname++))"       # create unresolved header with new name, associate with word
-      log "new forw: $1"
    }
 }
 
@@ -837,14 +819,11 @@ evaluate()  {
             continue                                              # hope that it will eventually get resolved
          }
          (( m[instantresolve] )) && {                             # interpret time forward references enables?
-            logplus "instant resolve needs $word"                 # log, then indent
             need "$word"; resolve                                 # yes: declare need, immediately try to resolve
             [[ -z "${headersunresolved[$word]}" ]] && {           # if resolved:
-               logminus "executing $word"                         #     unindent, log
                ${headers["$word"]}                                #     execute
                continue
             }
-            logminus "can't resolve $word"                        # else unindent, log,
             unset -v 'headersunresolved["$word"]'                 # restore former state, proceed with unknown word handling
          }
       }
@@ -911,7 +890,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1587,7 +1566,7 @@ inout 0 1
 
 
 
-# ----- bit logic ---------------------------------------- #fold01
+# ----- bit logic ---------------------------------------- #FOLD01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'

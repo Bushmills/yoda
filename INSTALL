@@ -40,17 +40,6 @@ definition of "review" itself can be opened too:
 
    review review
 
-
- "topics". Of the list of numbered topics, choose one
-which attracts your interest. Open it in the editor by typing the
-number next to it, followed by space, the word "topic" and a tap
-on the "Return" key. The picked topic should open, ready for reading.
-If an empty file is opened, the topics doc directory isn't right (it
-defaults to subdirectory doc/topics in the directory where yoda was
-found and launched from). if no editor is launched, the editor
-settings may need adjustment (editor defaults to vi, and can be changed
-in yoda.conf)
-
 4. create the file which tells yoda what files to include when
 forward referenced word are needed:
 

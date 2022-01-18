@@ -4,5 +4,5 @@ return stack:        ( -- ??? )
 string stack:        ( $1 -- ??? )
 decription:          takes a string from string stack and evaluates it as if it was
                      entered or read from file.
-contexts:            interpreting, compiling
+contexts:            stateless
 example:             "3 5 * ." evaluate$

@@ -8,7 +8,6 @@ decription:          performs an arithmetic comparison on signed numbers n1 and 
                      replaces them against a true flag if n1 is less than n2, or
                      a false flag in other cases.
 
-contexts:            interpreting, compiling
-example:             none
+contexts:            stateless
 
 notes:               < is broken wrt numbers other than 0...maxint (2021dec30)

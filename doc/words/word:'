@@ -10,7 +10,7 @@ decription:          returns the so called execution token of the next word whic
                      sized integer which identifies the word, and can be used to execute
                      it (see "execute")
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             ' cr  dup  ' u.
                      execute execute

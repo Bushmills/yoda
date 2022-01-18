@@ -10,7 +10,7 @@ input stream:        word name
 decription:          looks up word name in dictionary, returns 0 for word not found/
                      undefined, or the execution token associated with word.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               similar to ' , but doesn't throw an error if word not found.
                      This makes it useful for conditional compilation, where a

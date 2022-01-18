@@ -8,4 +8,4 @@ category:            status
 decription:          return version, subversion and subsubversion of currently
                      executing yoda
 
-contexts:            interpreting, compiling
+contexts:            stateless

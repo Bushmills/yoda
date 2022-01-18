@@ -4,4 +4,4 @@ return stack:        ( -- )
 string stack:        ( -- )
 decription:          replaces n with false flag if n was 0 or positive
                      replaces n with true flag if n was negative
-contexts:            interpreting, compiling
+contexts:            stateless

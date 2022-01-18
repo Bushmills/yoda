@@ -2,5 +2,7 @@ name:                bye
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+
 decription:          exit from running program or script
-contexts:            interpreting, compiling
+
+contexts:            stateless

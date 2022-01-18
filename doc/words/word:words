@@ -7,4 +7,4 @@ category:            dictionary
 decription:          shows a listing of all known named words in sections of all
                      populated vocabularies.
 
-contexts:            interpreting, compiling
+contexts:            stateless

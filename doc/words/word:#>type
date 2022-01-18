@@ -9,6 +9,6 @@ decription:          completes a pictured number conversion sequence, by
                      it, and cleaning up stacks.
                      meant to be used in conjunction with <#
 
-contexts:            interpreting, compiling
-example:             <ä # # #>type
+contexts:            stateless
+example:             <# # # #>type
 notes:               functional equivalent to "#> type", but more efficient.

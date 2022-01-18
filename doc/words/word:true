@@ -3,4 +3,4 @@ stack:               ( -- -1 )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          returns a true flag (all bits set)
-contexts:            interpreting, compiling
+contexts:            stateless

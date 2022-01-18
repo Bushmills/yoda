@@ -6,4 +6,4 @@ category:            stack
 
 decription:          empties stack
 
-contexts:            interpreting, compiling
+contexts:            stateless

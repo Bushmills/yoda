@@ -3,4 +3,4 @@ stack:               ( u1 -- u2 )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          bitwise invert of u1
-contexts:            interpreting, compiling
+contexts:            stateless

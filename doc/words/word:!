@@ -6,4 +6,4 @@ category:            memory
 
 decription:          stores x at memory address a
 
-contexts:            interpreting, compiling
+contexts:            stateless

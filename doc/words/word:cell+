@@ -3,5 +3,5 @@ stack:               ( u1 -- u2 )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          uncreases u1 by the number of memory cells needed to hold one integer
-contexts:            interpreting, compiling
+contexts:            stateless
 notes:               yoda uses cell size of 1

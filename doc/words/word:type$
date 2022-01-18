@@ -7,4 +7,4 @@ category:            strings, I/O
 decription:          prints top string stack item as string and removes it
                      from string stack.
 
-contexts:            interpreting, compiling
+contexts:            stateless

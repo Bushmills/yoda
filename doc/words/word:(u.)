@@ -3,7 +3,7 @@ stack:               ( u -- )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          a helper word for . and u. to output a number
-contexts:            interpreting, compiling
+contexts:            stateless
 example:             none
 notes:               provided for the time being, as there is no pictured output
                      conversion yet.  respects base

@@ -8,6 +8,5 @@ decription:          a non-zero value for flag aborts, passing u as abort value 
                      error handling.  if flag is zero, both flag und u are removed
                      and execution continues.
 
-contexts:            interpreting, compiling
-example:             none
+contexts:            stateless
 notes:               not entirely unlike "assert" known from some other languages.

@@ -7,4 +7,4 @@ category:            arithmetics
 decription:          a scaling operation on signed number, n4 being the quotient
                      of the product of n1, n2 divided by n3.
 
-contexts:            interpreting, compiling
+contexts:            stateless

@@ -7,7 +7,7 @@ category:            dictionary
 
 decription:          produces name of word from execution token xt
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               the reverse operation of ' (tick) which takes a word name and
                      produces its execution token.

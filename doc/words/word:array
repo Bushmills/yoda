@@ -11,4 +11,4 @@ decription:          parse a space delimited string from input stream and create
                      replaced against the corresponding item address.
                      Items in newly defined arrays are ininitialised.
 
-contexts:            interpreting, compiling
+contexts:            stateless

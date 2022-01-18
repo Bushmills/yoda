@@ -3,4 +3,4 @@ stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          pushs the largest value of the largest signed integer to stack.
-contexts:            interpreting, compiling
+contexts:            stateless

@@ -6,6 +6,5 @@ category:            I/O
 
 decription:          outputs n as signed integer, with a trailing space appended.
 
-contexts:            interpreting, compiling
-example:             none
+contexts:            stateless
 notes:               respects contents of variable "base"

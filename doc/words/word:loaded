@@ -14,7 +14,7 @@ decription:          returns a file load counter u. first time a file is loaded 
                      proceed with loading in any case, use
                         loaded unless  "first time loading" type$ cr
 
-contexts:            interpreting, loading
+contexts:            stateless
 
-notes:               using "loaded" only makes sense with words which execute while
-                     loading from file.
+notes:               compiling loaded into other words makes only sense with words which
+                     execute while loading from file.

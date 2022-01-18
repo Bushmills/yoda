@@ -6,4 +6,4 @@ category:            I/O
 
 decription:          output x spaces
 
-contexts:            interpreting, compiling
+contexts:            stateless

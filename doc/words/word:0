@@ -6,4 +6,4 @@ category:            constant
 
 decription:          push the value of zero to stack
 
-contexts:            interpreting, compiling
+contexts:            stateless

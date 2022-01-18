@@ -3,4 +3,4 @@ stack:               ( x -- f )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          replaces x against a false flag if x was zero, a true flag otherwise
-contexts:            interpreting, compiling
+contexts:            stateless

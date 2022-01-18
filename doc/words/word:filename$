@@ -6,7 +6,7 @@ category:            file, string
 
 decription:          convert file handle u to filename $1
 
-contexts:            interpreting, compiling
+contexts:            stateless
 example:             none
 
 notes:               filename is the canonical name of a file yoda has already read,

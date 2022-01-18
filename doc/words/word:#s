@@ -7,7 +7,7 @@ category:            pictured number conversion, string stack
 decription:          converts all (remaining) digits of x, respecting current
                      radix, to characters, which are prepended to $1
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               meant to be used with pictured number conversion, albeit
                      this implemenation doesn't require it. See notes at "hold"

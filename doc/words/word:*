@@ -6,4 +6,4 @@ category:            arithmetics
 
 decription:          multiply signed integers n1 and n2, return product n3
 
-contexts:            interpreting, compiling
+contexts:            stateless

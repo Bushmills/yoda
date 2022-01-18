@@ -6,4 +6,4 @@ category:            arithmetic
 
 decription:          signed division of n1 by n2. quotient is returned as n3
 
-contexts:            interpreting, compiling
+contexts:            stateless

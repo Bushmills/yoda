@@ -15,6 +15,6 @@ decription:          launches the word with execution token xt as coproc, that i
                      Also see "wait" for the word launching the coproc to synchronise with it
                      finishing.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 example:             none
 notes:               none

@@ -6,4 +6,4 @@ category:            stacks
 
 decription:          empties stack and string stack. shorthand for empty empty$
 
-contexts:            interpreting, compiling
+contexts:            stateless

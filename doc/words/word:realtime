@@ -7,7 +7,7 @@ category:            time
 decription:          return the number of microseconds elapsed since 1970jan1.
                      Similar to epoch, but with higher resolution.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               chosen arithmetic model (bit per cell) must be large enough
                      for an integer to hold a number of this size (51 bits), or it

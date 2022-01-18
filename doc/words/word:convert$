@@ -3,7 +3,7 @@ stack:               ( -- x )
 return stack:        ( -- )
 string stack:        ( $1 -- )
 decription:          converts a string to a number
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             "22" "05" join$ convert$ .
                      ( gives 2205 )

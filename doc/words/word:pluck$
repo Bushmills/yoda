@@ -6,4 +6,4 @@ category:            strings
 
 decription:          adds a copy of third string stack item on top of string stack
 
-contexts:            interpreting, compiling
+contexts:            stateless

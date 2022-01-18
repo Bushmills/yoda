@@ -7,8 +7,7 @@ category:            arithmetics
 
 decription:          add two to x1.
 
-contexts:            interpreting, compiling
-example:             none
+contexts:            stateless
 notes:               was meant to be unnecessary because optimiser is supposed
                      to generate identical code from 2 + but as that's not
                      already happening, 2+ was added for convenience

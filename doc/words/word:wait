@@ -8,7 +8,7 @@ category:            experimental, process control
 decription:          wait for completion of the process which was launched by
                      using coproc
 
-contexts:            interpreting, compiling
+contexts:            stateless
 notes:               a leftover from attempting to provide a real warm start
                      capability for error, abort, break or quit. Kept because
                      it may become useful for another purpose.

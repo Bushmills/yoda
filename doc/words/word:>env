@@ -7,4 +7,4 @@ category:            environment
 decription:          write number x to environment variable with the name specified
                      by top string stack item
 
-contexts:            interpreting, compiling
+contexts:            stateless

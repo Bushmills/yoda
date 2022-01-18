@@ -5,7 +5,7 @@ string stack:        ( -- )
 decription:          a variable, used as flag to turn off or on passing unknown
                      words for execution to shell.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             shell on
 

@@ -9,7 +9,7 @@ decription:          fetches a space delimited string from input stream, creates
                      Such created variables push, when executed, the address where
                      its data is stored.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             variable foo      \ create variable named foo
                      123 foo !         \ store 123 in variable

@@ -6,4 +6,4 @@ category:            memory, arithmetics
 
 decription:          adds x to contents at address a
 
-contexts:            interpreting, compiling
+contexts:            stateless

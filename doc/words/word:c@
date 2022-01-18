@@ -1,0 +1,8 @@
+name:                c@
+stack:               ( a -- c )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            memory
+contexts:            stateless
+
+decription:          reads a byte sized number c from address a

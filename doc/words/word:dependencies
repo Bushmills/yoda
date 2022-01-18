@@ -12,7 +12,7 @@ decription:          scans all files in first defined library directory and its
                      The compiler consults this file to locate source of forward
                      resolvable words for inclusion.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 notes:               should be executed to build or refresh if one of these
                      conditions apply:
                       -  fresh yoda installation

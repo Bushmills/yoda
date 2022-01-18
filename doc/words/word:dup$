@@ -3,4 +3,4 @@ stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( $1 -- $1 $1 )
 decription:          duplicate top string stack item
-contexts:            interpreting, compiling
+contexts:            stateless

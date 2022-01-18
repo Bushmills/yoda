@@ -7,6 +7,6 @@ category:            dictionary
 
 decription:          outputs name of word corresponding with execution token xt
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               just a shortcut for  name type$

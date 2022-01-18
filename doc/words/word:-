@@ -6,4 +6,4 @@ category:            arithmetics
 
 decription:          subtract n2 from n1, difference is returned as n3
 
-contexts:            interpreting, compiling
+contexts:            stateless

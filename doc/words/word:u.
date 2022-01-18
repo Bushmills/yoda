@@ -6,4 +6,4 @@ category:            number formating
 
 decription:          output unsigned number u., respecting radix stored in base
 
-contexts:            interpreting, compiling
+contexts:            stateless

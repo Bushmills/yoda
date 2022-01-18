@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 decription:          replaces $1 against a part of it, specified by first character
                      position u1, and length of u2.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             "abcdefgh"  2 3 mid$       \ produces  "cde"
 

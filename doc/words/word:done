@@ -2,12 +2,11 @@ name:                done
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-category:
-input stream:
+category:            loading, flow control
 
 decription:          terminates compiling from current file. Akin to treating the
                      remainder of the currently loaded file as comments.
 
-contexts:            loading from file, interpreting
+contexts:            stateless
 notes:               best use is in conjunction with interpretative conditionals,
-                     like lest or unless.
+                     like lest or unless, while loading from file

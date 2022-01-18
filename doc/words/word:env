@@ -3,7 +3,7 @@ stack:               ( -- x )
 return stack:        ( -- )
 string stack:        ( $1 -- )
 decription:          read numeric contents of environment variable $1 and place on stack
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             "LINES" env
 

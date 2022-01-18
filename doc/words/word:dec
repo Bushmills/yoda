@@ -6,4 +6,4 @@ category:            arithmetic, memory
 
 decription:          decrement memory contents at address a by 1
 
-contexts:            interpreting, compiling
+contexts:            stateless

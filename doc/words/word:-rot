@@ -5,4 +5,4 @@ string stack:        ( -- )
 category:            stack
 input stream:
 decription:          rearrange stack by rotating top element to third of top position
-contexts:            interpreting, compiling
+contexts:            stateless

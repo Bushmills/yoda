@@ -11,4 +11,4 @@ decription:          meant to be used between <# and #>, its operation is part o
                      string representation of the integer digit by digit, while gradually
                      diminishing u1 until 0 is left, and nothing more needs converting.
 
-contexts:            interpreting, compiling
+contexts:            stateless

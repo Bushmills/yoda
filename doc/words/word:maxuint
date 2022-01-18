@@ -3,4 +3,4 @@ stack:               ( -- u )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          largest unsigned number which can be represented with the chosen model
-contexts:            interpreting, compiling
+contexts:            stateless

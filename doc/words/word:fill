@@ -3,7 +3,7 @@ stack:               ( a u c -- )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          fill u memory locations fromon a with c
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               while c is meant to describe a character, fill will happily accept
                      non byte sized parameter for c, and fill memory with it.

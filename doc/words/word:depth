@@ -6,4 +6,4 @@ category:            stack
 
 decription:          returns number of stack items (exclusive u)
 
-contexts:            interpreting, compiling
+contexts:            stateless

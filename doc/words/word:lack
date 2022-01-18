@@ -9,6 +9,6 @@ input stream:        word name
 decription:           looks up word name in dictionary, returns true for word not found/
                      undefined, or false if word exists.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               he logical complement of "have"

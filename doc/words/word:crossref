@@ -7,6 +7,6 @@ category:            doc
 
 decription:          outputs a list of words along with their (synthetic) function names
 
-contexts:            interpreting, compiling
+contexts:            stateless
 example:             none
 notes:               none

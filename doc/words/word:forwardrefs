@@ -7,7 +7,7 @@ decription:          produces address of a variable, used as flag. When content
                      result in error, but in creating a forward reference for later
                      resolving.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             forwardrefs on
 

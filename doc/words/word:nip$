@@ -6,4 +6,4 @@ category:            strings
 
 decription:          remove and discard second from top string stack item
 
-contexts:            interpreting, compiling
+contexts:            stateless

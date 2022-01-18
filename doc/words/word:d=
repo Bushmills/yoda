@@ -9,4 +9,4 @@ decription:          while taken from the doubles word set, it has its use with 
                      stack items too, which is why it has been added: returns true when
                      (x1 == x3) AND (x2 == x4), false otherwise.
 
-contexts:            interpreting, compiling
+contexts:            stateless

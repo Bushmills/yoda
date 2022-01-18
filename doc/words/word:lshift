@@ -3,4 +3,4 @@ stack:               ( u1 u2  -- u3 )
 return stack:        ( -- )
 string stack:        ( -- )
 decription:          logical shift left of u1 by u2 bit positions
-contexts:            interpreting, compiling
+contexts:            stateless

@@ -10,7 +10,7 @@ decription:          searches for first occurance of $2 in $1, then remove match
                      the resulting string as $3. u is pushed to stack, informing how
                      many characters were removed from $1.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             "this foo could be rather nice if it was..."  "if" cut$
 

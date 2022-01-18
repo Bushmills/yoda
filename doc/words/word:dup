@@ -6,4 +6,4 @@ category:            stack
 
 decription:          duplicate top stack item
 
-contexts:            interpreting, compiling
+contexts:            stateless

@@ -12,4 +12,4 @@ decription:          return the loop index of loop enclosing the innermost loop.
                      loops.
                      j also works with nested interpreted "times" style loops.
 
-contexts:            interpreting, compiling
+contexts:            stateless

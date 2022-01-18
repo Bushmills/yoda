@@ -6,6 +6,6 @@ category:            string stack
 
 decription:          moves top string stack item below the third item from top
 
-contexts:            interpreting, compiling
+contexts:            stateless
 example:             none
 notes:               none

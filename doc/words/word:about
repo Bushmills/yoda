@@ -2,7 +2,7 @@ name:                about
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-category:
+category:            info
 input stream:        word name
 
 decription:          reads a word from input stream, which is appended to a dir/name
@@ -11,7 +11,7 @@ decription:          reads a word from input stream, which is appended to a dir/
                      which has already been described ("documemented"), in which case
                      will the displayed file contain some informative descriptions.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             about about
 

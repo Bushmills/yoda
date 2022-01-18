@@ -8,7 +8,7 @@ decription:          meant for use during pictured number conversion, the charac
                      is prepended to the string on string stack, allowing to insert
                      characters of choice into the number in process of being converted.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             none
 

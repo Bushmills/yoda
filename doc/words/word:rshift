@@ -6,4 +6,4 @@ category:            logic, arithmetic
 
 decription:          logical right shift of u1 by u2 positions, yielding u3
 
-contexts:            interpreting, compiling
+contexts:            stateless

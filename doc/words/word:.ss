@@ -6,4 +6,4 @@ category:            strings
 
 decription:          display a dump of all string stack items.
 
-contexts:            interpreting, compiling
+contexts:            stateless

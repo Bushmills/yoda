@@ -6,4 +6,4 @@ category:            memory
 
 decription:          reads from memory at address a, returns read content as x
 
-contexts:            interpreting, compiling
+contexts:            stateless

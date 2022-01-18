@@ -6,4 +6,4 @@ category:            memory
 
 decription:          stores two stack items x1 and x2 at address a
 
-contexts:            interpreting, compiling
+contexts:            stateless

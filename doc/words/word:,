@@ -8,4 +8,4 @@ decription:          write x into memory at address indicated by "here" and
                      bump that address by the number of increments specified
                       by "cell"
 
-contexts:            interpreting, compiling
+contexts:            stateless

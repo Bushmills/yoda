@@ -6,4 +6,4 @@ category:            arithmetics
 
 decription:          signed division by two of n1, yielding n2
 
-contexts:            interpreting, compiling
+contexts:            stateless

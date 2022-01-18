@@ -6,4 +6,4 @@ category:            arithmetics
 
 decription:          adds n2 to n1 and removes n2
 
-contexts:            interpreting, compiling
+contexts:            stateless

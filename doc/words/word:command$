@@ -6,4 +6,4 @@ category:            string, shell
 
 decription:          execute $1 as shell command, passing "$2" as command line parameter(s)
 
-contexts:            interpreting, compiling
+contexts:            stateless

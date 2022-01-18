@@ -9,7 +9,7 @@ decription:          a variable, serving as flag to turn resolving of interpreta
                      a word was resolved successfully, it will be executed directly
                      after, otherwise an error is reported.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 example:             forwardrefs on
                      instantresolve on

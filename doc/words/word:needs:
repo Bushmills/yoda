@@ -1,0 +1,18 @@
+name:                needs:
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:
+input stream:        whole input line
+
+decription:          repeatedly reads a space delimited string from input line,
+                     until input line has been consumed. Each string is taken as
+                     name of a word, which is, if not already present, compiled
+                     from its source file. Should no source file exist or be known,
+                     is the word added to the list of (yet) unresolved words, for
+                     compilation once its source becomes available.
+
+contexts:            stateless
+example:             needs: hello red bg
+notes:               needs: is an alias of satisfy, and has been provided for
+                     better symmetry with provides:

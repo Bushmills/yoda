@@ -5,6 +5,6 @@ string stack:        ( -- )
 
 decription:          call error handler, passing a value of x, which is reported as such.
 
-contexts:            interpreting, compiling
+contexts:            stateless
 
 notes:               in preparation of more flexible error management and response

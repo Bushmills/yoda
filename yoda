@@ -946,7 +946,7 @@ atom["here"]='((s[++sp]=dp))'
 
 colon ';'      # semicolon
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
-   code '(( ${s[sp--]} == ${#body[@]} )) && code ":"'                # insert a noop into empty function bodies
+   code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'                # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
 immediate
@@ -1884,7 +1884,7 @@ immediate
 
 colon 'else'
    code "(( s[sp]++ == \"$magic\" )) || { unstructured 'if'; return; }"
-   code '(( s[sp-1] == ${#body[@]} )) && code ":"'
+   code '(( s[sp-1] == ${#body[@]} )) && code "(())"'
    code 'code "else"'
    code '((s[sp-1]=${#body[@]}))'
 semicolon
@@ -1893,7 +1893,7 @@ immediate
 colon 'then'
    code "(( s[sp] == $magic ||  s[sp] == $((magic+1)) )) || { unstructured 'if or else'; return; }"
    atom 'drop'
-   code '(( s[sp--] == ${#body[@]} )) && code ":"'
+   code '(( s[sp--] == ${#body[@]} )) && code "(())"'
    code 'code "fi"'
 semicolon
 immediate
@@ -1911,7 +1911,7 @@ immediate
 
 colon 'again'
    code "(( s[sp--] == \"$magic\" )) || { unstructured 'begin'; return; }"
-   code '(( s[sp--] == ${#body[@]} )) && code ":"'
+   code '(( s[sp--] == ${#body[@]} )) && code "(())"'
    code 'code "done"'
 semicolon
 immediate
@@ -1953,7 +1953,7 @@ evaluate ': j r@ ;'   ;  inout 0 1
 
 colon 'next'
    code "((s[sp--] == $magic))|| { unstructured 'for'; return; }"
-   code '((s[sp--] == ${#body[@]})) && code ":"'
+   code '((s[sp--] == ${#body[@]})) && code "(())"'
    code 'code "done"'
    code "code '((i=r[rp--]))'"
 semicolon

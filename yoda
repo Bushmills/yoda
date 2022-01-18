@@ -229,18 +229,19 @@ where()  {                                                           # remember 
 # arg2: function name
 # not allowed to generate function names because some names want to be
 # determined by caller
+# NOTE: leave it to header to prepend $header_code.
+                                                                     # variable last doesn't exist yet, but is used in header.
+((last=dp++))                                                        # remedy: remember here, allot cell, define a constant later.
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
-   (( linenr < 0 )) ||                                               # not entered at keyboard
-      where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
-   [[ -z "${headersstateless["$1"]}" ]] ||  {
-      [[ ${headersstateless["$1"]} == "${header_code}_"* ]] &&
-         echo "redefining $1"
-   }
+   m[last]="${2##*_}"
+   [[ -n "${headersstateless["$1"]}" ]] && echo "redefining $1"
    headersstateless["$1"]="$2"                                       # associate word with name
    flags["$1"]="0"                                                   # default to no flags
    body=()                                                           # reinitialise code buffer
    analyser=()                                                       # reinitialise code tags for analyser
+   (( linenr < 0 )) ||                                               # not entered at keyboard
+      where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
 }
 
 
@@ -437,7 +438,7 @@ push()  {                                                            # leave it 
 # NOTE: quite some factoring possible in this section
 # arg1: word name
 create()  {
-   [[ -z "$2" ]] || echo "still passing arg2=$2 to create"
+#   [[ -z "$2" ]] || echo "still passing arg2=$2 to create"
    [[ -z "$1" ]] && emptyname
    names[nextname]="$1"
    name="${header_code}_$((nextname++))"
@@ -551,7 +552,7 @@ constant '0'                  "0"
 constant 'esc'                "27"
 constant 'bl'                 "32"
 constant 'bits'               "$bits"
-
+constant 'last'               "$last"
 
 
 # ----- errors, traps, entry points----------------------- #FOLD00

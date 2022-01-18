@@ -1,0 +1,9 @@
+name:                off
+stack:               ( a -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            memory
+
+decription:          writes false to memory address a
+
+contexts:            stateless

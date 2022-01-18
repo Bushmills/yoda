@@ -1,0 +1,10 @@
+name:                type$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+category:            strings, I/O
+
+decription:          prints top string stack item as string and removes it
+                     from string stack.
+
+contexts:            interpreting, compiling

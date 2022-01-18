@@ -1,0 +1,9 @@
+name:                cr
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            I/O
+
+decription:          advances cursor to begin of next line
+
+contexts:            interpreting, compiling

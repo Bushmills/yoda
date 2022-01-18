@@ -1,0 +1,11 @@
+name:                shell$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+category:            shell
+
+decription:          pass string $1 to shell for execution.
+                     $1 may contain spaces and arguments.
+
+contexts:            interpreting, compiling
+example:             "uname -a" shell$

@@ -1,0 +1,10 @@
+name:                last
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            dictionary
+
+decription:          returns an address at which the execution token of
+                     last created word is stored.
+
+contexts:            interpreting, compiling

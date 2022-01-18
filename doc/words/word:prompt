@@ -1,0 +1,15 @@
+name:                prompt
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+
+category:            status
+
+decription:          outputs an " ok" prompt while interpreting, followed by a depiction
+                     of stack item count. If any unresolved words are recorded, their
+                     number is then shown.
+                     When compiling does prompt only show a vertical bar.
+
+contexts:            interpreting, compiling
+example:             none
+notes:               prompt is executed as part of the interactive interpreter loop "quit"

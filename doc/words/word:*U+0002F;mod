@@ -1,0 +1,10 @@
+name:                */mod
+stack:               ( n1 n2 n3 -- n4 n5 )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            arithmetics
+
+decription:          divides the product of n1, n2 by n3,
+                     returns remainder as n4, quotient as n5
+
+contexts:            interpreting, compiling

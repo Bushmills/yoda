@@ -141,6 +141,8 @@ bits=63                                                              # Can't use
 msb="$((1<<(bits-1)))"
 maxint="$((msb-1))"
 maxuint="$((maxint|msb))"
+true="$maxuint"
+false=0
 
 compiling=0                                                          # state flag: interpreting or compiling
 line=""                                                              # source line being worked on. modified during parsing and processing
@@ -543,8 +545,8 @@ constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"
 constant 'msb'                "$msb"
 constant 'cell'               "1"
-constant 'true'               "$maxuint"
-constant 'false'              "0"
+constant 'true'               "$true"
+constant 'false'              "false"
 constant '0'                  "0"
 constant 'esc'                "27"
 constant 'bl'                 "32"
@@ -623,10 +625,10 @@ newerror "shellerror"      "shell returned"
 newerror "filenotfound"    "file not found:"
 
 
-ctrl-c()  {
-   printf "%s\n" "break"
-   ((break == 1))  && exit 1
-   ((m[callstack]))&& callstack
+ctrl-c()  {                                                          # "break" is configurable item to control
+   printf "%s\n" "break"                                             # how yoda responds to break signal.
+   ((break == 1))  && exit 1                                         # This is due to not having a clean
+   ((m[callstack]))&& callstack                                      # warm start procedure.
    ((break == 2))  && cold
 }
 trap ctrl-c SIGINT
@@ -637,20 +639,21 @@ trap ctrl-c SIGINT
 
 # ----- patterns ----------------------------------------- #FOLD00
 
+# wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
    ((radix=m[base]))
    tmp="0123456789abcdefghijklmnopqrstuvwxyz"                        # cut legal chars for base
    [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                          # 1234      unsigned number
-      stateless "((s[++sp]=$((${radix}#${word}&maxuint))))"          # convert signless numbers without special treatment
+      stateless "((s[++sp]=$((${radix}#${word}&true))))"          # convert signless numbers without special treatment
       return 0; }
    [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                         # -1234     negative number
-      stateless "((s[++sp]=$((-${radix}#${word:1}&maxuint))))"
+      stateless "((s[++sp]=$((-${radix}#${word:1}&true))))"
       return 0; }
    [[ ${word:0:1} == [%\$\#] ]] && {
       radix="${bases[${word:0:1}]}"                                  # yes: read radix associated with char
       [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                   # remainder of number all legal chars?
-         stateless "((s[++sp]=$((${radix}#${word:1}&maxuint))))"     # yes: convert from base and deal with it
+         stateless "((s[++sp]=$((${radix}#${word:1}&true))))"     # yes: convert from base and deal with it
          return 0; }; }
    [[ ${word} == \'? || ${word} == \'?\' ]] && {                     # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
       read -r tmp < <(printf "%d" "'${word:1:1}'")
@@ -662,8 +665,7 @@ pattern()  {                                                         # pattern i
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
          ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
             code  "ss+=('${word:1:${#word}-2}')"                     # But variable expansion take place in interpreted branch.
-            return 0                                                 # Both requirements are hard to formulate in one common version.
-         }
+            return 0; }                                              # Both requirements are hard to formulate in one common version.
          ss+=("${word:1:${#word}-2}")
          return 0; }; }
    [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
@@ -900,12 +902,12 @@ atom["over"]='((s[++sp]=s[sp-1]))'
 atom["pluck"]='((s[++sp]=s[sp-2]))'
 atom["drop"]='((sp--))'
 atom["@"]='((s[sp]=m[s[sp]]))'
-atom["1+"]='((s[sp]=(s[sp]+1)&maxuint))'
-atom["1-"]='((s[sp]=(s[sp]-1)&maxuint))'
-atom["2*"]='((s[sp]=(s[sp]<<1)&maxuint))'
+atom["1+"]='((s[sp]=(s[sp]+1)&true))'
+atom["1-"]='((s[sp]=(s[sp]-1)&true))'
+atom["2*"]='((s[sp]=(s[sp]<<1)&true))'
 
-atom["negate"]='((s[sp]=(-s[sp]&maxuint)))'
-atom["invert"]='((s[sp]^=maxuint))'
+atom["negate"]='((s[sp]=(-s[sp]&true)))'
+atom["invert"]='((s[sp]^=true))'
 
 atom["s1"]='((s1=s[sp]))'
 atom["s2"]='((s2=s[sp-1]))'
@@ -974,6 +976,7 @@ words()	{
    done
 }
 
+# NOTE: removal candidate.
 crossref()  {
    local headers
    for tmp in "${headerslistlist[@]}" "headersunresolved"; do
@@ -988,6 +991,7 @@ crossref()  {
 }
 
 # crossref lists name to word associations.
+# NOTE: removal candidate
 primitive 'crossref' 'crossref'
 
 # TODO: factor context voc search.  see also  tick, undoc, forward refs
@@ -1002,9 +1006,9 @@ see()  {
          [[ -z "$tmp" ]] && notfound
          if [[ "$(type -t "$tmp")" == "function" ]]; then
             type "$tmp"
-         else
-       	   printf "%s\n" "$tmp"
-         fi
+         else                                                        # NOTE: this branch is probably obsolete
+       	   printf "%s\n" "$tmp"                                     # now, a leftover from when data items
+         fi                                                          # couldn't be ticket
       }
    done
 }
@@ -1068,7 +1072,7 @@ colon "array"
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
 
-# factor code common with header
+# NOTE: factor code common with header
 # ' foo alias bar
 colon 'alias'
    define '0'
@@ -1076,62 +1080,6 @@ colon 'alias'
    code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'         # correct source line number for aliases in this file
 semicolon
 
-
-# ----- compiler and word search related ----------------- #FOLD01
-
-# ( -- 0 | a )
-have() {
-   local headers                                                     # meant to spare me from saving and restoring vectored headers variable
-   word
-   for tmp in "${headerslistlist[@]}"; do                            # loop through all vocs we want to search
-      declare -n headers="$tmp"                                      # vector headers to next vocabulary
-      [[ -z "${headers["$word"]}" ]] || {                            # word in there?
-         tmp="${headers["$word"]}"                                   #     yes: remember name
-         [[ $tmp == ${header_code}* ]] || break                      # can not tick data
-         ((s[++sp]=${headers["$word"]#"${header_code}_"}))           # convert name to "address" and push
-         return 0                                                    # found word, stacked execution token
-      }
-   done                                                              # go on search next voc
-   ((s[++sp]=0))
-}
-
-
-# NOTE: tick and execute need names to look like foobar_4711
-colon "'"
-   code 'have'
-   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
-semicolon
-
-colon "[']"
-   code 'have'
-   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
-   code 'push "${s[sp--]}"'
-semicolon
-immediate
-
-primitive '[' 'compiling=0'; immediate
-primitive ']' 'compiling=1'
-
-colon 'literal'
-   code 'push "${s[sp--]}"'
-semicolon
-immediate
-
-colon 'trash'
-   code 'word'
-   code 'unset "headersstateless[$word]"'
-semicolon
-
-primitive 'execute' "${header_code}_\${s[sp--]}"                     # ( xt -- )
-primitive 'name'    'ss+=("${names[s[sp--]]}")'                      # ( xt -- ) ( string: -- $1 )
-primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
-
-# can be used after a colon definition
-primitive 'inline'  'inline'                                         # ( -- )    set header flag for inline compilation
-primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
-primitive '.unresolved'  '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'   # print unresolved
-primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
-primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -- )
 
 
 # ----- environment--------------------------------------- #FOLD01
@@ -1388,7 +1336,7 @@ inline
 # I'll now try to sell as feature.
 # or not. too specific, I better add some more general replace$ function
 # ( string: $1 -- $2 )
-primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'
+#primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'
 
 #primitive '-leading$'  'ss[-1]="${ss[-1]//^[[:space:]]*/}"'
 #primitive '-trailing$'  'ss[-1]="${ss[-1]//[[:space:]]*$/}"'
@@ -1466,21 +1414,21 @@ inline
 
 colon '$='
    code '[[ ${ss[-1]} != ${ss[-2]} ]]'
-   push '(-$?)&maxuint'
+   push '(-$?)&true'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$<'
    code '[[ ${ss[-1]} > ${ss[-2]} ]]'
-   push '($?-1)&maxuint'
+   push '($?-1)&true'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
 
 colon '$>'
    code '[[ ${ss[-1]} < ${ss[-2]} ]]'
-   push '($?-1)&maxuint'
+   push '($?-1)&true'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
@@ -1490,11 +1438,11 @@ semicolon
 # "123"     "abcd" 1 insert$  -> "a123bcd"
 
 
-
 # push string array item u to string stack
 # ( u -- ) ( -- $1 )
 primitive '$@'  'ss+=("${strings[s[sp--]]}")';  inline
 
+# store string stack item in string array
 # ( u -- )  ( $1 -- )
 colon '$!'
    code 'strings[s[sp--]]="${ss[-1]}"'
@@ -1503,6 +1451,9 @@ semicolon
 
 
 # --- mixed mode operations, exchanges between stack and string stack ---
+# remove first character from top of string stack, push its ASCII value
+# on stack, or 0 if no char, empty string.
+# ( -- c )  ( $1 -- $2 )
 asc()  {
    if [[ -z "${ss[-1]}" ]]; then
       ((s[++sp]=0))
@@ -1558,83 +1509,141 @@ inout 0 1
 
 
 
-# ----- bit logic ---------------------------------------- #FOLD01
-
-primitive 'and'     '((s[sp-1]&=s[sp--]))'
-primitive 'or'      '((s[sp-1]|=s[sp--]))'
-primitive 'xor'     '((s[sp-1]^=s[sp--]))'
-primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&maxuint))'
-primitive 'rshift'  '((s[sp-1]>>=s[sp--]))'
-evaluate "' lshift alias <<"
-evaluate "' rshift alias >>"
-colon    'invert';  atom 'invert'; semicolon; inline
-
 # ----- numeric comparison ------------------------------- #FOLD01
 
-primitive '0='   '((s[sp]=s[sp]?0:maxuint))'                         # 0->maxuint  x->0
-primitive '0<>'  '((s[sp]=s[sp]?maxuint:0))'                         # 0->0   x->maxuint
-primitive '0<'   '((s[sp]=s[sp]&msb?maxuint:0))'                     # &msb: 0->0   msb->maxuint
+primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
+primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
+primitive '0<'   '((s[sp]=s[sp]&msb?true:false))'                    # &msb: 0->0   msb->true
 
 colon '='
    code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp])==(s1)?maxuint:0))'
+   code '((s[sp]=(s[sp])==(s1)?true:false))'
 semicolon
 inline
 
 colon '<>'
    code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp])==(s1)?0:maxuint))'
+   code '((s[sp]=(s[sp])==(s1)?false:true))'
 semicolon
 inline
 
 colon 'u<'
-   code '((s1=s[sp--]&maxuint))'
-   code '((s[sp]=(s[sp]&maxuint)<(s1)?maxuint:0))'
+   code '((s1=s[sp--]&true))'
+   code '((s[sp]=(s[sp]&true)<(s1)?true:false))'
 semicolon
 inline
 
 colon 'u>'
-   code '((s1=s[sp--]&maxuint))'
-   code '((s[sp]=(s[sp]&maxuint)>(s1)?maxuint:0))'
+   code '((s1=s[sp--]&true))'
+   code '((s[sp]=(s[sp]&true)>(s1)?true:false))'
 semicolon
 inline
 
 colon '<'
-   code '((s1=s[sp--]&maxuint))'
+   code '((s1=s[sp--]&true))'
    code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
-   code '((s[sp]=((s1>s[sp]&maxuint)^sign)?maxuint:0))'
+   code '((s[sp]=((s1>s[sp]&true)^sign)?true:false))'
 semicolon
 inline
 
 colon '>'
-   code '((s1=s[sp--]&maxuint))'
+   code '((s1=s[sp--]&true))'
    code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
-   code '((s[sp]=((s1<s[sp]&maxuint)^sign)?maxuint:0))'
+   code '((s[sp]=((s1<s[sp]&true)^sign)?true:false))'
 semicolon
 inline
 
 #    flag
 #   s2 < s1        sign           result
-#   0 (true)       0   (same)     maxuint
-#   1 (false)      0   (same)     0
-#   0 (true)       msb (diff)     0
-#   1 (false)      msb (diff)     maxuint
+#   0 (true)       0   (same)     true
+#   1 (false)      0   (same)     false
+#   0 (true)       msb (diff)     false
+#   1 (false)      msb (diff)     true
 
 #  flag  sign      result
-#  0     0         maxuint
-#  1     0         0
-#  0     $xxx1     0
-#  1     $xxx1     maxuint
+#  0     0         true
+#  1     0         false
+#  0     $xxx1     false
+#  1     $xxx1     true
 
 # ( x1 x2 x3 x4 -- 0 | -1 )
 colon 'd='
    code '((s1=s[sp--]))'
    code '((s2=s[sp--]))'
    code '((s3=s[sp--]))'
-   code '((s[sp]=(s1==s3&s2==s[sp])?maxuint:0))'
+   code '((s[sp]=(s1==s3&s2==s[sp])?true:false))'
 semicolon
 inline
 inout 4 1
+
+
+# ----- compiler and word search related ----------------- #FOLD01
+
+# ( -- 0 | a )
+have() {
+   local headers                                                     # meant to spare me from saving and restoring vectored headers variable
+   word
+   for tmp in "${headerslistlist[@]}"; do                            # loop through all vocs we want to search
+      declare -n headers="$tmp"                                      # vector headers to next vocabulary
+      [[ -z "${headers["$word"]}" ]] || {                            # word in there?
+         tmp="${headers["$word"]}"                                   #     yes: remember name
+         [[ $tmp == ${header_code}* ]] || break                      # can not tick data
+         ((s[++sp]=${headers["$word"]#"${header_code}_"}))           # convert name to "address" and push
+         return 0                                                    # found word, stacked execution token
+      }
+   done                                                              # go on search next voc
+   ((s[++sp]=0))
+}
+
+
+colon "'"
+   code 'have'
+   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
+semicolon
+
+colon "[']"
+   code 'have'
+   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
+   code 'push "${s[sp--]}"'
+semicolon
+immediate
+
+primitive '[' 'compiling=0'; immediate
+primitive ']' 'compiling=1'
+
+colon 'literal'
+   code 'push "${s[sp--]}"'
+semicolon
+immediate
+
+colon 'trash'
+   code 'word'
+   code 'unset "headersstateless[$word]"'
+semicolon
+
+primitive 'execute' "${header_code}_\${s[sp--]}"                     # ( xt -- )
+primitive 'name'    'ss+=("${names[s[sp--]]}")'                      # ( xt -- ) ( string: -- $1 )
+primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
+
+# can be used after a colon definition
+primitive 'inline'  'inline'                                         # ( -- )    set header flag for inline compilation
+primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
+primitive '.unresolved'  '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'   # print unresolved
+primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
+primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -- )
+
+
+
+# ----- bit logic ---------------------------------------- #FOLD01
+
+primitive 'and'     '((s[sp-1]&=s[sp--]))'
+primitive 'or'      '((s[sp-1]|=s[sp--]))'
+primitive 'xor'     '((s[sp-1]^=s[sp--]))'
+primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
+primitive 'rshift'  '((s[sp-1]>>=s[sp--]))'
+evaluate "' lshift alias <<"
+evaluate "' rshift alias >>"
+colon    'invert';  atom 'invert'; semicolon; inline
 
 
 
@@ -1652,8 +1661,8 @@ semicolon
 inline
 inout 1 1
 
-primitive '2+'   '((s[sp]=(s[sp]+2)&maxuint))'; inout 1 1
-primitive '2-'   '((s[sp]=(s[sp]-2)&maxuint))'; inout 1 1
+primitive '2+'   '((s[sp]=(s[sp]+2)&true))'; inout 1 1
+primitive '2-'   '((s[sp]=(s[sp]-2)&true))'; inout 1 1
 
 colon '2*'
    atom '2*'
@@ -1662,15 +1671,15 @@ inline
 inout 1 1
 
 
-primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&maxuint))'; inout 2 1
-primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&maxuint))'; inout 2 1
+primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'; inout 2 1
+primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'; inout 2 1
 
 # floored 2/
 #primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
 
 colon  '2/'
    atom 's1'
-   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&maxuint:s1>>1))'
+   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'
 semicolon
 inout 1 1
 
@@ -1699,11 +1708,11 @@ colon '*/mod'
    atom 'drop'
    code '((signr=(s2^s3)))'                                          # 0:+   x:-
    code '((signq=(signr^s1)))'                                       # 0:+   x:-
-   code '((s1&msb&&(s1=-s1&maxuint)))'                               # abs s1
+   code '((s1&msb&&(s1=-s1&true)))'                               # abs s1
    code '((s2*=s3))'
-   code '((s2&msb&&(s2=-s2&maxuint)))'
-   code '((s[sp-1]=(signr&msb?(-s2%s1)&maxuint:s2%s1)))'
-   code '((s[sp]=(signq&msb?-(s2/s1)&maxuint:s2/s1)))'
+   code '((s2&msb&&(s2=-s2&true)))'
+   code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
+   code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
 semicolon
 inout 3 2
 evaluate ': */     */mod nip ;'         ; inline; inout 3 1
@@ -1735,7 +1744,7 @@ inout 1 1
 
 # needs testing
 colon 'u/mod'		# u1 u2 -- rem quot
-   code '((s1=s[sp]&maxuint, s2=s[sp-1]&maxuint, s[sp]=s2/s1, s[sp-1]=s2%s1))'
+   code '((s1=s[sp]&true, s2=s[sp-1]&true, s[sp]=s2/s1, s[sp-1]=s2%s1))'
 semicolon
 inline
 inout 2 2
@@ -1796,16 +1805,16 @@ semicolon
 inout 2 0
 
 colon '+!'
-   code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&maxuint))'
+   code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&true))'
    atom 'drop'
 semicolon
 inline
 inout 2 0
 
-primitive 'on'   '((m[s[sp--]]=maxuint))';               inout 1 0
-primitive 'off'  '((m[s[sp--]]=0))';                     inout 1 0
-primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&maxuint))';  inout 1 0
-primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&maxuint))';  inout 1 0
+primitive 'on'   '((m[s[sp--]]=true))';               inout 1 0
+primitive 'off'  '((m[s[sp--]]=false))';                     inout 1 0
+primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&true))';  inout 1 0
+primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))';  inout 1 0
 
 # ( x1 a -- x2 )
 colon 'exchange'
@@ -1858,6 +1867,8 @@ move()  {                                                            # deals wit
 
 # ( a1 a2 u -- )
 primitive 'move'   'move'; inout 3 0
+
+
 
 # ----- flow control ------------------------------------- #FOLD01
 
@@ -1974,7 +1985,7 @@ immediate
 
 colon 'loop'
    code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
-   code 'code "((i=(i+1)&maxuint))"'
+   code 'code "((i=(i+1)&true))"'
    code 'code "((i == ibar))&&break"'
    code 'code "done"'
    code "code '((i=r[rp--]))'"
@@ -2038,33 +2049,6 @@ colon '?abort'
 semicolon
 
 
-# ----- conditional compilation--------------------------- #FOLD01
-
-# need can create forward ref even though forward refs are turned off.
-# resolving will still be done, that way can specific words (and their
-# dependencies) be picked from forward lib.
-# arg1: name of needed word,  arg2; referer
-need()  {                                                            # only ask for forward if word isn't in any context voc
-   [[ -z "${headersstateless[$1]}" ]] || return
-   [[ -z "${headersinterpretonly[$1]}" ]] || return
-   [[ -z "${headerscompileonly[$1]}" ]] || return
-   forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
-}
-
-colon 'need'
-   code 'word'
-   code 'need "$word" ""'                                            # empty arg indicates explicit need, no referer
-semicolon
-
-# ( -- f )     check unresolved status of word
-colon 'needed'
-   code 'word'
-   code '[[ "${headersunresolved["$word"]}" ]]'
-   push '${?}?0:maxuint'
-semicolon
-
-primitive 'have'   'have'
-evaluate ': lack  have 0= ;'
 # ----- i/o ---------------------------------------------- #FOLD01
 
 # given an ASCII, print the character
@@ -2102,14 +2086,14 @@ semicolon
 inout 0 1
 
 colon 'key?'
-   code '[[ -z "$keybuf" ]] || { s+=("$maxuint"); return; }'         # key in keybuf: yes, flag "key ready"
+   code '[[ -z "$keybuf" ]] || { s+=("$true"); return; }'         # key in keybuf: yes, flag "key ready"
    code 'IFS=""'                                                     # no key in keybuf: poll console
    code 'if read -rsn1 -t0.01 tmp; then'
    code 'keybuf+="$tmp"'                                             # add key to buffer. maybe add space if -z $tmp
-   push 'maxuint'
+   push 'true'
    code 'return'
    code 'fi'
-   push '0'
+   push 'false'
 semicolon
 inout 0 1
 
@@ -2185,7 +2169,7 @@ primitive 'files'  'printf "%s\n" "${files[@]}"|nl -v 0'; inout 0 0  # show list
 # ( x1 -- x2 ) ( string: $1 -- $2 )
 colon '#'                                                            # : #
    code '((radix=m[base]))'                                          # base @
-   code '((s1=s[sp]&maxuint, s[sp]=s1/radix, tmp=s1%radix+48))'      # /mod swap '0 +
+   code '((s1=s[sp]&true, s[sp]=s1/radix, tmp=s1%radix+48))'      # /mod swap '0 +
    code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;
@@ -2208,6 +2192,122 @@ evaluate ': u.r      >r uconvert r> rtype$ ;'; inout 2 0             # ( u1 u2 -
 primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
+
+
+# ----- foward referencing support words ----------------- #FOLD00
+
+# forward referencing scheme using dependencies files, which maps
+# word names to file names, allowing to locate source of required
+# code quickly for inclusion:
+#
+#  provides:
+#     like \ treating rest of line as comment.
+#     purpose is to allow grepping libraries for file names
+#     providing the words listed there, to generate a simple
+#     form of dependency files.
+#     Insert it into library files, listing the words which can
+#     be resolved by library. Idea is to have very short library
+#     files, often just containing a single word.
+#
+#  dependencies
+#     run through library directories and their subdirectories, and
+#     look for lines starting with provides:
+#     extract the list of names, and write names, one per line, followed
+#     by file name, into the "dependencies" file.
+#     This build the dependencies "database", and needs only done when
+#     dependencies are outdated, stale or missing.
+#
+#  satisfy
+#  needs:
+#     these are merely different names for the same function. needs:
+#     pairs more nicely with provides: when written into library fragments.
+#     These turn forward refs on, parse space delimited strings from input
+#     line (the name of needed words). For each word is the library
+#     file containing word's source located by searching the dependencies
+#     file, the source is included from file, thereby satisfying the
+#     forward reference. When done is old forward refs state restored.
+#     When a word can't be resolved, due to not having an entry in the
+#     dependencies fiel, or the file not existing, a vocabulary based
+#     forward reference is created through need. This renders the not
+#     included word compilable. When source becomes available (file
+#     suddenly existing, or word defined by other means) will the forward
+#     reference be cleared, and compiled calls to it associated with the
+#     then created word.
+#
+#  Purpose is to allow library inclusion with much finer granulation than
+#  what is possible with including library files which unconditionally
+#  include heaps of words, without the need to restructure the libraries
+#  towards conditional compilation.
+#
+#  Above words are more concerned with locating and including source. They
+#  don't address the case when a word source doesn't exist (yet). To deal
+#  with these words, a supporting word set working on vocabularies exists:
+
+# need can create forward ref even though forward refs are turned off.
+# resolving will still be done, that way can specific words (and their
+# dependencies) be picked from forward lib.
+# arg1: name of needed word,  arg2; referer
+
+# needed is used to test forward reference status of a word. A non-false
+# result indicates a forwards referenced word.
+# Interpret time flow control words such as lest or unless can be used
+# to respond to the result of needed.
+
+# words  have, lack and needed, all returning false or "some" value
+# (which could be true, but also an execution token), deliver results
+# according to this table:
+#
+#                         have    lack    needed
+# existing word            xt     false   false
+# non-existing non-forw   false   true    false
+# forward ref word        false   true    true
+
+
+need()  {
+   [[ -z "${headersstateless[$1]}" ]] || return                      # only ask for forward if word isn't in any context voc
+   [[ -z "${headersinterpretonly[$1]}" ]] || return
+   [[ -z "${headerscompileonly[$1]}" ]] || return
+   forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
+}
+
+colon 'need'                                                         # ( -- )  ( stream: bl delimited string )
+   code 'word'
+   code 'need "$word" ""'                                            # empty arg indicates explicit need, no referer
+semicolon
+
+colon 'needed'                                                       # ( -- f ) ( stream: bl delimited string )
+   code 'word'
+   code '[[ "${headersunresolved["$word"]}" ]]'                      # check unresolved status of word
+   push '${?}?false:true'
+semicolon
+
+primitive 'have'   'have'                                            # ( -- f ) ( stream: bl delimited string )    word exists?
+evaluate ': lack  have 0= ;'                                         # ( -- f ) ( stream: bl delimited string )    word missing?
+
+dependencies()  {                                                    # library inclusion dependency file builder
+   grep -r "^provides: " "${libdirs[0]}" |
+   while read -r file words; do
+      file="${file%:provides:}"
+# "Double quote to prevent globbing and word splitting."
+# I actually *want* word splitting here, for fprint to produce one line per word
+# shellcheck disable=SC2086
+      printf "%-31s $file\n" $words
+   done > "$dependencies"
+}
+
+# try to resolve all words given on input line.
+satisfy()  {
+   until [[ -z "$line" ]]; do
+      word
+      satisfy1 "$word"
+   done
+}
+
+primitive 'dependencies' 'dependencies'
+primitive "provides:"   'line=""'        ;   interactive             # double quoted escaped backslash rather than
+primitive 'needs:' 'satisfy'                                         # more symmetric with "provided:"
+primitive 'satisfy' 'satisfy'                                        # nice for interactive use
+
 
 
 
@@ -2282,8 +2382,8 @@ primitive empty  's=() sp=0'
 # way to do so manually was needed.
 evaluate ': _  empty empty$  ;'; inline
 primitive 'words' 'words'
-primitive 'random' '((s[++sp]=RANDOM&maxuint))'; inout 0 1           # ( -- u )        15 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&maxuint))';     # a microseconds epoch, used for benchmarking
+primitive 'random' '((s[++sp]=RANDOM&true))'; inout 0 1           # ( -- u )        15 bits random number
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&true))';     # a microseconds epoch, used for benchmarking
 primitive 'secs' 'sleep "${s[sp--]}"'
 
 colon 'filename$'
@@ -2298,7 +2398,7 @@ evaluate ': list  "cat"    filename$  command$ ;'
 colon 'bounds'
    atom 's1'
    atom 's2'
-   code '((s[sp-1]=(s1+s2)&maxuint))'
+   code '((s[sp-1]=(s1+s2)&true))'
    code '((s[sp]=s2))'
 semicolon
 inline
@@ -2378,72 +2478,6 @@ colon 'wait'
    code 'echo "wait pid=$pid"'
 semicolon
 
-
-
-# complementing existing forward referencing scheme, which could now
-# possibly lose a few support words, from dependency files, which
-# map word names to file names.
-# This allows quickly locating source of required code, and consequently
-# including it.
-
-# experimental early support here consists of 3 words:
-#  provides:
-#     like \ treating rest of line as comment.
-#     purpose is to allow grepping libraries for file names
-#     providing the words listed there, to generate a simple
-#     form of dependency files.
-#     Insert it into library files, listing the words which can
-#     be resolved by library. Idea is to have very short library
-#     files, often just containing a single word.
-#
-#  dependencies
-#     run through library directories and their subdirectories, and
-#     look for lines starting with provides:
-#     extract the list of names, and write names, one per line, followed
-#     by file name, into the "dependencies" file.
-#     This build the dependencies "database", and needs only done when
-#     dependencies are outdated, stale or missing.
-#
-#  satisfy
-#  needs:
-#     turns forward refs on, parses space delimited strings from input
-#     line (the name of needed words). For each word is the library
-#     file containing word's source located by searching the dependencies
-#     file, the source is included from file, thereby satisfying the
-#     forward reference. When done is old forward refs state restored.
-#
-#  Purpose is to allow library inclusion with much finer granulation than
-#  what is possible with including library files which unconditionally
-#  include heaps of words, without the need to restructure the libraries
-#  towards conditional compilation.
-#
-#  How useful this scheme is will still have to be determined, that's why
-#  it is likely to remain in "experimental" for a while.
-
-
-dependencies()  {                                                    # library inclusion dependency file builder
-   grep -r "^provides:" "${libdirs[0]}" |
-   while read -r file words; do
-      file="${file%:provides:}"
-# "Double quote to prevent globbing and word splitting."
-# I actually *want* word splitting here, for fprint to produce one line per word
-# shellcheck disable=SC2086
-      printf "%-31s $file\n" $words
-   done > "$dependencies"
-}
-
-# try to resolve all words given on input line.
-satisfy()  {
-   until [[ -z "$line" ]]; do
-      word
-      satisfy1 "$word"
-   done
-}
-
-primitive 'dependencies' 'dependencies'
-primitive "provides:"   'line=""'        ;   interactive             # double quoted escaped backslash rather than
-primitive 'needs:' 'satisfy'                                         # more symmetric with "provided:"
-primitive 'satisfy' 'satisfy'                                        # nice for interactive use
 
 
 # ----- evaluate command line----------------------------- #FOLD00

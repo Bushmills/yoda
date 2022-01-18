@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -42,7 +42,7 @@ IFS="$tmp"
 
 
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -129,7 +129,7 @@ declare -A atom                                                      # a table w
 
 default='boot quit "yoda shell" type$ cr prompt  satisfy fix'        # what to execute when no command line args given
 
-# ----- state variables, switches, globals, static etc --- #FOLD00
+# ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -169,7 +169,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -181,7 +181,7 @@ trace()  {
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- ANSI/VT100 attributes ---------------------------- #FOLD00
+# ----- ANSI/VT100 attributes ---------------------------- #fold00
 
 # use in error and prompt.
    redfg='31'
@@ -194,7 +194,7 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -245,7 +245,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -337,7 +337,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -365,7 +365,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # atoms may be:
 #  - micro instructions
@@ -414,7 +414,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -555,7 +555,7 @@ constant 'bits'               "$bits"
 constant 'last'               "$last"
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -638,7 +638,7 @@ trap ctrl-c SIGINT
 # resized()  { echo "resized"; }
 # trap foo SIGWINCH
 
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
@@ -696,7 +696,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -763,7 +763,7 @@ resolve()  {
 
 
 
-# ----- line interpreter, evaluate------------------------ #FOLD00
+# ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -833,7 +833,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -886,8 +886,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
-# ----- populating detokeniser --------------------------- #FOLD01
+# ----- primitives --------------------------------------- #fold00
+# ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -942,7 +942,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #FOLD01
+# ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'      # semicolon
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
@@ -1019,7 +1019,7 @@ primitive 'see' 'see'
 primitive '.s' '((sp))&&printf "%s " "${s[@]:1:$sp}"'
 
 
-# ----- does> -------------------------------------------- #FOLD01
+# ----- does> -------------------------------------------- #fold01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1045,7 +1045,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1083,7 +1083,7 @@ semicolon
 
 
 
-# ----- environment--------------------------------------- #FOLD01
+# ----- environment--------------------------------------- #fold01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
@@ -1117,7 +1117,7 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #FOLD01
+# ----- misc --------------------------------------------- #fold01
 
 primitive 'noop' ':'
 primitive "\\"   'line=""';   immediate                              # single quoted single backslash because
@@ -1127,7 +1127,7 @@ primitive '('    "parse ')'"; immediate
 primitive '('    "parse ')'"; interactive
 
 
-# ----- parameter stack ---------------------------------- #FOLD01
+# ----- parameter stack ---------------------------------- #fold01
 
 
 colon 'dup'
@@ -1230,7 +1230,7 @@ inline
 primitive 'depth'  '((s[++sp]=$sp))'
 primitive 'pick'   '((s[++sp]=s[sp-s[sp]]))'
 
-# ----- return stack ------------------------------------- #FOLD01
+# ----- return stack ------------------------------------- #fold01
 
 colon 'r@'
    atom 'r@'
@@ -1277,7 +1277,7 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #FOLD01
+# ----- string stack ------------------------------------- #fold01
 
 primitive 'depth$'   's+=("${#ss[@]}")'
 primitive 'empty$'   'ss=()'
@@ -1510,7 +1510,7 @@ inout 0 1
 
 
 
-# ----- numeric comparison ------------------------------- #FOLD01
+# ----- numeric comparison ------------------------------- #fold01
 
 primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
 primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
@@ -1578,7 +1578,7 @@ inline
 inout 4 1
 
 
-# ----- compiler and word search related ----------------- #FOLD01
+# ----- compiler and word search related ----------------- #fold01
 
 # ( -- 0 | a )
 have() {
@@ -1635,7 +1635,7 @@ primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -
 
 
 
-# ----- bit logic ---------------------------------------- #FOLD01
+# ----- bit logic ---------------------------------------- #fold01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
@@ -1648,7 +1648,7 @@ colon    'invert';  atom 'invert'; semicolon; inline
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'
@@ -1751,7 +1751,7 @@ inline
 inout 2 2
 
 
-# ----- memory ------------------------------------------- #FOLD01
+# ----- memory ------------------------------------------- #fold01
 
 colon '@'
    atom '@'
@@ -1871,7 +1871,7 @@ primitive 'move'   'move'; inout 3 0
 
 
 
-# ----- flow control ------------------------------------- #FOLD01
+# ----- flow control ------------------------------------- #fold01
 
 remagic
 
@@ -2050,7 +2050,7 @@ colon '?abort'
 semicolon
 
 
-# ----- i/o ---------------------------------------------- #FOLD01
+# ----- i/o ---------------------------------------------- #fold01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2195,7 +2195,7 @@ primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
 
-# ----- foward referencing support words ----------------- #FOLD00
+# ----- foward referencing support words ----------------- #fold00
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2312,7 +2312,7 @@ primitive 'satisfy' 'satisfy'                                        # nice for 
 
 
 
-# ----- documentation ------------------------------------ #FOLD01
+# ----- documentation ------------------------------------ #fold01
 
 
 undoc_template()  {
@@ -2322,21 +2322,33 @@ name:                $1
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:
 input stream:
+
 decription:          none
-contexts:            interpreting, compiling
+
 example:             none
 notes:               none
 EOF
 }
 
+# changes problematic chars in arg1.
+# sanitised string is returned in variable file
+declare -A sanitise=(['/']="[slash]" ['$']="[dollar]" ['>']="[gt]" ['<']="[ls]" ['#']="[hash]" ['*']="[star]")   # '  slash tick confuses efte syntax highlighting
+sanitise()  {
+   file="$1"
+   for tmp in ${!sanitise[@]}; do
+      file="${file//"$tmp"/${sanitise[$tmp]}}"
+   done
+}
+
 undoc()  {
    for word in "${!headers[@]}"; do                                  # run through all headers
-      name="$worddoc:${word/\//U+0002F;}"
-      [[ -f "$name" ]] || {                                          # found one for which no doc file exists
-         undoc_template "$word" >"$name"
-         editor "$name"
+      sanitise "$word"
+      [[ -f "$worddoc:$file" ]] || {                                 # found one for which no doc file exists
+         undoc_template "$word" >"$worddoc:$file"
+         editor "$worddoc:$file"
          break
       }
    done
@@ -2344,8 +2356,15 @@ undoc()  {
 primitive 'undoc' 'undoc'
 
 # candidates for $command further down
-doc()       { editor "$worddoc:${1/\//U+0002F;}"; }
-about()     { cat    "$worddoc:${1/\//U+0002F;}"; }
+doc()       {
+   sanitise "$1"
+   editor "$worddoc:$file"
+}
+
+about()     {
+   sanitise "$1"
+   cat "$worddoc:$file"
+}
 
 colon 'doc'
    code 'word'
@@ -2358,11 +2377,11 @@ colon 'about'
 semicolon
 
 
-# ----- interactive mode -------------------------------- #FOLD01
+# ----- interactive mode -------------------------------- #fold01
 
 evaluate ': quit warm begin query$ evaluate$ prompt again ;'
 
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 # TODO: optimiser: invalidate all stack register contents
 # execute shell command "$2" with args "$1"
 colon 'shell$'
@@ -2450,7 +2469,7 @@ colon 'version'
    push '${version[2]}'
 semicolon
 
-# ----- experimental ------------------------------------- #FOLD01
+# ----- experimental ------------------------------------- #fold01
 
 
 # leftovers from running quit as coproc, exiting by error and
@@ -2481,7 +2500,7 @@ semicolon
 
 
 
-# ----- evaluate command line----------------------------- #FOLD00
+# ----- evaluate command line----------------------------- #fold00
 
 
 

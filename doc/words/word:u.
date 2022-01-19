@@ -2,7 +2,7 @@ name:                u.
 stack:               ( u -- )
 return stack:        ( -- )
 string stack:        ( -- )
-category:            number formating
+category:            number formatting
 
 decription:          output unsigned number u., respecting radix stored in base
 

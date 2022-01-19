@@ -129,7 +129,7 @@ declare -A atom                                                      # a table w
 
 default='boot quit "yoda shell" type$ cr prompt  satisfy fix'        # what to execute when no command line args given
 
-# ----- state variables, switches, globals, static etc --- #fold00
+# ----- state variables, switches, globals, static etc --- #FOLD00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -245,7 +245,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -763,7 +763,7 @@ resolve()  {
 
 
 
-# ----- line interpreter, evaluate------------------------ #fold00
+# ----- line interpreter, evaluate------------------------ #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -886,7 +886,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1648,7 +1648,7 @@ colon    'invert';  atom 'invert'; semicolon; inline
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -1709,19 +1709,20 @@ colon '*/mod'
    atom 'drop'
    code '((signr=(s2^s3)))'                                          # 0:+   x:-
    code '((signq=(signr^s1)))'                                       # 0:+   x:-
-   code '((s1&msb&&(s1=-s1&true)))'                               # abs s1
+   code '((s1&msb&&(s1=-s1&true)))'                                  # abs s1
    code '((s2*=s3))'
    code '((s2&msb&&(s2=-s2&true)))'
    code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
    code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
 semicolon
 inout 3 2
-evaluate ': */     */mod nip ;'         ; inline; inout 3 1
-evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2
-evaluate ': *      1 */    ;'           ; inline; inout 2 1
-evaluate ': /      /mod nip  ;'         ; inline; inout 2 1
-evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1
 
+evaluate ': */     */mod nip ;'         ; inline; inout 3 1          # truncated, symmetric
+evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2          # truncated, symmetric
+evaluate ': *      1 */    ;'           ; inline; inout 2 1
+evaluate ': /      /mod nip  ;'         ; inline; inout 2 1          # truncated, symmetric
+evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1          # sign according  n1 == n2*(n1/n2)+remainder
+evaluate ': %      200 */ 1+ 2/ ;'      ; inline; inout 2 1          # percentage rounded, not truncated
 
 colon 'negate'
    atom 'negate'

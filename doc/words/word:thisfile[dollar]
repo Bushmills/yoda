@@ -1,0 +1,9 @@
+name:                thisfile$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+contexts:            stateless
+category:            loading
+
+decription:          push fully qualified path and name of the currently
+                     loaded file to string stack

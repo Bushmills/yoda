@@ -1,0 +1,18 @@
+name:                from$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            loading
+
+decription:          use top string stack item as file name, or path & file name,
+                     and load source from that file. If path is specified, only
+                     that location is attempted to open file. Files names without
+                     a path (i.e. containing no "/" characters) are searched through
+                     the directories listed in array variable libdirs (configuration
+                     item)
+
+example:             none
+notes:               this complements "from" which takes file name from
+                     input stream instead.
+                     "from$" are nestable

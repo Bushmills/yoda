@@ -1,0 +1,10 @@
+name:                r>
+stack:               ( -- x )
+return stack:        ( x -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            return stack, stack
+
+decription:          removed an item from return stack and places it on top of stack
+
+notes:               complementary with >r

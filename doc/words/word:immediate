@@ -1,0 +1,17 @@
+name:                immediate
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary, compiling
+
+decription:          move the header of the most recently created word
+                     to the compile-only context vocabulary. As consequence
+                     will the word execute when trying to compile it into
+                     another word, and it can't be found when not compiling.
+
+notes:               This replaces the traditional scheme of state-smart words.
+                     The name choice is under consideration, as it is deemed
+                     not a good one, overlapping with the traditional word
+                     for making words state-smart.
+

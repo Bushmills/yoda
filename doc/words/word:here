@@ -1,0 +1,13 @@
+name:                here
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+decription:          returns an address which points to the next yet unallocated
+                     memory location. Produced address is the result of earlier
+                     memory allications, for example by using allot,  , (comma),
+                     variable, array and others
+
+notes:               "allot" bumps "here"

@@ -1,0 +1,18 @@
+( test of   /   mod    /mod )
+
+   38  7  /     5 expected
+  -38  7  /    -5 expected
+   38 -7  /    -5 expected
+  -38 -7  /     5 expected
+
+   38  7  mod   3 expected
+  -38  7  mod  -3 expected
+   38 -7  mod   3 expected
+  -38 -7  mod  -3 expected
+
+\ /mod stack:  ( n1 n2 -- remainder quotient )  
+( sign check: test whether  n1 == n2*quotient+remainder is always true )
+   38  7   2dup  /mod rot * + expected
+  -38  7   2dup  /mod rot * + expected
+   38 -7   2dup  /mod rot * + expected
+  -38 -7   2dup  /mod rot * + expected

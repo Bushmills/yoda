@@ -1,0 +1,8 @@
+name:                r@
+stack:               ( -- x )
+return stack:        ( x -- x )
+string stack:        ( -- )
+contexts:            stateless
+category:            return stack
+
+decription:          place a copy of top of return stack on top of stack.

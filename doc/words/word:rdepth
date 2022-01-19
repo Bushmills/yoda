@@ -1,0 +1,9 @@
+name:                rdepth
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            return stack
+
+decription:          returns number of items on return stack
+

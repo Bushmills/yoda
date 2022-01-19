@@ -1,0 +1,14 @@
+name:                trash
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:
+input stream:        space delimited string
+
+decription:          read a space delimited string from input stream, discard the
+                     header with that name. Function body remains untouched, as do
+                     already compiled calls of that function. The only effect is that
+                     the word can't be found by that name any longer, and the name is
+                     free for reuse without yoda warning about redefinition.
+

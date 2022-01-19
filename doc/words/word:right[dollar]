@@ -1,0 +1,19 @@
+name:                right$
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          return the last u chars of $1 and return them as $2.
+                     if u equal the number of chars in $1, the whole string $1
+                     is returned as $2. If u is higher than the number of chars
+                     in $1, an empty string is returned
+
+notes:               right$ was once able to cut the specifed amount of characters
+                     from the left when a negative number was given, but that
+                     behaviour was lost in course of implementing better support
+                     for signed vs unsigned numbers. This also affected its behaviour
+                     when u is higher than the number of chars.
+                     It's possible that I'll eventually change right$ to restore the
+                     former behaviour.

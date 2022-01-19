@@ -1,0 +1,13 @@
+name:                bits
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+decription:          returns the number of bits an integer is wide. This is a
+                     configuration item which can be set in yoda.conf
+
+example:             none
+notes:               maximum value should not exceed 63. This constant exists so that
+                     yoda can provide words for both signed and unsigned operations

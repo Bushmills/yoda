@@ -98,6 +98,9 @@ declare -a files
 declare -a loaded
 files[0]="tty"
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
+
+cache_dependencies=1
+((cache_dependencies)) && declare -A lib
                                                                      # following does> to make it more easily available to dodoes
 declare -a lasterror
 lasterror=("" "-1" "0")
@@ -728,9 +731,15 @@ satisfy1()  {
    local word="$1"
    local forwarding="$((m[forwardrefs]))"
    ((m[forwardrefs]=-1))                                             # turn on forward references
-   read -r tmp < <(
-      awk -v word="$word" '$1 == word { print $2 }' "$dependencies"  # search dependency database
-   )
+
+   if ((cache_dependencies)); then                                   # choose memory or file bases deps
+      tmp="${lib["$word"]}"                                          # libary file name from memory
+   else
+      read -r tmp < <(
+         awk -v word="$word" '$1 == word { print $2 }' "$dependencies"  # library file name from file
+      )
+   fi
+
    if [[ -n "$tmp" && -f "$tmp" ]]; then
       from "$tmp"                                                    # source found: load
    else
@@ -946,7 +955,7 @@ atom["here"]='((s[++sp]=dp))'
 
 colon ';'      # semicolon
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
-   code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'                # insert a noop into empty function bodies
+   code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'             # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
 immediate
@@ -2503,10 +2512,22 @@ semicolon
 
 # ----- evaluate command line----------------------------- #fold00
 
-
-
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 [[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides
+
+[[ -f "$dependencies" ]] || {
+   echo "generating dependencies file..."
+   dependencies
+}
+
+((cache_dependencies)) && {
+   [[ -f "$dependencies" ]] && {
+      while read -r word file _; do
+         lib["$word"]="$file"
+      done < "$dependencies"
+   }
+}
+
 args=("$@")
 files[1]="$(realpath "$0")"
 ((${#args[@]})) || args[0]="$default"

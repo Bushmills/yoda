@@ -1,0 +1,8 @@
+name:                >r
+stack:               ( x -- )
+return stack:        ( -- x )
+string stack:        ( -- )
+contexts:            stateless
+category:            stack, return stack
+
+decription:          move one item from stack to return stack

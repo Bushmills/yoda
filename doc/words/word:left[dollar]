@@ -1,0 +1,16 @@
+name:                left$
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          return the u first chars of $1 and return them as $2.
+                     if u is equal of bigger than the number of chars in $1,
+                     the whole string $1 is returned as $2
+
+notes:               none
+                     left$ was once able to cut the specifed amount of characters
+                     from the right when a negative number was given, but that
+                     behaviour was lost in course of implementing better support
+                     for signed vs unsigned numbers.

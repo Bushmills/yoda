@@ -1,0 +1,8 @@
+name:                erase
+stack:               ( a u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+decription:          write 0 to u memory location starting at address a

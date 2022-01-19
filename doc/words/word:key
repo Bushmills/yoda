@@ -1,0 +1,16 @@
+name:                key
+stack:               ( -- c )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+
+decription:          Returns ASCII value of a pressed key as c on stack. In case
+                     characters are buffered and waiting to be read, key takes
+                     the next buffered key and removes it from buffer. When input
+                     buffer is empty, key will wait until a key was pressed.
+
+notes:               due to translation of key character to key ASCII value, using
+                     key character as lookup index, not all keys deliver the
+                     correct value. Some control keys will return 0 instead of their
+                     value between 1 and 31. Among those are the Return key.

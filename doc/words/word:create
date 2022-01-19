@@ -1,0 +1,14 @@
+name:                create
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            defining
+input stream:        space delimited string
+
+decription:          takes a space delimited string from input stream and creates
+                     a word with that name. Runm time semantics of the created word
+                     are to push the memory address marked by here at time of creating
+                     the word.
+
+notes:               stack effect of word created with create is ( -- a )

@@ -108,7 +108,7 @@ receive some suggestions here for what to do as second first steps:
          numbers. That function is commonly used for demonstration and testing because
          of its simplicity. To load that file, specifying its location, enter:
 
-               from tests/fibo
+               from demo/fibo
 
          It will load, compile, and run, resulting in the output of some fibonacci numbers
          followed by a decompiles listing of the code it generated.
@@ -118,7 +118,7 @@ receive some suggestions here for what to do as second first steps:
          then returning to it after execution (again assuming the current directory is
          where yoda is located):
 
-               yoda from tests/fibo
+               yoda from demo/fibo
 
 
 5. looking at loaded / compiled files:

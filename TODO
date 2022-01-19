@@ -1,16 +1,11 @@
 --- todos solving problems, shortcomings, quirks
-- * isn't sufficiently escaped or quoted in "doc". opening file names
-  which contain a "*" char treat it as wildcard.
 - ticking a word with headers in more than one context vocabulary allows
   no control nor test over which version was ticked.
-- better support for unsigned
 - add context vocabularies to selected searches (only undoc remaining)
 
 --- general todos, improvements, fancyness
 - let yoda choose editor or xeditor according the environment it runs in.
 - input line history would be nice
-- while "review" is functional, its implementation is a bit messy,
-  specifically the way primitives store their location information.
 - a "needed" for testing a list of words rather than just a single word
 - string operations based on search and match are mostly absent.
   index / index$ might cover a lot already. cut$ was added
@@ -20,7 +15,6 @@
   can be done by classical hide/reveal,  by postponing header creation,
   or by moving when compilation has completed.
   postponing is probably the way to go: delegate to detokeniser.
-- consider to let a satisfied u: turn forwardrefs on, and ; return to old state
 
 --- optimiser todos:
 - describe microinstructions effects to optimiser, using atom list
@@ -30,4 +24,4 @@
 - merge sequences of micro instructions to macro instructions.
 
 --- common suspects
-- documentation, tests
+- documentation, tests      these are progressing nicely

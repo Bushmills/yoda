@@ -47,5 +47,8 @@ forward referenced word are needed:
 
 or, from bash command line when yoda wasn't started:
 
-   yoda dependencies
- 
+   yoda dependencies  
+
+recently, this step is performed automatically if the dependency
+file doesn't exist during yoda launch, so you may skip step 4. now,
+though it won't hurt to perform it manually.

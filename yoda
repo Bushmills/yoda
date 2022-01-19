@@ -1745,11 +1745,11 @@ inline
 inout 1 1
 
 # needs testing
-colon 'u/mod'		# u1 u2 -- rem quot
-   code '((s1=s[sp]&true, s2=s[sp-1]&true, s[sp]=s2/s1, s[sp-1]=s2%s1))'
-semicolon
-inline
-inout 2 2
+#colon 'u/mod'		# u1 u2 -- rem quot
+#   code '((s1=s[sp]&true, s2=s[sp-1]&true, s[sp]=s2/s1, s[sp-1]=s2%s1))'
+#semicolon
+#inline
+#inout 2 2
 
 
 # ----- memory ------------------------------------------- #fold01
@@ -2171,7 +2171,7 @@ primitive 'files'  'printf "%s\n" "${files[@]}"|nl -v 0'; inout 0 0  # show list
 # ( x1 -- x2 ) ( string: $1 -- $2 )
 colon '#'                                                            # : #
    code '((radix=m[base]))'                                          # base @
-   code '((s1=s[sp]&true, s[sp]=s1/radix, tmp=s1%radix+48))'      # /mod swap '0 +
+   code '((s1=s[sp]&true, s[sp]=s1/radix, tmp=s1%radix+48))'         # /mod swap '0 +
    code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;

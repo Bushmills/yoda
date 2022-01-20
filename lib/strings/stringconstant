@@ -1,9 +1,5 @@
 provides: $constant
 
-: $constant
-   create               ( $1 -- )
-      nstrings
-      dup @
-      dup , $!
-      inc
-   does> @ $@  ;        ( -- $1 )
+: $constant             ( $1 -- )
+      here$ constant $,
+   does> $@  ;          ( -- $1 )

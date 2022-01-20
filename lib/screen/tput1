@@ -1,7 +1,7 @@
 provides: tput1
-needs: anothertput
 
 : tput1   ( $1 -- )
-      anothertput  does> ( x -- )
+      here$ constant $,
+      does> ( x -- )
       >tput "${strings[s[sp--]]}" "${s[sp--]}"
 ;

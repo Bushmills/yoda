@@ -37,18 +37,13 @@
 #v="0.2.0    # 2021dec29,16:04
 #v="0.1.0    # 2021dec20,14:57
 
-tmp="$IFS"
-IFS="."
-read -ar version <<< "$v"
-IFS="$tmp"
-
-
+read -ra version <<< "${v//./ }"
 
 # ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
-GLOBIGNORE='*:?'
+#GLOBIGNORE='*:?'
 
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
 trace=0                                                              # turn chatty system on
@@ -64,10 +59,14 @@ worddoc_prefix="word"                                                # used as p
 worddoc="$doc/words/$worddoc_prefix"                                 # directory of words documentation, also first part of word doc file name
 dependencies="$mydir/dependencies"                                   # dependency file, path and name
 
-# only first added directory - and its subdirectories - can
+# only first added directory - and its subdirectories -
 # contain forward referencable libs.
 libdirs=()                                                           # array of possible library paths
-for dir in "$mydir/lib" "$mydir" "/usr/local/lib/yoda"; do           # loop through directory candidates
+for dir in                          \
+   "$mydir/lib"                     \
+   "$mydir"                         \
+   "/usr/local/lib/yoda"
+do                                                                   # loop through directory candidates
    [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
 done
 
@@ -77,7 +76,7 @@ nextname="1000"                                                      # names enu
 declare -ai r=() s=() m=()
 declare -i sp=0 rp=0 dp=0
 declare -a ss=()
-declare -a strings=()                                        # an array for strings. Used for both string variables and constants.
+declare -a strings=()                                                # an array for strings.
 
 declare -i s1 s2 s3 s4                                               # temp variables to hold stack items s[-1] ... s[-4]
                                                                      # easier to read than "tmp, tmp2"
@@ -134,7 +133,6 @@ declare -A atom                                                      # a table w
 
 default='boot quit "yoda shell" type$ cr prompt  satisfy fix'        # what to execute when no command line args given
 
-# ----- state variables, switches, globals, static etc --- #fold00
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -545,7 +543,7 @@ variable 'forwardrefs'        "0"
 variable 'instantresolve'     "0"
 variable 'callstack'          "0"
 variable 'base'               "10"
-variable 'nstrings'           "0"                                    # index into strings, bumped by new $variable and $constant
+variable 'sdp'                "0"                                    # "string sp"
 
 constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"
@@ -643,6 +641,8 @@ trap ctrl-c SIGINT
 # resized()  { echo "resized"; }
 # trap foo SIGWINCH
 
+#err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
+# trap err ERR
 # ----- patterns ----------------------------------------- #fold00
 
 # wondering whether a case statement would make this look any better
@@ -651,7 +651,7 @@ pattern()  {                                                         # pattern i
    ((radix=m[base]))
    tmp="0123456789abcdefghijklmnopqrstuvwxyz"                        # cut legal chars for base
    [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                          # 1234      unsigned number
-      stateless "((s[++sp]=$((${radix}#${word}&true))))"          # convert signless numbers without special treatment
+      stateless "((s[++sp]=$((${radix}#${word}&true))))"             # convert signless numbers without special treatment
       return 0; }
    [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                         # -1234     negative number
       stateless "((s[++sp]=$((-${radix}#${word:1}&true))))"
@@ -659,7 +659,7 @@ pattern()  {                                                         # pattern i
    [[ ${word:0:1} == [%\$\#] ]] && {
       radix="${bases[${word:0:1}]}"                                  # yes: read radix associated with char
       [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                   # remainder of number all legal chars?
-         stateless "((s[++sp]=$((${radix}#${word:1}&true))))"     # yes: convert from base and deal with it
+         stateless "((s[++sp]=$((${radix}#${word:1}&true))))"        # yes: convert from base and deal with it
          return 0; }; }
    [[ ${word} == \'? || ${word} == \'?\' ]] && {                     # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
       read -r tmp < <(printf "%d" "'${word:1:1}'")
@@ -684,15 +684,18 @@ pattern()  {                                                         # pattern i
             return 0; }
          ss+=("$tmp $word")                                          # interpret push string to string stack
          return 0; }
-   [[ "${word:0:1}" == '>' ]] && {                                   # >foo      execute a shell command
-      tmp="${word:1}"                                                #           up to ; as args
-      if [[ "$line" == *';'* ]]; then                                # if line contains ;
-         parse ';'                                                   # then parse input until ;
-      else
-         word="$line"                                                # otherwise is whole line passed as arguments
+   [[ "${word:0:1}" == '>' ]] && {                                   # >foo...                   execute a shell command
+      tmp="${word:1}"                                                # >foo... ->  foo...
+      if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command
+         tmp="${tmp%;}"                                              # foo; -> foo
+      elif [[ "$line" == *';'* ]]; then                              # semicolon space seperated from command
+         parse ';'                                                   # parse input until ;
+         tmp+=" $word"
+      else                                                           # no semicolon at all
+         tmp+=" $line"
          line=""                                                     # and removed from further evaluation
       fi
-      stateless "$tmp $word"                                         # execute or compile the parsed shell command
+      stateless "$tmp"                                               # execute or compile the parsed shell command
       return 0; }
    ((m[shell])) || return 1                                          # done unless shell flag was set
    stateless "${word} ${line}" ||                                    # in which case execution as shell command is attempted
@@ -718,6 +721,7 @@ totalheaders()  {
 
 # create a forward ref by the name of arg1
 # now unused arg2 passes referer
+# NOTE: remove referer
 forwardref()  {
    [[ -z ${headersunresolved["$word"]} ]] && {                       # don't re-forwardref and already forward ref'ed word
       names[nextname]="$1"
@@ -1448,6 +1452,17 @@ semicolon
 # "nice"    "this is a very *** foo"   "***" replace$    ->   "this is a very nice foo"
 # "nope"    "this is a very *** foo"   "?" replace$      ->   "this is a very *** foo"
 # "123"     "abcd" 1 insert$  -> "a123bcd"
+
+primitive 'allot$' '((sdp+=s[sp--]))'
+
+colon 'here$'
+   push 'sdp'
+semicolon
+
+colon '$,'
+   code 'strings[sdp++]="${ss[s-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
 
 
 # push string array item u to string stack
@@ -2275,6 +2290,17 @@ primitive 'binary'   "m[$base]=2";  inout 0 0
 # non-existing non-forw   false   true    false
 # forward ref word        false   true    true
 
+# reason for this apparent redundancy of having both need/resolve and satisfy
+# for resolving yet unresolved words is that satisfy can't be used in some
+# situations, when need can. satisfy is unsuited for use while compiling a
+# word - most likely will execution of satisfy result in compiling words, and
+# we can't do that while already compiling a word, because compilation isn't
+# nestable. This disqualifies the use of satisfy for creating forward references
+# which arise during compilation - and that's probably the most common case
+# where forwards references are created. "Need" OTOH will do nicely there, by
+# only registering the need, but leaving it to "resolve" to include code at
+# a more appropriate time.
+
 
 need()  {
    [[ -z "${headersstateless[$1]}" ]] || return                      # only ask for forward if word isn't in any context voc
@@ -2297,15 +2323,23 @@ semicolon
 primitive 'have'   'have'                                            # ( -- f ) ( stream: bl delimited string )    word exists?
 evaluate ': lack  have 0= ;'                                         # ( -- f ) ( stream: bl delimited string )    word missing?
 
+
+cache_dependencies()  {
+   while read -r word file _; do
+   lib["$word"]="$file"
+   done < "$dependencies"
+}
+
 dependencies()  {                                                    # library inclusion dependency file builder
    grep -r "^provides: " "${libdirs[0]}" |
    while read -r file words; do
       file="${file%:provides:}"
 # "Double quote to prevent globbing and word splitting."
-# I actually *want* word splitting here, for fprint to produce one line per word
+# I actually *want* word splitting here, for fprint to produce one line per space delimited word
 # shellcheck disable=SC2086
       printf "%-31s $file\n" $words
    done > "$dependencies"
+   ((cache_dependencies)) && cache_dependencies
 }
 
 # try to resolve all words given on input line.
@@ -2349,6 +2383,8 @@ EOF
 # sanitised string is returned in variable file
 declare -A sanitise=(
    ['/']="slash"
+   ["\\"]="backslash"
+   [';']="semi"
    ['$']="dollar"
    ['>']="gt"
    ['<']="ls"
@@ -2526,18 +2562,12 @@ semicolon
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 [[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides
 
-[[ -f "$dependencies" ]] || {
+if [[ -f "$dependencies" ]]; then                                    # dependency file exist?
+   ((cache_dependencies)) && cache_dependencies                      # yes: read if caching enabled
+else
    echo "generating dependencies file..."
-   dependencies
-}
-
-((cache_dependencies)) && {
-   [[ -f "$dependencies" ]] && {
-      while read -r word file _; do
-         lib["$word"]="$file"
-      done < "$dependencies"
-   }
-}
+   dependencies                                                      # no: generate. additionally, read if caching enabled
+fi
 
 args=("$@")
 files[1]="$(realpath "$0")"

@@ -1,5 +1,0 @@
-provides: anothertput
-
-: anothertput ( -- )
-      nstrings dup @
-      dup constant $! inc ;

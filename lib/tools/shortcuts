@@ -1,0 +1,10 @@
+provides: +s -s +f -f +r +r
+
+\ shell on and off
+needed +s  needed -s or lest  : +s shell on ;            : -s shell off ;
+
+\ also interactive refs to yet uncompiled words
+needed +r  needed -r or lest  : +r instantresolve on +f ;   : -r instantresolve off -f  ;
+
+\ only those during compilation
+needed +f  needed -f or lest  : +f forwardrefs on ;      : -f forwardrefs off ;

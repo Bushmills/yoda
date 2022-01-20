@@ -25,7 +25,10 @@
 
 
 # date is post-gregorian Sol3, time is UTC
- v="0.5.3"   # 2022jan19,20:28   dependencies can be cached, therefore served from memory
+ v="0.5.4"   # 2022jan20,16:00   dependencies are cached, always. dependency file is
+#                                generated if non-existent. strings got sdp, here$, allot$
+#                                sanitising filenames helped removal of GLOBIGNORE
+#v="0.5.3"   # 2022jan19,20:28   dependencies can be cached, therefore served from memory
 #                                sanitising doc, undoc, about file names.
 #v="0.5.2"   # 2022jan17,15:00   dropped logging, added shell$.
 #v="0.5.1"   # 2022jan17,12:25   dependency base resolving. dropped postlib, topics
@@ -43,7 +46,6 @@ read -ra version <<< "${v//./ }"
 
 shopt -s extglob
 shopt -u nullglob
-#GLOBIGNORE='*:?'
 
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
 trace=0                                                              # turn chatty system on
@@ -53,7 +55,6 @@ codedump=0
 
 read -r tmp _ < <(realpath "$0")
 mydir="${tmp%/*}"
-
 doc="$mydir/doc"                                                     # documentation base directory
 worddoc_prefix="word"                                                # used as part of file names, prevents files to go hidden by leading period
 worddoc="$doc/words/$worddoc_prefix"                                 # directory of words documentation, also first part of word doc file name
@@ -77,10 +78,10 @@ declare -ai r=() s=() m=()
 declare -i sp=0 rp=0 dp=0 sdp=0
 declare -a ss=()
 declare -a strings=()                                                # an array for strings.
-
 declare -i s1 s2 s3 s4                                               # temp variables to hold stack items s[-1] ... s[-4]
                                                                      # easier to read than "tmp, tmp2"
 declare -Ai flags                                                    # header flags (only inline left for now)
+declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
 headerslistlist=(
          "headersstateless"                                          # searched during both interpreting and compiling
          "headersinterpretonly"                                      # searched during compiling only
@@ -95,19 +96,17 @@ declare -a names                                                     # function 
 declare -A headersunresolved                                         # forward referenced. Not searched.
 declare -A wherefile                                                 # source file
 declare -A whereline                                                 # source line
-declare -a files
-declare -a loaded
-files[0]="tty"
-declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
-                                                                     # following does> to make it more easily available to dodoes
 declare -A lib                                                       # cache dependencies
+
+declare -a files=("tty")                                             # list of included files
+declare -a loaded                                                    # list of inclusion counters for included files
+                                                                     # following does> to make it more easily available to dodoes
 declare -a lasterror
 lasterror=("" "-1" "0")
 
 # header flags:
 flagscount="0"
 inline=$((1<<flagscount++))                                          # compile function code rather than calls to function
-
 
 # all 0: don't optimise, copy literal code
 analyserflag="0"                                                     # shift by this number for next flag
@@ -129,7 +128,7 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings.
 
-default='boot quit "yoda shell" type$ cr prompt  satisfy fix'        # what to execute when no command line args given
+default='boot quit "yoda shell" type$ cr prompt needs: files fix'    # what to execute when no command line args given
 
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
@@ -848,6 +847,7 @@ evaluate()  {
 
 # return filehandle as result, and return value
 # indicating first time load or reload
+# arg1: file name (fully qualified)
 loaded()  {
    local file="$1"
    for ((filehandle=1; filehandle<${#files[@]}; filehandle++)); do   # while multiple inclusion is allowed, those files won't be recorded multiple times
@@ -2180,7 +2180,6 @@ semicolon
 # ( -- ) ( input: parse word )
 evaluate ': from word$ from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
-primitive 'files'  'printf "%s\n" "${files[@]}"|nl -v 0'; inout 0 0  # show list of already included files
 
 # ----- pictured number conversion ----------
 

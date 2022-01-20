@@ -1,0 +1,8 @@
+provides: files
+
+( show list of loaded files, along with their handle )
+: files ( -- )
+   #files 0 do
+      i  4 u.r  3 spaces
+      i filename$ type$ cr
+   loop ;

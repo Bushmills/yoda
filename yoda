@@ -2460,7 +2460,7 @@ primitive empty  's=() sp=0'
 # way to do so manually was needed.
 evaluate ': _  empty empty$  ;'; inline
 primitive 'words' 'words'
-primitive 'random' '((s[++sp]=RANDOM&true))'; inout 0 1              # ( -- u )        15 bits random number
+primitive 'random' '((s[++sp]=SRANDOM&true))'; inout 0 1             # ( -- u )        32 bits random number
 primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&true))';        # a microseconds epoch, used for benchmarking
 primitive 'secs' 'sleep "${s[sp--]}"'
 
@@ -2564,12 +2564,13 @@ semicolon
 [[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides
 
 [[ -f "$dependencies" ]] ||generate_dependencies                     # dependency file missing?
-cache_dependencies
+cache_dependencies                                                   # read dependencies into memory
 
-args=("$@")
-files[1]="$(realpath "$0")"
-((${#args[@]})) || args[0]="$default"
-evaluate "${args[*]}"
+args=("$@")                                                          # read command line
+(( ${#args[@]} )) || read -rst 0.01 "args"                           # no command line specified: check whether commands are piped
+[[ -z ${args[0]} ]] && args[0]="$default"                            # neither pipe nor command line: load default launch commands
+files[1]="$(realpath "$0")"                                          # handles: 0=tty, 1=yoda, others added as they're loaded
+evaluate "${args[*]}"                                                # evaluate piped command, command line or default initial commands
 if [[ -n "$coldvector" ]]; then                                      # if cold launch point was specified, try to run.
    resolve                                                           # still unresolved words? try to resolve those.
    if (( ${#headersunresolved[@]} )); then

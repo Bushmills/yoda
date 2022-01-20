@@ -7,8 +7,6 @@ yoda relies on these external program for execution of few words:
       sort        # used by crossref.
                   # As I may remove crossref, this dependency may get dropped
 
-      nl          # currently used to number listed items in files
-
       grep        # added to support new experimental dependency based resolving
                   # which augments existing forward referencing scheme. Used to
                   # build dependency files by scanning libraries

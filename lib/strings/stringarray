@@ -1,0 +1,13 @@
+provides: $array
+\ string arrays for storing and random accessing strings
+
+: $array  ( u -- )
+   here$ constant allot$
+   does> +
+;
+
+\ use:
+\   10 $array foo$
+\   "hello"  5 foo$ $!
+\   "world"  2 foo$ $!
+\   5 foo$ $@ type$

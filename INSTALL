@@ -1,25 +1,44 @@
-For starting, you need at least the file  yoda
+For starting, you need at least the file  yoda and
+the directory lib with their subdirectories.
 
-While yoda will be able to run all alone, you still
-may want to grab the rest, especially yoda.conf, and
-the subdirectories doc and lib.
+While yoda will be able to run all alone, current
+preconfiguration depends on a small number of files
+in the lib directory.
 
-Further instructions assume presence of populated lib
-directory:
+Further instructions therefore assume presence of
+populated lib directory:
 
 For an initial test run, change to the directory which
 contains the file yoda and the subdirecty "lib" with at
 least the file "fix" in it, and run there:
 
-   bash yoda
+   `bash yoda`
 
 Should you be greeted with a "Yoda shell" message, your
 setup appears to be fine. Verify by tapping the "Enter"
 key: an " ok" message should be produced.
 
+in case of an error at this point:
+   * yoda tries to build library dependecies at first run, and
+   requires external command grep for this. does grep exist?
+
+   * if yoda quits with a message complaining about unresolved
+   forward references, make sure the directory lib exists and
+   is populated (contains a handful of subdirectories with files
+   in them)
+
+   * including library files relies on presence of the "realpath"
+   command, which comes with coreutils. verify that you have it.
+
+   * the bash shell required. does executing "bash" alone still
+   throw an error
+
+
 Now proceed with finalising the installation:
 1. create a symlink to yoda in a directory which
-   is in your PATH.  /usr/local/bin may be a good candidate.
+   is in your PATH.  Placing the symlink in your directory
+   /usr/local/bin may be a good candidate, let it point to
+   the file yoda in the directory where you installed it.
 
 As result of the above step should you now be able to launch
 yoda from anywhere.
@@ -28,27 +47,23 @@ yoda from anywhere.
 which can be found in the same directory where yoda resides.
 All settings should have been set to reasonable defaults,
 but your preferences may differ.
+Especially the editor setting may be worth of taking note here.
 
-3. Test editor and doc path settings by launching yoda, then 
-try to open the definition of a word by entering review followed
-by the name of the word. For example
+3. Test editor by launching yoda, then try to open the source
+of a word by entering review followed by the name of the word.
+For example:
 
-   review .
+   `review .`
 
 should open the definition of .  in the editor. Similarily, the
 definition of "review" itself can be opened too:
 
-   review review
+   `review review`
 
-4. create the file which tells yoda what files to include when
-forward referenced word are needed:
+4. If you copied the doc directory, test whether its contents
+are found, by entering:
 
-   dependencies
+   `about about`    ( or any other word of your liking, as long it has already been documented )
 
-or, from bash command line when yoda wasn't started:
+If this succeeds too, you're all set.
 
-   yoda dependencies  
-
-recently, this step is performed automatically if the dependency
-file doesn't exist during yoda launch, so you may skip step 4. now,
-though it won't hurt to perform it manually.

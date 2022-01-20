@@ -42,7 +42,7 @@
 
 read -ra version <<< "${v//./ }"
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -128,7 +128,8 @@ declare -A stackout=()
 
 declare -A atom                                                      # a table with token -> code mappings.
 
-default='boot quit "yoda shell" type$ cr prompt needs: files fix'    # what to execute when no command line args given
+# what to execute when no command line args given
+default='boot quit "yoda shell" type$ cr prompt needs: files fix shortcuts'
 
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32

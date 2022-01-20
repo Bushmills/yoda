@@ -1,10 +1,22 @@
-provides: +s -s +f -f +r +r
+provides: +s -s +f -f +r +r shortcuts
 
-\ shell on and off
-needed +s  needed -s or lest  : +s shell on ;            : -s shell off ;
+loaded lest done                           \ protect against reloading
+: +s shell on ;
+: -s shell off ;
+: +f forwardrefs on ;                      \ only those during compilation
+: -f forwardrefs off ;
+: +i instantresolve on +f ;                \ resolve interactive refs immediate
+: -i instantresolve off -f  ;
 
-\ also interactive refs to yet uncompiled words
-needed +r  needed -r or lest  : +r instantresolve on +f ;   : -r instantresolve off -f  ;
+: ?  ( -- )  ( $1 -- )
+   dup$ #16 ltype$
+   evaluate$ @
+   if "on" else "off" then
+   type$ cr ;
 
-\ only those during compilation
-needed +f  needed -f or lest  : +f forwardrefs on ;      : -f forwardrefs off ;
+: shortcuts ( -- )
+   "shell"          ?
+   "forwardrefs"    ?
+   "instantresolve" ?
+;
+trash ?    \ too special case for keeping.

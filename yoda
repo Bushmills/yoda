@@ -732,14 +732,23 @@ forwardref()  {
 satisfy1()  {
    [[ -z ${headersstateless[$1]} ]] || return                        # word exists - already satisfied
    local word="$1"
-   local forwarding="$((m[forwardrefs]))"
+   local forwarding="$((m[forwardrefs]))"                            # save fwdref state for later restoring
    ((m[forwardrefs]=-1))                                             # turn on forward references
-   tmp="${lib["$word"]}"                                             # libary file name from memory
-   if [[ -n "$tmp" && -f "$tmp" ]]; then
-      from "$tmp"                                                    # source found: load
-   else
-      forwardref "$word"
-   fi
+   tmp="${lib["$word"]}"                                             # name of library containing word source
+
+### test:  allow libraries to compile conditionally by testing
+### "needed" - creating a forward ref unconditionally here - and
+### not only when inclusion failed - allows need/resolve based
+### conditional compilation to deal with needed:/satisfy based
+### resolving in identical way. In addition, logic gets simpler
+   forwardref "$word"
+   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"                       # load source if file exists
+
+#   if [[ -n "$tmp" && -f "$tmp" ]]; then                             # check that file exists
+#      from "$tmp"                                                    # load source
+#   else
+#      forwardref "$word"
+#   fi
    ((m[forwardrefs]=forwarding))                                     # restore forward refs status
 }
 
@@ -1978,7 +1987,6 @@ immediate
 
 
 remagic
-
 dodo()  {
    ((r[++rp]=ibar))
    ((r[++rp]=i))
@@ -2022,21 +2030,20 @@ colon '+loop'
 semicolon
 immediate
 
-primitive 'leave'  'code "break"'; immediate                         # break out of loop
-primitive '?leave' 'code "((s[sp--]))&&break"'; immediate            # break out of loop when false
+primitive 'leave'  'code "break"'              ; immediate           # break out of loop
+primitive '?leave' 'code "((s[sp--]))&&break"' ; immediate           # break out of loop when false
 primitive 'lest'   'code "((s[sp--]))||return"'; immediate           # interpreting version: skip rest of line when false
-primitive 'lest'   '((s[sp--]))||line=""'; interactive               # compiling version: skip until end of word (i.e. return) when true
-primitive 'unless' 'code "((s[sp--]))&&return" '; immediate          # interpreting version: skip rest of line when true
-primitive 'unless' '((s[sp--]))&&line=""'; interactive               # compiling version: skip rest of word when false
+primitive 'lest'   '((s[sp--]))||line=""'      ; interactive         # compiling version: skip until end of word (i.e. return) when true
+primitive 'unless' 'code "((s[sp--]))&&return"'; immediate           # interpreting version: skip rest of line when true
+primitive 'unless' '((s[sp--]))&&line=""'      ; interactive         # compiling version: skip rest of word when false
 
 # interpreting version: u times repeat evaluation of input line remainder
 colon 'times'
-   code '((r[++rp]=i))'
-   code '((i=s[sp--]))'
-   code 'while ((i--)); do evaluate "$line"; done'
-   code '((i=r[rp--]))'
-   atom 'rdrop'
-   code 'line=""'
+   code '((r[++rp]=i))'                                              # by using i, and pushing previous i to rstack,
+   code '((i=s[sp--]))'                                              # we make times, and nested times, compatible with i and j
+   code 'while ((i--)); do evaluate "$line"; done'                   # evaluate line i times
+   code '((i=r[rp--]))'                                              # restore old i
+   code 'line=""'                                                    # prevent re-evaluation of line when times has completed
 semicolon
 interactive
 

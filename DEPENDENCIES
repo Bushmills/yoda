@@ -13,14 +13,6 @@ yoda relies on these external program for execution of few words:
                   # which augments existing forward referencing scheme. Used to
                   # build dependency files by scanning libraries
 
-only needed with cache_dependencies=0  (in yoda.conf).
-if caching of dependencies is enabled, by assigning a value different 
-from 0, searching the files containg sources of needed words is done
-by hash lookup, rather than using awk to look through dependencies file.
-      awk         # added to support new experimental dependency based resolving
-                  # which augments existing forward referencing scheme. Used to
-                  # search dependency file for word to file association.
-
 No test for their presence is performed, as both are considered pretty standard
 on any system able to run bash.
 

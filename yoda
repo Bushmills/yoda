@@ -99,10 +99,8 @@ declare -a files
 declare -a loaded
 files[0]="tty"
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
-
-cache_dependencies=1
-((cache_dependencies)) && declare -A lib
                                                                      # following does> to make it more easily available to dodoes
+declare -A lib                                                       # cache dependencies
 declare -a lasterror
 lasterror=("" "-1" "0")
 
@@ -226,15 +224,17 @@ where()  {                                                           # remember 
 
 
 # create header, but don't compile, and don't generate function yet.
-# compiling (that is, creating a bash function) is left to semicolon, calling compile
-# won't detect redefinition if word was moved to context vocabulary
+# compiling (that is, creating a bash function) is left to
+# semicolon, calling compile won't detect redefinition if word was
+# moved to context vocabulary
 # arg1: word name
 # arg2: function name
-# not allowed to generate function names because some names want to be
-# determined by caller
+# not allowed to generate function names because some names want
+# to be determined by caller
 # NOTE: leave it to header to prepend $header_code.
-                                                                     # variable last doesn't exist yet, but is used in header.
-((last=dp++))                                                        # remedy: remember here, allot cell, define a constant later.
+                                                                     # variable last doesn't exist yet, but is used in header, and
+                                                                     # can't be defined earlier, because defining it calls header.
+((last=dp++))                                                        # remedy: remember here, allot cell, define it as constant later.
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
    m[last]="${2##*_}"
@@ -327,14 +327,15 @@ optimise()  {                                                        # run code 
       elif (( bodyflag & does )); then                               # does>
          targetline="${body[tmp]}"                                   # compile dodoes call
          dodoes_at="$((${#target[@]}+1))"                            # remember end of target for splitting code (but only when whole word
-      fi                                                             #   was compiled - we want to rip out all the run time code, after all.
+      fi                                                             # was compiled - we want to rip out all the run time code, after all.
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
    ((dodoes_at)) && {
-# in raw code was a does> encountered: split generated code in two parts.
-# first part is compiled to defining word,
-# second part is seperated to an array item associated with defining word.
-# dodoes, when executed, knows how to retrieve and compile that code to defined word.
+# in raw code was a does> encountered: split generated code in
+# two parts. first part is compiled to defining word, second part
+# is seperated to an array item associated with defining word.
+# dodoes, when executed, knows how to retrieve and
+# compile that code to defined word.
       doescode[${headersstateless[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
       target=("${target[@]:0:$dodoes_at}")
    }
@@ -471,13 +472,13 @@ primitive()  {
 
 colon()  {
    [[ -z "$1" ]] && emptyname
-   if [[ -z "${headersunresolved[$1]}" ]]; then                    # check whether word is an unresolved forward reference
+   if [[ -z "${headersunresolved[$1]}" ]]; then                      # check whether word is an unresolved forward reference
       names[nextname]="$1"
       name="${header_code}_$((nextname++))"                          # prefix function names will avoid effect described on next line
    else                                                              # created word will resolve forward reference(s)
       name="${headersunresolved[$1]}"                                # as word name use name of forward reference
       foo="$1"
-      unset -v 'headersunresolved[$foo]'                               # remove forward reference
+      unset -v 'headersunresolved[$foo]'                             # remove forward reference
    fi
    header "$1" "$name"
 
@@ -489,10 +490,10 @@ colon()  {
 # from evaluate. This hack is needed for another hack which is here
 # too and similar enough that they both can be pulled together:
 # source locations from primitives in general need that other hack
-# which takes source location from BASH_LINENO[0] (and from BASH_LINENO[2]
-# for the hack of the hack).
-# So when suddenly source lookup of primitives through "review" fails, this
-# would be the place to look at.
+# which takes source location from BASH_LINENO[0] (and from
+# BASH_LINENO[2] for the hack of the hack).
+# So when suddenly source lookup of primitives through "review"
+# fails, this would be the place to look at.
    [[ -z "$linenr" ]] && {
       tmp="${BASH_LINENO[0]}"
 #      echo "-- ${FUNCNAME[@]:0:4}"
@@ -719,8 +720,6 @@ totalheaders()  {
 
 
 # create a forward ref by the name of arg1
-# now unused arg2 passes referer
-# NOTE: remove referer
 forwardref()  {
    [[ -z ${headersunresolved["$word"]} ]] && {                       # don't re-forwardref and already forward ref'ed word
       names[nextname]="$1"
@@ -736,19 +735,11 @@ satisfy1()  {
    local word="$1"
    local forwarding="$((m[forwardrefs]))"
    ((m[forwardrefs]=-1))                                             # turn on forward references
-
-   if ((cache_dependencies)); then                                   # choose memory or file bases deps
-      tmp="${lib["$word"]}"                                          # libary file name from memory
-   else
-      read -r tmp < <(
-         awk -v word="$word" '$1 == word { print $2 }' "$dependencies"  # library file name from file
-      )
-   fi
-
+   tmp="${lib["$word"]}"                                             # libary file name from memory
    if [[ -n "$tmp" && -f "$tmp" ]]; then
       from "$tmp"                                                    # source found: load
    else
-      forwardref "$word" "satisfy1"
+      forwardref "$word"
    fi
    ((m[forwardrefs]=forwarding))                                     # restore forward refs status
 }
@@ -2323,13 +2314,7 @@ primitive 'have'   'have'                                            # ( -- f ) 
 evaluate ': lack  have 0= ;'                                         # ( -- f ) ( stream: bl delimited string )    word missing?
 
 
-cache_dependencies()  {
-   while read -r word file _; do
-   lib["$word"]="$file"
-   done < "$dependencies"
-}
-
-dependencies()  {                                                    # library inclusion dependency file builder
+generate_dependencies()  {                                                    # library inclusion dependency file builder
    grep -r "^provides: " "${libdirs[0]}" |
    while read -r file words; do
       file="${file%:provides:}"
@@ -2338,7 +2323,17 @@ dependencies()  {                                                    # library i
 # shellcheck disable=SC2086
       printf "%-31s $file\n" $words
    done > "$dependencies"
-   ((cache_dependencies)) && cache_dependencies
+}
+
+cache_dependencies()  {
+   while read -r word file _; do
+   lib["$word"]="$file"
+   done < "$dependencies"
+}
+
+dependencies()  {                                                    # library inclusion dependency file builder
+   generate_dependencies
+   cache_dependencies
 }
 
 # try to resolve all words given on input line.
@@ -2349,7 +2344,7 @@ satisfy()  {
    done
 }
 
-primitive 'dependencies' 'dependencies'
+primitive 'dependencies' 'dependencies'                              # generate, then cache
 primitive "provides:"   'line=""'        ;   interactive             # double quoted escaped backslash rather than
 primitive 'needs:' 'satisfy'                                         # more symmetric with "provided:"
 primitive 'satisfy' 'satisfy'                                        # nice for interactive use
@@ -2458,8 +2453,8 @@ primitive empty  's=() sp=0'
 # way to do so manually was needed.
 evaluate ': _  empty empty$  ;'; inline
 primitive 'words' 'words'
-primitive 'random' '((s[++sp]=RANDOM&true))'; inout 0 1           # ( -- u )        15 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&true))';     # a microseconds epoch, used for benchmarking
+primitive 'random' '((s[++sp]=RANDOM&true))'; inout 0 1              # ( -- u )        15 bits random number
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&true))';        # a microseconds epoch, used for benchmarking
 primitive 'secs' 'sleep "${s[sp--]}"'
 
 colon 'filename$'
@@ -2561,12 +2556,8 @@ semicolon
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 [[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides
 
-if [[ -f "$dependencies" ]]; then                                    # dependency file exist?
-   ((cache_dependencies)) && cache_dependencies                      # yes: read if caching enabled
-else
-   echo "generating dependencies file..."
-   dependencies                                                      # no: generate. additionally, read if caching enabled
-fi
+[[ -f "$dependencies" ]] ||generate_dependencies                     # dependency file missing?
+cache_dependencies
 
 args=("$@")
 files[1]="$(realpath "$0")"

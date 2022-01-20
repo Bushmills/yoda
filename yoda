@@ -74,7 +74,7 @@ header_code="yoda"                                                   # prefix to
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
 
 declare -ai r=() s=() m=()
-declare -i sp=0 rp=0 dp=0
+declare -i sp=0 rp=0 dp=0 sdp=0
 declare -a ss=()
 declare -a strings=()                                                # an array for strings.
 
@@ -543,7 +543,6 @@ variable 'forwardrefs'        "0"
 variable 'instantresolve'     "0"
 variable 'callstack'          "0"
 variable 'base'               "10"
-variable 'sdp'                "0"                                    # "string sp"
 
 constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"

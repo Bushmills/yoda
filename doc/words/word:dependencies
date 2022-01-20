@@ -22,3 +22,8 @@ notes:               should be executed to build or refresh if one of these
                       -  library base directory changed (first entry in ${libdirs[]} array,
                          configuration item)
                       generation of new file may take a few seconds.
+
+                     recently yoda has been changed to execute dependencies during
+                     launch if no dependencies file exists. Therefore, often you'd
+                     not need to execute `dependencies` yourself, as you can, prior
+                     to starting yoda, simply delete an existing dependency file.

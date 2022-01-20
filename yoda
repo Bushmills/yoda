@@ -42,7 +42,7 @@
 
 read -ra version <<< "${v//./ }"
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -185,6 +185,7 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 # ----- ANSI/VT100 attributes ---------------------------- #fold00
 
 # use in error and prompt.
+# want to use tput, but esc[ strings are easier to embed for now.
    redfg='31'
    redbg='41'
    greenfg='32'
@@ -347,7 +348,7 @@ optimise()  {                                                        # run code 
 
 # read space delimited word from line without removing it.
 peek_word()  {
-   word="${line##+([[:space:]])}"                                    # remove all leading spaces (nee
+   word="${line##+([[:space:]])}"                                    # remove all leading spaces (needs extglobs)
    word="${word%%[[:space:]]*}"                                      # bl lookahead
 }
 
@@ -360,12 +361,12 @@ word()  {
 }
 
 # read string from line and remove it, also remove delimiter.
-# delimiter passed as argument.
+# delimiter passed as arg1.
 # leading spaces aren't removed from remainder of line.
 parse()  {
    word="${line%%"${1}"*}"
    [[ -z "$1" ]] && word="$line"
-   line="${line#"${word}"}"                                          # " unconfuse efte syntax highlighting
+   line="${line#"${word}"}"
    line="${line#"$1"}"
 }
 
@@ -477,8 +478,7 @@ colon()  {
       name="${header_code}_$((nextname++))"                          # prefix function names will avoid effect described on next line
    else                                                              # created word will resolve forward reference(s)
       name="${headersunresolved[$1]}"                                # as word name use name of forward reference
-      foo="$1"
-      unset -v 'headersunresolved[$foo]'                             # remove forward reference
+      unset -v 'headersunresolved[$1]'                               # remove forward reference
    fi
    header "$1" "$name"
 

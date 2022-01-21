@@ -5,8 +5,8 @@ loaded lest done                           \ protect against reloading
 : -s shell off ;
 : +f forwardrefs on ;                      \ only those during compilation
 : -f forwardrefs off ;
-: +i instantresolve on +f ;                \ resolve interactive refs immediate
-: -i instantresolve off -f  ;
+: +i instantresolve on  ;                \ resolve interactive refs immediate
+: -i instantresolve off  ;
 
 : ?  ( -- )  ( $1 -- )
    dup$ #16 ltype$

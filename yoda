@@ -129,7 +129,7 @@ declare -A stackout=()
 declare -A atom                                                      # a table with token -> code mappings.
 
 # what to execute when no command line args given
-default='boot quit "yoda shell" type$ cr prompt needs: files fix shortcuts'
+default='boot quit "yoda shell" type$ cr prompt needs: files fix shortcuts page'
 
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
@@ -250,7 +250,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -371,7 +371,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 # atoms may be:
 #  - micro instructions
@@ -543,7 +543,7 @@ variable()  {
 
 variable 'shell'              "0"
 variable 'forwardrefs'        "0"
-variable 'instantresolve'     "0"
+variable 'instantresolve'     "1"
 variable 'callstack'          "0"
 variable 'base'               "10"
 
@@ -560,7 +560,7 @@ constant 'bits'               "$bits"
 constant 'last'               "$last"
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -754,9 +754,13 @@ satisfy1()  {
 
 #   forwardref "$word"
 ### commented out for now. reason for this is a bit tricky to find.
-
-   [[ -n "$tmp" && -f "$tmp" ]] && from "$tmp"                       # load source if file exists
+   tmp1=1
+   [[ -n "$tmp" && -f "$tmp" ]] && {
+      from "$tmp"                                                    # load source if file exists
+      tmp1=0
+   }
    ((m[forwardrefs]=forwarding))                                     # restore forward refs status
+   return "$tmp1"
 }
 
 resolving=0
@@ -778,7 +782,7 @@ resolve()  {
       ((${#headersunresolved[@]})) || break                          # no forwardrefs left: done
       totalheaders                                                   # total headers count now, after inclusion
    done
-echo "end resolve $word"
+#echo "end resolve $word"
 ### page isn't unresolved any longer after loading first time"
 ### it still will be loaded again after here.
 ### second time loading does not go through resolve.
@@ -787,7 +791,7 @@ echo "end resolve $word"
 
 
 
-# ----- line interpreter, evaluate------------------------ #fold00
+# ----- line interpreter, evaluate------------------------ #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -838,13 +842,11 @@ evaluate()  {
             code "${headersunresolved["$word"]}"                     #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
             continue                                                 # hope that it will eventually get resolved
          }
-         (( m[instantresolve] )) && {                                # interpret time forward references enables?
-            need "$word"; resolve                                    # yes: declare need, immediately try to resolve
-            [[ -z "${headersunresolved[$word]}" ]] && {              # if resolved:
-               ${headers["$word"]}                                   #     execute
-               continue
-            }
-            unset -v 'headersunresolved["$word"]'                    # restore former state, proceed with unknown word handling
+      }
+      (( m[instantresolve] )) && {                                   # interpret time forward references enables?
+         satisfy1 "$word" && {                                       # load word
+            ${headers["$word"]}                                      # execute if loaded
+            continue
          }
       }
       notfound "$word"                                               # nothing helped. get grouchy.
@@ -1070,7 +1072,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1142,7 +1144,7 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #FOLD01
+# ----- misc --------------------------------------------- #fold01
 
 primitive 'noop' ':'
 primitive "\\"   'line=""';   immediate                              # single quoted single backslash because
@@ -1152,7 +1154,7 @@ primitive '('    "parse ')'"; immediate
 primitive '('    "parse ')'"; interactive
 
 
-# ----- parameter stack ---------------------------------- #FOLD01
+# ----- parameter stack ---------------------------------- #fold01
 
 
 colon 'dup'
@@ -1546,7 +1548,7 @@ inout 0 1
 
 
 
-# ----- numeric comparison ------------------------------- #FOLD01
+# ----- numeric comparison ------------------------------- #fold01
 
 primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
 primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
@@ -1614,7 +1616,7 @@ inline
 inout 4 1
 
 
-# ----- compiler and word search related ----------------- #FOLD01
+# ----- compiler and word search related ----------------- #fold01
 
 # ( -- 0 | a )
 have() {
@@ -1684,7 +1686,7 @@ colon    'invert';  atom 'invert'; semicolon; inline
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -1716,7 +1718,8 @@ primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'; inout 2 1
 
 colon  '2/'
    atom 's1'
-   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'
+#   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'               # floored
+   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'    # symmetric
 semicolon
 inout 1 1
 
@@ -1788,7 +1791,7 @@ inout 1 1
 #inout 2 2
 
 
-# ----- memory ------------------------------------------- #FOLD01
+# ----- memory ------------------------------------------- #fold01
 
 colon '@'
    atom '@'
@@ -1908,7 +1911,7 @@ primitive 'move'   'move'; inout 3 0
 
 
 
-# ----- flow control ------------------------------------- #FOLD01
+# ----- flow control ------------------------------------- #fold01
 
 remagic
 
@@ -2096,7 +2099,7 @@ colon '?abort'
 semicolon
 
 
-# ----- i/o ---------------------------------------------- #FOLD01
+# ----- i/o ---------------------------------------------- #fold01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2210,7 +2213,7 @@ semicolon
 evaluate ': from word$ from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
 
-# ----- pictured number conversion ---------- #FOLD01
+# ----- pictured number conversion ---------- #fold01
 
 # ( x1 -- x2 ) ( string: $1 -- $2 )
 colon '#'                                                            # : #
@@ -2240,7 +2243,7 @@ primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
 
-# ----- foward referencing support words ----------------- #FOLD01
+# ----- foward referencing support words ----------------- #fold01
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2380,7 +2383,7 @@ primitive 'satisfy' 'satisfy'                                        # nice for 
 
 
 
-# ----- documentation ------------------------------------ #FOLD01
+# ----- documentation ------------------------------------ #fold01
 
 
 undoc_template()  {
@@ -2456,7 +2459,7 @@ colon 'about'
 semicolon
 
 
-# ----- interactive mode -------------------------------- #FOLD01
+# ----- interactive mode -------------------------------- #fold01
 
 evaluate ': quit warm begin query$ evaluate$ prompt again ;'
 
@@ -2477,7 +2480,7 @@ semicolon
 
 
 
-# ----- files --------------------------------------------- #FOLD01
+# ----- files --------------------------------------------- #fold01
 
 
 colon 'filename$'
@@ -2530,7 +2533,7 @@ evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
 
 
 
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 primitive empty  's=() sp=0'
 
 # empty stack and string stack
@@ -2548,7 +2551,7 @@ colon 'version'
    push '${version[2]}'
 semicolon
 
-# ----- experimental ------------------------------------- #FOLD01
+# ----- experimental ------------------------------------- #fold01
 
 # ----- launch ------------------------------------------- #fold00
 

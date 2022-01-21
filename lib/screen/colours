@@ -4,5 +4,6 @@ provides: black red green yellow blue magenta cyan white
 loaded lest done
 needs: enum
 
-\ colours for using with fg and bg
-enum black red green yellow blue magenta cyan white
+\ colours for using with fg and bg.
+\ start at 0, with increments of 1
+0 1 enum   black red green yellow blue magenta cyan white

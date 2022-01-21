@@ -1,13 +1,14 @@
 ( linked variables can be displayed in a list with contents displayed )
+provides: var .vars
+needs: link
 
 variable vars               \ link anchor as base of linked list through variables
 
-need link
 : var ( create: -- )  ( run: -- a )
     vars link               \ add linked list item
     here cell+ constant     \ skip cell to store xt for name
     last @ ,                \ add xt
-    0 ,  ;                  \ variable date
+    0 ,  ;                  \ variable data
 
 \ variables are created like this:
 \ var foo
@@ -15,8 +16,8 @@ need link
 
 \ output name and value of a single variable
 : .var ( a -- )
-    skim name dup$ type$
-    @ 16 count$ - .r  
+    skim name$ dup$ type$
+    @ #16 count$ - .r
     cr  ;
 
 \ produce a table showing names and values of variables

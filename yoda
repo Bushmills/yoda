@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -25,7 +25,11 @@
 
 
 # date is post-gregorian Sol3, time is UTC
- v="0.5.4"   # 2022jan20,16:00   dependencies are cached, always. dependency file is
+ v="0.5.5"   # 2022jan21,13:36   made instantresolve independent from forwardrefs.
+#                                instantly resolving utilises satisfy instead of need now, and has been turned on by default.
+#                                consequence is that unknown words, entered while interpreting, will be loaded from library,
+#                                compiled, then executed, behaving as they had been in the dictionary all along.
+#v="0.5.4"   # 2022jan20,16:00   dependencies are cached, always. dependency file is
 #                                generated if non-existent. strings got sdp, here$, allot$
 #                                sanitising filenames helped removal of GLOBIGNORE
 #v="0.5.3"   # 2022jan19,20:28   dependencies can be cached, therefore served from memory
@@ -42,7 +46,7 @@
 
 read -ra version <<< "${v//./ }"
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -170,7 +174,7 @@ for i in {1..255}; do                                                # ascii->ch
 done
 
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 trace()  {
@@ -196,7 +200,7 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -250,7 +254,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -420,7 +424,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -560,7 +564,7 @@ constant 'bits'               "$bits"
 constant 'last'               "$last"
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -843,7 +847,7 @@ evaluate()  {
             continue                                                 # hope that it will eventually get resolved
          }
       }
-      (( m[instantresolve] )) && {                                   # interpret time forward references enables?
+      (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
          satisfy1 "$word" && {                                       # load word
             ${headers["$word"]}                                      # execute if loaded
             continue
@@ -913,7 +917,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1686,7 +1690,7 @@ colon    'invert';  atom 'invert'; semicolon; inline
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'

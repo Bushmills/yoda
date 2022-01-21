@@ -1,7 +1,8 @@
 provides: enum
+
 : enum ( -- )  ( stream: names )
    0 parse$
-   chop$ for 
+   chop$ for
      i "constant " swap$ join$
      evaluate$
    next ;

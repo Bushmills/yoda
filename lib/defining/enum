@@ -1,8 +1,12 @@
 provides: enum
 
-: enum ( -- )  ( stream: names )
-   0 parse$
-   chop$ for
-     i "constant " swap$ join$
-     evaluate$
-   next ;
+\ x1 is value of first enum item,
+\ x2 is increment
+: enum   ( x1 x2 -- )
+   swap
+   begin
+      source$ count$ 
+   while
+      dup constant
+      over +
+   repeat 2drop  ;

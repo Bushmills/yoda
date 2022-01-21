@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -29,6 +29,10 @@
 #                                instantly resolving utilises satisfy instead of need now, and has been turned on by default.
 #                                consequence is that unknown words, entered while interpreting, will be loaded from library,
 #                                compiled, then executed, behaving as they had been in the dictionary all along.
+#                                unknown words during compilation fall now under jurisdiction of need/resolve while dealing with
+#                                interpret time unknowns is delegated to satisfy (though resolve utilises satisfy too). Consider
+#                                satisfy as an immediate response to requesting unknown words, while need produces a delayed response
+#                                (delayed until execution of resolve, or until word was defined)
 #v="0.5.4"   # 2022jan20,16:00   dependencies are cached, always. dependency file is
 #                                generated if non-existent. strings got sdp, here$, allot$
 #                                sanitising filenames helped removal of GLOBIGNORE
@@ -46,7 +50,7 @@
 
 read -ra version <<< "${v//./ }"
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -200,7 +204,7 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #fold00
+# ----- headers ------------------------------------------ #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -254,7 +258,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- pretend optimiser -------------------------------- #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -424,7 +428,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -564,7 +568,7 @@ constant 'bits'               "$bits"
 constant 'last'               "$last"
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -795,7 +799,7 @@ resolve()  {
 
 
 
-# ----- line interpreter, evaluate------------------------ #FOLD00
+# ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -863,7 +867,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #fold00
+# ----- load source files -------------------------------- #FOLD00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -917,8 +921,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
-# ----- populating detokeniser --------------------------- #fold01
+# ----- primitives --------------------------------------- #FOLD00
+# ----- populating detokeniser --------------------------- #FOLD01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -1076,7 +1080,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #fold01
+# ----- defining words ----------------------------------- #FOLD01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1795,7 +1799,7 @@ inout 1 1
 #inout 2 2
 
 
-# ----- memory ------------------------------------------- #fold01
+# ----- memory ------------------------------------------- #FOLD01
 
 colon '@'
    atom '@'
@@ -2247,7 +2251,7 @@ primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
 
-# ----- foward referencing support words ----------------- #fold01
+# ----- foward referencing support words ----------------- #FOLD01
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2484,7 +2488,7 @@ semicolon
 
 
 
-# ----- files --------------------------------------------- #fold01
+# ----- files --------------------------------------------- #FOLD01
 
 
 colon 'filename$'
@@ -2503,6 +2507,10 @@ colon 'source'
 semicolon
 inline
 inout 0 1
+
+# copy remainder of input line to string stack without affecting it.
+# ( -- )  ( -- $1 )
+primitive 'source$'  'ss+=("$line")'
 
 # check whether current source was had already been compiled before.
 # most useful when used interpretatively in a file, for testing whether

@@ -25,7 +25,10 @@
 
 
 # date is post-gregorian Sol3, time is UTC
- v="0.5.5"   # 2022jan21,13:36   made instantresolve independent from forwardrefs.
+ v="0.5.6"   # 2022jan22,20:15   added defer, is
+#                                prompt is now a deferred words
+#                                result producing functions return those in array ${returned[@]} rather than in arbitrary variables
+#v="0.5.5"   # 2022jan21,13:36   made instantresolve independent from forwardrefs.
 #                                instantly resolving utilises satisfy instead of need now, and has been turned on by default.
 #                                consequence is that unknown words, entered while interpreting, will be loaded from library,
 #                                compiled, then executed, behaving as they had been in the dictionary all along.
@@ -177,6 +180,9 @@ for i in {1..255}; do                                                # ascii->ch
    ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
 done
 
+
+declare -a returned                                                  # an array to return function results
+                                                                     # meant to be used instead of returning results in arbitrary variables
 
 # ----- diagnostics  ------------------------------------- #fold00
 
@@ -460,7 +466,7 @@ push()  {                                                            # leave it 
 # arg1:word
 newname()  {
    names[nextname]="$1"                                              # keep word name for .name, name$
-   name="${header_code}_$((nextname++))"                             # grab new xt, make a function name from it
+   returned[0]="${header_code}_$((nextname++))"                             # grab new xt, make a function name from it
 }
 
 sourcelocation()  {
@@ -473,6 +479,7 @@ sourcelocation()  {
 create()  {
    [[ -z "$1" ]] && emptyname
    newname "$1"                                                      # returns name
+   name="${returned[0]}"
    header "$1" "$name"
    sourcelocation
 }
@@ -495,10 +502,11 @@ primitive()  {
 
 colon()  {
    [[ -z "$1" ]] && emptyname
-   if [[ -z "${headersunresolved[$1]}" ]]; then                      # check whether word is an unresolved forward reference
+   name="${headersunresolved[$1]}"                                   # function name of forward reference, or empty
+   if [[ -z "$name" ]]; then                                         # check whether word is an unresolved forward reference
       newname "$1"                                                   # no: generate new name
+      name="${returned[0]}"
    else
-      name="${headersunresolved[$1]}"                                # yes: use name of forward reference
       unset -v "headersunresolved[$1]"                               # remove forward reference from vocabulary
    fi
    header "$1" "$name"
@@ -726,7 +734,7 @@ pattern()  {                                                         # pattern i
 # forward refs create new forward refs, in which case resolving
 # will be repeated.
 totalheaders()  {
-   totalheaders=$((
+   returned[0]=$((
       ${#headersstateless[@]}
    +  ${#headerscompileonly[@]}
    +  ${#headersinterpretonly[@]}
@@ -738,8 +746,9 @@ totalheaders()  {
 # create a forward ref by the name of arg1
 forwardref()  {
    [[ -z ${headersunresolved["$word"]} ]] && {                       # don't re-forwardref and already forward ref'ed word
-       newname "$1"                                                  # generate new function name
-       headersunresolved["$1"]="$name"                               # keep in unresolved vocabulary
+      newname "$1"                                                   # generate new function name
+      name="${returned[0]}"
+      headersunresolved["$1"]="$name"                                # keep in unresolved vocabulary
    }
 }
 
@@ -788,6 +797,7 @@ resolve()  {
    local resolving=1                                                 #   how often resolve calls itself. This would only slow down
    previousheaders="-1"
    totalheaders                                                      # total headers count before inclusion
+   totalheaders="${returned[0]}"
    until (( totalheaders == previousheaders )); do                   # loop until header count stabilises
       previousheaders="$totalheaders"
       for word in "${!headersunresolved[@]}"; do                     # try to resolve all in unresolved vocabulary
@@ -795,6 +805,7 @@ resolve()  {
       done
       ((${#headersunresolved[@]})) || break                          # no forwardrefs left: done
       totalheaders                                                   # total headers count now, after inclusion
+      totalheaders="${returned[0]}"
    done
 #echo "end resolve $word"
 ### page isn't unresolved any longer after loading first time"
@@ -927,7 +938,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1086,7 +1097,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1122,18 +1133,27 @@ colon 'alias'
    code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'         # correct source line number for aliases in this file
 semicolon
 
-primitive 'emptyname' 'emptyname'
 
-# defer foo      ' bar is foo
-colon "defer"
+# -------------- deferred words ------------------
+
+# new deferred words are initialised to noop
+primitive 'noop' '(())'
+
+# arg1: deferred word
+# arg2: initially deferred to, word name
+# example:  defer 'foo'  'bar'
+defer()  {                                                           # use in yoda source
+   constant "$1" "$((dp))"
+   use "${header_code}_\${m[$dp]}"
+   ((m[dp++]="${headersstateless[$2]##*_}"))
+}
+
+# example:  defer foo      ' bar is foo
+colon "defer"                                                        # use in yoda program
    code 'word'
-   code 'constant "$word" "$((dp))"'                                 # define part pushs memory address containing xt
-   code 'use "${header_code}_\${m[$dp]}"'                            # replace define part against code executing word with xt
-   code "((m[dp++]=\"${headersstateless[emptyname]#${header_code}_}\"))"   # initialize deferred word with xt of an error
+   code 'defer "$word" "noop"'
 semicolon
 
-trash()  { unset "headersstateless[$1]"; }
-trash 'emptyname'
 
 # here's another Rube Goldberg. This works around the fact that
 # there's no easy way for yoda to determine the memory address
@@ -1186,7 +1206,6 @@ inout 0 0
 
 # ----- misc --------------------------------------------- #fold01
 
-primitive 'noop' ':'
 primitive "\\"   'line=""';   immediate                              # single quoted single backslash because
 primitive "\\"   'line=""';   interactive                            # double quoted escaped backslash rather than
                                                                      # efte syntax highlighting gets confused
@@ -1658,11 +1677,6 @@ inout 4 1
 
 # ----- compiler and word search related ----------------- #fold01
 
-# arg1: word name.
-#tick()  {
-#
-#}
-
 
 # ( -- 0 | a )
 have() {
@@ -1673,13 +1687,12 @@ have() {
       [[ -z "${headers["$word"]}" ]] || {                            # word in there?
          tmp="${headers["$word"]}"                                   #     yes: remember name
          [[ $tmp == ${header_code}* ]] || break                      # can not tick data
-         ((s[++sp]=${headers["$word"]#"${header_code}_"}))           # convert name to "address" and push
+         ((s[++sp]=${headers["$word"]##*_}))                         # convert name to "address" and push
          return 0                                                    # found word, stacked execution token
       }
    done                                                              # go on search next voc
    ((s[++sp]=0))
 }
-
 
 colon "'"
    code 'have'
@@ -1701,6 +1714,7 @@ colon 'literal'
 semicolon
 immediate
 
+trash()  { unset "headersstateless[$1]"; }
 colon 'trash'
    code 'word'
    code 'trash "$word"'
@@ -1829,13 +1843,6 @@ semicolon
 inline
 inout 1 1
 
-# needs testing
-#colon 'u/mod'		# u1 u2 -- rem quot
-#   code '((s1=s[sp]&true, s2=s[sp-1]&true, s[sp]=s2/s1, s[sp-1]=s2%s1))'
-#semicolon
-#inline
-#inout 2 2
-
 
 # ----- memory ------------------------------------------- #fold01
 
@@ -1924,7 +1931,6 @@ inline
 inout 1 0
 
 primitive ',' '((m[dp++]=s[sp--]))';  inout 1 0
-# primitive 'pad' '((s[++sp]=dp+256))'; inout 0 1                      # pad is 256 cells above here.
 
 # c -> m[a++],  u times
 # ( a u c -- )
@@ -2193,13 +2199,12 @@ colon 'key?'
 semicolon
 inout 0 1
 
-# read line into tib
-# TODO: configurable ANSI sequences
+# read line, push to string stack
+# TODO: configurable attributes
 query()  {
    printf '\e[%dm' "$greenfg"
    ss+=("")
    IFS="" read -er -i "$keybuf" "ss[-1]"                             # key? may have put chars into keybuf
-
    keybuf=""
    printf '\e[%dm' "$normal"
 }
@@ -2244,7 +2249,9 @@ prompt()  {
    printf "\n"                                                       # finalize with linefeed
 }
 
-primitive 'prompt' 'prompt'
+primitive '(prompt)' 'prompt'
+defer 'prompt'  '(prompt)'
+
 
 # load file whose name is given on string stack
 # ( -- ) ( string: $1 -- )
@@ -2484,12 +2491,12 @@ undoc()  {
 primitive 'undoc' 'undoc'
 
 # candidates for $command further down
-doc()       {
+doc()  {
    sanitise "$1"
    editor "$worddoc:$file"
 }
 
-about()     {
+about()  {
    sanitise "$1"
    cat "$worddoc:$file"
 }
@@ -2508,7 +2515,6 @@ semicolon
 # ----- interactive mode -------------------------------- #fold01
 
 evaluate ': quit warm begin query$ evaluate$ prompt again ;'
-
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents
@@ -2529,15 +2535,18 @@ semicolon
 # ----- files --------------------------------------------- #fold01
 
 
+
+# push name of file u (from output of files) to string stack
+# ( u -- ) ( string: -- $1 )
 colon 'filename$'
-   code 'ss+=("${files[s[sp--]]}")'                                  # ( u -- ) ( string: -- $1 ) push name of file u (from output of files) to string stack
+   code 'ss+=("${files[s[sp--]]}")'
 semicolon
 
 evaluate ': edit  "editor" filename$  command$ ;'
 evaluate ': list  "cat"    filename$  command$ ;'
 
-# return handle of source. 0=console, >0 correspond files number
-# allows words to check whether they're executed while loaded
+# return handle of source. 0=console, >0 correspond files handle
+# allows words to determine whether they're executed while loaded
 # from file or console.
 # ( -- u )
 colon 'source'
@@ -2602,6 +2611,7 @@ colon 'version'
 semicolon
 
 # ----- experimental ------------------------------------- #fold01
+
 
 # ----- launch ------------------------------------------- #fold00
 

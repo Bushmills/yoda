@@ -927,7 +927,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1086,7 +1086,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #fold01
+# ----- defining words ----------------------------------- #FOLD01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1109,7 +1109,7 @@ colon 'variable'
 semicolon
 
 colon "array"
-   define '$header_code'
+   define ''                                                         # value irrelevant, use will replace code anyway
    code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
@@ -1117,7 +1117,7 @@ semicolon
 # NOTE: factor code common with header
 # ' foo alias bar
 colon 'alias'
-   define '0'
+   define ''                                                         # value irrelevant, will point to different function anyway
    code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
    code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'         # correct source line number for aliases in this file
 semicolon
@@ -1127,9 +1127,9 @@ primitive 'emptyname' 'emptyname'
 # defer foo      ' bar is foo
 colon "defer"
    code 'word'
-   code 'constant "$word" "$((dp))"'                                 # not using single quotes because want $1 to expand
-   code 'use "${header_code}_\${m[$dp]}"'
-   code "((m[dp++]=\"${headersstateless[emptyname]#${header_code}_}\"))"
+   code 'constant "$word" "$((dp))"'                                 # define part pushs memory address containing xt
+   code 'use "${header_code}_\${m[$dp]}"'                            # replace define part against code executing word with xt
+   code "((m[dp++]=\"${headersstateless[emptyname]#${header_code}_}\"))"   # initialize deferred word with xt of an error
 semicolon
 
 trash()  { unset "headersstateless[$1]"; }
@@ -1141,13 +1141,12 @@ trash 'emptyname'
 # therefore, is decompiles the deferred word, then extracts the
 # address from the line where the deferred word fetches the xt
 # from memory. sed could do that more easily, but isn't currently
-# an already existing dependency, contrars to grep, that's why
+# an already existing dependency, contrary to grep, which is why
 # grep is used here.
 colon 'is'
    code 'word'
-   code 'tmp="$(type "${headersstateless[$word]}" | grep "${header_code}_.*m\[")"'
-   code 'tmp="${tmp%%]*}"'
-   code 'm["${tmp#*m[}"]="${s[sp--]}"'
+   code 'tmp="$(type "${headersstateless[$word]}"|grep "${header_code}_.*m\[")"'
+   code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
 

@@ -8,7 +8,5 @@ decription:          a variable, used as flag to turn off or on passing unknown
 contexts:            stateless
 
 example:             shell on
-
-notes:               don't enable instantresolve and shell at the same time:
-                     not finding a shell command and including a not found 
-                     yoda word don't harmonise well.
+notes:               a shortcut +s exists for "shell on"
+                     a shortcut -s exists for "shell off"

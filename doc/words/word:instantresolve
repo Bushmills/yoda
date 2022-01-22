@@ -10,10 +10,6 @@ decription:          a variable, serving as flag to turn resolving of interpreta
                      after, otherwise an error is reported.
 
 contexts:            stateless
-
-example:             forwardrefs on
-                     instantresolve on
-
-notes:               don't enable instantresolve and shell at the same time:
-                     not finding a shell command and including a not found 
-                     yoda word don't harmonise well.
+example:             instantresolve on
+notes:               a shortcut  +i exists for "instantresolve on"
+                     a shortcut  -i exists for "instantresolve off"

@@ -11,4 +11,5 @@ contexts:            stateless
 
 example:             forwardrefs on
 
-notes:               see also resolve, instantresolve
+notes:               a shortcut +f exists for "forwardrefs on"
+                     a shortcut -f exists for "forwardrefs off"

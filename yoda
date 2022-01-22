@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -50,7 +50,7 @@
 
 read -ra version <<< "${v//./ }"
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -204,7 +204,7 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 #   reverse='7'
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -258,7 +258,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #FOLD00
+# ----- pretend optimiser -------------------------------- #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -346,8 +346,15 @@ optimise()  {                                                        # run code 
 # is seperated to an array item associated with defining word.
 # dodoes, when executed, knows how to retrieve and
 # compile that code to defined word.
-      doescode[${headersstateless[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
-      target=("${target[@]:0:$dodoes_at}")
+
+# a workaround is needed here too:  create ... does> ;   does without following code will let bash run into an empty function,
+# which bash doesn't like, and complain about.  Therefore this condition is caught here and acted upon.
+     if (( ${#target[@]} > $dodoes_at )); then                       # everything ok: there was code between does> and ; - extract and store it.
+        doescode[${headersstateless[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
+        target=("${target[@]:0:$dodoes_at}")
+     else                                                            # but does> without code ...
+        unset "target[-1]"                                           # will cause to compile without any does run time action. no code behind does>
+     fi                                                              # would result in no action at all, therefore the whole does> can be dropped too.
    }
 }
 
@@ -428,7 +435,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -462,7 +469,6 @@ sourcelocation()  {
 }
 
 
-# NOTE: quite some factoring possible in this section
 # arg1: word name
 create()  {
    [[ -z "$1" ]] && emptyname
@@ -568,7 +574,7 @@ constant 'bits'               "$bits"
 constant 'last'               "$last"
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
@@ -714,7 +720,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -867,7 +873,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -921,8 +927,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
-# ----- populating detokeniser --------------------------- #FOLD01
+# ----- primitives --------------------------------------- #fold00
+# ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -1080,7 +1086,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1799,7 +1805,7 @@ inout 1 1
 #inout 2 2
 
 
-# ----- memory ------------------------------------------- #FOLD01
+# ----- memory ------------------------------------------- #fold01
 
 colon '@'
    atom '@'
@@ -2251,7 +2257,7 @@ primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
 
-# ----- foward referencing support words ----------------- #FOLD01
+# ----- foward referencing support words ----------------- #fold01
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2488,7 +2494,7 @@ semicolon
 
 
 
-# ----- files --------------------------------------------- #FOLD01
+# ----- files --------------------------------------------- #fold01
 
 
 colon 'filename$'

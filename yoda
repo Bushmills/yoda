@@ -721,10 +721,7 @@ pattern()  {                                                         # pattern i
       fi
       stateless "$tmp"                                               # execute or compile the parsed shell command
       return 0; }
-   ((m[shell])) || return 1                                          # done unless shell flag was set
-   stateless "${word} ${line}" ||                                    # in which case execution as shell command is attempted
-   shellerror "$?"                                                   # non-zero exit values of shell commands will be passed on to yoda error handler
-   line=""                                                           # assignment sets return value to 0
+   return 1
 }
 
 
@@ -869,10 +866,16 @@ evaluate()  {
          }
       }
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
-         satisfy1 "$word" && {                                       # load word
-            ${headers["$word"]}                                      # execute if loaded
+         satisfy1 "$word" && {                                       # attempt to load word
+            ${headers["$word"]}                                      # successful: execute
             continue
          }
+      }
+      ((m[shell])) && {                                              # done unless shell flag was set
+         stateless "${word} ${line}" ||                              # in which case execution as shell command is attempted (cmd not found returns 127)
+         shellerror "$?"                                             # non-zero exit values of shell commands will be passed on to yoda error handler
+         line=""                                                     # assignment sets return value to 0
+         continue
       }
       notfound "$word"                                               # nothing helped. get grouchy.
       line=""                                                        # stop evaluation: nothing left

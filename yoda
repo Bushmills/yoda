@@ -349,7 +349,7 @@ optimise()  {                                                        # run code 
 
 # a workaround is needed here too:  create ... does> ;   does without following code will let bash run into an empty function,
 # which bash doesn't like, and complain about.  Therefore this condition is caught here and acted upon.
-     if (( ${#target[@]} > $dodoes_at )); then                       # everything ok: there was code between does> and ; - extract and store it.
+     if (( ${#target[@]} > dodoes_at )); then                       # everything ok: there was code between does> and ; - extract and store it.
         doescode[${headersstateless[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
         target=("${target[@]:0:$dodoes_at}")
      else                                                            # but does> without code ...
@@ -1124,12 +1124,12 @@ semicolon
 
 primitive 'emptyname' 'emptyname'
 
+# defer foo      ' bar is foo
 colon "defer"
    code 'word'
    code 'constant "$word" "$((dp))"'                                 # not using single quotes because want $1 to expand
    code 'use "${header_code}_\${m[$dp]}"'
-#   code '((m[dp++]="${headersstateless["emptyname"]#${header_code}_}"))'   # functionally overlapping with "have"
-   code "((m[dp++]="${headersstateless[emptyname]#${header_code}_}"))"
+   code "((m[dp++]=\"${headersstateless[emptyname]#${header_code}_}\"))"
 semicolon
 
 trash()  { unset "headersstateless[$1]"; }
@@ -1704,7 +1704,7 @@ immediate
 
 colon 'trash'
    code 'word'
-   code 'unset "headersstateless[$word]"'
+   code 'trash "$word"'
 semicolon
 
 primitive 'execute' "${header_code}_\${s[sp--]}"                     # ( xt -- )

@@ -14,7 +14,6 @@ contexts:            stateless
 example:             forwardrefs on
                      instantresolve on
 
-notes:               needs forwardrefs to be turned on.
-                     Feature is still experimental, handle carefully.
-
-
+notes:               don't enable instantresolve and shell at the same time:
+                     not finding a shell command and including a not found 
+                     yoda word don't harmonise well.

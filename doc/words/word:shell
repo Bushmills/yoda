@@ -9,6 +9,6 @@ contexts:            stateless
 
 example:             shell on
 
-notes:               a combination of forwardrefs, instanresolve and shell all turned
-                     on can't be recommended, as word searching path can get rather
-                     complicated and harder to predict.
+notes:               don't enable instantresolve and shell at the same time:
+                     not finding a shell command and including a not found 
+                     yoda word don't harmonise well.

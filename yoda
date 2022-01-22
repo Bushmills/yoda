@@ -1122,6 +1122,33 @@ colon 'alias'
    code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'         # correct source line number for aliases in this file
 semicolon
 
+primitive 'emptyname' 'emptyname'
+
+colon "defer"
+   code 'word'
+   code 'constant "$word" "$((dp))"'                                 # not using single quotes because want $1 to expand
+   code 'use "${header_code}_\${m[$dp]}"'
+#   code '((m[dp++]="${headersstateless["emptyname"]#${header_code}_}"))'   # functionally overlapping with "have"
+   code "((m[dp++]="${headersstateless[emptyname]#${header_code}_}"))"
+semicolon
+
+trash()  { unset "headersstateless[$1]"; }
+trash 'emptyname'
+
+# here's another Rube Goldberg. This works around the fact that
+# there's no easy way for yoda to determine the memory address
+# where a deferred word stores the xt of the word it executes.
+# therefore, is decompiles the deferred word, then extracts the
+# address from the line where the deferred word fetches the xt
+# from memory. sed could do that more easily, but isn't currently
+# an already existing dependency, contrars to grep, that's why
+# grep is used here.
+colon 'is'
+   code 'word'
+   code 'tmp="$(type "${headersstateless[$word]}" | grep "${header_code}_.*m\[")"'
+   code 'tmp="${tmp%%]*}"'
+   code 'm["${tmp#*m[}"]="${s[sp--]}"'
+semicolon
 
 
 # ----- environment--------------------------------------- #fold01
@@ -1631,6 +1658,12 @@ inout 4 1
 
 
 # ----- compiler and word search related ----------------- #fold01
+
+# arg1: word name.
+#tick()  {
+#
+#}
+
 
 # ( -- 0 | a )
 have() {

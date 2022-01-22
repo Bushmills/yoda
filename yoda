@@ -760,7 +760,7 @@ satisfy1()  {
    local word="$1"
    local forwarding="$((m[forwardrefs]))"                            # save fwdref state for later restoring
    ((m[forwardrefs]=-1))                                             # turn on forward references
-   tmp="${lib["$word"]}"                                             # name of library containing word source
+   tmp="${libdirs[0]}/${lib["$word"]}"                               # name of library containing word source
 
 ### test:  allow libraries to compile conditionally by testing
 ### "needed" - creating a forward ref unconditionally here - and
@@ -2398,10 +2398,11 @@ primitive 'have'   'have'                                            # ( -- f ) 
 evaluate ': lack  have 0= ;'                                         # ( -- f ) ( stream: bl delimited string )    word missing?
 
 
-generate_dependencies()  {                                                    # library inclusion dependency file builder
+generate_dependencies()  {                                           # library inclusion dependency file builder
    grep -r "^provides: " "${libdirs[0]}" |
    while read -r file words; do
       file="${file%:provides:}"
+      file="${file#${libdirs[0]}/}"
 # "Double quote to prevent globbing and word splitting."
 # I actually *want* word splitting here, for fprint to produce one line per space delimited word
 # shellcheck disable=SC2086

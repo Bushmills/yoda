@@ -1,8 +1,8 @@
 #!/bin/bash
 # results are from a Dell latitude 7480 laptop with Intel Core i7-7600U CPU @ 2.8/3.9 GHz,
 # 8 GB RAM, running Debian bookworm, X11, bash version 5.1.16(1)
-for i in {1..3}; do
-   echo "$i"
+
+runbenchesonce()  {
    for f in *bench; do
       file=$(realpath "$f")
       echo $(date; yoda from "$file") >> $f.results
@@ -10,5 +10,8 @@ for i in {1..3}; do
       tail -5 $f.results
       echo
    done
-   sleep 5
-done
+}
+
+runbenchesonce
+sleep 5
+runbenchesonce

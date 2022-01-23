@@ -7,23 +7,25 @@ yoda relies on these external program for execution of few words:
       sort        # used by crossref.
                   # As I may remove crossref, this dependency may get dropped
 
-      grep        # added to support new experimental dependency based resolving
-                  # which augments existing forward referencing scheme. Used to
-                  # build dependency files by scanning libraries
+      grep        # used with dependency based resolving, to build dependency
+                  # file by scanning libraries for lines containing "^provides: "
+                  # New dependency added:  is
 
-No test for their presence is performed, as both are considered pretty standard
+
+No test for their presence is performed, as those are considered pretty standard
 on any system able to run bash.
 
-Optionally, a supported editor is used by:
+Optionally, a supported editor is used.
+Related to viewing and editing documentation files:
 
       edit
       doc
       undoc
-(these are all related to viewing and editing documentation files)
+
+Opening and viewing source of words:
 
       fix
       review
-(in library file "fix")
 
 "Support" means, an editor which can, after opening
 the file, move the cursor to a position as specified on command line.
@@ -46,13 +48,12 @@ The editors for which support has been preconfigured are:
 
       less
       most
-in addition are "less" and "most" supported, but just for viewing,
+in addition are "less" and "most" now supported, but only for viewing,
 not for editing. Those are an alternative to an editor if mostly
 jumping to specific lines for viewing is wanted.
 
 Any of those can be specified in yoda.conf configuration file.
 
-
 screen libraries for controlling cursor and attributes rely on
-presence of tput. No yoda internal references to any word 
+presence of tput. No yoda internal references to any word
 depending on it exist.

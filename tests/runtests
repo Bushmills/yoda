@@ -5,7 +5,7 @@ needs: check
 
 \ quite a mix of shell commands and yoda words
 : runtests
-   >tests=($(realpath $(find -maxdepth 1 -type f -name *.auto)))
+   >tests=($(realpath $(find  -maxdepth 1 -type f -name "*.auto")))
    >s[++sp]="${#tests[@]}"
    0 do
       >ss+=(${tests[i]})

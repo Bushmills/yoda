@@ -15,6 +15,7 @@ loaded lest  done
 
    " ok" type$
 
+   #unresolved if resolve then
    #unresolved ?dup if
       space
       convert "()" bracket$ type$

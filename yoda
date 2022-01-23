@@ -27,7 +27,11 @@
 # date is post-gregorian Sol3, time is UTC
  v="0.5.6"   # 2022jan22,20:15   added defer, is
 #                                prompt is now a deferred words
+#                                changed dependencies file format. paths are relative to libdirs[0] now
+#                                moved code dealing with shell on to evaluate
 #                                result producing functions return those in array ${returned[@]} rather than in arbitrary variables
+#                                yoda internal prompt is now very minimal. A functional equivalent of the former full featured prompt
+#                                has been created as library file.  execute  "satisfy newprompt" to compile and activate it.
 #v="0.5.5"   # 2022jan21,13:36   made instantresolve independent from forwardrefs.
 #                                instantly resolving utilises satisfy instead of need now, and has been turned on by default.
 #                                consequence is that unknown words, entered while interpreting, will be loaded from library,
@@ -156,7 +160,7 @@ maxuint="$((maxint|msb))"
 true="$maxuint"
 false=0
 
-compiling=0                                                          # state flag: interpreting or compiling
+compiling="$false"                                                   # state flag: interpreting or compiling
 line=""                                                              # source line being worked on. modified during parsing and processing
 word=""                                                              # bl delimited string from line currently being processed
 lastword=""                                                          # most recently created word, set by create.
@@ -511,7 +515,7 @@ colon()  {
    fi
    header "$1" "$name"
    sourcelocation
-   compiling=1
+   compiling="$true"
 
 # -- hack alert:
 # source location isn't recorded properly when definition is
@@ -540,7 +544,7 @@ colon()  {
 
 semicolon()  {
    compile                                                           # compilation is gathered in an array body. Only
-   compiling=0                                                       # when semicolon completes compilation, is
+   compiling="$false"                                                # when semicolon completes compilation, is
 }                                                                    # a function created from contents of array.
 
 
@@ -587,7 +591,7 @@ constant 'last'               "$last"
 warm()  {
    line=""                                                           # signal to evaluate to stop evaluation of current line
    linenr="-1"                                                       # signal to from to stop sending more lines to evaluate
-   compiling=0                                                       # interpret
+   compiling="$false"                                                # interpret
    error=0
    r=() rp=0
    ((sp<0)) &&s=() sp=0                                              # always clear stack underflow
@@ -1011,7 +1015,7 @@ colon ':'
    code 'colon "$word"'                                              # generate synthetic name, associate with word
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
    code "((s[++sp]=$magic))"                                         # allow check of structure
-   code 'compiling=1'
+   code '((compiling=true))'
 semicolon
 interactive
 
@@ -1149,6 +1153,7 @@ defer()  {                                                           # use in yo
    constant "$1" "$((dp))"
    use "${header_code}_\${m[$dp]}"
    ((m[dp++]="${headersstateless[$2]##*_}"))
+   sourcelocation
 }
 
 # example:  defer foo      ' bar is foo
@@ -1709,8 +1714,8 @@ colon "[']"
 semicolon
 immediate
 
-primitive '[' 'compiling=0'; immediate
-primitive ']' 'compiling=1'
+primitive '[' '((compiling=false))'; immediate
+primitive ']' '((compiling=true))'
 
 colon 'literal'
    code 'push "${s[sp--]}"'
@@ -2143,7 +2148,8 @@ semicolon                                                            # this way 
 
 primitive 'warm'  'warm'
 primitive 'bye'  'exit 0'
-primitive 'exit'  'return'; immediate
+primitive 'exit'  'code "return"'; immediate
+primitive 'return'  'code "return \${s[sp--]}"'; immediate
 primitive 'abort'  'abort "${s[sp--]}"'                              # ( err -- )
 
 # ( f err -- )
@@ -2231,30 +2237,19 @@ primitive 'query$'    'query';           inout 0 0
 primitive 'cr'        'printf "\n"';     inout 0 0
 primitive 'space'     'printf " "';      inout 0 0
 
-prompt()  {
-   ((error)) && {
-      warm
-      return 1
-   }
+colon 'compiling'
+   push 'compiling'
+semicolon
 
-   ((compiling)) && {
-      printf "|%-4s" ""                                              # just a vertical bar, then indenting, while compiling
-      return 0
-   }
-   printf " %s" "ok"                                                 # ok prompt
-   ((${#s[@]})) &&  {                                                # stack depth > 0?
-      tmp=".........>"                                               # yes: print a dot for each item
-      printf " %s" "${tmp:0:$sp}"                                    # but not more than in $tmp
-   }
-   ((${#headersunresolved[@]})) &&  {                                # unresolved words > 0?
-      printf " (%d)" "${#headersunresolved[@]}"                      # yes: show count
-   }
-   printf "\n"                                                       # finalize with linefeed
-}
+colon 'error'
+   push 'error'
+semicolon
 
-primitive '(prompt)' 'prompt'
-defer 'prompt'  '(prompt)'
-
+colon 'simpleprompt'
+   code '((error)) && { warm; return 1; }'
+   code '((compiling)) || printf " %s\n" "ok"'
+semicolon
+defer 'prompt'  'simpleprompt'
 
 # load file whose name is given on string stack
 # ( -- ) ( string: $1 -- )

@@ -1,0 +1,6 @@
+provides: bracket$
+
+\ "foo" "<<>>" bracket$   ->   "<<foo>>"
+: bracket$  ( $1 $2 -- $3 )
+   dup$ count$ 2/ split$
+   swap$ -rot$ join$ join$ ;

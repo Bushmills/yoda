@@ -1,6 +1,7 @@
 ( tools for automated test suite )
 loaded lest tests done  \ don't reload, reset error log instead
 provides: tests check expected report
+needs: red bg normal link
 
 create errors 0 ,
 create testcount 0 ,

@@ -1,12 +1,4 @@
 provides: at
 needs: tput2
 
-\ must specify need tput2 here because tput2 will get executed,
-\ not compiled. The turned on forward references are only effective
-\ for compiling non-existing words into colon words. For executing
-\ a not yet existing word, it must be present and compiled before
-\ being called (unless instantresolve is turned on)
-
-
-\ ( u1 u2 -- )
-"cup"      tput2 at                    \ move cursor to column u1 line u2
+"cup"      tput2 at     ( u1 u2 -- )   \ move cursor to column u1 line u2

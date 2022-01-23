@@ -1,5 +1,0 @@
-provides: c-downs
-needs: tput1
-
-\ ( u -- )
-"cud"      tput1 c-downs               \ move cursor down by u lines

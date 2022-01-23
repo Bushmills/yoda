@@ -1,0 +1,5 @@
+provides: <so so>
+needs: tput0
+
+"smso"     tput0 <so                   \ start stand out
+"rmso"     tput0 so>                   \ end stand out

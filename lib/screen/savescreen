@@ -1,0 +1,5 @@
+provides: savescreen restorescreen
+needs: tput0
+
+"smcup"    tput0 savescreen            \ save screen contents, then wipe screen
+"rmcup"    tput0 restorescreen         \ restore previously saved screen contents

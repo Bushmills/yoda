@@ -1,0 +1,4 @@
+provides: rev
+needs: tput0
+
+"rev"    tput0 rev                     \ set blink attribute

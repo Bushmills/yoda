@@ -1,0 +1,4 @@
+provides: blink
+needs: tput0
+
+"blink"    tput0 blink                 \ set blink attribute

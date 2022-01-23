@@ -1,0 +1,5 @@
+provides: savecursor restorecursor
+needs: tput0
+
+"sc"       tput0 savecursor            \ save cursor position
+"rc"       tput0 restorecursor         \ move cursor to previously saved cursor position

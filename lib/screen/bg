@@ -1,5 +1,4 @@
 provides: bg
 needs: tput1
 
-\ ( u -- )
-"setab"    tput1 bg                    \ set background colour
+"setab"    tput1 bg     ( u -- )       \ set background colour

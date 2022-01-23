@@ -1,4 +1,0 @@
-provides: save-cursor
-needs: tput0
-
-"sc"       tput0 save-cursor           \ save cursor position

@@ -1,0 +1,4 @@
+boot quit
+"yoda shell" type$ cr
+prompt
+needs:  files fix shortcuts page newprompt

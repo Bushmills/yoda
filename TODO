@@ -12,7 +12,6 @@
 - left$, right$ with negative index didn't survive recent changes towards
   making yoda more unsigned-capable. Those may be desired.
 - allow customising query attributes
-- allow customising prompt
 - hide header of currently compiled word until compilation completed.
   can be done by classical hide/reveal,  by postponing header creation,
   or by moving when compilation has completed.

@@ -1,4 +1,4 @@
-boot quit
+needs:  page newprompt
 "yoda shell" type$ cr
+boot quit
 prompt
-needs:  files fix shortcuts page newprompt

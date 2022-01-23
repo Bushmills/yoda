@@ -945,7 +945,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -2160,7 +2160,7 @@ colon '?abort'
 semicolon
 
 
-# ----- i/o ---------------------------------------------- #fold01
+# ----- i/o ---------------------------------------------- #FOLD01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2235,7 +2235,8 @@ evaluate ': ltype$ dup$ type$ count$ - spaces ;'; inout 1 0          # ( u -- ) 
 evaluate ': rtype$ dup$ count$ - spaces type$ ;'; inout 1 0          # ( u -- ) (string: $1 -- )
 primitive 'query$'    'query';           inout 0 0
 primitive 'cr'        'printf "\n"';     inout 0 0
-primitive 'space'     'printf " "';      inout 0 0
+primitive 'space'     'printf " "' ;     inout 0 0
+primitive 'page'      'clear'      ;     inout 0 0
 
 colon 'compiling'
    push 'compiling'

@@ -1,4 +1,4 @@
-needs:  page newprompt
+needs:  newprompt
 "yoda shell" type$ cr
 boot quit
 prompt

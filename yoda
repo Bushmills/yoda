@@ -729,7 +729,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -762,13 +762,14 @@ forwardref()  {
 satisfy1()  {
    [[ -z ${headersstateless[$1]} ]] || return 0                      # word exists - already satisfied
    local word="$1"
-   local forwarding="$((m[forwardrefs]))"                            # save fwdref state for later restoring
+#   local forwarding="$((m[forwardrefs]))"                            # save fwdref state for later restoring
+#   m[forwardrefs]="$true"
    forwardref "$word"
    tmp="${libdirs[0]}/${lib["$word"]}"                               # name of library containing word source
    [[ -n "$tmp" && -f "$tmp" ]] && {
       from "$tmp"                                                    # load source if file exists
    }
-   return
+#   m[forwardrefs]="$forwarding"
 }
 
 resolving=0

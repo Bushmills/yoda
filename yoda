@@ -757,7 +757,7 @@ forwardref()  {
 # tries by loading source immediately if available.
 # if source isn't available, a forward ref will be generated.
 satisfy1()  {
-   [[ -z ${headersstateless[$1]} ]] || return                        # word exists - already satisfied
+   [[ -z ${headersstateless[$1]} ]] || return 0                      # word exists - already satisfied
    local word="$1"
    local forwarding="$((m[forwardrefs]))"                            # save fwdref state for later restoring
    ((m[forwardrefs]=-1))                                             # turn on forward references
@@ -2420,19 +2420,31 @@ dependencies()  {                                                    # library i
 }
 
 # try to resolve all words given on input line.
+# args:  names of words
 satisfy()  {
-   until [[ -z "$line" ]]; do
-      word
-      satisfy1 "$word"
+   for word in $@; do
+      satisfy1 "$word" || notfound "$word"
    done
 }
 
 primitive 'dependencies' 'dependencies'                              # generate, then cache
 primitive "provides:"   'line=""'        ;   interactive             # double quoted escaped backslash rather than
-primitive 'needs:' 'satisfy'                                         # more symmetric with "provided:"
-primitive 'satisfy' 'satisfy'                                        # nice for interactive use
 
+#primitive 'needs:' 'satisfy'                                         # more symmetric with "provided:"
 
+colon 'satisfy'
+   code  'satisfy "$line"'
+   code  'line=""'
+semicolon
+
+evaluate "' satisfy alias needs:"
+
+# satisfy references from top string stack item
+# ( $1 -- )
+colon 'satisfy$'
+   code 'satisfy "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
 
 
 # ----- documentation ------------------------------------ #fold01

@@ -8,32 +8,8 @@ Still, forward references can be used without actually enabling them.
 "Enabling" in this context means, allowing yoda to create forward references
 to unresolved words itself.
 
-Creating forward references manually used the word "need". Example:
+------------ removed stuff because outdated -----------
 
-   need hello
-
-You'll notice now a new number in the "ok" prompt, between parenthesise.
-That's the count of yet unresolved forward references.
-Executing "words" shows a new category at the end, listing the still needed
-words. "hello" should show there.  For showing only the names of unresolved
-words, execute:
-
-   .unresolved
-
-While "hello" has still not been resolved, attempting to execute it still
-produces an error.
-
-A straightforward way to resolve "hello" now manually is to execute
-"resolve":
-
-   resolve
-
-After pressing the Enter key, the number between parenthesises disappears,
-indicating that all forward references have been resolved. Executing
-
-   hello
-
-confirms this.
 
 
 Rather than creating the forward reference, then resolving it manually, we
@@ -50,16 +26,30 @@ I may silently convert an unsatisfied "satisfy" into a "need" eventually if that
 seems to be of advantage.
 
 
-Resolving also happens automatically sometimes. For example, after including
-a file, using "from", will resolve get executed if any unresolved forward
-references exist, in case the included files created any.
+------------- inserted because updated -----------------
+actually, no "satisfy" needed now. Just enter "hello".
+satisfy still has a purpose, though. It's just not needed
+any longer for this example.
 
-Another way to resolve a forward reference is to simply define it:
+---------------------------------------------------------
+
+Resolving also happens automatically sometimes. 
+Just before the prompt shows is when such a resolve run
+takes place (naturally only doing any work if there are
+unresolved words in the dictionary)
+
+
+You don't need to enable forward references to still be able
+to use them. The word "need" can create them explicitely:
 
   need bar
-: foo  bar  ;                 \ notice that bar can be compiled, though it doesn't exist yet.
-                              \ that's because the compiler notices that it is a needed word.
-: bar "this is bar" type$  ;  \ by defining "bar", the forward reference will be resolved.
+: foo  bar  ;
+
+Resolving takes place automatically anyway, when a forward ref'd
+word becomes available, regardless of whether forwards refs are
+enabled or disabled. Simply defining it counts as "becomes available":
+
+: bar "this is bar" type$  ;
 
 
 
@@ -70,9 +60,18 @@ a non-zero value:
 
    forwardrefs on
 
+or by using the shortcut:
+
+  +f
+
+
 To turn automatic forward referencing off again, execute:
 
    forwardrefs off
+
+or
+
+   -f
 
 
 
@@ -81,9 +80,13 @@ interactively. This needs enabling to. The variable for doing this is
 called  "instantresolve":
 
    instantresolve on
+( or  +i   , which is now enabled by default )
 
-Note that "forwardrefs" must be turned on too for instantresolve to have
-any effect.
+
+
+------------ removed some, outdated ------------
+
+
 
 A forward referencable word from the library is "dump" ("hello" is now a
 poor example because already present - you'd need to exit and restart
@@ -100,7 +103,6 @@ needed to find dump, then read and compile it prior to executing it.
 
 For managing conditional compilation, these words exist:
 
-      u:
       need
       needed
       resolve
@@ -109,8 +111,6 @@ For managing conditional compilation, these words exist:
       satisfy, needs:
       dependencies
 
-u:       is almost identical with : but compiles the following word only if it's
-         an unresolved forward reference (i.e. only when needed)
 
 needed   can be used to test existence of a specific forward reference. A flag
          is produced, reflecting the result of the test.
@@ -141,12 +141,10 @@ needs:   resolve each word read from line, without going through forward referen
          name "needs" is offered as alias because it pairs nicely with "provides:",
          while "satisfy" may be more suited for interactive use.
 
-dependencies:  rebuilds the dependency database. only needs to be done if base doesn't
-         exist or is outdated. base becomes outdated when new library files are added,
-         words moved to other library files, or their name or path changed.
+dependencies  rebuilds the dependency database. only needs to be done if base doesn't
+         exist or is outdated. base becomes outdated when new library files are added
+         or removed, words moved between library files, their name or path changed,
+         or the database file becoming corrupted.
+         yoda will execute dependencies automatically during launch when database is
+         missing.
 
-
-Yet another place where forward reference may be created automatically, regardless
-whether enabled or not, is when setting a cold start vector at the end of a source
-file, using the word "boot". The specified word to boot may be forward referenced
-too, and resolving attempt will take place upon completion of file loading.

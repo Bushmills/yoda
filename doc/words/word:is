@@ -1,0 +1,15 @@
+name:                is
+stack:               ( xt -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:
+input stream:        space delimited string
+
+decription:          reads the name of a word from input stream which must be the
+                     name of a deferred word, and applies execution token xt to it
+                     in such a way that executing the deferred word now results in
+                     execution of xt.
+
+example:             none
+notes:               none

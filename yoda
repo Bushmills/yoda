@@ -763,7 +763,9 @@ satisfy1()  {
       forwardref "$word"                                             # yes: create forward ref only
       tmp="${libdirs[0]}/${lib["$word"]}"                            #      path and name of lib file
       [[ -f "$tmp" ]] && from "$tmp"                                 #      load if file exists
+      return 0
    }
+   return 1
 }
 
 resolving=0
@@ -2395,9 +2397,10 @@ dependencies()  {                                                    # library i
 # try to resolve all words given on input line.
 # args:  names of words
 satisfy()  {
+   local line
    for word in $@; do
-#      satisfy1 "$word" || notfound "$word"
-      satisfy1 "$word"
+      satisfy1 "$word" || notfound "$word"
+#      satisfy1 "$word"
    done
 }
 
@@ -2497,7 +2500,7 @@ semicolon
 
 # ----- interactive mode -------------------------------- #FOLD01
 
-evaluate ': quit warm begin query$ evaluate$ prompt again ;'
+evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents

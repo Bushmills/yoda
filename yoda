@@ -1155,7 +1155,6 @@ colon 'is'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
-
 # ----- environment--------------------------------------- #fold01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
@@ -1351,7 +1350,7 @@ primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
 # ----- string stack ------------------------------------- #fold01
 
-primitive 'depth$'   's+=("${#ss[@]}")'
+primitive 'depth$'   's[++sp]="${#ss[@]}"'
 primitive 'empty$'   'ss=()'
 primitive 'dup$'     'ss+=("${ss[-1]}")'
 primitive '?dup$'    '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'
@@ -1732,224 +1731,7 @@ colon    'invert';  atom 'invert'; semicolon; inline
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
-
-colon '1+'
-   atom '1+'
-semicolon
-inline
-inout 1 1
-
-colon '1-'
-   atom '1-'
-semicolon
-inline
-inout 1 1
-
-primitive '2+'   '((s[sp]=(s[sp]+2)&true))'; inout 1 1
-primitive '2-'   '((s[sp]=(s[sp]-2)&true))'; inout 1 1
-
-colon '2*'
-   atom '2*'
-semicolon
-inline
-inout 1 1
-
-
-primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'; inout 2 1
-primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'; inout 2 1
-
-# floored 2/
-#primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
-
-colon  '2/'
-   atom 's1'
-#   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'               # floored
-   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'    # symmetric
-semicolon
-inout 1 1
-
-evaluate ': cells ;'      ; immediate  ; inout 1 1
-evaluate ': cells ;'      ; interactive; inout 1 1
-evaluate ': cell+ 1+ ;'   ; inline;      inout 1 1
-
-
-
-#                     msb&    msb&
-#  s3 s2 s1 -- r q  s1^s2^s3  s2^s3
-# ---------------------------------
-#  +  +  +     + +     0        0
-#  +  +  -     + -     1        0
-#  +  -  +     - -     1        1
-#  +  -  -     - +     0        1
-#  -  +  +     - -     1        1
-#  -  +  -     - +     0        1
-#  -  -  +     + +     0        0
-#  -  -  -     + -     1        0
-# ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
-colon '*/mod'
-   atom 's1'
-   atom 's2'
-   atom 's3'
-   atom 'drop'
-   code '((signr=(s2^s3)))'                                          # 0:+   x:-
-   code '((signq=(signr^s1)))'                                       # 0:+   x:-
-   code '((s1&msb&&(s1=-s1&true)))'                                  # abs s1
-   code '((s2*=s3))'
-   code '((s2&msb&&(s2=-s2&true)))'
-   code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
-   code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
-semicolon
-inout 3 2
-
-evaluate ': */     */mod nip ;'         ; inline; inout 3 1          # truncated, symmetric
-evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2          # truncated, symmetric
-evaluate ': *      1 */    ;'           ; inline; inout 2 1
-evaluate ': /      /mod nip  ;'         ; inline; inout 2 1          # truncated, symmetric
-evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1          # sign according  n1 == n2*(n1/n2)+remainder
-evaluate ': %      50 */ dup 0< 1 or + 2/ ;'  ; inline; inout 2 1          # percentage rounded, not truncated
-
-colon 'negate'
-   atom 'negate'
-semicolon
-inline
-inout 1 1
-
-colon '?negate'
-   code '((s[sp--]))&&'
-   atom 'negate'
-semicolon
-inline
-inout 2 1
-
-colon 'abs'
-   code '((s[sp]&msb))&&'
-   atom 'negate'
-semicolon
-inline
-inout 1 1
-
-
-# ----- memory ------------------------------------------- #fold01
-
-colon '@'
-   atom '@'
-semicolon
-inline
-inout 1 1
-
-colon '!'
-   code '((m[s[sp--]]=s[sp-1]))'
-   atom 'drop'
-semicolon
-inline
-inout 2 0
-
-primitive 'c@'  '((s[sp]=m[s[sp]]&255))'; inout 1 1
-
-colon 'c!'
-   code '((m[s[sp--]]=s[sp-1]&255))'
-   atom 'drop'
-semicolon
-inline
-inout 2 0
-
-
-# ( a -- [a+cell] [a] )
-colon '2@'
-   atom 's1'
-   code '((s[sp++]=m[s1+1]))'
-   code '((s[sp]=m[s1]))'
-semicolon
-inline
-inout 1 2
-
-
-# ( [a+cell] [a] a -- )
-colon '2!'
-   code 's1=s[sp--]'
-   code '((m[s1++]=s[sp--]))'
-   code '((m[s1]=s[sp--]))'
-semicolon
-inline
-inout 3 0
-
-
-primitive 'skim'    '((s[++sp]=m[s[sp]++]))'; inout 1 2
-primitive 'count'   '((s[++sp]=m[s[sp]++]&255))'; inout 1 2
-
-colon '<-'                                                           # ( a x -- )   swap !
-   code '((m[s[sp]]="s[sp--]"))'
-   atom 'drop'
-semicolon
-inout 2 0
-
-colon '+!'
-   code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&true))'
-   atom 'drop'
-semicolon
-inline
-inout 2 0
-
-primitive 'on'   '((m[s[sp--]]=true))';               inout 1 0
-primitive 'off'  '((m[s[sp--]]=false))';                     inout 1 0
-primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&true))';  inout 1 0
-primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))';  inout 1 0
-
-# ( x1 a -- x2 )
-colon 'exchange'
-   code '((tmp=m[s[sp]]))'
-   code '((m[s[sp]]=s[sp-1]))'
-   code '((s[--sp]=tmp))'
-semicolon
-inout 2 1
-
-colon 'here'
-   atom 'here'
-semicolon
-inline
-inout 0 1
-
-colon 'allot'
-   atom 'allot'
-semicolon
-inline
-inout 1 0
-
-primitive ',' '((m[dp++]=s[sp--]))';  inout 1 0
-
-# c -> m[a++],  u times
-# ( a u c -- )
-colon 'fill'
-   code '((s1=s[sp--], s2=s[sp--], s3=s[sp--]))'
-   code 'for ((;s2--;)); do ((m[s3++] = s1)); done'                  # c -> m[a++],  u times
-semicolon
-inout 3 0
-
-# ( a u -- )
-evaluate ': erase   0 fill ;'    ; inline; inout 2 0                 # 0 -> m[a++],  u times
-
-# ( a1 a2 u -- )
-move()  {                                                            # deals with destination overlapping source
-   ((s1=s[sp--], s2=s[sp--], s3=s[sp--]))
-   if ((s3 < s2)); then                                              # copy highest to lowest:
-      ((s2+=s1, s3+=s1))                                             # m[--a1+u} -> m[--a2+u],  u times
-      for ((;s1--;)); do
-         ((m[--s2] = m[--s3]))
-      done
-   else                                                              # copy lowest tio highest
-      for ((;s1--;)); do                                             # m[a1++} -> m[a2++],  u times
-         ((m[s2++] = m[s3++]))
-      done
-   fi
-}
-
-# ( a1 a2 u -- )
-primitive 'move'   'move'; inout 3 0
-
-
-
-# ----- flow control ------------------------------------- #fold01
+# ----- flow control -------------------------------------
 
 remagic
 
@@ -2138,6 +1920,232 @@ colon '?abort'
 semicolon
 
 
+
+
+# ----- arithmetics -------------------------------------- #fold01
+
+colon '1+'
+   atom '1+'
+semicolon
+inline
+inout 1 1
+
+colon '1-'
+   atom '1-'
+semicolon
+inline
+inout 1 1
+
+primitive '2+'   '((s[sp]=(s[sp]+2)&true))'; inout 1 1
+primitive '2-'   '((s[sp]=(s[sp]-2)&true))'; inout 1 1
+
+colon '2*'
+   atom '2*'
+semicolon
+inline
+inout 1 1
+
+
+primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'; inout 2 1
+primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'; inout 2 1
+
+# floored 2/
+#primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
+
+colon  '2/'
+   atom 's1'
+#   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'               # floored
+   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'    # symmetric
+semicolon
+inout 1 1
+
+evaluate ': cells ;'      ; immediate  ; inout 1 1
+evaluate ': cells ;'      ; interactive; inout 1 1
+evaluate ': cell+ 1+ ;'   ; inline;      inout 1 1
+
+
+
+#                     msb&    msb&
+#  s3 s2 s1 -- r q  s1^s2^s3  s2^s3
+# ---------------------------------
+#  +  +  +     + +     0        0
+#  +  +  -     + -     1        0
+#  +  -  +     - -     1        1
+#  +  -  -     - +     0        1
+#  -  +  +     - -     1        1
+#  -  +  -     - +     0        1
+#  -  -  +     + +     0        0
+#  -  -  -     + -     1        0
+# ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
+colon '*/mod'
+   atom 's1'
+   atom 's2'
+   atom 's3'
+   atom 'drop'
+   code '((signr=(s2^s3)))'                                          # 0:+   x:-
+   code '((signq=(signr^s1)))'                                       # 0:+   x:-
+   code '((s1&msb&&(s1=-s1&true)))'                                  # abs s1
+   code '((s2*=s3))'
+   code '((s2&msb&&(s2=-s2&true)))'
+   code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
+   code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
+semicolon
+inout 3 2
+
+evaluate ': */     */mod nip ;'         ; inline; inout 3 1          # truncated, symmetric
+evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2          # truncated, symmetric
+evaluate ': *      1 */    ;'           ; inline; inout 2 1
+evaluate ': /      /mod nip  ;'         ; inline; inout 2 1          # truncated, symmetric
+evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1          # sign according  n1 == n2*(n1/n2)+remainder
+evaluate ': %      50 */ dup 0< 1 or + 2/ ;'  ; inline; inout 2 1          # percentage rounded, not truncated
+
+colon 'negate'
+   atom 'negate'
+semicolon
+inline
+inout 1 1
+
+colon '?negate'
+   code '((s[sp--]))&&'
+   atom 'negate'
+semicolon
+inline
+inout 2 1
+
+colon 'abs'
+   code '((s[sp]&msb))&&'
+   atom 'negate'
+semicolon
+inline
+inout 1 1
+
+
+evaluate ": min    2dup >  if swap then drop ;"
+evaluate ": max    2dup <  if swap then drop ;"
+evaluate ": umin   2dup u> if swap then drop ;"
+evaluate ": umax   2dup u< if swap then drop ;"
+
+
+# ----- memory ------------------------------------------- #fold01
+
+colon '@'
+   atom '@'
+semicolon
+inline
+inout 1 1
+
+colon '!'
+   code '((m[s[sp--]]=s[sp-1]))'
+   atom 'drop'
+semicolon
+inline
+inout 2 0
+
+primitive 'c@'  '((s[sp]=m[s[sp]]&255))'; inout 1 1
+
+colon 'c!'
+   code '((m[s[sp--]]=s[sp-1]&255))'
+   atom 'drop'
+semicolon
+inline
+inout 2 0
+
+
+# ( a -- [a+cell] [a] )
+colon '2@'
+   atom 's1'
+   code '((s[sp++]=m[s1+1]))'
+   code '((s[sp]=m[s1]))'
+semicolon
+inline
+inout 1 2
+
+
+# ( [a+cell] [a] a -- )
+colon '2!'
+   code 's1=s[sp--]'
+   code '((m[s1++]=s[sp--]))'
+   code '((m[s1]=s[sp--]))'
+semicolon
+inline
+inout 3 0
+
+
+primitive 'skim'    '((s[++sp]=m[s[sp]++]))'; inout 1 2
+primitive 'count'   '((s[++sp]=m[s[sp]++]&255))'; inout 1 2
+
+colon '<-'                                                           # ( a x -- )   swap !
+   code '((m[s[sp]]="s[sp--]"))'
+   atom 'drop'
+semicolon
+inout 2 0
+
+colon '+!'
+   code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&true))'
+   atom 'drop'
+semicolon
+inline
+inout 2 0
+
+primitive 'on'   '((m[s[sp--]]=true))';               inout 1 0
+primitive 'off'  '((m[s[sp--]]=false))';                     inout 1 0
+primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&true))';  inout 1 0
+primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))';  inout 1 0
+
+# ( x1 a -- x2 )
+colon 'exchange'
+   code '((tmp=m[s[sp]]))'
+   code '((m[s[sp]]=s[sp-1]))'
+   code '((s[--sp]=tmp))'
+semicolon
+inout 2 1
+
+colon 'here'
+   atom 'here'
+semicolon
+inline
+inout 0 1
+
+colon 'allot'
+   atom 'allot'
+semicolon
+inline
+inout 1 0
+
+primitive ',' '((m[dp++]=s[sp--]))';  inout 1 0
+
+# c -> m[a++],  u times
+# ( a u c -- )
+colon 'fill'
+   code '((s1=s[sp--], s2=s[sp--], s3=s[sp--]))'
+   code 'for ((;s2--;)); do ((m[s3++] = s1)); done'                  # c -> m[a++],  u times
+semicolon
+inout 3 0
+
+# ( a u -- )
+evaluate ': erase   0 fill ;'    ; inline; inout 2 0                 # 0 -> m[a++],  u times
+
+# ( a1 a2 u -- )
+move()  {                                                            # deals with destination overlapping source
+   ((s1=s[sp--], s2=s[sp--], s3=s[sp--]))
+   if ((s3 < s2)); then                                              # copy highest to lowest:
+      ((s2+=s1, s3+=s1))                                             # m[--a1+u} -> m[--a2+u],  u times
+      for ((;s1--;)); do
+         ((m[--s2] = m[--s3]))
+      done
+   else                                                              # copy lowest tio highest
+      for ((;s1--;)); do                                             # m[a1++} -> m[a2++],  u times
+         ((m[s2++] = m[s3++]))
+      done
+   fi
+}
+
+# ( a1 a2 u -- )
+primitive 'move'   'move'; inout 3 0
+
+
+
+
 # ----- i/o ---------------------------------------------- #fold01
 
 # given an ASCII, print the character
@@ -2228,6 +2236,7 @@ colon 'simpleprompt'
    code '((error)) && { warm; return 1; }'
    code '((compiling)) || printf " %s\n" "ok"'
 semicolon
+
 defer 'prompt'  'simpleprompt'
 
 # load file whose name is given on string stack
@@ -2243,7 +2252,7 @@ semicolon
 evaluate ': from word$ from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
 
-# ----- pictured number conversion ---------- #fold01
+# ----- pictured number conversion ----------------------- #fold01
 
 # ( x1 -- x2 ) ( string: $1 -- $2 )
 colon '#'                                                            # : #

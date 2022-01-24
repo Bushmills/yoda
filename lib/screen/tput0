@@ -1,7 +1,11 @@
 provides: tput0
 
+\ using tput terminal control without screen control shelling to tput:
+
 : tput0   ( $1 -- )
-      here$ constant $,
-      does>    ( -- )
-      >tput "${strings[s[sp--]]}"
+      here$ constant 
+      >read -r strings[sdp++] < <(tput "${ss[-1]}")
+      drop$
+      does> >printf "%s" "${strings[s[sp--]]}"
 ;
+

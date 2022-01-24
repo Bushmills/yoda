@@ -2,31 +2,31 @@ provides: newprompt
 needs: bracket$
 loaded lest  done
 
+\ a more informative prompt than the very minimal prompt in yoda
 : newprompt  ( -- )
-   error if 
+   error if                         \ error reported back, don't do prompt but pretend-warmstart
       warm
       1 return
    then
 
-   compiling if
+   compiling if                     \ no full prompt during compilation, but just a vertical bar 
       "|   " type$
       0 return
    then
 
-   " ok" type$
+   " ok" type$                      \ otherwise (interpreting) an ok prompt
 
-   #unresolved if resolve then
-   #unresolved ?dup if
+   #unresolved ?dup if              \ show count of unresolved forward references if any
       space
       convert "()" bracket$ type$
    then
 
-   depth ?dup if
-      space
-      ".........>" left$ type$
+   depth ?dup if                    \ show stack indicator, one dot per stack item 
+      space                         \ up to some limit. above that limit, ">" indicates "more"
+      ".........>" left$ type$            
    then
 
    cr
 ;
 
-' newprompt is prompt
+' newprompt is prompt               \ activate this replacement prompt

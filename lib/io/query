@@ -1,0 +1,11 @@
+provides: newquery$
+needs: green fg  normal
+
+loaded lest done
+
+: newquery$
+      green fg
+      simplequery$
+      normal  ;
+
+' newquery$ is query$

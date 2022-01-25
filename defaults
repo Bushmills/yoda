@@ -1,4 +1,4 @@
-needs:  newprompt
+needs:  newprompt newquery$
 "yoda shell" type$ cr
 boot quit
 prompt

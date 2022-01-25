@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -796,7 +796,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter, evaluate------------------------ #fold00
+# ----- line interpreter, evaluate------------------------ #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -923,7 +923,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -1082,7 +1082,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   immediate
 
-# ----- defining words ----------------------------------- #fold01
+# ----- defining words ----------------------------------- #FOLD01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -2146,7 +2146,7 @@ primitive 'move'   'move'; inout 3 0
 
 
 
-# ----- i/o ---------------------------------------------- #fold01
+# ----- i/o ---------------------------------------------- #FOLD01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2194,15 +2194,16 @@ colon 'key?'
 semicolon
 inout 0 1
 
+
 # read line, push to string stack
 # TODO: configurable attributes
-query()  {
-   printf '\e[%dm' "$greenfg"
-   ss+=("")
-   IFS="" read -er -i "$keybuf" "ss[-1]"                             # key? may have put chars into keybuf
-   keybuf=""
-   printf '\e[%dm' "$normal"
-}
+colon 'simplequery$'
+   code 'ss+=("")'
+   code 'IFS="" read -er -i "$keybuf" "ss[-1]"'                      # key? may have put chars into keybuf
+   code 'keybuf=""'
+semicolon
+inout 0 0
+
 
 colon 'evaluate$'
    code 'local tib="${ss[-1]}"'
@@ -2217,12 +2218,14 @@ colon 'spaces'
 semicolon
 inout 1 0
 
-evaluate ': ltype$ dup$ type$ count$ - spaces ;'; inout 1 0          # ( u -- ) (string: $1 -- )
-evaluate ': rtype$ dup$ count$ - spaces type$ ;'; inout 1 0          # ( u -- ) (string: $1 -- )
-primitive 'query$'    'query';           inout 0 0
-primitive 'cr'        'printf "\n"';     inout 0 0
-primitive 'space'     'printf " "' ;     inout 0 0
-primitive 'page'      'clear'      ;     inout 0 0
+
+defer       'query$' 'simplequery$'
+evaluate ': ltype$    dup$ type$ count$ - spaces ;'; inout 1 0       # ( u -- ) (string: $1 -- )
+evaluate ': rtype$    dup$ count$ - spaces type$ ;'; inout 1 0       # ( u -- ) (string: $1 -- )
+primitive  'cr'      'printf "\n"';                  inout 0 0
+primitive  'space'   'printf " "' ;                  inout 0 0
+primitive  'page'    'clear'      ;                  inout 0 0
+
 
 colon 'compiling'
    push 'compiling'
@@ -2515,7 +2518,7 @@ colon 'about'
 semicolon
 
 
-# ----- interactive mode -------------------------------- #fold01
+# ----- interactive mode -------------------------------- #FOLD01
 
 evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
 
@@ -2595,7 +2598,7 @@ evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
 
 
 
-# ----- convenience -------------------------------------- #fold01
+# ----- convenience -------------------------------------- #FOLD01
 primitive empty  's=() sp=0'
 
 # empty stack and string stack

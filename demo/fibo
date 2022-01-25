@@ -1,4 +1,4 @@
-#!/usr/local/bin/yoda
+#!/usr/local/bin/yoda from
 
 : fibo ( u -- u2 )         \ fibo(u+1) =
       1- dup 1 > lest      \ bottom out

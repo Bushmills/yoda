@@ -1,0 +1,54 @@
+( input extended key codes: esc[ code )
+provides: xkey
+
+\ this utterly stinks
+
+: xkey
+   key  dup esc = lest
+   key? lest
+   key '[' = lest
+   drop key $80 or ;
+
+\ above word can be used for both single bytes as well as for 3 char esc[ keys,
+\ which will return a single byte with bit 7 of esc[ keys.
+
+'A' $80 or constant key_up
+'B' $80 or constant key_down
+'C' $80 or constant key_right
+'D' $80 or constant key_left
+'F' $80 or constant key_end
+'H' $80 or constant key_home
+
+done
+
+\ unhandled 3 char sequences
+\ "oh well, using esc[ all the time gets boring, lets change to escO for a change""
+\ "who needs consistency when he can have mindless variation"
+\ 27 79 80           f1             escOP
+\ 27 79 81           f2             escOQ
+\ 27 79 82           f3             escOR
+\ 27 79 83           f4             escOS
+
+\ unhandled 4 char sequences:
+\ who came up with the idea of sticking tildes to key sequence
+\ of these keys deserves to have a different voltage on each and
+\ every power plug in his house.
+\ 27 91 50 126       insert         esc[2~
+\ 27 91 51 126       delete         esc[3~
+\ 27 91 53 126       page up        esc[5~
+\ 27 91 54 126       page down      esc[6~
+
+\ unhandled 5 char sequences
+\ I bet I'll find 6 char sequences soon too.
+\ 27 91 49 53 126    f5             esc[15~
+\ what a --><-- cute little gap between F5 and F6
+\ 27 91 49 55 126    f6             esc[17~
+\ 27 91 49 56 126    f7             esc[18~
+\ 27 91 49 57 126    f8             esc[19~
+\ 27 91 50 48 126    f9             esc[20~
+
+\ unhandled 6 char sequences
+\ ctrl right
+\ ctrl left
+\ are they mad? gone completely out of their minds?
+\ need a state machine for decoding key codes???

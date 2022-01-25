@@ -2374,10 +2374,15 @@ colon 'need'                                                         # ( -- )  (
    code 'need "$word" ""'                                            # empty arg indicates explicit need, no referer
 semicolon
 
-colon 'needed'                                                       # ( -- f ) ( stream: bl delimited string )
+colon 'needed'                                                       # ( -- f ) ( stream: bl delimited strings, whole input line )
+   push "$false"
+   code 'while [[ -n "$line" ]]; do'
    code 'word'
-   code '[[ "${headersunresolved["$word"]}" ]]'                      # check unresolved status of word
-   push '${?}?false:true'
+   code '[[ -z "${headersunresolved["$word"]}" ]] || {'              # check unresolved status of word
+   code '((s[sp]=true))'                                             # unresolved -> needed
+   code 'line=""'                                                    # "wired or" - one needed is enough, skip rest
+   code '}'
+   code 'done'
 semicolon
 
 primitive 'have'   'have'                                            # ( -- f ) ( stream: bl delimited string )    word exists?

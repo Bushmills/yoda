@@ -43,6 +43,7 @@ once
       "files" #files show1
       "unresolved" #unresolved show1
       "bits" bits show1
+      .s
       normal
 ;
 trash status

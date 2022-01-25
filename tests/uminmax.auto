@@ -1,0 +1,18 @@
+
+     2  3 umin   2 expected
+     3  2 umin   2 expected
+    -4  5 umin   5 expected
+     5 -4 umin   5 expected
+     6 -7 umin   6 expected
+    -7  6 umin   6 expected
+    -8 -9 umin  -9 expected
+    -9 -8 umin  -9 expected
+
+     2  3 umax   3 expected
+     3  2 umax   3 expected
+    -4  5 umax  -4 expected
+     5 -4 umax  -4 expected
+     6 -7 umax  -7 expected
+    -7  6 umax  -7 expected
+    -8 -9 umax  -8 expected
+    -9 -8 umax  -8 expected

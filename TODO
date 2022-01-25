@@ -6,7 +6,6 @@
 --- general todos, improvements, fancyness
 - let yoda choose editor or xeditor according the environment it runs in.
 - input line history would be nice
-- a "needed" for testing a list of words rather than just a single word
 - string operations based on search and match are mostly absent.
   index / index$ might cover a lot already. cut$ was added
 - left$, right$ with negative index didn't survive recent changes towards

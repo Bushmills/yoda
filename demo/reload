@@ -1,8 +1,13 @@
-thisfile$            type$
-" has been loaded "  type$
-loaded . "times"     type$ cr
+needs: $constant
 
-loaded lest done
+thisfile$
+" has been loaded " join$
+loaded convert join$
+" times" join$  type$ cr
 
-: foo ;   ( for testing "where" )
-"first time load has compiled contents" type$ cr
+once
+
+thisfile$ $constant me
+
+: re    me from$ ;  
+"first time load has compiled contents. reload be executing 're'" type$ cr

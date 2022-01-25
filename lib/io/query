@@ -1,8 +1,56 @@
-once
 provides: newquery$
-needs: green fg  normal
+needs: green fg bg normal savecursor eol home bold
+once
 
-: newquery$
+\ query may not be the ideal place to put statusline in.
+\ NOTE: split statusline and move to its own file
+
+: show$           ( $1 $2 -- )
+   swap$ ": " join$ type$  type$ 3 spaces ;
+
+: capitalise      ( c1 -- c2 )
+   dup 'a u<  unless
+   dup 'z u>  unless
+   [ 'a 'A - ] literal -  ;
+
+: status          ( c -- )  ( $1 -- $2 )
+      if capitalise then
+      append$ ;
+
+: show0           ( $1 -- )
+   type$ 3 spaces ;
+
+: show1           ( x -- ) ( $1 -- )
+   base @ >r
+   decimal
+   ": " join$ type$ u. 3 spaces
+   r> base ! ;
+
+: .status         ( -- )
+      bold yellow fg  blue bg
+      eol
+      "yoda version" "v" env$ show$
+
+      ""
+       'f  forwardrefs @     status
+       'i  instantresolve @  status
+       's   shell @          status
+      show0
+
+      "base" base @ show1
+      "depth"  depth  show1
+      "rdepth"  rdepth show1
+      "files" #files show1
+      "unresolved" #unresolved show1
+      "bits" bits show1
+      normal
+;
+trash status
+
+: newquery$       ( -- )
+      savecursor
+      home .status
+      restorecursor
       green fg
       simplequery$
       normal  ;

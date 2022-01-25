@@ -5,46 +5,43 @@ once
 \ query may not be the ideal place to put statusline in.
 \ NOTE: split statusline and move to its own file
 
-: show$           ( $1 $2 -- )
-   swap$ ": " join$ type$  type$ 3 spaces ;
-
+\ NOTE: move elsewhere
 : capitalise      ( c1 -- c2 )
-   dup 'a u<  unless
-   dup 'z u>  unless
-   [ 'a 'A - ] literal -  ;
-
-: status          ( c -- )  ( $1 -- $2 )
-      if capitalise then
-      append$ ;
+        dup 'a u<  unless
+        dup 'z u>  unless
+        [ 'a 'A - ] literal -  ;
 
 : show0           ( $1 -- )
-   type$ 3 spaces ;
+        type$ 3 spaces ;
+
+: show$           ( $1 $2 -- )
+        swap$ type$ ': emit show0 ;
+
+: status          ( c -- )  ( $1 -- $2 )
+        if capitalise then
+        append$ ;
 
 : show1           ( x -- ) ( $1 -- )
-   base @ >r
-   decimal
-   ": " join$ type$ u. 3 spaces
-   r> base ! ;
+        base @ >r
+        decimal
+        type$ ': emit u. 3 spaces
+        r> base ! ;
 
 : .status         ( -- )
-      bold yellow fg  blue bg
-      eol
-      "yoda version" "v" env$ show$
-
-      ""
-       'f  forwardrefs @     status
-       'i  instantresolve @  status
-       's   shell @          status
-      show0
-
-      "base" base @ show1
-      "depth"  depth  show1
-      "rdepth"  rdepth show1
-      "files" #files show1
-      "unresolved" #unresolved show1
-      "bits" bits show1
-      .s
-      normal
+        bold yellow fg   blue bg   eol
+        "yoda version " type$ "v" env$ show0
+        "flags" ""
+            'f  forwardrefs @     status
+            'i  instantresolve @  status
+            's  shell @           status
+            show$
+        "base" base @ show1
+        "depth"  depth  show1
+        "rdepth"  rdepth show1
+        "files" #files show1
+        "unresolved" #unresolved show1
+        "bits" bits show1
+        .s
 ;
 trash status
 

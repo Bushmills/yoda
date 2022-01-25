@@ -1,6 +1,6 @@
+once
 provides: newprompt
 needs: bracket$
-loaded lest  done
 
 \ a more informative prompt than the very minimal prompt in yoda
 : newprompt  ( -- )
@@ -9,7 +9,7 @@ loaded lest  done
       1 return
    then
 
-   compiling if                     \ no full prompt during compilation, but just a vertical bar 
+   compiling if                     \ no full prompt during compilation, but just a vertical bar
       "|   " type$
       0 return
    then
@@ -21,9 +21,9 @@ loaded lest  done
       convert "()" bracket$ type$
    then
 
-   depth ?dup if                    \ show stack indicator, one dot per stack item 
+   depth ?dup if                    \ show stack indicator, one dot per stack item
       space                         \ up to some limit. above that limit, ">" indicates "more"
-      ".........>" left$ type$            
+      ".........>" left$ type$
    then
 
    cr

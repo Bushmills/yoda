@@ -1,9 +1,9 @@
+once                                     \ protect against reloading
 provides: +s -s +f -f +r +r shortcuts
 
-loaded lest done                           \ protect against reloading
 : +s shell on ;
 : -s shell off ;
-: +f forwardrefs on ;                      \ only those during compilation
+: +f forwardrefs on ;                    \ only those during compilation
 : -f forwardrefs off ;
 : +i instantresolve on  ;                \ resolve interactive refs immediate
 : -i instantresolve off  ;

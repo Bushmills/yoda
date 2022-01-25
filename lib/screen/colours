@@ -1,7 +1,6 @@
 ( colours to use with fg, bg )
+once
 provides: black red green yellow blue magenta cyan white
-
-loaded lest done
 needs: enum
 
 \ colours for using with fg and bg.

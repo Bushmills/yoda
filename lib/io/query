@@ -1,7 +1,6 @@
+once
 provides: newquery$
 needs: green fg  normal
-
-loaded lest done
 
 : newquery$
       green fg

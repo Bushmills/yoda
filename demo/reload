@@ -1,13 +1,10 @@
-needs: $constant
+thisfile$               " has been loaded "    join$
+loaded convert join$    " times"               join$
+type$ cr
 
-thisfile$
-" has been loaded " join$
-loaded convert join$
-" times" join$  type$ cr
+once            \ stop loading if file has been loaded before already
 
-once
+\ compile a word which (re-)loads the file with name of this file.
+: re            ( -- )      [ thisfile$ ] literal$ from$ ;  
 
-thisfile$ $constant me
-
-: re    me from$ ;  
 "first time load has compiled contents. reload be executing 're'" type$ cr

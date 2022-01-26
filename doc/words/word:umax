@@ -1,0 +1,8 @@
+name:                umax
+stack:               ( u1 u2 -- u1|u2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+decription:          returns the unsigned larger number of u1 and u2

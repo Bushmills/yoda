@@ -1,0 +1,17 @@
+name:                simplequery$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+contexts:            stateless
+category:            I/O
+input stream:        not parsing from input stream, but requests fresh interactive input
+
+decription:          waits until a line of input was entered, terminated by "Enter" key,
+                     and places the entered line on string stack.
+                     Words following simplequery$ on input line will still be executed
+                     after simplequery$ has completed.
+
+notes:               simplequery$ is used to resolve deferred word "query$" with it. There
+                     is an alternative to simplequery$, called newquery$, in the library
+                     which will loaded and activated autotically during yoda start.
+

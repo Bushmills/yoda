@@ -1,0 +1,10 @@
+name:                once
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            loading from file
+
+decription:          examines whether currently loaded file has been loaded
+                     already before, and ends loading from file in case it has.
+

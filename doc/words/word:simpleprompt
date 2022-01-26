@@ -1,0 +1,15 @@
+name:                simpleprompt
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            status, I/O
+
+decription:          shows a simple ok prompt. By default resolving the deferred
+                     word "prompt" with the purpose of replacing it with a more
+                     powerful prompt.
+
+example:             none
+notes:               a more powerful prompt, "newprompt", is in library file "prompt",
+                     loaded by default at yoda start.
+

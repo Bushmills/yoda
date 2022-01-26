@@ -1,0 +1,8 @@
+name:                min
+stack:               ( n1 n2 -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+decription:          returns the lesser of two signed numbers

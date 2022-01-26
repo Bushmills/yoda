@@ -1,0 +1,17 @@
+name:                quote$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          places double quotes around top of string stack
+
+notes:               like a parameterless bracket$, provided because placing
+                     literal strings containing double quotes on string stack
+                     isn't yet comfortably done.
+                     Considering to add a single quote pattern, but that'd
+                     collide with the already existing patterns for returning
+                     single char ASCII values.
+
+

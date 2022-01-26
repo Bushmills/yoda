@@ -606,7 +606,8 @@ warm()  {
 coldvector=""                                                        # colon word "boot" assigns coldvector. started when compilation completed.
 cold()  {                                                            # also by running cold. error restarts interpreter at cold
    [[ -z "$coldvector" ]] && exit 1
-   warm; $coldvector
+   warm
+   $coldvector
 }
 
 callstack()  {
@@ -2244,10 +2245,6 @@ colon 'compiling'
    push 'compiling'
 semicolon
 
-colon 'error'
-   push 'error'
-semicolon
-
 primitive 'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
 defer     'prompt'       'simpleprompt'
 
@@ -2545,7 +2542,7 @@ semicolon
 
 # ----- interactive mode -------------------------------- #fold01
 
-evaluate ': quit warm begin query$ evaluate$  error unless resolve prompt again ;'
+evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents

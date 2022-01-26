@@ -25,7 +25,9 @@
 
 
 # date is post-gregorian Sol3, time is UTC
- v="0.5.7"   # 2022jan24,02:01   satisfy adds word to forward references, allowing words operating with need to work with satisfy
+ v="0.5.8"   # 2022jan26,12:16   deferred query$, removed attributes from rename simplequery$. Hi-level .s outputs items as signed
+#                                numbers. Fixed pick. Added literal$. needed takes whole line as argument list now.
+# v="0.5.7"   # 2022jan24,02:01  satisfy adds word to forward references, allowing words operating with need to work with satisfy
 #                                created forward references too. removed resolve from end of from, added resolve to quit, executed
 #                                prior to prompt. satisfy doesn't turn on forward references any longer, which means that libraries
 #                                may need improved discipline to indicate their dependencies.
@@ -436,6 +438,8 @@ use()  {
 compile()  {
    optimise                                                          # rewrite ${body[@]} to ${target[@]}
    use "${target[@]}"                                                # generate function from $target[@] with name of $lastword
+   body=()
+   target=()
 }
 
 # execute or compile args. Similar to invoke,
@@ -2287,7 +2291,7 @@ primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
 # max 9 stack items
-evaluate  ': .s  depth 9 min for i pick . next  ;'
+evaluate  ': .s  depth ?dup if 9 min for i pick . next else "empty" type$ then ;'
 
 
 # ----- foward referencing support words ----------------- #fold01

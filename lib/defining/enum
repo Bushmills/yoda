@@ -1,11 +1,12 @@
 provides: enum
+once
 
 \ x1 is value of first enum item,
 \ x2 is increment
 : enum   ( x1 x2 -- )
    swap
    begin
-      source$ count$ 
+      source$ count$
    while
       dup constant
       over +

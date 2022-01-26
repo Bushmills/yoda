@@ -1,9 +1,9 @@
+( using tput terminal control without screen control shelling to tput )
 provides: tput0
-
-\ using tput terminal control without screen control shelling to tput:
+once
 
 : tput0   ( $1 -- )
-      here$ constant 
+      here$ constant
       >read -r strings[sdp++] < <(tput "${ss[-1]}")
       drop$
       does> >printf "%s" "${strings[s[sp--]]}"

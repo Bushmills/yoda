@@ -1,5 +1,6 @@
 provides: $constant
+once
 
-: $constant             ( $1 -- )
+: $constant                ( $1 -- )
       here$ constant $,
-   does> $@  ;          ( -- $1 )
+      does> $@  ;          ( -- $1 )

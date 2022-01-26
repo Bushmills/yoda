@@ -1,4 +1,5 @@
 provides: at
 needs: tput2
+once
 
 "cup"      tput2 at     ( u1 u2 -- )   \ move cursor to column u1 line u2

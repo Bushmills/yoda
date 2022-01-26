@@ -1,4 +1,5 @@
 provides: capitalise
+once
 
 : capitalise      ( c1 -- c2 )
         dup 'a u<  unless

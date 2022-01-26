@@ -1,4 +1,0 @@
-provides: fg
-needs: tput1
-
-"setaf"    tput1 fg     ( u -- )

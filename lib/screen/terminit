@@ -1,4 +1,5 @@
 provides: terminit
 needs: tput0
+once
 
 "init"     tput0 terminit              \ (re-)initialize terminal

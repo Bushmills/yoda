@@ -1,5 +1,6 @@
 provides: <ul ul>
 needs: tput0
+once
 
 "smul"     tput0 <ul                   \ start underlining
 "rmul"     tput0 ul>                   \ end underlining

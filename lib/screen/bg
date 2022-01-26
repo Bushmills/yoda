@@ -1,4 +1,0 @@
-provides: bg
-needs: tput1
-
-"setab"    tput1 bg     ( u -- )       \ set background colour

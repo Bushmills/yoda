@@ -1,4 +1,5 @@
 provides: bracket$
+once
 
 \ "foo" "<<>>" bracket$   ->   "<<foo>>"
 : bracket$  ( $1 $2 -- $3 )

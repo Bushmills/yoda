@@ -1,4 +1,5 @@
 provides: time
+once
 \ use:   time command(s)
 \ measures and outputs time to execute command(s), unit is microseconds.
 : time  ( -- )

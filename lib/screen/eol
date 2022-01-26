@@ -1,4 +1,5 @@
 provides: eol
 needs: tput0
+once
 
 "el"       tput0 eol                   \ delete from cursor to end of line

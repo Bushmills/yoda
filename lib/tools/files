@@ -1,4 +1,5 @@
 provides: files
+once
 
 ( show list of loaded files, along with their handle )
 : files ( -- )

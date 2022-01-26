@@ -1,11 +1,11 @@
-provides: fix review
 ( string: $1 -- )  ( -- f )
-: used       "editor" env$ $= ;
+provides: fix review
+once
 
 \ "error" places filename, error line and error column in lasterror[0], [1] and [2].
 \ error line and columns can be passed to editor for moving cursor to error location.
 \ but as editor invocation lines differs, here's a selection of two handfuls:
-
+: used       "editor" env$ $= ;
 "less"       used lest >fixargs='+${lasterror[1]}'
 "most"       used lest >fixargs='+${lasterror[1]}'
 "nano"       used lest >fixargs='+${lasterror[1]},${lasterror[2]}'

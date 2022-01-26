@@ -1,5 +1,6 @@
+( string arrays for storing and random accessing strings )
 provides: $array
-\ string arrays for storing and random accessing strings
+once
 
 : $array  ( u -- )
    here$ constant allot$

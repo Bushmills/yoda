@@ -1,6 +1,7 @@
 provides: $variable
+once
 
 : $variable                        \ a string variable is a constant
-   here$ constant                  \ producing the index into string array
-   1 allot$                        \ while allocating space for 1 string
+      here$ constant               \ producing the index into string array
+      1 allot$                     \ while allocating space for 1 string
 ;

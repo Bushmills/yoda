@@ -1,5 +1,6 @@
 provides: up down ups downs
 needs: tput0 tput1
+once
 
 "cuu1"     tput0 up                    \ move cursor up
 "cud1"     tput0 down                  \ move cursor down

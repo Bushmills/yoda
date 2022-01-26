@@ -1,4 +1,5 @@
 provides: tput2
+once
 
 : tput2   ( $1 -- )
       here$ constant $,

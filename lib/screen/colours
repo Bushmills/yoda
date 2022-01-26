@@ -1,8 +1,11 @@
-( colours to use with fg, bg )
+( foreground and background colour setting )
+provides: fg bg colours black red green yellow blue magenta cyan white
+needs: enum tput1
 once
-provides: black red green yellow blue magenta cyan white
-needs: enum
 
-\ colours for using with fg and bg.
 \ start at 0, with increments of 1
 0 1 enum   black red green yellow blue magenta cyan white
+
+"setaf"    tput1 fg     ( u -- )        \ set foreground colour
+"setab"    tput1 bg     ( u -- )        \ set background colour
+: colours       ( fg bg -- )   fg bg ;

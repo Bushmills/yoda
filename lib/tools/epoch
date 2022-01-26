@@ -1,2 +1,4 @@
 provides: epoch
+once
+
 : epoch    ( -- u ) "EPOCHSECONDS" env  ;

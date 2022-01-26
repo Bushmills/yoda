@@ -1,6 +1,7 @@
 ( linked variables can be displayed in a list with contents displayed )
 provides: var .vars
 needs: link
+once
 
 variable vars               \ link anchor as base of linked list through variables
 

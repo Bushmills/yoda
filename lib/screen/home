@@ -1,4 +1,5 @@
 provides: home
 needs: tput0
+once
 
 "home"     tput0 home                  \ send cursor home

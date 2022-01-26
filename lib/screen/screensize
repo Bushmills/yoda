@@ -1,5 +1,7 @@
 provides: screensize
+once
 
 : screensize  ( -- x y )                   \ return terminal window dimensions
-      "COLUMNS" env
-      "LINES" env  ;
+      >s[++sp]="$COLUMNS"
+      >s[++sp]="$LINES"
+;

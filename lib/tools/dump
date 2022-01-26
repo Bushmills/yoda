@@ -1,4 +1,5 @@
 provides: dump
+once
 : .byte ( c -- )                    \ 2 digits
       <# # # #>type space ;
 

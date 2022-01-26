@@ -1,6 +1,12 @@
-provides: newquery$
+provides: newquery$ +l -l 
 needs: green fg bg normal savecursor eol home bold
 once
+
+
+create statusline   true ,
+
+: +l   statusline on ;
+: -l   statusline off ;
 
 \ query may not be the ideal place to put statusline in.
 \ NOTE: split statusline and move to its own file
@@ -46,11 +52,13 @@ once
 trash status
 
 : newquery$       ( -- )
-      savecursor
-      home .status
-      restorecursor
-      green fg
-      simplequery$
-      normal  ;
+        statusline @ if
+            savecursor
+            home .status
+            restorecursor
+        then
+        green fg
+        simplequery$
+        normal  ;
 
 ' newquery$ is query$

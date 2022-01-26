@@ -2,30 +2,36 @@ provides: statusline +l -l
 needs: capitalise bold blue fg bg eol
 
 create statusline   true ,
+2 constant spacing
 
 : +l   statusline on ;
 : -l   statusline off
-       savecursor home eol restorecursor        \ empty top line
-;
+       savecursor
+       home eol                     \ empty top line
+       restorecursor ;
+
 
 : show0           ( $1 -- )
-        type$ 3 spaces ;
+        type$
+        spacing spaces ;
 
 : show1           ( x -- ) ( $1 -- )
         base @ >r
         decimal
-        type$ ': emit u. 2 spaces
+        type$ ': emit 0 u.r
+        spacing spaces
         r> base ! ;
 
 : show$           ( $1 $2 -- )
-        swap$ type$ ': emit show0 ;
+        swap$ type$
+        ': emit show0 ;
 
 : status          ( c -- )  ( $1 -- $2 )
         if capitalise
         then append$ ;
 
 : .status         ( -- )
-        bold yellow fg   blue bg   eol
+        bold yellow fg  ( blue bg )  eol
         "yoda version " type$ "v" env$ show0
         "bits" bits show1
         "flags" ""

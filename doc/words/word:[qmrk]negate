@@ -1,0 +1,9 @@
+name:                ?negate
+stack:               ( n1 f -- n2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetic
+
+decription:          conditionally negates a number. A non-zero f causes sign change
+                     to n1 which is returned as n2

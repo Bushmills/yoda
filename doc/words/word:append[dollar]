@@ -1,0 +1,9 @@
+name:                append$
+stack:               ( c -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          appends the character represented by its ASCII c to string $1,
+                     resulting in $2

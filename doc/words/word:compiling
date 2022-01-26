@@ -1,0 +1,10 @@
+name:                compiling
+stack:               ( -- f )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            compiler
+
+decription:          returns a flag which indicates whether yoda is currently
+                     interpreting or compiling
+

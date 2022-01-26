@@ -1,0 +1,15 @@
+name:                allot$
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            strings
+
+decription:          adds u to sdp, the offset to first free string memory location,
+                     akin to how allot increments dp.
+
+notes:               string memory is organised such that each location can hold a
+                     string - it's not meant to bump here$ by the number of characters
+                     in the string. Neither is it to unpack the string into individual
+                     bytes. Strings can be left while, and stored on each in every
+                     location by single increments of here$

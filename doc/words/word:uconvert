@@ -1,0 +1,9 @@
+name:                uconvert
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+contexts:            stateless
+category:            number conversion, strings
+
+decription:          converts unsigned number u to a string which is pushed to
+                     string stack. Respects base.

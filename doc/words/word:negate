@@ -1,0 +1,9 @@
+name:                negate
+stack:               ( n1 -- n2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+decription:          changes sign of number n1, which is returned as n2
+

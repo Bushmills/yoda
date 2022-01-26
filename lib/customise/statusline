@@ -1,0 +1,43 @@
+provides: statusline +l -l
+needs: capitalise bold blue fg bg eol
+
+create statusline   true ,
+
+: +l   statusline on ;
+: -l   statusline off
+       savecursor home eol restorecursor        \ empty top line
+;
+
+: show0           ( $1 -- )
+        type$ 3 spaces ;
+
+: show1           ( x -- ) ( $1 -- )
+        base @ >r
+        decimal
+        type$ ': emit u. 3 spaces
+        r> base ! ;
+
+: show$           ( $1 $2 -- )
+        swap$ type$ ': emit show0 ;
+
+: status          ( c -- )  ( $1 -- $2 )
+        if capitalise
+        then append$ ;
+
+: .status         ( -- )
+        bold yellow fg   blue bg   eol
+        "yoda version " type$ "v" env$ show0
+        "flags" ""
+            'f  forwardrefs @     status
+            'i  instantresolve @  status
+            's  shell @           status
+            show$
+        "base" base @ show1
+        "depth"  depth  show1
+        "rdepth"  rdepth show1
+        "files" #files show1
+        "unresolved" #unresolved show1
+        "bits" bits show1
+        .s
+;
+trash status

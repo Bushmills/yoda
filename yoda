@@ -212,12 +212,7 @@ pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placehold
 # want to use tput, but esc[ strings are easier to embed for now.
    redfg='31'
    redbg='41'
-#   greenfg='32'
-#   greenbg='42'
    normal='0'
-#   italics='3'
-#   underscore='4'
-#   reverse='7'
 
 
 # ----- headers ------------------------------------------ #fold00
@@ -404,6 +399,12 @@ parse()  {
 
 # ----- compiler ----------------------------------------- #fold00
 
+# arg1: code token, arg2: code token type (opt)
+code()  {                                                            # literal code compiler
+   body+=("$1")
+   analyser+=("${2:-0}")                                             # default to no optimiser intervention
+}
+
 # atoms may be:
 #  - micro instructions
 #  - single instructions
@@ -463,11 +464,6 @@ inout()  {
 }
 
 
-# arg1: code token, arg2: code token type (opt)
-code()  {                                                            # literal code compiler
-   body+=("$1")
-   analyser+=("${2:-0}")                                             # default to no optimiser intervention
-}
 
 push()  {                                                            # leave it to detokeniser to generate code
    code "$1"   "$literalnumber"                                      # only insert value or expression, mark it.
@@ -1457,6 +1453,9 @@ colon 'chop$'
    push '${#ss[@]}-s1'
 semicolon
 
+# ( $1 -- $2 )
+primitive 'quote$' 'ss[-1]="\"${ss[-1]}\""'
+
 # ---------- command ---------      - output -        ----- mnemonic -----
 # "abcdefgh"   2 left$   type$      ab                "keep 2 left"
 # "abcdefgh"  -2 left$   type$      abcdef            "keep left all but last 2"
@@ -1726,7 +1725,11 @@ primitive '.unresolved'  '((${#headersunresolved[@]}))&&printf "%s " "${!headers
 primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
 primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; immediate   # ( -- )
 
-
+# apply run time semantic from string stack
+colon 'use$'
+   code 'use "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
 
 # ----- bit logic ---------------------------------------- #fold01
 
@@ -2156,7 +2159,7 @@ primitive 'move'   'move'; inout 3 0
 
 
 
-# ----- i/o ---------------------------------------------- #fold01
+# ----- character i/o ------------------------------------ #fold01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2248,6 +2251,10 @@ semicolon
 primitive 'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
 defer     'prompt'       'simpleprompt'
 
+
+# ----- file i/o -----------------------------------------
+
+
 # load file whose name is given on string stack
 # ( -- ) ( string: $1 -- )
 colon 'from$'
@@ -2260,6 +2267,15 @@ semicolon
 # ( -- ) ( input: parse word )
 evaluate ': from word$ from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
+
+# ignore block of source lines up to next empty line
+colon 'waive'
+   code 'until (( linenr > ${#lines[@]} )); do'
+   code 'line="${lines[linenr++]}"'
+   code '[[ -z "$line" ]] && break'
+   code 'done'
+semicolon
+
 
 # ----- pictured number conversion ----------------------- #fold01
 

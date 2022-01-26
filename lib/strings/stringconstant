@@ -1,6 +1,21 @@
 provides: $constant
+needs: bracket$
 once
 
-: $constant                ( $1 -- )
+: $constant                           ( $1 -- )
+     create
+       >use "ss+=(\"${ss[-1]}\")";    ( -- $1 )
+       drop$ ;
+
+have $constant lest waive the next definition as we got one already
+: $constant                            ( $1 -- )
+      create
+      quote$                        \   string   ->  "string"
+      "()" bracket$                 \  "string"  ->  ("string")
+      "ss+=" swap$ join$            \ ("string") ->  ss+=("string")
+      use$ ;                          ( -- $1 )
+
+have $constant lest waive this one too because we prefer on of the above
+: $constant                           ( $1 -- )
       here$ constant $,
-      does> $@  ;          ( -- $1 )
+      does> $@  ;                      ( -- $1 )

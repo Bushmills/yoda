@@ -1,0 +1,10 @@
+name:                prepend$
+stack:               ( c -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          converts the ASCII value on top of stack to a character which
+                     is prepended to the top string stack item
+

@@ -34,6 +34,7 @@ create statusline   true ,
         'i  instantresolve @  status
         's  shell @           status  ;
 
+\ NOTE: consider to change amount of status line information depending on terminal width
 : .status         ( -- )
         bold yellow fg  ( blue bg )  deol
         "yoda version " type$ "v" env$ show0

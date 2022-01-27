@@ -1,0 +1,19 @@
+provides: .s
+once
+9 constant items
+: .s  ( -- )    
+        depth
+        ?dup if 
+            dup items u> if
+                dup convert
+                "()" bracket$ type$
+                space
+            then
+            items min for 
+                i pick .
+            next 
+        else 
+            "empty" type$ 
+        then ;
+
+trash items

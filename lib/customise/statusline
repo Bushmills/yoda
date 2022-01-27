@@ -1,5 +1,5 @@
 provides: statusline +l -l
-needs: capitalise bold blue fg bg deol
+needs: capitalise bold blue fg bg deol .s
 
 create statusline   true ,
 2 constant spacing
@@ -44,10 +44,6 @@ create statusline   true ,
         "base" base @ show1
         "here" here show1
         "rdepth"  rdepth show1
-        "stack:" type$ 
-        depth 9 u> if
-            depth convert
-            "()" bracket$ type$ 
-            space 
-        then .s  ;
+        "stack:" type$ .s ;
+
 trash status

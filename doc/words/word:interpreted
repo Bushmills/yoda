@@ -1,4 +1,4 @@
-name:                interactive
+name:                interpreted
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
@@ -14,9 +14,6 @@ notes:               Useful specifically for an interpretative version of words
                      with the same name as those which have been moved to the
                      compile-only vocabulary, for achieving different run- and
                      compile time semantics for words with identical names.
-
-                     the name is a misnomer and should be changed to a name more
-                     accurately describing its effect and purpose.
 
 examples:            word "unless" has been defined with compile time semantics
                      of conditionally exiting the word (conceptualised as "jumping

@@ -1,0 +1,17 @@
+name:                boot
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+input stream:        space delimited string
+
+decription:          reads a space delimited string from input stream
+                     and writes the excution token of the word with that
+                     name to cold start vector. (Well, almost - actually the
+                     function name is written, but function names and execution
+                     tokens bear a one-to-one relationship).
+                     Should the word not exists, it will be marked as forward reference,
+                     in the expectation that it will be available later.
+
+example:             boot quit

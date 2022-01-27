@@ -1,0 +1,9 @@
+name:                trash$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          trash the header of the word whose name is on string stack.
+

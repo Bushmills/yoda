@@ -1,0 +1,8 @@
+name:                1+
+stack:               ( x1 -- x2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+decription:          increments top of stack by one

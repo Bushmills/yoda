@@ -1,0 +1,10 @@
+name:                have$
+stack:               ( -- xt|0 )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          examines whether a word with the name of top string stack item
+                     exists, and returns its execution token, or 0 if it doesn't.
+

@@ -1,0 +1,8 @@
+name:                page
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            screen, I/O
+
+decription:          clears the console screen

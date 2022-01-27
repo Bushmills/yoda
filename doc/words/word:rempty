@@ -1,0 +1,16 @@
+name:                rempty
+stack:               ( -- )
+return stack:        ( ??? -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            return stack
+
+decription:          empties and reinitialises return stack
+
+example:             none
+notes:               a convenience word, supplied only because return stack in
+                     yoda is not used according to what its name suggest: It
+                     won't carry return addresses. As such is it possibly to
+                     push and keep items on it unintentionally, without yoda
+                     balking at unexecutable code. Therefore has rempty been
+                     provided to reset it easily when needed.

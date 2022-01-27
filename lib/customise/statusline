@@ -1,5 +1,5 @@
 provides: statusline +l -l
-needs: capitalise movecursor bold blue fg bg deol .s
+needs: capitalise movecursor bold blue fg bg deol .s columns
 
 create statusline   true ,
 2 constant spacing
@@ -34,18 +34,28 @@ create statusline   true ,
         'i  instantresolve @  status
         's  shell @           status  ;
 
-\ NOTE: consider to change amount of status line information depending on terminal width
+: toolong ( columns width -- columns flag )
+   spacing + -
+   dup 0<  ;
+
+: .dynamicstatus  ( u1 -- u2 )
+      bold yellow fg  ( blue bg )  deol
+      #9 toolong  unless                       flags       show$
+      #8 toolong  unless             "unres"   #unresolved show1
+      #7 toolong  unless             "base"    base @      show1
+      #8 toolong  unless             "files"   #files      show1
+      #9 toolong  unless             "here"    here        show1
+      #9 toolong  unless             "rdepth"  rdepth      show1
+      #7 toolong  unless             "bits"    bits        show1
+     #18 toolong  unless  "yoda version " type$ "v" env$   show0
+     #25 toolong  unless              "stack:" type$   >r .s r>
+;
+
 : .status         ( -- )
-        bold yellow fg  ( blue bg )  deol
-        "yoda version " type$ "v" env$ show0
-        "bits" bits show1
-        flags show$
-        "unresolved" #unresolved show1
-        "files" #files show1
-        "base" base @ show1
-        "here" here show1
-        "rdepth"  rdepth show1
-        "stack:" type$ .s ;
+      columns
+      .dynamicstatus
+      drop  ;
 
 trash status
 trash flags
+trash toolong

@@ -1,7 +1,16 @@
-provides: screensize
+provides: screensize columns lines
 once
 
-: screensize  ( -- x y )                   \ return terminal window dimensions
+
+: columns ( -- u )
       >s[++sp]="$COLUMNS"
+;
+
+: lines ( -- u )
       >s[++sp]="$LINES"
+;
+
+: screensize  ( -- x y )                   \ return terminal window dimensions
+      columns
+      lines
 ;

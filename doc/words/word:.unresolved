@@ -1,0 +1,8 @@
+name:                .unresolved
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary, compiling
+
+decription:          prints the names of unresolved words, if any.

@@ -1,0 +1,8 @@
+name:                abs
+stack:               ( n -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetic
+
+decription:          removes sign from number

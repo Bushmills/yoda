@@ -1,0 +1,17 @@
+name:                bounds
+stack:               ( start n -- limit start  )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics, flow control helper
+
+decription:          converts start, count parameters to do ... loop compatible
+                     limit, start parameters.
+
+example:             10 5 bounds
+                     \ produces loop parameters for do which run 5 iterations
+                     \ with a loop index starting at 10
+
+notes:               interestingly will repetitive execution of bounds on its
+                     own results, when starting with 0 1, produce the fibonacci
+                     sequence.

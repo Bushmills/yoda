@@ -1,0 +1,9 @@
+name:                cell
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+decription:          returns as u the count of cells needed to store one integer.
+

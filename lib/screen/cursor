@@ -1,7 +1,11 @@
-provides: up down ups downs
-needs: tput0 tput1
+provides: up down ups downs savecursor restorecursor home at
+needs: tput0 tput1 tput2
 once
 
+"sc"       tput0 savecursor            \ save cursor position
+"rc"       tput0 restorecursor         \ move cursor to previously saved cursor position
+"home"     tput0 home
+"cup"      tput2 at     ( u1 u2 -- )   \ move cursor to column u1 line u2
 "cuu1"     tput0 up                    \ move cursor up
 "cud1"     tput0 down                  \ move cursor down
 "cuu"      tput1 ups    ( u -- )       \ move cursor up by u lines

@@ -1,5 +1,0 @@
-provides: bold
-needs: tput0
-once
-
-"bold"     tput0 bold                  \ turn on bold

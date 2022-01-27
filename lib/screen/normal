@@ -1,5 +1,0 @@
-provides: normal
-needs: tput0
-once
-
-"sgr0"     tput0 normal                \ undo attribute changes

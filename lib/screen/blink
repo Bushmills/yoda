@@ -1,5 +1,0 @@
-provides: blink
-needs: tput0
-once
-
-"blink"    tput0 blink                 \ set blink attribute

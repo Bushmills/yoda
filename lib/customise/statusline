@@ -1,5 +1,5 @@
 provides: statusline +l -l
-needs: capitalise bold blue fg bg eol
+needs: capitalise bold blue fg bg deol
 
 create statusline   true ,
 2 constant spacing
@@ -7,7 +7,7 @@ create statusline   true ,
 : +l   statusline on ;
 : -l   statusline off
        savecursor
-       home eol                     \ empty top line
+       home deol                    \ empty top line
        restorecursor ;
 
 
@@ -31,7 +31,7 @@ create statusline   true ,
         then append$ ;
 
 : .status         ( -- )
-        bold yellow fg  ( blue bg )  eol
+        bold yellow fg  ( blue bg )  deol
         "yoda version " type$ "v" env$ show0
         "bits" bits show1
         "flags" ""

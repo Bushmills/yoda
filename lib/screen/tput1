@@ -1,8 +1,0 @@
-provides: tput1
-once
-
-: tput1   ( $1 -- )
-      here$ constant $,
-      does> ( x -- )
-      >tput "${strings[s[sp--]]}" "${s[sp--]}"
-;

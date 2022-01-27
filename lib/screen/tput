@@ -1,0 +1,22 @@
+( using tput terminal control without screen control shelling to tput )
+provides: tput0 tput1 tput2
+once
+
+: tput0
+     create
+       >read -r tmp < <(tput ${ss[-1]})
+       drop$
+       >use "printf \"%s\" \"$tmp\"";    ( -- $1 )
+       ;
+
+: tput1   ( $1 -- )
+      here$ constant $,
+      does> ( x -- )
+      >tput "${strings[s[sp--]]}" "${s[sp--]}"
+;
+
+: tput2   ( $1 -- )
+      here$ constant $,
+      does> ( x1 x2 -- )
+      >tput "${strings[s[sp--]]}" "${s[sp--]}" "${s[sp--]}"
+;

@@ -44,7 +44,10 @@ create statusline   true ,
         "base" base @ show1
         "here" here show1
         "rdepth"  rdepth show1
-        "depth"  depth  show1
-        .s
-;
+        "stack:" type$ 
+        depth 9 u> if
+            depth convert
+            "()" bracket$ type$ 
+            space 
+        then .s  ;
 trash status

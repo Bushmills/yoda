@@ -4,12 +4,12 @@ once
 : .s  ( -- )    
         depth
         ?dup if 
-            dup items u> if
-                dup convert
-                "()" bracket$ type$
-                space
-            then
-            items min for 
+            items
+            2dup u> if
+                over convert
+                "() " bracket$ type$            \ with odd bracket char count, shorter part is prepended, longer part appended
+            then                                \ that's how I sneak a trailing space in.
+            min for
                 i pick .
             next 
         else 

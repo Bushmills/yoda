@@ -1,11 +1,11 @@
 provides: newquery$
-needs: green fg normal savecursor home statusline
+needs: green fg normal movecursor restorecursor statusline
 once
 
 : newquery$       ( -- )
         statusline @ if
-            savecursor
-            home .status
+            0 0 movecursor
+            .status
             restorecursor
         then
         green fg

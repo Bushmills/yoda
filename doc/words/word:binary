@@ -1,0 +1,8 @@
+name:                binary
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            number conversion, I/O
+
+decription:          changes radix to 2, affecting conversion of number in- and output

@@ -1,13 +1,12 @@
-created:             auto     (remove line after having checked and revised description)
 name:                $@
-stack:               ( -- )
+stack:               ( u -- )
 return stack:        ( -- )
-string stack:        ( -- )
+string stack:        ( -- $1 )
 contexts:            stateless
-category:
-input stream:
+category:            strings
 
-decription:          none
+decription:          push a string taken from string memory location u
+                     to string stack.
 
-example:             none
-notes:               none
+notes:               complementary to $!
+see also:            $, here$, allot$

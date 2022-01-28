@@ -931,7 +931,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -2515,9 +2515,10 @@ colon 'satisfy$'
 semicolon
 
 
-# ----- documentation ------------------------------------ #fold01
+# ----- documentation ------------------------------------ #FOLD01
 
-
+# arg1: word name
+# arg2: headerlist
 undoc_template()  {
 cat << EOF
 created:             auto     (remove line after having checked and revised description)
@@ -2525,7 +2526,7 @@ name:                $1
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            stateless
+contexts:            ${2#"headers"}
 category:
 input stream:
 
@@ -2558,13 +2559,16 @@ sanitise()  {
 }
 
 undoc()  {
-   for word in "${!headers[@]}"; do                                  # run through all headers
-      sanitise "$word"
-      [[ -f "$worddoc:$file" ]] || {                                 # found one for which no doc file exists
-         undoc_template "$word" >"$worddoc:$file"
-         editor "$worddoc:$file"
-         break
-      }
+   for list in "${headerslistlist[@]}"; do                          # run through all header lists
+      declare -n headers="$list"
+      for word in "${!headers[@]}"; do                               # run through all headers
+         sanitise "$word"
+         [[ -f "$worddoc:$file" ]] || {                                 # found one for which no doc file exists
+            undoc_template "$word" "${!headers}" > "$worddoc:$file"
+            editor "$worddoc:$file"
+            return
+         }
+      done
    done
 }
 primitive 'undoc' 'undoc'

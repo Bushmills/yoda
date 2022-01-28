@@ -1,0 +1,9 @@
+name:                $,
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            strings
+
+decription:          writes $1 to address here$ of strings storage, then causes
+                     here$ to point to the next free string storage location.

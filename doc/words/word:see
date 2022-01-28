@@ -1,0 +1,12 @@
+name:                see
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system, status
+
+input stream:        space delimited string
+
+decription:          "decompile" a word and show its composition.
+
+example:             see u.

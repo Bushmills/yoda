@@ -1,0 +1,12 @@
+name:                transient
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            compilation, dictionary, file loading
+
+decription:          marks the header of the last word as discardable.
+                     Headers of words marked as transient will be trashed
+                     when loading the file they were defined in has completed.
+                     This limits the scope on those words to inside the same
+                     file only.

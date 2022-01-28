@@ -2,11 +2,10 @@ name:                d=
 stack:               ( x1 x2 x3 x4 -- f )
 return stack:        ( -- )
 string stack:        ( -- )
-
+contexts:            stateless
 category:            compare, arithmetic
 
 decription:          while taken from the doubles word set, it has its use with pairs of
                      stack items too, which is why it has been added: returns true when
                      (x1 == x3) AND (x2 == x4), false otherwise.
 
-contexts:            stateless

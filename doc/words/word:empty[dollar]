@@ -1,0 +1,8 @@
+name:                empty$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( ??? -- )
+contexts:            stateless
+category:            strings
+
+decription:          reinitialise the string stack

@@ -1,0 +1,19 @@
+name:                need
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            compiling, dictionary, system
+input stream:        space delimited string
+
+decription:          creates a forward reference by the name of space delimited string,
+                     parsed from input stream. As consequence can that word be compiled
+                     into other words. Resolving takes place automatically at appropriate
+                     times, or can be forced by executing "resolve", assuming the word can
+                     be resolved from library.
+                     As long as the word hasn't been resolved, it can't be executed.
+                     Defining the word (interactively or by loading from a file) are
+                     other methods to resolve the word.
+
+notes:               contrary to "satisfy" does need not throw an error if a
+                     word can't be resolved immediately.

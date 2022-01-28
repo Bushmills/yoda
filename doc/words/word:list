@@ -1,0 +1,12 @@
+name:                list
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            file I/O, informative
+
+decription:          by specifying the file handle u (the number left of the file when
+                     executing "files") will list display the contents of that file
+
+notes:               list may be dropped and moved to library, as its
+                     spectrum of potential uses is rather limited

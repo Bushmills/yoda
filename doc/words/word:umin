@@ -1,0 +1,8 @@
+name:                umin
+stack:               ( u1 u2 -- u1|u2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+decription:          returns the lower of two unsigned numbers u1, u2

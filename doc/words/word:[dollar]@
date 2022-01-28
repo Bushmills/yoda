@@ -1,0 +1,13 @@
+created:             auto     (remove line after having checked and revised description)
+name:                $@
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:
+input stream:
+
+decription:          none
+
+example:             none
+notes:               none

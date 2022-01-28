@@ -1,0 +1,32 @@
+name:                warm
+stack:               ( ??? -- )
+return stack:        ( ??? -- )
+string stack:        ( ??? -- )
+contexts:            stateless
+category:            system
+input stream:        whole line
+
+decription:          initialises all stacks, clears input line, sets number base
+                     to decimal, stops file loading, enters interpretation state.
+
+notes:               contrary to what the name suggests, "warm" doesn't really
+                     perform a real warm start. It initialises as much as it can
+                     to set the conditions of a warm start, but it won't terminate
+                     execution of the currently running word, because it can't.
+                     There doesn't exist a simple warm start procedure which I
+                     could submit to in bash. Other methods examined had unwanted
+                     consequences, such as wiping the dictionary of added words.
+                     Therefore will execution of foo, when defined as
+                     : foo  warm words ;
+                     still execute words.
+                     Therefore is the current mode of operation of warm actually a
+                     misnomer, as it's more like initialise without proceding with
+                     execution at a defined starting point.
+                     If you need to work around this limitation, you may want to
+                     define:
+                     : mywarm  warm quit ;
+                     There's a reason for not doing so in warm:  this won't clear
+                     the bash call stack, but instead pile up a new level of quit
+                     for each warm start. Attempts to modify bash call stack with
+                     the goal of removing the previous level of quit, or replacing
+                     it with the new level, weren't successful yet.

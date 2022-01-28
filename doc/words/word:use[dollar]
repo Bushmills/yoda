@@ -1,0 +1,25 @@
+name:                use$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            compiling, system
+
+decription:          changes run time semantic of last defined word to the code
+                     stored as string in top string stack item.
+                     "code" means "low level code", from viewpoint of bash - that is,
+                     bash executable code, not yoda high level code.
+                     The steps undertaken by use$ are:
+                     - a new bash function will be created, with new and unique
+                       function name.
+                     - the code in top string stack item will become function body
+                     - that function will be associated with the most recently
+                       defined word.
+
+example:             create 5drop    "((sp-=5))" use$
+                     see 5drop
+
+notes:               use$ can be used on any wird type, regardless of whether it was -
+                     prior to use$ - a constant, a created word, a colon word or other.
+                     The word will lose its previous type and functionality completely,
+                     and will simply execute the code assigned with use$

@@ -1,0 +1,16 @@
+name:                source$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+contexts:            stateless
+category:            I/O, interpreting
+input stream:        whole line
+
+decription:          places a copy of remainder of input line on string stack,
+                     without affeceting input stream.
+                     This means, interpreting will continue unchanged, but
+                     there'll be a copy of not yet executed input on string stack,
+                     which can be used to look ahead and respond in advance.
+
+example:             : limit  ( u -- ) source$ count$ > unless done ;
+                     10 limit ...      \ ignore rest of line if longer than 10 chars.

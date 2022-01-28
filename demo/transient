@@ -1,0 +1,22 @@
+\ transient:  words marked as transient are local to the file
+\    they are defined in. Here, words part1 and part2 will be
+\    trashed when file loading completes.
+\    because of their inline nature, the resulting code of demo1
+\    is identical with that of demo2.
+\    As neither part1. part2 headers will clutter the dictionary
+\    nor is any call overhead added to the word they've been used
+\    in, extreme factoring becomes cheap that way:
+
+: part1   1     ;  transient inline 
+: part2   drop  ;  transient inline
+
+: demo1 ( -- )     part1  part2  ;
+: demo2 ( -- )     1 drop ;
+
+see demo1
+see demo2
+
+\ after loading, words part1 and parts2 can't be found any longer.
+\ not combining transient with inline is legal too: the function
+\ body will remain, and will be called from where it was compiled
+\ into. 

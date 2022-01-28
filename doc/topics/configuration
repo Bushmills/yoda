@@ -32,5 +32,5 @@ libdirs+=("$PWD")                     # example: add current directory
 bits=n                                # set cell width. 16..63 are reasonable.
                                       # be aware that 16 is a tad small for epoch or
                                       # higher resolution time measurements.
-header_code="function"                # leading part of function names
+functionname_prefix="yoda"            # leading part of function names
 nextname="1000"                       # functions are numbered, starting with this number.

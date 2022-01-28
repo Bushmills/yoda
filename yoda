@@ -95,7 +95,7 @@ do                                                                   # loop thro
    [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
 done
 
-header_code="yoda"                                                   # prefix to bash function names,  _${nextname} will be appended upon header creation
+functionname_prefix="yoda"                                                   # prefix to bash function names,  _${nextname} will be appended upon header creation
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
 
 declare -ai r=() s=() m=()
@@ -245,7 +245,7 @@ where()  {                                                           # remember 
 # arg2: function name
 # not allowed to generate function names because some names want
 # to be determined by caller
-# NOTE: leave it to header to prepend $header_code.
+# NOTE: leave it to header to prepend $functionname_prefix.
                                                                      # variable last doesn't exist yet, but is used in header, and
                                                                      # can't be defined earlier, because defining it calls header.
 ((last=dp++))                                                        # remedy: remember here, allot cell, define it as constant later.
@@ -468,7 +468,7 @@ push()  {                                                            # leave it 
 # arg1:word
 newname()  {
    names[nextname]="$1"                                              # keep word name for .name, name$
-   returned[0]="${header_code}_$((nextname++))"                             # grab new xt, make a function name from it
+   returned[0]="${functionname_prefix}_$((nextname++))"                             # grab new xt, make a function name from it
 }
 
 sourcelocation()  {
@@ -1111,7 +1111,7 @@ semicolon
 # ' foo alias bar
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
-   code 'headersstateless["$word"]="${header_code}_${s[sp--]}"'
+   code 'headersstateless["$word"]="${functionname_prefix}_${s[sp--]}"'
    code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'         # correct source line number for aliases in this file
 semicolon
 
@@ -1126,7 +1126,7 @@ primitive 'noop' '(())'
 # example:  defer 'foo'  'bar'
 defer()  {                                                           # use in yoda source
    constant "$1" "$((dp))"
-   use "${header_code}_\${m[$dp]}"
+   use "${functionname_prefix}_\${m[$dp]}"
    ((m[dp++]="${headersstateless[$2]##*_}"))
    sourcelocation
 }
@@ -1148,7 +1148,7 @@ semicolon
 # grep is used here.
 colon 'is'
    code 'word'
-   code 'tmp="$(type "${headersstateless[$word]}"|grep "${header_code}_.*m\[")"'
+   code 'tmp="$(type "${headersstateless[$word]}"|grep "${functionname_prefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
@@ -1672,7 +1672,7 @@ havearg() {
       declare -n headers="$tmp"                                      # vector headers to next vocabulary
       [[ -z "${headers["$word"]}" ]] || {                            # word in there?
          tmp="${headers["$word"]}"                                   #     yes: remember name
-         [[ $tmp == ${header_code}* ]] || break                      # can not tick data
+         [[ $tmp == ${functionname_prefix}* ]] || break                      # can not tick data
          ((s[++sp]=${headers["$word"]##*_}))                         # convert name to "address" and push
          return                                                      # found word, stacked execution token
       }
@@ -1715,7 +1715,7 @@ colon 'literal$'
 semicolon
 compiled
 
-primitive 'execute' "${header_code}_\${s[sp--]}"                     # ( xt -- )
+primitive 'execute' "${functionname_prefix}_\${s[sp--]}"                     # ( xt -- )
 primitive 'name$'   'ss+=("${names[s[sp--]]}")'                      # ( xt -- ) ( string: -- $1 )
 primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 

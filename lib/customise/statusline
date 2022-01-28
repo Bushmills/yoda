@@ -64,7 +64,7 @@ trash plenty
 : redraw  ( -- )
         statusline @ lest
         0 0 movecursor
-        deol .status cr deol
+        .status deol cr deol
         restorecursor  ;
 
->trap ${header_code}_${m[last]} SIGWINCH
+>trap ${functionname_prefix}_${m[last]} SIGWINCH

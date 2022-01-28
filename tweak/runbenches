@@ -5,7 +5,7 @@
 runbenchesonce()  {
    for f in *bench; do
       file=$(realpath "$f")
-      echo $(date; yoda from "$file") >> $f.results
+      echo $(date -u; yoda from "$file") >> $f.results
       echo "$f"
       tail -5 $f.results
       echo

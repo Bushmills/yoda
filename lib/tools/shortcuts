@@ -12,11 +12,10 @@ provides: +s -s +f -f +r +r shortcuts
    dup$ #16 ltype$
    evaluate$ @
    if "on" else "off" then
-   type$ cr ;
+   type$ cr ;        transient
 
 : shortcuts ( -- )
    "shell"          ?
    "forwardrefs"    ?
    "instantresolve" ?
 ;
-trash ?    \ too special case for keeping.

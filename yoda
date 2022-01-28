@@ -24,7 +24,9 @@
 #        is assigned, but shellcheck can't see how
 
 
-# date is post-gregorian Sol3, time is UTC
+# times in UTC
+# dates in post-gregorian Sol3
+# numbers in decimal. Mostly.
  v="0.5.8"   # 2022jan26,12:16   deferred query$, removed attributes from rename simplequery$. Hi-level .s outputs items as signed
 #                                numbers. Fixed pick. Added literal$. needed takes whole line as argument list now.
 #                                added have$ trash$, factored have, added word for emptying rstack, which was added to _
@@ -60,9 +62,9 @@
 #v="0.4.1"   # 2022jan12,04:03   early version of automated testing.
 #                                converted many colon to primitive. literal became push.
 #v="0.4.0    # 2022jan10,04:13   pulled yoda and primitives together into a single file
-#v="0.3.0    # 2022jan07,22:31   any data item can be ticked now, so can words create by defining word using create ... does>
-#v="0.2.0    # 2021dec29,16:04
-#v="0.1.0    # 2021dec20,14:57
+#v="0.3.0    # 2022jan07,22:31   any data item can be ticked now, so can words created by defining word using create ... does>
+#v="0.2.0    # 2021dec29,16:04   compiles Game of Life demo
+#v="0.1.0    # 2021dec20,14:57   does what you can expect of a 0.1 version.
 
 read -ra version <<< "${v//./ }"
 
@@ -118,6 +120,7 @@ done
 
 declare -a names                                                     # function name -> word name lookup
 declare -A headersunresolved                                         # forward referenced. Not searched.
+declare -a headerstransient                                          # transient headers.
 declare -A wherefile                                                 # source file
 declare -A whereline                                                 # source line
 declare -A lib                                                       # cache dependencies
@@ -153,7 +156,7 @@ declare -A stackout=()
 declare -A atom                                                      # a table with token -> code mappings.
 
 # what to execute when no command line args given
-default='from defaults'                                               # load defaults from file
+default='from defaults'                                              # load defaults from file
 
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=32
@@ -468,7 +471,7 @@ push()  {                                                            # leave it 
 # arg1:word
 newname()  {
    names[nextname]="$1"                                              # keep word name for .name, name$
-   returned[0]="${functionname_prefix}_$((nextname++))"                             # grab new xt, make a function name from it
+   returned[0]="${functionname_prefix}_$((nextname++))"              # grab new xt, make a function name from it
 }
 
 sourcelocation()  {
@@ -509,7 +512,7 @@ colon()  {
       newname "$1"                                                   # no: generate new name
       name="${returned[0]}"
    else
-      unset -v "headersunresolved['$1']"                               # remove forward reference from vocabulary
+      unset -v "headersunresolved['$1']"                             # remove forward reference from vocabulary
    fi
    header "$1" "$name"
    sourcelocation
@@ -907,11 +910,15 @@ from()  {
    file="$(realpath "$file")"                                        # canonical or original name of file
    loaded "$file" || files[filehandle]="$file"                       # first time inclusion: add to files array
    readarray -t lines < "$file"                                      # read whole source into lines array
+   local headerstransient=()                                         # list of headers marked transient
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping
       evaluate "$line"                                               # process next line
       ((error | (linenr < 0)))&&break                                # source can flag "stop loading" with negative linenr
    done                                                              #   (warm and done do so)
+   for ((tmp=0; tmp<${#headerstransient[@]}; tmp++)); do             # trash transient headers
+      unset -v "headersstateless[${headerstransient[tmp]}]"
+   done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    ((stackeffect == sp)) || unbalancedstack "$1"                     # demanding stack clean files with net effect zero.
    ((loaded[filehandle]++))                                          # increment load counter, mark as loaded
@@ -996,7 +1003,8 @@ interpreted
 
 
 primitive 'interpreted'  'interpreted'                               # move header to interpreter context vocabulary
-primitive 'compiled'    'compiled'                                 # move header to compiler context vocabulary
+primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
+primitive 'transient'   'headerstransient+=("$lastword")'            # copy header to transient for later trashing
 
 # ----- diagnostics -------------------------
 
@@ -1188,7 +1196,7 @@ inout 0 0
 
 # ----- misc --------------------------------------------- #fold01
 
-primitive "\\"   'line=""';   compiled                              # single quoted single backslash because
+primitive "\\"   'line=""';   compiled                               # single quoted single backslash because
 primitive "\\"   'line=""';   interpreted                            # double quoted escaped backslash rather than
                                                                      # efte syntax highlighting gets confused
 primitive '('    "parse ')'"; compiled
@@ -1672,7 +1680,7 @@ havearg() {
       declare -n headers="$tmp"                                      # vector headers to next vocabulary
       [[ -z "${headers["$word"]}" ]] || {                            # word in there?
          tmp="${headers["$word"]}"                                   #     yes: remember name
-         [[ $tmp == ${functionname_prefix}* ]] || break                      # can not tick data
+         [[ $tmp == ${functionname_prefix}* ]] || break              # can not tick data
          ((s[++sp]=${headers["$word"]##*_}))                         # convert name to "address" and push
          return                                                      # found word, stacked execution token
       }
@@ -1715,7 +1723,7 @@ colon 'literal$'
 semicolon
 compiled
 
-primitive 'execute' "${functionname_prefix}_\${s[sp--]}"                     # ( xt -- )
+primitive 'execute' "${functionname_prefix}_\${s[sp--]}"             # ( xt -- )
 primitive 'name$'   'ss+=("${names[s[sp--]]}")'                      # ( xt -- ) ( string: -- $1 )
 primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
@@ -1924,11 +1932,11 @@ colon '+loop'
 semicolon
 compiled
 
-primitive 'leave'  'code "break"'              ; compiled           # break out of loop
-primitive '?leave' 'code "((s[sp--]))&&break"' ; compiled           # break out of loop when false
-primitive 'lest'   'code "((s[sp--]))||return"'; compiled           # interpreting version: skip rest of line when false
+primitive 'leave'  'code "break"'              ; compiled            # break out of loop
+primitive '?leave' 'code "((s[sp--]))&&break"' ; compiled            # break out of loop when false
+primitive 'lest'   'code "((s[sp--]))||return"'; compiled            # interpreting version: skip rest of line when false
 primitive 'lest'   '((s[sp--]))||line=""'      ; interpreted         # compiling version: skip until end of word (i.e. return) when true
-primitive 'unless' 'code "((s[sp--]))&&return"'; compiled           # interpreting version: skip rest of line when true
+primitive 'unless' 'code "((s[sp--]))&&return"'; compiled            # interpreting version: skip rest of line when true
 primitive 'unless' '((s[sp--]))&&line=""'      ; interpreted         # compiling version: skip rest of word when false
 
 # interpreting version: u times repeat evaluation of input line remainder
@@ -2003,8 +2011,8 @@ primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'; inout 2 1
 
 colon  '2/'
    atom 's1'
-#   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'               # floored
-   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'    # symmetric
+#   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'                        # floored
+   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'             # symmetric
 semicolon
 inout 1 1
 
@@ -2046,7 +2054,7 @@ evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2          # truncated
 evaluate ': *      1 */    ;'           ; inline; inout 2 1
 evaluate ': /      /mod nip  ;'         ; inline; inout 2 1          # truncated, symmetric
 evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1          # sign according  n1 == n2*(n1/n2)+remainder
-evaluate ': %      50 */ dup 0< 1 or + 2/ ;'  ; inline; inout 2 1          # percentage rounded, not truncated
+evaluate ': %      50 */ dup 0< 1 or + 2/ ;'  ; inline; inout 2 1    # percentage rounded, not truncated
 
 colon 'negate'
    atom 'negate'
@@ -2232,7 +2240,7 @@ semicolon
 inout 0 1
 
 colon 'key?'
-   code '[[ -z "$keybuf" ]] || { s+=("$true"); return; }'         # key in keybuf: yes, flag "key ready"
+   code '[[ -z "$keybuf" ]] || { s+=("$true"); return; }'            # key in keybuf: yes, flag "key ready"
    code 'IFS=""'                                                     # no key in keybuf: poll console
    code 'if read -rsn1 -t0.01 tmp; then'
    code 'keybuf+="$tmp"'                                             # add key to buffer. maybe add space if -z $tmp

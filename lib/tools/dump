@@ -1,31 +1,29 @@
 provides: dump
 once
 : .byte ( c -- )                    \ 2 digits
-      <# # # #>type space ;
+      <# # # #>type space ;   transient
 
 : .bytes ( a u -- )                 \ output u hex bytes at a
       for count
          .byte
-      next drop ;
+      next drop ;       transient
 
 : safe ( c1 -- c2 )                 \ replace nonprintable chars against .
       dup bl u<
       over $7e u> or
-      lest drop '.' ;
+      lest drop '.' ;   transient
 
 : .chars ( a u -- )                 \ output u chars at a. "type" isn't control char safe
       ""                            \ initialise top string stack item with empty string
       for count                     \ appending chars to top string stack item, then
          safe append$               \ outputting the whole string is slightly
       next drop                     \ faster than emitting chars one by one.
-      type$ ;
-
-trash safe                          \ allow reuse of this versatile name
+      type$ ;           transient
 
 : dumpline ( a1 u -- a2 )           \ single line hexdump of u bytes at a.
       over 4 u.r 2 spaces
       2dup .bytes space
-      2dup .chars +  ;
+      2dup .chars +  ;   transient
 
 : dump  ( a n -- )
       base @ >r hex                 \ save current number base, change to hex

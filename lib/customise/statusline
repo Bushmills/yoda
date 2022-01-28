@@ -11,31 +11,31 @@ create statusline   true ,
 
 : show0           ( $1 -- )
         type$
-        spacing spaces ;
+        spacing spaces ;         transient
 
 : show1           ( x -- ) ( $1 -- )
         base @ >r
         decimal
         type$ ': emit 0 u.r
         spacing spaces
-        r> base ! ;
+        r> base ! ;              transient
 
 : show$           ( $1 $2 -- )
         swap$ type$
-        ': emit show0 ;
+        ': emit show0 ;          transient
 
 : status          ( c -- )  ( $1 -- $2 )
         if capitalise
-        then append$ ;
+        then append$ ;           transient
 
 : flags  ( -- $1 )
         "flags" ""
         'f  forwardrefs @     status
         'i  instantresolve @  status
-        's  shell @           status  ;
+        's  shell @           status  ;      transient
 
 : plenty  ( columns width prio -- columns flag )
-   spacing * + over < ;
+   spacing * + over < ;                      transient
 
 \ 120 columns for full status line
 : .status  ( -- )
@@ -55,10 +55,6 @@ create statusline   true ,
       80 8 plenty if                 "stack:"  type$   >r .s r>   then
    drop
 ;
-
-trash status
-trash flags
-trash plenty
 
 \ increasing window size vertical creates screen relicts if not done gently
 : redraw  ( -- )

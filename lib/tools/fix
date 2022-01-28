@@ -5,7 +5,7 @@ once
 \ "error" places filename, error line and error column in lasterror[0], [1] and [2].
 \ error line and columns can be passed to editor for moving cursor to error location.
 \ but as editor invocation lines differs, here's a selection of two handfuls:
-: used       "editor" env$ $= ;
+: used       "editor" env$ $= ;   transient
 "less"       used lest >fixargs='+${lasterror[1]}'
 "most"       used lest >fixargs='+${lasterror[1]}'
 "nano"       used lest >fixargs='+${lasterror[1]},${lasterror[2]}'
@@ -18,7 +18,6 @@ once
 "mousepad"   used lest >fixargs='-l ${lasterror[1]} -c $((${lasterror[2]}-1))'
 "efte"       used lest >fixargs='-l${lasterror[1]},${lasterror[2]}'
 "gedit"      used lest >fixargs='+${lasterror[1]}:${lasterror[2]}'
-trash used   \ used is a too common word to waste it for this: discard header
 
 \ in case error occured while not loading from file, number in lasterror[1] (the line number)
 \ will be negative. Therefore will fix refuse to open a file when lasterror[1] is negative.

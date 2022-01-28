@@ -1,9 +1,9 @@
 provides: .s
 once
-9 constant items
-: .s  ( -- )    
+9 constant items     transient
+: .s  ( -- )
         depth
-        ?dup if 
+        ?dup if
             items
             2dup u> if
                 over convert
@@ -11,9 +11,8 @@ once
             then                                \ that's how I sneak a trailing space in.
             min for
                 i pick .
-            next 
-        else 
-            "empty" type$ 
+            next
+        else
+            "empty" type$
         then ;
 
-trash items

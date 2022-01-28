@@ -30,7 +30,7 @@
  v="0.5.9"   # 2022jan28,14:22   added transient, which marks header of last word as to dispose of after file was loaded. Changed
 #                                "from" accordingly. Transient headers are local to the file they were defined in.
 #                                context words (compiled, interpreted) can't be transient.
-#                                uppercase$, lowercase$, othercase$, uppercase1$, lowercase1$, othercase1$, addee
+#                                uppercase$, lowercase$, othercase$, uppercase1$, lowercase1$, othercase1$, added
 # v="0.5.8"  # 2022jan26,12:16   deferred query$, removed attributes from rename simplequery$. Hi-level .s outputs items as signed
 #                                numbers. Fixed pick. Added literal$. needed takes whole line as argument list now.
 #                                added have$ trash$, factored have, added word for emptying rstack, which was added to _

@@ -1,7 +1,0 @@
-provides: capitalise
-once
-
-: capitalise      ( c1 -- c2 )
-        dup 'a u<  unless
-        dup 'z u>  unless
-        [ 'a 'A - ] literal -  ;

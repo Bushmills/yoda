@@ -1,5 +1,5 @@
 provides: statusline +l -l
-needs: capitalise movecursor bold blue fg bg deol .s columns
+needs: uppercase movecursor bold blue fg bg deol .s columns
 
 create statusline   true ,
 2 constant spacing
@@ -25,7 +25,7 @@ create statusline   true ,
         ': emit show0 ;          transient
 
 : status          ( c -- )  ( $1 -- $2 )
-        if capitalise
+        if uppercase
         then append$ ;           transient
 
 : flags  ( -- $1 )

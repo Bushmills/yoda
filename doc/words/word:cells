@@ -1,0 +1,8 @@
+name:                cells
+stack:               ( n1 -- n2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics, system
+
+decription:          returns as n2 the count of cells needed to store n1 integers

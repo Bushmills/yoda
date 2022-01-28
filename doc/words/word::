@@ -1,0 +1,18 @@
+name:                :
+stack:               ( -- x1 x2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            interpretonly
+category:            compilation, dictionary
+input stream:        space delimited word
+
+decription:          begin compilation of a high level "colon" definition.
+                     A space delimited word is taken from input stream and
+                     used as name for the new definition. After that follow
+                     code, which will be compiled and associated with the
+                     name of the definition. Compilation ends at semicolon (;)
+
+example:             : foo hello ;
+notes:               the stacked values x1 and x2 are not meant to be exposed
+                     to user. these are stacked for sanity checking the definition,
+                     and consumed by semicolon.

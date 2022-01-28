@@ -1,0 +1,12 @@
+provides: uppercase lowercase
+once
+
+: uppercase    ( c1 -- c2 )
+        dup 'a u<  unless
+        dup 'z u>  unless
+        [ 'a 'A - ] literal -  ;
+
+: lowercase    ( c1 -- c2 )
+        dup 'A u<  unless
+        dup 'Z u>  unless
+        [ 'a 'A - ] literal +  ;

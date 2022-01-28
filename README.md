@@ -20,6 +20,6 @@ from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)
 Differences are listed and commented on the [Differences wiki page](https://github.com/Bushmills/yoda/wiki/Differences).  
 My musings, ideas, plans and thoughts of possible changes can be found at
 [Considerations wiki
-page](https://github.com/Bushmills/yoda/wiki/Considerations).
-
+page](https://github.com/Bushmills/yoda/wiki/Considerations), and the rest possibly
+among the [remaining wiki pages](https://github.com/Bushmills/yoda/wiki/Home).
 

@@ -1,0 +1,14 @@
+name:                sign
+stack:               ( n -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            number conversion
+
+decription:          prepend a hyphen ("-") to top of string stack item if n is negative
+
+notes:               meant to be used within a pictured number conversion sequence,
+                     "sign" doesn't require being used within <#  #>, though its
+                     use without seems limited.
+                     "sign" doesn "apply" sign, not does it change sign - it merely
+                     prepends (or doesn't) a hyphen.

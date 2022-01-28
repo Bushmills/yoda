@@ -1,0 +1,8 @@
+name:                space
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+
+decription:          output a space character

@@ -1,0 +1,8 @@
+name:                #unresolved
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary, compiling
+
+decription:          return the count of unresolved words

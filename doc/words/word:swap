@@ -1,0 +1,8 @@
+name:                swap
+stack:               ( x1 x2 -- x2 x1 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            stack
+
+decription:          reverse order of top two stack items

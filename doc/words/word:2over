@@ -1,0 +1,9 @@
+name:                2over
+stack:               ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            stack
+
+decription:          copy the pair of stack items which is located underneath
+                     the topmost pair of stack items to top of stack.

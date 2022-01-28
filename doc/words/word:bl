@@ -1,0 +1,8 @@
+name:                bl
+stack:               ( -- c )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            constants, I/O
+
+decription:          push the ASCII of a space character

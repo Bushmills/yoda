@@ -1,0 +1,8 @@
+name:                rdrop
+stack:               ( -- )
+return stack:        ( x -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            return stack
+
+decription:          drop top return stack item

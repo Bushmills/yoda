@@ -1,0 +1,9 @@
+name:                count$
+stack:               ( -- u )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            strings
+
+decription:          determine length of topmost string stack item $1,
+                     and return it as u

@@ -1,0 +1,8 @@
+name:                exchange
+stack:               ( x1 a -- x2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+decription:          read and return x2 from address, then replace memory contents by x1

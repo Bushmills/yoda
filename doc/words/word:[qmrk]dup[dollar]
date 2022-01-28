@@ -1,0 +1,8 @@
+name:                ?dup$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $1 $1|"" )
+contexts:            stateless
+category:            strings
+
+decription:          duplicate top of string stack if it's not an empty string

@@ -1,0 +1,11 @@
+name:                $!
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            strings
+
+decription:          stores top string stack item at address u of strings memory space
+
+example:             none
+notes:               see also here$, allot$, $@, $,

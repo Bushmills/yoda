@@ -34,28 +34,37 @@ create statusline   true ,
         'i  instantresolve @  status
         's  shell @           status  ;
 
-: toolong ( columns width -- columns flag )
-   spacing + -
-   dup 0<  ;
+: plenty  ( columns width prio -- columns flag )
+   spacing * + over < ;
 
-: .dynamicstatus  ( u1 -- u2 )
+\ 120 columns for full status line
+: .status  ( -- )
+   columns
       bold yellow fg  ( blue bg )  deol
-      #9 toolong  unless                       flags       show$
-      #8 toolong  unless             "unres"   #unresolved show1
-      #7 toolong  unless             "base"    base @      show1
-      #8 toolong  unless             "files"   #files      show1
-      #9 toolong  unless             "here"    here        show1
-      #9 toolong  unless             "rdepth"  rdepth      show1
-      #7 toolong  unless             "bits"    bits        show1
-     #18 toolong  unless  "yoda version " type$ "v" env$   show0
-     #25 toolong  unless              "stack:" type$   >r .s r>
+\     +------ space required
+\     |  +--- priority ( 1 is highest )
+\     |  |
+      98 9 plenty if "yoda version " type$ "v" env$        show0  then
+      57 7 plenty if                 "bits"    bits        show1  then
+       9 1 plenty if                           flags       show$  then
+      32 4 plenty if                 "files"   #files      show1  then
+      17 2 plenty if                 "unres"   #unresolved show1  then
+      24 3 plenty if                 "base"    base @      show1  then
+      41 5 plenty if                 "here"    here        show1  then
+      50 6 plenty if                 "rdepth"  rdepth      show1  then
+      80 8 plenty if                 "stack:"  type$   >r .s r>   then
+   drop
 ;
-
-: .status         ( -- )
-      columns
-      .dynamicstatus
-      drop  ;
 
 trash status
 trash flags
-trash toolong
+trash plenty
+
+\ increasing window size vertical creates screen relicts if not done gently
+: redraw  ( -- )
+        statusline @ lest
+        0 0 movecursor
+        deol .status cr deol
+        restorecursor  ;
+
+>trap ${header_code}_${m[last]} SIGWINCH

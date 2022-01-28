@@ -7,11 +7,11 @@
 \    nor is any call overhead added to the word they've been used
 \    in, extreme factoring becomes cheap that way:
 
-: part1   1     ;  transient inline 
+: part1   here  ;  transient inline 
 : part2   drop  ;  transient inline
 
 : demo1 ( -- )     part1  part2  ;
-: demo2 ( -- )     1 drop ;
+: demo2 ( -- )     here drop ;
 
 see demo1
 see demo2

@@ -1,0 +1,9 @@
+name:                othercase1$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          flips first character of $1 to opposite case.
+                     Remaining characters aren't affected.

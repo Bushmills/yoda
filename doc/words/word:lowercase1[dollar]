@@ -1,0 +1,9 @@
+name:                lowercase1$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          sets first char of string $1 to lowercase.
+                     Remaining chars aren't touched.

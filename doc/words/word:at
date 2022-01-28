@@ -9,7 +9,8 @@ decription:          move cursor and output position to column, row. 0 0 is uppe
 
 contexts:            stateless
 
-notes:               This sends a VT52/VT100/ANSI "Escape" sequence to output, therefore
-                     cursor positioning will only be successful when terminal driver
-                     intercepts and acts on those. Console and X terminals commonly do.
+notes:               This sends a terminal specific cursor control sequence, positioning
+                     the cursor at column, row.
+                     The sequence is determined by querying the tput terminal database.
+
 

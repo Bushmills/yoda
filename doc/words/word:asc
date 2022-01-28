@@ -1,0 +1,9 @@
+name:                asc
+stack:               ( -- c )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          strips first character of string $1, converts and returns
+                     it as ASCII value. An empty string delivers ASCII value of 0

@@ -1,0 +1,11 @@
+name:                rtype$
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            string, I/O
+
+decription:          right-boundary output of the top string stack item in a
+                     space padded field with a size of u characters.
+
+notes:               complementary to ltype$

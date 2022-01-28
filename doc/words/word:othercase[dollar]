@@ -1,0 +1,8 @@
+name:                othercase$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+decription:          flips case of all chars in $1.

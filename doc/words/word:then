@@ -1,0 +1,8 @@
+name:                then
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          part of an if ... then  or  if ... else ... then flow control construct

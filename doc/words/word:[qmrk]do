@@ -1,0 +1,8 @@
+name:                ?do
+stack:               ( limit start -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          begin of a ?do ... loop   or   ?do ... +loop flow control construct

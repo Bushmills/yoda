@@ -1,0 +1,12 @@
+name:                [
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            compiling
+
+decription:          suspend compilation, continue interpreting.
+
+example:             hex
+                     : foo [ decimal ] 123 .  ;
+notes:               complented by ]

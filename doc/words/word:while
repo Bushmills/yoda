@@ -1,0 +1,8 @@
+name:                while
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          part of a begin ... while ... repeat flow control construct

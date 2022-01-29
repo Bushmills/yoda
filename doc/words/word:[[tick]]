@@ -1,0 +1,15 @@
+name:                [']
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            dictionary
+input stream:        a word delimited string
+
+decription:          fetches the next word delimited string from input stream,
+                     used as word name, which is looked up and its execution
+                     token compiled such that when word executes, that execution
+                     token is pushed to stack.
+                     An error is thrown if word can't be found
+
+example:             : foo  ['] words execute ;

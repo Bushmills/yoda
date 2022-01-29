@@ -1,0 +1,8 @@
+name:                repeat
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          completes a begin ... while ... repeat flow control construct

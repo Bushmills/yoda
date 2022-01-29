@@ -2,7 +2,7 @@ name:                i
 stack:               ( -- x )
 return stack:        ( -- )
 string stack:        ( -- )
-
+contexts:            stateless
 category:            flow control
 
 decription:          return the loop index of the innermost loop. If there's no such loop,
@@ -10,4 +10,3 @@ decription:          return the loop index of the innermost loop. If there's no 
                      i works with do ... loop type loops, with for ... next loops, and
                      also with interpreted "times" style loops.
 
-contexts:            stateless

@@ -1,4 +1,4 @@
-provides: up down ups downs savecursor restorecursor home at
+provides: up down ups downs savecursor restorecursor home at movecursor
 needs: tput0 tput1 tput2
 once
 
@@ -10,3 +10,4 @@ once
 "cud1"     tput0 down                  \ move cursor down
 "cuu"      tput1 ups    ( u -- )       \ move cursor up by u lines
 "cud"      tput1 downs  ( u -- )       \ move cursor down by u lines
+: movecursor  ( x y ) savecursor at ;

@@ -1,6 +1,0 @@
-provides: movecursor
-needs: savecursor at
-once
-
-: movecursor  ( x y )
-    savecursor at ;

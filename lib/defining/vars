@@ -9,7 +9,7 @@ variable vars               \ link anchor as base of linked list through variabl
     vars link               \ add linked list item
     here cell+ constant     \ skip cell to store xt for name
     last @ ,                \ add xt
-    0 ,  ;                  \ variable data
+    0 ,  ;                  \ initial variable data
 
 \ variables are created like this:
 \ var foo
@@ -17,9 +17,9 @@ variable vars               \ link anchor as base of linked list through variabl
 
 \ output name and value of a single variable
 : .var ( a -- )
-    skim name$ dup$ type$
-    @ #16 count$ - .r
-    cr  ;
+    skim name$
+    #16 ltype$
+    @ . cr  ;
 
 \ produce a table showing names and values of variables
 : .vars  ( -- )

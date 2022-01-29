@@ -1,0 +1,17 @@
+name:                literal
+stack:               ( x -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            compiling
+
+decription:          take a number from stack during compilation,
+                     compile it into currently build definition such
+                     that the number will be pushed to stack when
+                     the definition executes.
+
+example:             satisfy epoch
+                     : foo  [ epoch ] literal ;
+notes:               before using literal, take action that the value
+                     it expects is actually on stack.
+

@@ -1,0 +1,19 @@
+name:                provides:
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            interpretonly
+category:            compiling, loading from file, system
+input stream:        whole line
+
+decription:          read and discard whole input line, thereby hiding it from
+                     interpretation. The line is therefore treated as comment.
+                     Its function is found in simply being written: dependency
+                     generation will search for lines beginning with "provides: "
+                     and create the dependency file from the word names on the
+                     same line.
+
+notes:               it is considered to supply "provides:" with actual run time
+                     semantics, which would be to only keep those names which
+                     appear on the list of provided words when loading a library.
+                     All others would be trashed.

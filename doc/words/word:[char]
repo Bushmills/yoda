@@ -1,0 +1,17 @@
+name:                [char]
+stack:               ( -- c )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            input, character conversion
+input stream:        space delimited string (preferably single character, but not enforced)
+
+decription:          read a space delimited string from input, and produce the
+                     ASCII if its first character, pushed on stack as c.
+                     Possibly more characters in that string will be ignored.
+
+example:             none
+notes:               as an alternative to 'x  or  'x'  because getting escaping if single
+                     quote right in bash source wasn't alwas trivial.
+                     In yoda source,  single chars with leading single quotes, or enclosed
+                     by single quotes should always be a viable alternative to [char]

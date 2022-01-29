@@ -1,0 +1,13 @@
+name:                unless
+stack:               ( f -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            interpretonly
+category:            flow control
+input stream:        whole line
+
+decription:          execute rest of input line unless flag f is true:
+
+example:             true unless   ( not executing )
+                     false unless  ( executing )
+notes:               complements "lest"

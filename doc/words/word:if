@@ -1,0 +1,18 @@
+name:                if
+stack:               ( f -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          start an "if ... then"  or  "if ... else ... then"
+                     conditional sequence. Code code following if will be
+                     executed when flag f is true, skipped until "else" or "then"
+                     otherwise.
+
+notes:               stack diagram as depicted describes run time stack effect.
+                     The compile time stack effect differs: During compilation are
+                     items stacked, which allow checking that if will be properly
+                     paired with else or then. As those don't have any effect on
+                     run time semantics of if, they're not described here.
+

@@ -1,4 +1,6 @@
 provides: epoch
 once
 
+\ NOTE: look at screensize columns and lines for more efficient implementation
+\ NOTE: or check whether definition of env can be supercharged.
 : epoch    ( -- u ) "EPOCHSECONDS" env  ;

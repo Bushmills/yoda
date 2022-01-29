@@ -1,12 +1,7 @@
 provides: screensize columns lines
+needs: pusher
 once
 
-: push  ( $1 -- )
-      quote$                        \ put double quotes around variable name
-      "s[++sp]=" swap$ join$        \ prepend stack push operation
-      use$ inline ;   transient     \ set instruction as run time semantics of last word
-
-create columns ( -- u )     "$COLUMNS" push
-create lines   ( -- u )     "$LINES"   push
+"$COLUMNS" pusher columns
+"$LINES"   pusher lines
 : screensize   ( -- x y )    columns   lines ;
-

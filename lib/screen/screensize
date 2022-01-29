@@ -4,8 +4,9 @@ once
 : push  ( $1 -- )
       quote$                        \ put double quotes around variable name
       "s[++sp]=" swap$ join$        \ prepend stack push operation
-      use$  ;   transient           \ set instruction as run time semantics
+      use$  ;   transient           \ set instruction as run time semantics of last word
 
 create columns ( -- u )     "$COLUMNS" push        inline
 create lines   ( -- u )     "$LINES"   push        inline
 : screensize   ( -- x y )    columns   lines ;
+

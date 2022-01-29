@@ -4,21 +4,39 @@ provides: wdump
          <#  bits 3 + 2 >>          \ no need for multiple of 8
          for # next
          #>type space ;
+transient
 
 : .cells    ( a u -- )              \ output u cells fromon address a
          for skim .cell
          next drop ;
+transient
 
 : wdumpline ( a1 u -- a2 )          \ single line dump of u cells at a.
          over u. 2 spaces           \ address
          2dup .cells +  ;
+transient
+
+\ zero reuse potential. only factored for shortening and readability:
+\ from space remaining on one line, calculate how many integers will fit.
+\ how many chars an integers consists of depends on the bits used for the running yoda model.
+: integers/line  ( linelen -- u )
+         bits 1+ 2 >>               \ number of chars per integer
+         1+                         \ plus one space separating them
+         / ;      transient inline
+( transients combined with inline allow readability factoring without penalty )
+
+\ calculate output lines from total integers count and integers per line
+: #outputlines ( totalintegerstodump integersperline -- numberoflinestodump )
+         >r r@ + 1+
+         r> / ;  transient inline
 
 : wdump  ( a n -- )                 \ "wide" dump.  cell dump, "cdump", looks like "char dump"
          base @ >r hex              \ save current number base, change to hex
-         #72 bits 3 + 2 >> 1+ /     \ number of cells per line
-         -rot pluck 1- +
-         pluck /                    \ determine number of lines to output
-         for
-            over wdumpline cr       \ loop through lines
+\ NOTE: should use actual char count in address instead of 5 ( plus 2 spaces ) here.
+         columns 7 -                \ minus address and spaces, leaves that many chars for dump
+         integers/line
+         -rot pluck
+         #outputlines for           \ loop through number of lines to output
+            over wdumpline cr
          next 2drop
          r> base !  ;               \ restore former number base

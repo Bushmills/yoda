@@ -1,0 +1,10 @@
+created:             auto     (remove line after having checked and revised description)
+name:                thisfile
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            files
+
+decription:          produces handle of currently loading file, or 0 for console.
+                     alias of source, provided for better symmetry with thisfile$

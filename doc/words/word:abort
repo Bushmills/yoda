@@ -3,7 +3,7 @@ stack:               ( ??? x -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
-category:            system. flow control
+category:            system, flow control
 
 decription:          call error handler, passing a value of x, which is reported as such.
 

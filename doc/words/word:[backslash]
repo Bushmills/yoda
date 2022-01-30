@@ -2,7 +2,7 @@ name:                \
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            interpretonly
+contexts:            interpreting, compiling
 category:
 input stream:        whole line
 
@@ -10,4 +10,7 @@ decription:          read an discard all remaining input from input line, thereb
                      removing it from further interpretation. As consequence is
                      text from input treated a comment.
 
-example:             \ this is a comment
+example:             \ this is a comment to end of line
+                     : foo          \  this is a comment to end of line too
+                         hello  ;
+

@@ -2,7 +2,7 @@ name:                exit
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            compileonly
+contexts:            compiling
 category:            flow control
 
 decription:          break out of a function early, preventing execution of

@@ -2,9 +2,9 @@ name:                :
 stack:               ( -- x1 x2 )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            interpretonly
+contexts:            interpreting
 category:            compilation, dictionary
-input stream:        space delimited word
+input stream:        space delimited string
 
 decription:          begin compilation of a high level "colon" definition.
                      A space delimited word is taken from input stream and

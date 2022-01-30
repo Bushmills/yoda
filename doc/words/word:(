@@ -2,12 +2,13 @@ name:                (
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            interpreting
+contexts:            interpreting, compiling
 category:
 input stream:        right parenthesise delimited string
 
 description:         takes and discards input from input stream until ")" was encountered,
                      rendering anything between parenthesies ( ) commentary.
 
-example:             ( yoda will ignore this )
+example:             ( yoda will ignore this )  hello
+                     : foo  ( yoda will ignore this too )  hello ;
 notes:               similar to \ which will ignore text until end of line.

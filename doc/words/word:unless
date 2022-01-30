@@ -2,12 +2,31 @@ name:                unless
 stack:               ( f -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            interpretonly
+contexts:            interpreting, compiling
 category:            flow control
-input stream:        whole line
-
-decription:          execute rest of input line unless flag f is true:
-
-example:             true unless   ( not executing )
-                     false unless  ( executing )
 notes:               complements "lest"
+
+
+
+context:             interpreting
+input stream:        whole line
+description:         execute remainder of line if flag f is false, which is
+                     the same as "execute rest of line unless flag f is true"
+                     A true flag therefore sets the condition for unless to
+                     take exception of the default case "execute the rest",
+                     and treats the remainder of the line as if it was a comment.
+
+example:             Putting the logic into words:
+                     false unless ( do this, because "false" isn't the case )
+                     true unless  ( don't do this, because the "unless" case is given )
+                     4 3 = unless ( do this, because 4 isn't 3 )
+                     #unresolved unless ( all words resolved, no pending words left )
+
+
+context:             compiling
+decription:          compiles a conditional branch which causes the word, when
+                     executed, to skip all remaining code until end of function
+                     if flag f is true. Or, said differently, will allow
+                     execution of rest of function only when flag f is false.
+
+example:             : protect  #unresolved unless "all resolved" type$  ;

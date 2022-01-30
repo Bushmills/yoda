@@ -2,7 +2,14 @@ name:                cells
 stack:               ( n1 -- n2 )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            stateless
+context:             interpreting, compiling
 category:            arithmetics, system
 
+
+context:             interpreting
 decription:          returns as n2 the count of cells needed to store n1 integers
+
+
+context:             compiling
+decription:          effectively a no ooperation, not compiling any code,
+                     therefore leaving n1 on stack unmodified

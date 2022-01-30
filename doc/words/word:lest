@@ -2,13 +2,23 @@ name:                lest
 stack:               ( f -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            compilation
+contexts:            interpreting, compiling
 category:            flow control
+notes:               complementary to "unless"
 
+
+
+context:             interpreting
+description:         execute remainder of line only if flag f is true.
+                     A false flag results in ignoring rest of line, as if
+                     it was a comment.
+example:             false lest  this will be ignored
+
+
+context:             compiling
 decription:          compiles a conditional branch which causes the word, when
                      executed, to skip all remaining code until end of function
                      if flag f is false. Or, said differently, will allow
                      execution of rest of function only when flag f is true.
 
 example:             : foo   condition lest "is true" type$  ;
-notes:               complementary to "unless"

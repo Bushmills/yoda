@@ -2,5 +2,7 @@ name:                over
 stack:               ( x1 x2 -- x1 x2 x1 )
 return stack:        ( -- )
 string stack:        ( -- )
-decription:          pushs a copy of second stack item to stack
 contexts:            stateless
+category:            stack
+
+decription:          pushs a copy of second stack item to stack

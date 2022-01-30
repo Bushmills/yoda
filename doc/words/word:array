@@ -2,13 +2,12 @@ name:                array
 stack:               ( define: u -- ) ( run: u1 -- u2 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            defining word
-input stream:        array name
+input stream:        space delimited string
 
 decription:          parse a space delimited string from input stream and create an
                      array instance by that name. allocate u cells to the array.
                      When executing the defined array, an array index on stack is
                      replaced against the corresponding item address.
                      Items in newly defined arrays are ininitialised.
-
-contexts:            stateless

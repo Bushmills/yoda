@@ -2,8 +2,8 @@ name:                dup
 stack:               ( x -- x x )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            stack
 
 decription:          duplicate top stack item
 
-contexts:            stateless

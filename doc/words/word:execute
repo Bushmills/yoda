@@ -2,12 +2,12 @@ name:                execute
 stack:               ( xt -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:
 
 decription:          removes an execution token from stack and executes the word
                      associated with it.
 
-contexts:            stateless
 example:             none
 notes:               to obtain the execution token of a word, see '
                      This allows treating executable code as unnamed or

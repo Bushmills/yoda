@@ -2,8 +2,8 @@ name:                /
 stack:               ( n1 n2 -- n3 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            arithmetic
 
 decription:          signed division of n1 by n2. quotient is returned as n3
 
-contexts:            stateless

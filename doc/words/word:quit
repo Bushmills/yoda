@@ -2,9 +2,9 @@ name:                quit
 stack:               ( ??? -- )
 return stack:        ( ??? -- )
 string stack:        ( ??? -- )
+contexts:            stateless
 category:            interpreter
 
 decription:          a loop, providing yoda an interactive mode for entering input
                      and executing it.
 
-contexts:            stateless

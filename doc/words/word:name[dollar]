@@ -2,12 +2,11 @@ name:                name$
 stack:               ( xt -- )
 return stack:        ( -- )
 string stack:        ( -- $1 )
-
+contexts:            stateless
 category:            dictionary
 
 decription:          produces name of word from execution token xt
 
-contexts:            stateless
 
 notes:               the reverse operation of ' (tick) which takes a word name and
                      produces its execution token.

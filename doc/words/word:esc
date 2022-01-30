@@ -2,11 +2,10 @@ name:                esc
 stack:               ( -- c )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            constants
 
 decription:          a constant returning the ASCII value of Escape character.
-
-contexts:            stateless
 
 notes:               same as ^[
 

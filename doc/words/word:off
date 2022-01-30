@@ -2,8 +2,8 @@ name:                off
 stack:               ( a -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            memory
 
 decription:          writes false to memory address a
 
-contexts:            stateless

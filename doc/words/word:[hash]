@@ -2,6 +2,7 @@ name:                #
 stack:               ( u1 -- u2 )
 return stack:        ( -- )
 string stack:        ( $1 -- $2 )
+contexts:            stateless
 category:            pictured number conversion, I/O
 
 decription:          meant to be used between <# and #>, its operation is part of
@@ -11,4 +12,3 @@ decription:          meant to be used between <# and #>, its operation is part o
                      string representation of the integer digit by digit, while gradually
                      diminishing u1 until 0 is left, and nothing more needs converting.
 
-contexts:            stateless

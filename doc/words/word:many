@@ -2,12 +2,12 @@ name:                many
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            interpreting
 category:            flow control
 input stream:        none. but checks terminal key available status
 
 decription:          repeats execution of the remainder of the input line until
                      a key was pressed.
 
-contexts:            interpreting
 
 example:             many 3 secs page >free     \ periodically update display of "free" output

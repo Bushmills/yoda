@@ -3,6 +3,7 @@ stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            compilation
+category:            flow control
 
 description:         a compile time flow control word
                      part of if .. else .. then flow control construct.

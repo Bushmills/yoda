@@ -2,9 +2,10 @@ name:                env
 stack:               ( -- x )
 return stack:        ( -- )
 string stack:        ( $1 -- )
-decription:          read numeric contents of environment variable $1 and place on stack
 contexts:            stateless
+category:            environment
+
+decription:          read numeric contents of environment variable $1 and place on stack
 
 example:             "LINES" env
-
 notes:               contents of environment variable may be an arithmetic expression

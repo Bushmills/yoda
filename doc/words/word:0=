@@ -2,7 +2,8 @@ name:                0=
 stack:               ( x -- f )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
+category:            comparison
 
 decription:          replaces x against a true flag if x was zero, a false flag otherwise
 
-contexts:            stateless

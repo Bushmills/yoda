@@ -2,6 +2,7 @@ name:                resolve
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            compiler
 
 decription:          performs a resolve run if any unresolved references exist.
@@ -17,7 +18,6 @@ decription:          performs a resolve run if any unresolved references exist.
                      when in yoda interactive mode)
 
 
-contexts:            stateless
 notes:               resolve may be executed whenever it seem appropriate. You may
                      execute it interactively, after declaring a word as needed
                      (see: need), but it will also be called by the compiler in some

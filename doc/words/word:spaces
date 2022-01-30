@@ -2,8 +2,8 @@ name:                spaces
 stack:               ( x -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            I/O
 
 decription:          output x spaces
 
-contexts:            stateless

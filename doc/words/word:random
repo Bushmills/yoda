@@ -2,8 +2,8 @@ name:                random
 stack:               ( -- u )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:
 
 decription:          produce a 32 bit random number
 
-contexts:            stateless

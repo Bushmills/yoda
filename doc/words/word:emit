@@ -2,8 +2,8 @@ name:                emit
 stack:               ( c -- )
 return stack:        ( -- )
 string stack:        ( -- )
-category:            I/O
 contexts:            stateless
+category:            I/O
 
 decription:          takes c which represents a byte sized ASCII value of a character,
                      and output the character represented by that ASCII value.

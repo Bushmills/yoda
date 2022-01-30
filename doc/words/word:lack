@@ -2,6 +2,7 @@ name:                lack
 stack:               ( -- f )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            dictionary, conditional compilation
 
 input stream:        word name
@@ -9,6 +10,5 @@ input stream:        word name
 decription:           looks up word name in dictionary, returns true for word not found/
                      undefined, or false if word exists.
 
-contexts:            stateless
 
 notes:               he logical complement of "have"

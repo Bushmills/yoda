@@ -2,6 +2,7 @@ name:                0<
 stack:               ( n -- f )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
+
 decription:          replaces n with false flag if n was 0 or positive
                      replaces n with true flag if n was negative
-contexts:            stateless

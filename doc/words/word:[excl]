@@ -2,8 +2,8 @@ name:                !
 stack:               ( x a -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            memory
 
 decription:          stores x at memory address a
 
-contexts:            stateless

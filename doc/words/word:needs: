@@ -2,7 +2,8 @@ name:                needs:
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-category:
+contexts:            stateless
+category:            compilation
 input stream:        whole input line
 
 decription:          repeatedly reads a space delimited string from input line,
@@ -12,7 +13,6 @@ decription:          repeatedly reads a space delimited string from input line,
                      is the word added to the list of (yet) unresolved words, for
                      compilation once its source becomes available.
 
-contexts:            stateless
 example:             needs: hello red bg
 notes:               needs: is an alias of satisfy, and has been provided for
                      better symmetry with provides:

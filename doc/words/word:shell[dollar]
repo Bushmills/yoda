@@ -2,10 +2,10 @@ name:                shell$
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( $1 -- )
+contexts:            stateless
 category:            shell
 
 decription:          pass string $1 to shell for execution.
                      $1 may contain spaces and arguments.
 
-contexts:            stateless
 example:             "uname -a" shell$

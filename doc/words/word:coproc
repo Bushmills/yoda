@@ -2,7 +2,7 @@ name:                coproc
 stack:               ( xt -- )
 return stack:        ( -- )
 string stack:        ( -- )
-
+contexts:            stateless
 category:            experimental
 
 decription:          launches the word with execution token xt as coproc, that is, running
@@ -14,7 +14,3 @@ decription:          launches the word with execution token xt as coproc, that i
                      may be useful for another purpose.
                      Also see "wait" for the word launching the coproc to synchronise with it
                      finishing.
-
-contexts:            stateless
-example:             none
-notes:               none

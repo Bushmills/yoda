@@ -3,6 +3,6 @@ stack:               ( n -- u )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
-category:            arithmetic
+category:            arithmetics
 
 decription:          removes sign from number

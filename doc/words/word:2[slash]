@@ -2,8 +2,8 @@ name:                2/
 stack:               ( n1 -- n2 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            arithmetics
 
 decription:          signed division by two of n1, yielding n2
 
-contexts:            stateless

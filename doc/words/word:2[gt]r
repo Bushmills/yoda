@@ -2,10 +2,10 @@ name:                2>r
 stack:               ( x1 x2 -- )
 return stack:        ( -- x1 x2 )
 string stack:        ( -- )
+contexts:            stateless
 category:            stack, return stack
 
 decription:          transfers the top two stack items to return stack.
                      Item order remains unchanged - the item which was
                      top on stack will still be top on return stack.
 
-contexts:            stateless

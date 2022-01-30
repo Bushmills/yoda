@@ -2,8 +2,8 @@ name:                0
 stack:               ( -- 0 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            constant
 
 decription:          push the value of zero to stack
 
-contexts:            stateless

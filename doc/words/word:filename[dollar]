@@ -2,12 +2,11 @@ name:                filename$
 stack:               ( u -- )
 return stack:        ( -- )
 string stack:        ( -- $1 )
+contexts:            stateless
 category:            file, string
 
 decription:          convert file handle u to filename $1
 
-contexts:            stateless
 example:             none
-
 notes:               filename is the canonical name of a file yoda has already read,
                      and is therefore displayed in the output from executing "files"

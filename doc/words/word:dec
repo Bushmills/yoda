@@ -2,8 +2,8 @@ name:                dec
 stack:               ( a -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            arithmetic, memory
 
 decription:          decrement memory contents at address a by 1
 
-contexts:            stateless

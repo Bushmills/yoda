@@ -2,6 +2,7 @@ name:                move
 stack:               ( a1 a2 u -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            memory
 
 decription:          copy u memory items contents beginning at a1 to the
@@ -9,4 +10,3 @@ decription:          copy u memory items contents beginning at a1 to the
                      move takes care of choosing proper copying order when
                      source and target overlap.
 
-contexts:            stateless

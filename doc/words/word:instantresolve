@@ -2,6 +2,8 @@ name:                instantresolve
 stack:               ( -- a )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
+category:            interpretation, dictionary
 
 decription:          a variable, serving as flag to turn resolving of interpretative
                      forward references on. When enabled will unknown words, entered
@@ -9,7 +11,6 @@ decription:          a variable, serving as flag to turn resolving of interpreta
                      a word was resolved successfully, it will be executed directly
                      after, otherwise an error is reported.
 
-contexts:            stateless
 example:             instantresolve on
 notes:               a shortcut  +i exists for "instantresolve on"
                      a shortcut  -i exists for "instantresolve off"

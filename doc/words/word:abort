@@ -2,9 +2,9 @@ name:                abort
 stack:               ( ??? x -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
+category:            system. flow control
 
 decription:          call error handler, passing a value of x, which is reported as such.
-
-contexts:            stateless
 
 notes:               in preparation of more flexible error management and response

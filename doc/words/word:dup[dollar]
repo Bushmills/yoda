@@ -2,5 +2,7 @@ name:                dup$
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( $1 -- $1 $1 )
-decription:          duplicate top string stack item
 contexts:            stateless
+category:            string stack
+
+decription:          duplicate top string stack item

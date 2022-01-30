@@ -2,10 +2,10 @@ name:                <<
 stack:               ( u1 u2 -- u3 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            arithmetics, bit logic
 
 decription:          logical shift left of u1 by u2 positions,
                      yielding u3 as result
 
-contexts:            stateless
 notes:               << is an alias of lshift

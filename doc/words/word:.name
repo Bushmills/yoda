@@ -2,11 +2,10 @@ name:                .name
 stack:               ( xt -- )
 return stack:        ( -- )
 string stack:        ( -- )
-
+contexts:            stateless
 category:            dictionary
 
 decription:          outputs name of word corresponding with execution token xt
 
-contexts:            stateless
 
 notes:               just a shortcut for  name type$

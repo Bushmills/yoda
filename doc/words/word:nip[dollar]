@@ -2,8 +2,8 @@ name:                nip$
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( $1 $2 -- )
+contexts:            stateless
 category:            strings
 
 decription:          remove and discard second from top string stack item
 
-contexts:            stateless

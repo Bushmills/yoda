@@ -2,10 +2,12 @@ name:                mid$
 stack:               ( u1 u2 -- )
 return stack:        ( -- )
 string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
 decription:          replaces $1 against a part of it, specified by first character
                      position u1, and length of u2.
 
-contexts:            stateless
 
 example:             "abcdefgh"  2 3 mid$       \ produces  "cde"
 

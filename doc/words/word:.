@@ -2,9 +2,9 @@ name:                .
 stack:               ( n -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            I/O
 
 decription:          outputs n as signed integer, with a trailing space appended.
 
-contexts:            stateless
 notes:               respects contents of variable "base"

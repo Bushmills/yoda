@@ -2,8 +2,8 @@ name:                rshift
 stack:               ( u1 u2 -- u3 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            logic, arithmetic
 
 decription:          logical right shift of u1 by u2 positions, yielding u3
 
-contexts:            stateless

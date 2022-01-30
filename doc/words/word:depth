@@ -2,8 +2,8 @@ name:                depth
 stack:               ( ??? -- u )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            stack
 
 decription:          returns number of stack items (exclusive u)
 
-contexts:            stateless

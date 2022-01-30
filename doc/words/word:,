@@ -2,10 +2,10 @@ name:                ,
 stack:               ( x -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            memory, allocation
 
 decription:          write x into memory at address indicated by "here" and
                      bump that address by the number of increments specified
                       by "cell"
 
-contexts:            stateless

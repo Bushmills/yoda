@@ -2,8 +2,8 @@ name:                +
 stack:               ( n1 n2 -- n3 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            arithmetics
 
 decription:          adds n2 to n1 and removes n2
 
-contexts:            stateless

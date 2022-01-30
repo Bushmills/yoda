@@ -2,8 +2,8 @@ name:                join$
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( $1 $2 -- $3 )
+contexts:            stateless
 category:            strings
 
 decription:          append top string stack item to next of top string stack item.
 
-contexts:            stateless

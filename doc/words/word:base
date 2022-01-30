@@ -2,6 +2,7 @@ name:                base
 stack:               ( -- a )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            number conversion
 
 decription:          a variable, containing the radix ("number base") applied when
@@ -9,8 +10,6 @@ decription:          a variable, containing the radix ("number base") applied wh
                      2 to 36 is considered a valid radix.
                      words decimal, hex and binary have been defined for setting
                      contents of base to commonly used values.
-
-contexts:            stateless
 
 notes:               for number input, a leading base indicator can be used without the
                      need to change base:  $ for hex,  # for decimal and % for binary.

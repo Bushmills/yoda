@@ -2,11 +2,11 @@ name:                ?abort
 stack:               ( flag u -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            flow control, error handling
 
 decription:          a non-zero value for flag aborts, passing u as abort value to
                      error handling.  if flag is zero, both flag und u are removed
                      and execution continues.
 
-contexts:            stateless
 notes:               not entirely unlike "assert" known from some other languages.

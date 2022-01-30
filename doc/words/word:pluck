@@ -2,4 +2,7 @@ name:                pluck
 stack:               ( x1 x2 x3 -- x1 x2 x3 x1 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
+category:            stack
+
 decription:          copy third stack item

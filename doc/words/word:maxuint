@@ -2,5 +2,7 @@ name:                maxuint
 stack:               ( -- u )
 return stack:        ( -- )
 string stack:        ( -- )
-decription:          largest unsigned number which can be represented with the chosen model
 contexts:            stateless
+category:            arithmetics, system
+
+decription:          largest unsigned number which can be represented with the chosen model

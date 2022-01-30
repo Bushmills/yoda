@@ -2,6 +2,7 @@ name:                about
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            info
 input stream:        word name
 
@@ -11,9 +12,6 @@ decription:          reads a word from input stream, which is appended to a dir/
                      which has already been described ("documemented"), in which case
                      will the displayed file contain some informative descriptions.
 
-contexts:            stateless
-
 example:             about about
-
 notes:               similar do doc, with the difference that file isn't opened in
                      an editor, but its contents merely displayed in the terminal

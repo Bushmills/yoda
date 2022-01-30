@@ -2,7 +2,7 @@ name:                j
 stack:               ( -- x )
 return stack:        ( x -- x )
 string stack:        ( -- )
-
+contexts:            stateless
 category:            flow control
 
 decription:          return the loop index of loop enclosing the innermost loop.
@@ -12,4 +12,3 @@ decription:          return the loop index of loop enclosing the innermost loop.
                      loops.
                      j also works with nested interpreted "times" style loops.
 
-contexts:            stateless

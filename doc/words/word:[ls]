@@ -2,12 +2,12 @@ name:                <
 stack:               ( n1 n2 -- 0 | -1 )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            signed comparison
 
 decription:          performs an arithmetic comparison on signed numbers n1 and n2,
                      replaces them against a true flag if n1 is less than n2, or
                      a false flag in other cases.
 
-contexts:            stateless
 
 notes:               < is broken wrt numbers other than 0...maxint (2021dec30)

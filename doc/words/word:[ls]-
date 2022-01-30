@@ -2,9 +2,9 @@ name:                <-
 stack:               ( a x1 -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            memory
 
 decription:          store x1 in memory address a.
                      similar to ! but expecting reverse order of stack items.
 
-contexts:            stateless

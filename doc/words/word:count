@@ -2,5 +2,7 @@ name:                count
 stack:               ( a -- a+1 c )
 return stack:        ( -- )
 string stack:        ( -- )
-decription:          reads character from a, increments a and places character on top
 contexts:            stateless
+category:            memory
+
+decription:          reads character from a, increments a and places character on top

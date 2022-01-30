@@ -2,10 +2,10 @@ name:                false
 stack:               ( -- f )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            constants, logic
 
 decription:          returns a flag representing false
 
-contexts:            stateless
 notes:               integer numbers are used to personate flags,
                      with zero representing false.

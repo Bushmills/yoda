@@ -2,7 +2,7 @@ name:                prompt
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-
+contexts:            stateless
 category:            status
 
 decription:          outputs an " ok" prompt while interpreting, followed by a depiction
@@ -10,6 +10,5 @@ decription:          outputs an " ok" prompt while interpreting, followed by a d
                      number is then shown.
                      When compiling does prompt only show a vertical bar.
 
-contexts:            stateless
 example:             none
 notes:               prompt is executed as part of the interactive interpreter loop "quit"

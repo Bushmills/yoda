@@ -2,8 +2,8 @@ name:                _
 stack:               ( ??? -- )
 return stack:        ( -- )
 string stack:        ( ??? -- )
+contexts:            stateless
 category:            stacks
 
 decription:          empties stack and string stack. shorthand for empty empty$
 
-contexts:            stateless

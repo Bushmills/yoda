@@ -2,11 +2,11 @@ name:                done
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            loading, flow control
 
 decription:          terminates compiling from current file. Akin to treating the
                      remainder of the currently loaded file as comments.
 
-contexts:            stateless
 notes:               best use is in conjunction with interpretative conditionals,
                      like lest or unless, while loading from file

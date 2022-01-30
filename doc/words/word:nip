@@ -2,9 +2,8 @@ name:                nip
 stack:               ( x1 x2 -- x2 )
 return stack:        ( -- )
 string stack:        ( -- )
-
+contexts:            stateless
 category:            stack
 
 decription:          remove second from top stack item
 
-contexts:            stateless

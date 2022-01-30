@@ -2,6 +2,7 @@ name:                callstack
 stack:               ( -- a )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            customising
 
 decription:          a variable which determines whether any and what number of call stack
@@ -9,4 +10,3 @@ decription:          a variable which determines whether any and what number of 
                      The value can be set to an initial value specified in yoda.conf, but
                      also changed any time, by writing the desired value to this variable.
 
-contexts:            stateless

@@ -2,8 +2,8 @@ name:                drop
 stack:               ( x -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            stack
 
 decription:          discard top stack item
 
-contexts:            stateless

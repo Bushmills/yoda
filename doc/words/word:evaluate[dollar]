@@ -2,7 +2,10 @@ name:                evaluate$
 stack:               ( -- )
 return stack:        ( -- ??? )
 string stack:        ( $1 -- ??? )
+contexts:            stateless
+category:            compilation, strings
+
 decription:          takes a string from string stack and evaluates it as if it was
                      entered or read from file.
-contexts:            stateless
+
 example:             "3 5 * ." evaluate$

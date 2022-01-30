@@ -2,11 +2,11 @@ name:                ]
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            interpreting
 category:            compiler
 
 decription:          switches compiler state to compiling
 
-contexts:            interpreting
 notes:               not very useful without prior [ inside of a definition:
                      "switching compiler state to compiling" doesn't actually
                      mean "compile input to code". Instead, encountered statement

@@ -2,5 +2,7 @@ name:                ?dup
 stack:               ( x -- x x | 0 )
 return stack:        ( -- )
 string stack:        ( -- )
-decription:          duplicates x if value of x isn't zero
 contexts:            stateless
+category:            stack
+
+decription:          duplicates x if value of x isn't zero

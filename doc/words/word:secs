@@ -2,4 +2,7 @@ name:                secs
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( u -- )
+contexts:            stateless
+category:
+
 description:         pauses for u seconds

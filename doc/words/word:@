@@ -2,8 +2,8 @@ name:                @
 stack:               ( a -- x )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            memory
 
 decription:          reads from memory at address a, returns read content as x
 
-contexts:            stateless

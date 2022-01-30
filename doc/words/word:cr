@@ -2,8 +2,8 @@ name:                cr
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
+contexts:            stateless
 category:            I/O
 
 decription:          advances cursor to begin of next line
 
-contexts:            stateless

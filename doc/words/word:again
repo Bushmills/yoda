@@ -1,0 +1,9 @@
+name:                again
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          conclude a begin ... again structure, by compiling code
+                     which unconditionally jumps back to begin.

@@ -1,0 +1,10 @@
+name:                recurse
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            compiling
+
+decription:          compiles a call to the word within which recurse was used,
+                     thereby causing the word to recurse into itself.
+

@@ -1,0 +1,11 @@
+name:                begin
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          initiate one of these flow control constructs:
+                     begin ... again
+                     begin ... until
+                     begin ... while ... repeat

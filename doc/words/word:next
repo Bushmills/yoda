@@ -1,0 +1,14 @@
+name:                next
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          concludes a for ... next flow control construct, by decrementing
+                     the initial loop count, as passed to for, by one, and jumping
+                     back to the code following for as long the resulting loop index
+                     isn't negative.
+
+example:             none
+notes:               none

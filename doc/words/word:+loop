@@ -1,0 +1,15 @@
+name:                +loop
+stack:               ( n -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          concludes a do ... +loop flow control construct, which causes
+                     the enclosed body to be executed (potentially) multiple times.
+                     The parameters provided to do, values for initial loop index
+                     and loop limit, are used by +loop such that n is added to loop
+                     index, then compared against loop limit. If still within the range
+                     of initial loop index and loop limit will a jump to code following
+                     do be executed, otherwise will loop data be cleaned up, and code
+                     proceeds with code following +loop.

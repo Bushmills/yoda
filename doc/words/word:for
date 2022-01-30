@@ -1,0 +1,20 @@
+name:                for
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          initiates a for ... next flow control construct, executing
+                     a loop u times. A value of 0 for u will result in no
+                     excecution of for ... next body.
+                     Loop index can be produced by execution of i, starting with
+                     u-1 and counting towards 0.
+
+example:             none
+notes:               In case of nest for ... next will the loop index of the
+                     for ... next one level below be avalable by execution of j.
+                     leave and ?leave can both be used within for ... next.
+                     a for ... next generates simpler and therefore more
+                     efficient code than a do ... loop
+

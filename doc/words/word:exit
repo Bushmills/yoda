@@ -1,0 +1,13 @@
+name:                exit
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          break out of a function early, preventing execution of
+                     code following exit.
+
+notes:               makes often more sense in combination with some conditionals
+                     guarding it. For a presentable alternative, hiding the flair
+                     of unstructuredness of exit, see lest and unless.

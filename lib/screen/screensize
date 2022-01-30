@@ -5,3 +5,6 @@ once
 "$COLUMNS" pusher columns
 "$LINES"   pusher lines
 : screensize   ( -- x y )    columns   lines ;
+
+\ initialise LINES and COLUMNS environment variables
+>read -ert0.001

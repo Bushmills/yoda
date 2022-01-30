@@ -1,0 +1,20 @@
+name:                ?leave
+stack:               ( f -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            flow control
+
+decription:          jump to end of loop conditinally. If flag f is not false, loop parameters
+                     will be cleaned up, and execution continues after end of
+                     loop. If flag f is false, execution continues with the word following
+                     ?leave.
+
+notes:               ?leave can be used in all these loop constructs:
+                     do ... loop
+                     ?do ... loop
+                     do ... +loop
+                     ?do ... +loop
+                     for ... next
+
+                     see leave for an unconditioan version of ?leave

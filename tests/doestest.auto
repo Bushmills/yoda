@@ -1,16 +1,18 @@
 
 : plural        ( xt -- )
    create ,
-   does> @       ( u -- )
+   does> @      ( u -- )
    swap for
       >r r@ execute r>
    next drop ;
 
-: n+
+: adder         ( x -- )
    create , 
-   does> @ + ;
+   does>        ( x1 -- x2 )
+      @ + ;
 
-10 n+ ten+
-' ten+ plural *ten+
+7 adder 7+
+' 7+ plural 7*+
 
-5 3 *ten+ 35 expected
+2 7+     9 expected
+3 5 7*+ 38 expected

@@ -1,33 +1,9 @@
 ( tools for automated test suite )
-provides: tests check expected
-needs: link normal colours
+provides: expected
 once
 
-create errors 0 ,
-create testcount 0 ,
 random constant canary
 
-: report  ( -- )
-        "failed test(s): " type$
-        errors
-        begin @
-        ?dup while
-           dup cell+ @ u.
-        repeat  ;
-
-: tests    ( -- )
-        errors off
-        testcount off ;
-
-: check    ( -- )
-        errors @
-        if     red bg report normal
-        else  "No errors" type$
-        then  cr   ;
-
 : expected ( x1 x2 -- )
-        testcount inc
-        = unless
-           errors link
-           testcount @ ,  ;
-
+      = unless  >echo "- failed line $linenr:  $tib"
+;

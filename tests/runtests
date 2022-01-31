@@ -11,8 +11,8 @@ needs: check
       >ss+=(${tests[i]})
       dup$  
       >ss[-1]="${ss[-1]##*/}"
-       ": " join$ 20 ltype$
-      tests from$ check
+      20 ltype$ cr
+      from$
    loop 
  ;
 

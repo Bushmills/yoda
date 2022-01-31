@@ -2,7 +2,7 @@ provides: statusline +l -l
 needs: uppercase movecursor bold blue fg bg deol .s columns
 
 create statusline   true ,
-2 constant spacing
+2 constant spacing               transient
 
 : +l   statusline on ;
 : -l   statusline off

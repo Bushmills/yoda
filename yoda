@@ -31,6 +31,7 @@
 #                                "from" accordingly. Transient headers are local to the file they were defined in.
 #                                context words (compiled, interpreted) can't be transient.
 #                                uppercase$, lowercase$, othercase$, uppercase1$, lowercase1$, othercase1$, added
+#                                loading added
 # v="0.5.8"  # 2022jan26,12:16   deferred query$, removed attributes from rename simplequery$. Hi-level .s outputs items as signed
 #                                numbers. Fixed pick. Added literal$. needed takes whole line as argument list now.
 #                                added have$ trash$, factored have, added word for emptying rstack, which was added to _
@@ -679,7 +680,7 @@ trap ctrl-c SIGINT
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
@@ -987,9 +988,51 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #fold01
+# ----- colon/semicolon ---------------------------------- #FOLD01
+
+
+# experimental construct which adds actions to array cleanup
+# for later execution by semicolon. Used for trying compiled
+# times symmetric with interpreted times:
+#      : foo 10 times i . ;
+# times, which compiles first part of a for ...; do ...; done loop,
+# up to and including do.  Between do and done will be filled in
+# by code following times. The concluding done must be at end of
+# function. Semicolon could compile those if semicolon had a reason
+# to do so.
+# by calling cleanup, semicolon can be signaled what actions to
+# perform when compilation of a word concluded.  What actions to
+# take is determined by the function which adds action to cleanup
+# array.  (In case of times those actions are: 1. compile code to
+# restore i, and 2. compile a done)
+
+# a construct like this may be better moved to detokeniser, but
+# for testing and trying out, pluggin it into semicolon will do.
+
+# other actions cleanup could be used to signal to semicolon:
+#  :  sets  semicolon semantics, those can be removed from semicolon.
+#     as consequence could semicolon be paired with
+#          code: foo  ...  ;
+#  or      hash: bar   key value  key value  ;
+
+
+cleanup=()
+
+# arg1: postponed action for semicolon to execute
+addcleanup()  {
+   cleanup+=("$@")
+}
+
+cleanup()  {
+   for ((nextcleanup=0; nextcleanup<${#cleanup[@]};nextcleanup++)); do
+      eval "${cleanup[nextcleanup]}"
+   done
+   cleanup=()
+}
+
 
 colon ';'      # semicolon
+   code 'cleanup'
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
    code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'             # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
@@ -1788,7 +1831,7 @@ semicolon
 evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
 
 
-# ----- bit logic ---------------------------------------- #fold01
+# ----- bit logic ---------------------------------------- #FOLD01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
@@ -1961,6 +2004,23 @@ colon 'times'
    code 'line=""'                                                    # prevent re-evaluation of line when times has completed
 semicolon
 interpreted
+
+
+#colon 'end'
+#   code 'code "done"'
+#   code 'code "((i=r[rp--]))"'                                       # restore old i
+#semicolon
+#compiled
+
+colon 'times'
+   code 'code "((r[++rp]=i))"'                                       # by using i, and pushing previous i to rstack,
+   code 'code "for ((i=s[sp--];i--;)); do"'
+   code 'addcleanup "code \"done\""'
+   code 'addcleanup "code \"((i=r[rp--]))\""'
+semicolon
+compiled
+
+
 
 # this is the prefered version, repeating the line upon encountering many
 # prefered because its use is more symmetrical with times, both specified
@@ -2515,7 +2575,7 @@ colon 'satisfy$'
 semicolon
 
 
-# ----- documentation ------------------------------------ #FOLD01
+# ----- documentation ------------------------------------ #fold01
 
 # arg1: word name
 # arg2: headerlist
@@ -2559,12 +2619,13 @@ sanitise()  {
 }
 
 undoc()  {
-   for list in "${headerslistlist[@]}"; do                          # run through all header lists
+   for list in "${headerslistlist[@]}"; do                           # run through all header lists
+      local headers
       declare -n headers="$list"
       for word in "${!headers[@]}"; do                               # run through all headers
          sanitise "$word"
-         [[ -f "$worddoc:$file" ]] || {                                 # found one for which no doc file exists
-            undoc_template "$word" "${!headers}" > "$worddoc:$file"
+         [[ -f "$worddoc:$file" ]] || {                              # found one for which no doc file exists
+            undoc_template "$word" "${!headers}" >> "$worddoc:$file"
             editor "$worddoc:$file"
             return
          }
@@ -2638,6 +2699,9 @@ semicolon
 inline
 inout 0 1
 
+# better symmetry with thisfile$
+evaluate "' source alias thisfile"
+
 # copy remainder of input line to string stack without affecting it.
 # ( -- )  ( -- $1 )
 primitive 'source$'  'ss+=("$line")'
@@ -2648,6 +2712,10 @@ primitive 'source$'  'ss+=("$line")'
 # ( -- f )
 colon 'loaded'
    push 'loaded[filehandle]'
+semicolon
+
+colon 'loading'
+   push 'linenr<0?false:true '
 semicolon
 
 # stop loading file

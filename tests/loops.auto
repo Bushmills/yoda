@@ -1,0 +1,19 @@
+
+
+: foo    for  i +  next  ;
+89 0 over foo
+swap dup 2/ * expected
+trash foo
+
+: foo    0 do  i +  loop  ;
+67 0 over foo 
+swap dup 2/ * expected
+
+trash foo
+
+
+\  10 -20 do ... loop
+\  -10 -35  do ... loop
+\  50 30 do ... 3 +loop
+\  80 -30 do ... 7 +loop
+\  -45  -85  do ..11 +loop

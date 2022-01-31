@@ -1,0 +1,7 @@
+provides: pusher
+
+: pusher  ( $1 -- )
+      create
+      quote$                        \ put double quotes around variable name
+      "s[++sp]=" swap$ join$        \ prepend stack push operation
+      use$ inline ;

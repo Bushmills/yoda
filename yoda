@@ -680,7 +680,7 @@ trap ctrl-c SIGINT
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
@@ -932,7 +932,7 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
@@ -988,7 +988,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #FOLD01
+# ----- colon/semicolon ---------------------------------- #fold01
 
 
 # experimental construct which adds actions to array cleanup
@@ -1831,13 +1831,13 @@ semicolon
 evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
 
 
-# ----- bit logic ---------------------------------------- #FOLD01
+# ----- bit logic ---------------------------------------- #fold01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
 primitive 'xor'     '((s[sp-1]^=s[sp--]))'
 primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
-primitive 'rshift'  '((s[sp-1]>>=s[sp--]))'
+primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
 evaluate "' lshift alias <<"
 evaluate "' rshift alias >>"
 colon    'invert';  atom 'invert'; semicolon; inline
@@ -2685,6 +2685,7 @@ semicolon
 colon 'filename$'
    code 'ss+=("${files[s[sp--]]}")'
 semicolon
+inline
 
 evaluate ': edit  "editor" filename$  command$ ;'
 evaluate ': list  "cat"    filename$  command$ ;'

@@ -1,10 +1,13 @@
-needs: home page
+needs: home
 40 constant xdim
 15 constant ydim
 
 \ ----------- missing words -----------
-: table create does> + @ ;
 
+\ equivalent to   + @
+create +@   "((tmp=s[sp--], s[sp]=m[s[sp]+tmp]))" use$
+\ above optimising attempt has no appreciatable effect.
+: table create does> +@ ;
 
 \ ----------- data and allocation --------------
 
@@ -21,7 +24,6 @@ table  deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 
 \ ----------- setup arena and neighbours relations ----------
 \ done once when initialising neighbour relations in neighbours
-
 : xy>offs ( x y -- offs )
    ydim + ydim mod
    xdim * swap
@@ -84,7 +86,7 @@ table  deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 
 
 \ "code level" optimisation for inner loop
-: >r_skim_@_r>_+   
+: >r_skim_@_r>_+
       >((s[sp]+=m[m[s[sp-1]++]]))
 ;  inline
 

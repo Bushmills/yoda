@@ -32,7 +32,7 @@ decription:          repeat execution of remainder of word u times.
                      times.
 
 example:             : foo   3 times  cr  4 times   j . i .  space  ;
-notes:               for the compiled version an experimental construct had to
-                     be added to yoda, of which I'm at this point not sure
+notes:               for the compiled version an experimental construct was
+                     added to yoda, of which I'm at this point not sure
                      whether it will stay. Don't rely on presence of this
-                     compiled version of times for all times.
+                     compiled version of times for all time to come.

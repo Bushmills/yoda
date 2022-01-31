@@ -1,7 +1,7 @@
 #!/usr/local/bin/yoda from
 ( yoda source file: load to execute all *.auto tests )
 
-needs: check
+needs: expected
 
 \ quite a mix of shell commands and yoda words
 : runtests

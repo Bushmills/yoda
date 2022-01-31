@@ -28,6 +28,7 @@
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
  v="0.5.9"   # 2022jan28,14:22   added transient, which marks header of last word as to dispose of after file was loaded. Changed
+#                                moved experimental cleanup scheme to semicolon, renamed it "conclude"
 #                                "from" accordingly. Transient headers are local to the file they were defined in.
 #                                context words (compiled, interpreted) can't be transient.
 #                                uppercase$, lowercase$, othercase$, uppercase1$, lowercase1$, othercase1$, added
@@ -271,7 +272,7 @@ header()  {
 }
 
 
-# ----- pretend optimiser -------------------------------- #fold00
+# ----- detokeniser / pretend optimiser ------------------ #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -548,7 +549,18 @@ colon()  {
 
 
 
+# compiler words can add actions to array conclude, which
+# will be executed when semicolon executes
+declare -a conclude
+
+# arg1: add action for semicolon to execute to conclude[@]
+conclude()  { conclude+=("$@"); }
+
 semicolon()  {
+   for ((nextconclude=0; nextconclude<${#conclude[@]};nextconclude++)); do
+      eval "${conclude[nextconclude]}"
+   done
+   conclude=()
    compile                                                           # compilation is gathered in an array body. Only
    compiling="$false"                                                # when semicolon completes compilation, is
 }                                                                    # a function created from contents of array.
@@ -991,48 +1003,7 @@ atom["here"]='((s[++sp]=dp))'
 # ----- colon/semicolon ---------------------------------- #fold01
 
 
-# experimental construct which adds actions to array cleanup
-# for later execution by semicolon. Used for trying compiled
-# times symmetric with interpreted times:
-#      : foo 10 times i . ;
-# times, which compiles first part of a for ...; do ...; done loop,
-# up to and including do.  Between do and done will be filled in
-# by code following times. The concluding done must be at end of
-# function. Semicolon could compile those if semicolon had a reason
-# to do so.
-# by calling cleanup, semicolon can be signaled what actions to
-# perform when compilation of a word concluded.  What actions to
-# take is determined by the function which adds action to cleanup
-# array.  (In case of times those actions are: 1. compile code to
-# restore i, and 2. compile a done)
-
-# a construct like this may be better moved to detokeniser, but
-# for testing and trying out, pluggin it into semicolon will do.
-
-# other actions cleanup could be used to signal to semicolon:
-#  :  sets  semicolon semantics, those can be removed from semicolon.
-#     as consequence could semicolon be paired with
-#          code: foo  ...  ;
-#  or      hash: bar   key value  key value  ;
-
-
-cleanup=()
-
-# arg1: postponed action for semicolon to execute
-addcleanup()  {
-   cleanup+=("$@")
-}
-
-cleanup()  {
-   for ((nextcleanup=0; nextcleanup<${#cleanup[@]};nextcleanup++)); do
-      eval "${cleanup[nextcleanup]}"
-   done
-   cleanup=()
-}
-
-
 colon ';'      # semicolon
-   code 'cleanup'
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
    code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'             # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
@@ -2015,8 +1986,8 @@ interpreted
 colon 'times'
    code 'code "((r[++rp]=i))"'                                       # by using i, and pushing previous i to rstack,
    code 'code "for ((i=s[sp--];i--;)); do"'
-   code 'addcleanup "code \"done\""'
-   code 'addcleanup "code \"((i=r[rp--]))\""'
+   code 'conclude "code \"done\""'
+   code 'conclude "code \"((i=r[rp--]))\""'
 semicolon
 compiled
 

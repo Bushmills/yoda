@@ -1,0 +1,19 @@
+
+: foo 0 
+    $10 for 
+       $10 for
+          i j and + 
+          i j or + 
+          i j xor + 
+       next
+    next  ;
+foo   $1680 expected
+trash foo
+
+           $fedcba9876543210 maxuint and
+           $0579bdf12468ace3 maxuint and
+2dup and   $0458b89024402000 maxuint and expected
+2dup  or   $fffdbff9767cbef3 maxuint and expected
+2dup xor   $fba50769523c9ef3 maxuint and expected
+invert     $fa86420edb97531c maxuint and expected
+drop

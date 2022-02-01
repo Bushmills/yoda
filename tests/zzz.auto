@@ -14,13 +14,12 @@ msb 1 <<        0 expected
          >r 1+ r> 
       repeat ;
 headerless execute  bits expected
-
 maxint msb +    maxuint expected
 maxint msb -    maxuint expected
 maxint msb or   maxuint expected
 maxint msb xor  maxuint expected
-
-
+maxint     1+   1 <<  0 expected        
+maxuint    1+         0 expected
 
 \ finally a test which ought to produce an error
 \ no error here means that all prior tests may be unreliable too

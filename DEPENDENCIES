@@ -55,5 +55,4 @@ jumping to specific lines for viewing is wanted.
 Any of those can be specified in yoda.conf configuration file.
 
 screen libraries for controlling cursor and attributes rely on
-presence of tput. No yoda internal references to any word
-depending on it exist.
+presence of tput, as does screen attributes change of error messages.

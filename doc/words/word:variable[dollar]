@@ -1,0 +1,9 @@
+name:                variable$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            defining
+
+decription:          creates a variable with a name which is taken from string stack.
+                     value of created value is initialised to 0

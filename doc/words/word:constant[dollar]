@@ -1,0 +1,13 @@
+name:                constant$
+stack:               ( x -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            defining
+
+decription:          A defining word for creating constants. Name of a created constant
+                     is taken from string stack, with value x associated with it.
+
+example:             10 "ten" constant$
+notes:               don't confuse with $constant which creates a constant associated with
+                     a string from string stack (as value, not as name, that is)

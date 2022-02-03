@@ -1,0 +1,10 @@
+name:                array$
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            defining
+
+decription:          create an array with u cells allocated to it. Name of array is
+                     taken from string stack
+

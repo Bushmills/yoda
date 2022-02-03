@@ -1,0 +1,10 @@
+name:                create$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            defining
+
+decription:          create a word which pushs the value of here as it was at time
+                     of creation to stack. Name of created word is taken from string
+                     stack

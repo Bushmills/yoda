@@ -4,9 +4,6 @@ yoda relies on these external program for execution of few words:
                   # and to create unique paths for list of files even when
                   # path specification differs (relative vs. absolute, symlinks etc)
 
-      sort        # used by crossref.
-                  # As I may remove crossref, this dependency may get dropped
-
       grep        # used with dependency based resolving, to build dependency
                   # file by scanning libraries for lines containing "^provides: "
                   # New dependency added:  is

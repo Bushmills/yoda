@@ -1037,23 +1037,6 @@ words()	{
    done
 }
 
-# NOTE: removal candidate.
-crossref()  {
-   local headers
-   for tmp in "${headerslistlist[@]}" "headersunresolved"; do
-      declare -n headers="$tmp"
-      (( ${#headers[@]} )) && {
-         printf '%s:\n' "${tmp#"headers"}"
-         for tmp2 in "${!headers[@]}"; do
-            printf "    %-16s %s\n" "${headers["$tmp2"]}" "$tmp2"
-         done | sort -t'_' -k2,2 -n
-      }
-   done
-}
-
-# crossref lists name to word associations.
-# NOTE: removal candidate
-primitive 'crossref' 'crossref'
 
 # TODO: factor context voc search.  see also  tick, undoc, forward refs
 see()  {

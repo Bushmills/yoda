@@ -37,7 +37,9 @@ create statusline   true ,
 : plenty  ( columns width prio -- columns flag )
    spacing * + over < ;                      transient
 
+
 \ 120 columns for full status line
+\ NOTE: define a version of .s which fits output into available space, truncated if necessary
 : .status  ( -- )
    columns
       bold yellow fg  ( blue bg )  deol

@@ -1,8 +1,0 @@
-name:                crossref
-stack:               ( -- )
-return stack:        ( -- )
-string stack:        ( -- )
-contexts:            stateless
-category:            doc
-
-decription:          outputs a list of words along with their (synthetic) function names

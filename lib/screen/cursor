@@ -1,9 +1,12 @@
 provides: up down ups downs savecursor restorecursor home at movecursor
+provides: hidecursor showcursor
 needs: tput0 tput1 tput2
 once
 
 "sc"       tput0 savecursor            \ save cursor position
 "rc"       tput0 restorecursor         \ move cursor to previously saved cursor position
+"civis"    tput0 hidecursor
+"cnorm"    tput0 showcursor
 "home"     tput0 home
 "cup"      tput2 at     ( u1 u2 -- )   \ move cursor to column u1 line u2
 "cuu1"     tput0 up                    \ move cursor up

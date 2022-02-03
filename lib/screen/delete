@@ -1,0 +1,6 @@
+provides: deol
+needs: tput0
+once
+
+"el"       tput0 deol                  \ delete from cursor to end of line
+\ "es"       tput0 deos                  \ delete from cursor to end of screen

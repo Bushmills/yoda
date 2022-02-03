@@ -29,6 +29,7 @@
 # numbers in decimal. Mostly.
  v="0.6.0"   # 2022feb01,21:11   create$ constant$ variable$ array$ like their non-$ counterparts, but taking names from string stack
 #                                instead of from input stream. Removed crossref. realtime seperator can be . or ,
+#                                config in home dir has priority over config in yoda dir, which may be overwritten by git pull
 # v="0.5.9"   # 2022jan28,14:22  added transient, which marks header of last word as to dispose of after file was loaded. Changed
 #                                moved experimental cleanup scheme to semicolon, renamed it "conclude"
 #                                "from" accordingly. Transient headers are local to the file they were defined in.
@@ -2737,7 +2738,12 @@ semicolon
 # ----- launch ------------------------------------------- #fold00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
-[[ -f "$mydir/$config" ]] && source "$mydir/$config"                 # currently only looking in dir where yoda resides
+config()  {
+   [[ -f "$HOME/$config" ]]  && { source "$HOME/$config"; return; }  # config in $HOME has priority over config in yoda dir
+   [[ -f "$mydir/$config" ]] && source "$mydir/$config"
+}
+
+config                                                               #
 [[ -f "$dependencies" ]] ||generate_dependencies                     # dependency file missing?
 cache_dependencies                                                   # read dependencies into memory
 args=("$@")                                                          # read command line

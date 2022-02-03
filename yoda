@@ -27,7 +27,9 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
- v="0.5.9"   # 2022jan28,14:22   added transient, which marks header of last word as to dispose of after file was loaded. Changed
+ v="0.6.0"   # 2022feb01,21:11   create$ constant$ variable$ array$ like their non-$ counterparts, but taking names from string stack
+#                                instead of from input stream.
+# v="0.5.9"   # 2022jan28,14:22  added transient, which marks header of last word as to dispose of after file was loaded. Changed
 #                                moved experimental cleanup scheme to semicolon, renamed it "conclude"
 #                                "from" accordingly. Transient headers are local to the file they were defined in.
 #                                context words (compiled, interpreted) can't be transient.
@@ -133,7 +135,9 @@ declare -A lib                                                       # cache dep
 
 declare -a files=("tty")                                             # list of included files
 declare -a loaded                                                    # list of inclusion counters for included files
-                                                                     # following does> to make it more easily available to dodoes
+
+declare -a conclude=()                                               # compiler words can add actions to array conclude, which
+                                                                     # will be executed when semicolon executes
 declare -a lasterror
 lasterror=("" "-1" "0")
 
@@ -158,8 +162,7 @@ does="$((1<<analyserflag++))"                                        # probably 
 # them out to stack, only to be retrieved again by next word.
 declare -A stackin=()
 declare -A stackout=()
-
-declare -A atom                                                      # a table with token -> code mappings.
+declare -A atom=()                                                   # a table with token -> code mappings.
 
 # what to execute when no command line args given
 default='from defaults'                                              # load defaults from file
@@ -548,10 +551,6 @@ colon()  {
 #   analyser=()                                                      # reinitialise code tags for analyser
 
 
-
-# compiler words can add actions to array conclude, which
-# will be executed when semicolon executes
-declare -a conclude
 
 # arg1: add action for semicolon to execute to conclude[@]
 conclude()  { conclude+=("$@"); }
@@ -966,7 +965,7 @@ atom["1-"]='((s[sp]=(s[sp]-1)&true))'
 atom["2*"]='((s[sp]=(s[sp]<<1)&true))'
 
 atom["negate"]='((s[sp]=(-s[sp]&true)))'
-atom["invert"]='((s[sp]^=true))'
+atom["invert"]='((s[sp]^=maxuint))'
 
 atom["s1"]='((s1=s[sp]))'
 atom["s2"]='((s2=s[sp-1]))'
@@ -1066,11 +1065,7 @@ see()  {
          printf "found in %s:\n" "${tmp#"headers"}"
          tmp="${headers["$word"]}"
          [[ -z "$tmp" ]] && notfound
-         if [[ "$(type -t "$tmp")" == "function" ]]; then
-            type "$tmp"
-         else                                                        # NOTE: this branch is probably obsolete
-       	   printf "%s\n" "$tmp"                                     # now, a leftover from when data items
-         fi                                                          # couldn't be ticket
+         type "$tmp"
       }
    done
 }
@@ -1109,10 +1104,19 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
+definess()  {
+   code "constant \"\${ss[-1]}\" \"$1\""                             # not using single quotes because want $1 to expand
+   code 'unset "ss[-1]"'
+}
+
 define()  {
    code 'word'
    code "constant \"\$word\" \"$1\""                                 # not using single quotes because want $1 to expand
 }
+
+colon 'create$'
+    definess '$dp'
+semicolon
 
 colon 'create'
     define '$dp'
@@ -1122,8 +1126,17 @@ colon 'constant'
    define '${s[sp--]}'
 semicolon
 
+colon 'constant$'
+   definess '${s[sp--]}'
+semicolon
+
 colon 'variable'
    define '$((dp))'
+   code '((m[dp++]=0))'                                              # allocate and initialise
+semicolon
+
+colon 'variable$'
+   definess '$((dp))'
    code '((m[dp++]=0))'                                              # allocate and initialise
 semicolon
 
@@ -1132,6 +1145,14 @@ colon "array"
    code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
    code "((dp+=s[sp--]))"                                            # allocate
 semicolon
+
+colon "array$"
+   definess ''                                                       # value irrelevant
+   code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
+   code "((dp+=s[sp--]))"                                            # allocate
+semicolon
+
+
 
 # NOTE: factor code common with header
 # ' foo alias bar
@@ -1976,13 +1997,6 @@ colon 'times'
 semicolon
 interpreted
 
-
-#colon 'end'
-#   code 'code "done"'
-#   code 'code "((i=r[rp--]))"'                                       # restore old i
-#semicolon
-#compiled
-
 colon 'times'
    code 'code "((r[++rp]=i))"'                                       # by using i, and pushing previous i to rstack,
    code 'code "for ((i=s[sp--];i--;)); do"'
@@ -1990,8 +2004,6 @@ colon 'times'
    code 'conclude "code \"((i=r[rp--]))\""'
 semicolon
 compiled
-
-
 
 # this is the prefered version, repeating the line upon encountering many
 # prefered because its use is more symmetrical with times, both specified

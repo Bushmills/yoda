@@ -150,6 +150,7 @@ table  deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 : gol  ( -- )
    "Setting up arenas, hang on..." type$
    neighbours page
+   hidecursor
    begin
       populate
       begin
@@ -157,6 +158,6 @@ table  deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
          generation show
          realtime r> - 1000 / u. "ms " type$ cr
       key? until                          \ any key aborts current pattern
-   key esc = until ;                      \ but only esc terminates program
-                                          \ other keys restart a new random pattern
+   key esc = until                        \ but only esc terminates program
+   showcursor ;                           \ other keys restart a new random pattern
 gol

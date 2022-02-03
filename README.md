@@ -23,3 +23,6 @@ My musings, ideas, plans and thoughts of possible changes can be found at
 page](https://github.com/Bushmills/yoda/wiki/Considerations), and the rest possibly
 among the [remaining wiki pages](https://github.com/Bushmills/yoda/wiki/Home).
 
+
+Here's a screenshot showing yoda's status line, the current list of words, and a "word not found" error:  
+![words and error screenshot](http://snap.scarydevilmonastery.net/github/1643883173174493618d.png)

@@ -28,7 +28,7 @@
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
  v="0.6.0"   # 2022feb01,21:11   create$ constant$ variable$ array$ like their non-$ counterparts, but taking names from string stack
-#                                instead of from input stream.
+#                                instead of from input stream. Removed crossref. realtime seperator can be . or ,
 # v="0.5.9"   # 2022jan28,14:22  added transient, which marks header of last word as to dispose of after file was loaded. Changed
 #                                moved experimental cleanup scheme to semicolon, renamed it "conclude"
 #                                "from" accordingly. Transient headers are local to the file they were defined in.
@@ -2722,7 +2722,7 @@ primitive rempty 'r=() rp=0'
 evaluate ': _  empty rempty empty$  ;'                ; inline
 primitive 'words'    'words'
 primitive 'random'   '((s[++sp]=SRANDOM&true))'; inout 0 1           # ( -- u )        32 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//,/}&true))';        # a microseconds epoch, used for benchmarking
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))';        # a microseconds epoch, used for benchmarking
 primitive 'secs'     'sleep "${s[sp--]}"'
 
 colon 'version'

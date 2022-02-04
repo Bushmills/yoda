@@ -1,0 +1,6 @@
+provides: gcd
+once
+: gcd ( u1 u2 -- u3 )
+  begin  ?dup
+  while  swap over mod
+  repeat ;

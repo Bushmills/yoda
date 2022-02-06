@@ -1032,7 +1032,7 @@ colon ';'      # semicolon
 semicolon
 compiled
 
-colon ':'
+colon '::'
    code 'word'                                                       # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
@@ -1042,7 +1042,7 @@ semicolon
 interpreted
 
 # --- experimental: delayed header creation  ---
-colon '::'
+colon ':'
    code 'word'                                                       # parse space delimited word from input stream
    code 'colonlate "$word"'                                          # generate synthetic name, associate with word
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function

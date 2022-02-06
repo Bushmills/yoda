@@ -1794,7 +1794,7 @@ primitive 'inline'  'inline'                                         # ( -- )   
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
 primitive '.unresolved'  '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'   # print unresolved
 primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
-# primitive 'recurse' 'code "${headersstateless["$lastword"]}"'; compiled   # ( -- )
+primitive 'recurse' 'code "${functionname_prefix}_$((nextname))"'; compiled   # ( -- )
 
 # apply run time semantic from string stack
 colon 'use$'

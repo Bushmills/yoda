@@ -273,7 +273,6 @@ header()  {
    [[ -z "${headersstateless["$1"]}" ]] || echo "redefining $1"
    headersstateless["$1"]="$2"                                       # associate word with name
    flags["$1"]="0"                                                   # default to no flags
-#   compiler_init
    (( linenr < 0 )) ||                                               # not entered at keyboard
       where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
 }
@@ -350,7 +349,6 @@ optimise()  {                                                        # run code 
 # preparing to delegate header creation to detokeniser
 #           pretend "create function header for $lastword at body line $tmp"
          word="${body[tmp]}"
-trace  "creating header for $word"
    name="${headersunresolved[$word]}"
    if [[ -z "$name" ]]; then
       newname "$word"
@@ -465,7 +463,6 @@ use()  {
 compile()  {
    optimise                                                          # rewrite ${body[@]} to ${target[@]}
    use "${target[@]}"                                                # generate function from $target[@] with name of $lastword
-#   compiler_init
 }
 
 # execute or compile args. Similar to invoke,
@@ -534,7 +531,6 @@ primitive()  {
 colonlate()  {
    [[ -z "$1" ]] && emptyname
    compiler_init
-trace "new name $1"
    code "$1" "$functionheader"
 }
 

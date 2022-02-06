@@ -83,7 +83,6 @@ shopt -s extglob
 shopt -u nullglob
 
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
-trace=0                                                              # turn chatty system on
 break=2                                                              # break will return (0), exit (1) or execute coldvector (2)
 clean=1                                                              # empty stack on error/ctrl-c
 codedump=0
@@ -213,10 +212,10 @@ declare -a returned                                                  # an array 
 # ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
+
 trace()  {
-   ((trace)) &&
    printf "### %-1s %-20s %s\n" "${comp[compiling & 1]}" "[${FUNCNAME[1]}]" "$@"
-#                                                 ^^^  convert any non-zero to 1, used as array index
+#                                                  ^^^  convert any non-zero to 1, used as array index
 }
 
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
@@ -250,6 +249,12 @@ where()  {                                                           # remember 
 }
 
 
+compiler_init()  {
+   body=()
+   analyser=()                                                       # reinitialise code tags for analyser
+   target=()
+}
+
 # create header, but don't compile, and don't generate function yet.
 # compiling (that is, creating a bash function) is left to
 # semicolon, calling compile won't detect redefinition if word was
@@ -265,12 +270,10 @@ where()  {                                                           # remember 
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
    m[last]="${2##*_}"
-   trace "$1"
    [[ -z "${headersstateless["$1"]}" ]] || echo "redefining $1"
    headersstateless["$1"]="$2"                                       # associate word with name
    flags["$1"]="0"                                                   # default to no flags
-   body=()                                                           # reinitialise code buffer
-   analyser=()                                                       # reinitialise code tags for analyser
+#   compiler_init
    (( linenr < 0 )) ||                                               # not entered at keyboard
       where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
 }
@@ -310,7 +313,14 @@ analyserflag()  {
 # - generating code pushing literals
 # - dealing with does>
 optimise()  {                                                        # run code generator on ${analyser[@]} data
-   ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
+   ((${#body[@]}==${#analyser[@]}))|| {
+      echo "body/analyser<>1"
+      printf "%s\n" "----- body: -----"
+      printf "%s\n" "${body[@]}"
+      printf "%s\n" "----- analyser: -----"
+      printf "%s\n" "${analyser[@]}"
+      exit
+   }
    target=()
    dodoes_at=0
 #   corresponding=()                                                 # index array source line to target line.
@@ -328,23 +338,32 @@ optimise()  {                                                        # run code 
                                                                      # needed for post mod or removal
       bodyline="${body[tmp]}"
       bodyflag="${analyser[tmp]}"
-
       if ! (( bodyflag )); then                                      # no flags: literal code, copy
          targetline="$bodyline"
+
+
 # some analyser flags were set. Examine.
-      elif (( analyser[tmp] & functionheader )); then                # test attempting to delegate header creation to detokeniserr
+      elif (( bodyflag & functionheader )); then                # test attempting to delegate header creation to detokeniserr
 # only pretending anyway right now, real headers are
 # still defined in advance of compilation.
 #
 # preparing to delegate header creation to detokeniser
 #           pretend "create function header for $lastword at body line $tmp"
+         word="${body[tmp]}"
+trace  "creating header for $word"
+   name="${headersunresolved[$word]}"
+   if [[ -z "$name" ]]; then
+      newname "$word"
+      name="${returned[0]}"
+   else
+      unset -v "headersunresolved['$word']"
+   fi
+   header "$word" "$name"
+   sourcelocation
 
-# body[tmp]: "word name"
-# analyser[tmp]
+#   [[ -z "$linenr" && "${FUNCNAME[2]}" == "evaluate" ]] &&
+#      where "$lastword" "1"  "${BASH_LINENO[2]}"
 
-#           tmp2="${body[tmp]}"
-#           header "${tmp2% *}" "${tmp2#* }"
-#echo "optimise created header $tmp2"
          continue
       elif (( bodyflag & inlined )); then                            # inlined code: copy
          targetline="$bodyline"
@@ -446,8 +465,7 @@ use()  {
 compile()  {
    optimise                                                          # rewrite ${body[@]} to ${target[@]}
    use "${target[@]}"                                                # generate function from $target[@] with name of $lastword
-   body=()
-   target=()
+#   compiler_init
 }
 
 # execute or compile args. Similar to invoke,
@@ -502,8 +520,6 @@ create()  {
 #   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
 #   code "$1 $name" "$functionheader"                                # preparing to delegate header creation to detokeniser
 #   lastword="$1"                                                    # global variable. setting header flags needs this one
-#   body=()                                                          # reinitialise code buffer
-#   analyser=()                                                      # reinitialise code tags for analyser
 
 
 # primitive wordname  functionname
@@ -515,8 +531,17 @@ primitive()  {
 }
 
 
+colonlate()  {
+   [[ -z "$1" ]] && emptyname
+   compiler_init
+trace "new name $1"
+   code "$1" "$functionheader"
+}
+
+
 colon()  {
    [[ -z "$1" ]] && emptyname
+   compiler_init
    name="${headersunresolved[$1]}"                                   # function name of forward reference, or empty
    if [[ -z "$name" ]]; then                                         # check whether word is an unresolved forward reference
       newname "$1"                                                   # no: generate new name
@@ -548,8 +573,6 @@ colon()  {
 #   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
 #   code "$1 $name" "$functionheader"                                # preparing to delegate header creation to detokeniser
 #   lastword="$1"                                                    # global variable. setting header flags needs this one
-#   body=()                                                          # reinitialise code buffer
-#   analyser=()                                                      # reinitialise code tags for analyser
 
 
 
@@ -833,7 +856,6 @@ invoke() {
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
-   trace "line=[$line]"
    until [[ -z "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
@@ -1019,6 +1041,16 @@ colon ':'
 semicolon
 interpreted
 
+# --- experimental: delayed header creation  ---
+colon '::'
+   code 'word'                                                       # parse space delimited word from input stream
+   code 'colonlate "$word"'                                          # generate synthetic name, associate with word
+   code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
+   code "((s[++sp]=$magic))"                                         # allow check of structure
+   code '((compiling=true))'
+semicolon
+interpreted
+# ----------------------------------------------
 
 primitive 'interpreted'  'interpreted'                               # move header to interpreter context vocabulary
 primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
@@ -1098,6 +1130,7 @@ define()  {
    code "constant \"\$word\" \"$1\""                                 # not using single quotes because want $1 to expand
 }
 
+
 colon 'create$'
     definess '$dp'
 semicolon
@@ -1105,6 +1138,7 @@ semicolon
 colon 'create'
     define '$dp'
 semicolon
+
 
 colon 'constant'
    define '${s[sp--]}'

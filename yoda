@@ -463,6 +463,7 @@ use()  {
 compile()  {
    optimise                                                          # rewrite ${body[@]} to ${target[@]}
    use "${target[@]}"                                                # generate function from $target[@] with name of $lastword
+   compiler_init
 }
 
 # execute or compile args. Similar to invoke,
@@ -634,6 +635,7 @@ warm()  {
    ((sp<0)) &&s=() sp=0                                              # always clear stack underflow
    ((clean))&&s=() sp=0 ss=()                                        # empty stacks
    m[base]="10"                                                      # set decimal if base exists
+   compiler_init
 }
 
 coldvector=""                                                        # colon word "boot" assigns coldvector. started when compilation completed.
@@ -802,6 +804,7 @@ satisfy1()  {
    [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
       forwardref "$word"                                             # yes: create forward ref only
       tmp="${libdirs[0]}/${lib["$word"]}"                            #      path and name of lib file
+      ((${#body[@]})) && return 1
       [[ -f "$tmp" ]] && from "$tmp"                                 #      load if file exists
       return 0
    }
@@ -1772,6 +1775,10 @@ compiled
 
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
+
+#colon '??'
+#   code 'echo "${#body[@]}"'
+#semicolon
 
 colon 'literal'
    code 'push "${s[sp--]}"'

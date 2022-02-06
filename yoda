@@ -343,26 +343,25 @@ optimise()  {                                                        # run code 
 
 # some analyser flags were set. Examine.
       elif (( bodyflag & functionheader )); then                # test attempting to delegate header creation to detokeniserr
-# only pretending anyway right now, real headers are
-# still defined in advance of compilation.
-#
-# preparing to delegate header creation to detokeniser
-#           pretend "create function header for $lastword at body line $tmp"
+
+# late headers: defining words don't create headers, but pass
+# word name with analyser flag "dunctionheader" to optimise.
+# It's upon detokeniser to create header, which it is doing here and now.
+# NOTE: functional but ugly. Needs some taking care of here
          word="${body[tmp]}"
-   name="${headersunresolved[$word]}"
-   if [[ -z "$name" ]]; then
-      newname "$word"
-      name="${returned[0]}"
-   else
-      unset -v "headersunresolved['$word']"
-   fi
-   header "$word" "$name"
-   sourcelocation
-
-#   [[ -z "$linenr" && "${FUNCNAME[2]}" == "evaluate" ]] &&
-#      where "$lastword" "1"  "${BASH_LINENO[2]}"
-
+         name="${headersunresolved[$word]}"
+         if [[ -z "$name" ]]; then
+            newname "$word"
+            name="${returned[0]}"
+         else
+            unset -v "headersunresolved['$word']"
+         fi
+         header "$word" "$name"
+         sourcelocation
+         [[ -z "$linenr" && "${FUNCNAME[4]}" == "evaluate" ]] &&
+         where "$lastword" "1"  "${BASH_LINENO[4]}"
          continue
+
       elif (( bodyflag & inlined )); then                            # inlined code: copy
          targetline="$bodyline"
       elif (( bodyflag & atomiccode )); then                         # atomic code: expand

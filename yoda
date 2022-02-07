@@ -2469,7 +2469,7 @@ generate_dependencies()  {                                           # library i
    grep -r "^provides: " "${libdirs[0]}" |
    while read -r file words; do
       file="${file%:provides:}"
-      file="${file#${libdirs[0]}/}"
+      file="${file#"${libdirs[0]}"/}"
 # "Double quote to prevent globbing and word splitting."
 # I actually *want* word splitting here, for fprint to produce one line per space delimited word
 # shellcheck disable=SC2086
@@ -2492,6 +2492,9 @@ dependencies()  {                                                    # library i
 # args:  names of words
 satisfy()  {
    local line
+# SC2068 (error): Double quote array expansions to avoid re-splitting elements:
+# I don't want to avoid re-splitting, I want re-splitting to happen.
+#shellcheck disable=2068
    for word in $@; do
       satisfy1 "$word" || notfound "$word"
    done

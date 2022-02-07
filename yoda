@@ -312,6 +312,19 @@ analyserflag()  {
 }
 
 
+# return a new function name in variable name
+# arg1:word
+newname()  {
+   names[nextname]="$1"                                              # keep word name for .name, name$
+   returned[0]="${functionname_prefix}_$((nextname++))"              # grab new xt, make a function name from it
+}
+
+sourcelocation()  {
+   [[ -z "$linenr" ]] &&
+   where "$lastword" "1" "$((BASH_LINENO[$1]))"                       # set source location to yoda, line of caller
+}
+
+
 
 # doesn't actually do any optimizing at this point.
 # Function is now limited to:
@@ -364,11 +377,11 @@ optimise()  {                                                        # run code 
             unset -v "headersunresolved['$word']"                    # going to resolve word, remove from forward refs
          fi
          header "$word" "$name"                                      # create new header
-         sourcelocation                                              # record file/line
+         sourcelocation 3                                            # record file/line
 
-         level=4
-         [[ -z "$linenr" && "${FUNCNAME[level]}" == "evaluate" ]] && # special case: colon word in yoda, created by "evaluate"
-         where "$lastword" "1"  "${BASH_LINENO[level]}"              # special because of how file handle and line number are produced
+         # special case: colon word in yoda, created by "evaluate"
+         [[ -z "$linenr" && "${FUNCNAME[4]}" == "evaluate" ]] &&
+         sourcelocation 5
          continue
 
       elif (( bodyflag & inlined )); then                            # inlined code: copy
@@ -500,33 +513,12 @@ push()  {                                                            # leave it 
    code "$1"   "$literalnumber"                                      # only insert value or expression, mark it.
 }                                                                    # "literalnumber" is a misnomer here. but at the end
 
-
-# return a new function name in variable name
-# arg1:word
-newname()  {
-   names[nextname]="$1"                                              # keep word name for .name, name$
-   returned[0]="${functionname_prefix}_$((nextname++))"              # grab new xt, make a function name from it
-}
-
-sourcelocation()  {
-   level=3
-   [[ -z "$linenr" ]] &&
-   where "$lastword" "1" "$((BASH_LINENO[level]))"                       # set source location to yoda, line of caller
-}
-
-
-# arg1: word name
 create()  {
    [[ -z "$1" ]] && emptyname
-   newname "$1"                                                      # returns name
-   name="${returned[0]}"
-   header "$1" "$name"
-   sourcelocation
+   compiler_init
+   code "$1" "$functionheader"
+   optimise
 }
-
-#   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
-#   code "$1 $name" "$functionheader"                                # preparing to delegate header creation to detokeniser
-#   lastword="$1"                                                    # global variable. setting header flags needs this one
 
 
 # primitive wordname  functionname
@@ -534,7 +526,6 @@ primitive()  {
    create "$1"
    use "$2"
    inline
-   sourcelocation
 }
 
 
@@ -561,9 +552,9 @@ constant()  {
    colon "$1"
    push "$2"
    semicolon
+   sourcelocation 1
    inline
    inout 0 1
-   sourcelocation
 }
 
 
@@ -572,7 +563,7 @@ variable()  {
    (( "$1"="$dp" ))
    m[dp]="${2:-0}"
    constant "$1" "$((dp++))"
-   sourcelocation
+   sourcelocation 1
 }
 
 
@@ -1002,15 +993,6 @@ colon ';'      # semicolon
 semicolon
 compiled
 
-colon '::'
-   code 'word'                                                       # parse space delimited word from input stream
-   code 'colon "$word"'                                              # generate synthetic name, associate with word
-   code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
-   code "((s[++sp]=$magic))"                                         # allow check of structure
-   code '((compiling=true))'
-semicolon
-interpreted
-
 # --- experimental: delayed header creation  ---
 colon ':'
    code 'word'                                                       # parse space delimited word from input stream
@@ -1028,13 +1010,13 @@ primitive 'transient'   'headerstransient+=("$lastword")'            # copy head
 
 # ----- diagnostics -------------------------
 
-words()	{
+words() {
    local headers
    for tmp in "${headerslistlist[@]}" "headersunresolved"; do
       declare -n headers="$tmp"
-	   (( ${#headers[@]} )) && {
+      (( ${#headers[@]} )) && {
          printf '%s\n' "--- ${tmp#"headers"} ---"
-   	   printf  "%s  " "${!headers[@]}"
+         printf  "%s  " "${!headers[@]}"
          printf '\n\n'
       }
    done
@@ -1163,7 +1145,7 @@ defer()  {                                                           # use in yo
    constant "$1" "$((dp))"
    use "${functionname_prefix}_\${m[$dp]}"
    ((m[dp++]="${headersstateless[$2]##*_}"))
-   sourcelocation
+   sourcelocation 3
 }
 
 # example:  defer foo      ' bar is foo

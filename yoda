@@ -326,24 +326,17 @@ sourcelocation()  {
 
 
 
-# doesn't actually do any optimizing at this point.
-# Function is now limited to:
+# doesn't actually do any optimizing.
+# Function is limited to:
 # - expanding atoms
 # - generating code pushing literals
 # - dealing with does>
+# - postcompile creation headers
 optimise()  {                                                        # run code generator on ${analyser[@]} data
-   ((${#body[@]}==${#analyser[@]}))|| {
-      echo "body/analyser<>1"
-      printf "%s\n" "----- body: -----"
-      printf "%s\n" "${body[@]}"
-      printf "%s\n" "----- analyser: -----"
-      printf "%s\n" "${analyser[@]}"
-      exit
-   }
+   ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
    target=()
    dodoes_at=0
 #   corresponding=()                                                 # index array source line to target line.
-
    ((codedump))&& {
       echo ": $lastword"
       for ((tmp=0; tmp<${#body[@]}; tmp++)); do
@@ -351,49 +344,40 @@ optimise()  {                                                        # run code 
       done
       echo "------------------------------------------------"
    }
-
    for ((tmp=0; tmp<${#body[@]}; tmp++)); do
 #      corresponding[tmp]="${#target[@]}"                            # allow optimiser to locate target code for any source line.
-                                                                     # needed for post mod or removal
       bodyline="${body[tmp]}"
       bodyflag="${analyser[tmp]}"
-      if ! (( bodyflag )); then                                      # no flags: literal code, copy
-         targetline="$bodyline"
-
-
-# some analyser flags were set. Examine.
-      elif (( bodyflag & functionheader )); then                     # test attempting to delegate header creation to detokeniserr
-
+      targetline="$bodyline"                                         # Default action: pass through
+      if (( bodyflag )); then                                        # flags: examine
+         if (( bodyflag & functionheader )); then                    # test attempting to delegate header creation to detokeniserr
 # late headers: defining words don't create headers, but pass
 # word name with analyser flag "dunctionheader" to optimise.
 # It's upon detokeniser to create header, which it is doing here and now.
 # NOTE: functional but ugly. Needs some taking care of here
-         word="${body[tmp]}"                                         # word name of new word
-         name="${headersunresolved[$word]}"                          # if forward ref, reuse function name of forward ref
-         if [[ -z "$name" ]]; then
-            newname "$word"                                          # not a forward ref: invent new name
-            name="${returned[0]}"
-         else
-            unset -v "headersunresolved['$word']"                    # going to resolve word, remove from forward refs
-         fi
-         header "$word" "$name"                                      # create new header
-         sourcelocation 3                                            # record file/line
-
-         # special case: colon word in yoda, created by "evaluate"
-         [[ -z "$linenr" && "${FUNCNAME[4]}" == "evaluate" ]] &&
-         sourcelocation 5
-         continue
-
-      elif (( bodyflag & inlined )); then                            # inlined code: copy
-         targetline="$bodyline"
-      elif (( bodyflag & atomiccode )); then                         # atomic code: expand
-         targetline="${atom[${bodyline}]}"
-      elif (( bodyflag & literalnumber )); then                      # number literal: generate code pushing the number
-         targetline="((s[++sp]=$bodyline))"
-      elif (( bodyflag & does )); then                               # does>
-         targetline="${body[tmp]}"                                   # compile dodoes call
-         dodoes_at="$((${#target[@]}+1))"                            # remember end of target for splitting code (but only when whole word
-      fi                                                             # was compiled - we want to rip out all the run time code, after all.
+            word="$bodyline"                                         # word name of new word
+            name="${headersunresolved[$word]}"                       # if forward ref, reuse function name of forward ref
+            if [[ -z "$name" ]]; then
+               newname "$word"                                       # not a forward ref: invent new name
+               name="${returned[0]}"
+            else
+               unset -v "headersunresolved['$word']"                 # going to resolve word, remove from forward refs
+            fi
+            header "$word" "$name"                                   # create new header
+            if [[ "${FUNCNAME[4]}" == "evaluate" ]]; then
+               sourcelocation 5                                      # special case: colon word in yoda, created by "evaluate"
+            else
+               sourcelocation 3                                      # record file/line
+            fi
+            continue
+         elif (( bodyflag & atomiccode )); then                      # atomic code: expand
+            targetline="${atom[${bodyline}]}"
+         elif (( bodyflag & literalnumber )); then                   # number literal: generate code pushing the number
+            targetline="((s[++sp]=$bodyline))"
+         elif (( bodyflag & does )); then                            # does>
+            dodoes_at="$((${#target[@]}+1))"                         # remember end of target for splitting code (but only when whole word
+         fi                                                          # was compiled - we want to rip out all the run time code, after all.
+      fi
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
    ((dodoes_at)) && {
@@ -402,10 +386,9 @@ optimise()  {                                                        # run code 
 # is seperated to an array item associated with defining word.
 # dodoes, when executed, knows how to retrieve and
 # compile that code to defined word.
-
 # a workaround is needed here too:  create ... does> ;   does without following code will let bash run into an empty function,
 # which bash doesn't like, and complain about.  Therefore this condition is caught here and acted upon.
-     if (( ${#target[@]} > dodoes_at )); then                       # everything ok: there was code between does> and ; - extract and store it.
+     if (( ${#target[@]} > dodoes_at )); then                        # everything ok: there was code between does> and ; - extract and store it.
         doescode[${headersstateless[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
         target=("${target[@]:0:$dodoes_at}")
      else                                                            # but does> without code ...

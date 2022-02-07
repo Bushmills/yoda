@@ -27,7 +27,14 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
- v="0.6.0"   # 2022feb01,21:11   create$ constant$ variable$ array$ like their non-$ counterparts, but taking names from string stack
+v="0.6.1"   # 2022feb06,20:23    late headers: headers aren't created by defining words like create, variable, constant, : but instead
+#                                by semicolon. defining words merely place word name and analyser flag into code buffer, expecting
+#                                detokeniser to do header creation. Consequence ist that for words failing compilation no headers are
+#                                created at all, which eliminates a potentially needed hide/reveal scheme to exclude words from being
+#                                found as long compilation hasn't finished successfully. On the down side is source location now
+#                                recorded as the line containing the semicolon. There's a workaround possible, but hasn't been coded for
+#                                this version.
+# v="0.6.0"   # 2022feb01,21:11   create$ constant$ variable$ array$ like their non-$ counterparts, but taking names from string stack
 #                                instead of from input stream. Removed crossref. realtime seperator can be . or ,
 #                                config in home dir has priority over config in yoda dir, which may be overwritten by git pull
 # v="0.5.9"   # 2022jan28,14:22  added transient, which marks header of last word as to dispose of after file was loaded. Changed
@@ -342,24 +349,26 @@ optimise()  {                                                        # run code 
 
 
 # some analyser flags were set. Examine.
-      elif (( bodyflag & functionheader )); then                # test attempting to delegate header creation to detokeniserr
+      elif (( bodyflag & functionheader )); then                     # test attempting to delegate header creation to detokeniserr
 
 # late headers: defining words don't create headers, but pass
 # word name with analyser flag "dunctionheader" to optimise.
 # It's upon detokeniser to create header, which it is doing here and now.
 # NOTE: functional but ugly. Needs some taking care of here
-         word="${body[tmp]}"
-         name="${headersunresolved[$word]}"
+         word="${body[tmp]}"                                         # word name of new word
+         name="${headersunresolved[$word]}"                          # if forward ref, reuse function name of forward ref
          if [[ -z "$name" ]]; then
-            newname "$word"
+            newname "$word"                                          # not a forward ref: invent new name
             name="${returned[0]}"
          else
-            unset -v "headersunresolved['$word']"
+            unset -v "headersunresolved['$word']"                    # going to resolve word, remove from forward refs
          fi
-         header "$word" "$name"
-         sourcelocation
-         [[ -z "$linenr" && "${FUNCNAME[4]}" == "evaluate" ]] &&
-         where "$lastword" "1"  "${BASH_LINENO[4]}"
+         header "$word" "$name"                                      # create new header
+         sourcelocation                                              # record file/line
+
+         level=4
+         [[ -z "$linenr" && "${FUNCNAME[level]}" == "evaluate" ]] && # special case: colon word in yoda, created by "evaluate"
+         where "$lastword" "1"  "${BASH_LINENO[level]}"              # special because of how file handle and line number are produced
          continue
 
       elif (( bodyflag & inlined )); then                            # inlined code: copy
@@ -500,8 +509,9 @@ newname()  {
 }
 
 sourcelocation()  {
+   level=3
    [[ -z "$linenr" ]] &&
-   where "$lastword" "1" "$((BASH_LINENO[1]))"                       # set source location to yoda, line of caller
+   where "$lastword" "1" "$((BASH_LINENO[level]))"                       # set source location to yoda, line of caller
 }
 
 
@@ -528,49 +538,11 @@ primitive()  {
 }
 
 
-colonlate()  {
+colon()  {
    [[ -z "$1" ]] && emptyname
    compiler_init
    code "$1" "$functionheader"
 }
-
-
-colon()  {
-   [[ -z "$1" ]] && emptyname
-   compiler_init
-   name="${headersunresolved[$1]}"                                   # function name of forward reference, or empty
-   if [[ -z "$name" ]]; then                                         # check whether word is an unresolved forward reference
-      newname "$1"                                                   # no: generate new name
-      name="${returned[0]}"
-   else
-      unset -v "headersunresolved['$1']"                             # remove forward reference from vocabulary
-   fi
-   header "$1" "$name"
-   sourcelocation
-   compiling="$true"
-
-# -- hack alert:
-# source location isn't recorded properly when definition is
-# created by  "evaluate ': foo ... ;' as done several time in here
-# In order to fix their source locations in the "where" array, it
-# is examined here whether call to colon happened two levels higher
-# from evaluate. This hack is needed for another hack which is here
-# too and similar enough that they both can be pulled together:
-# source locations from primitives in general need that other hack
-# which takes source location from BASH_LINENO[0] (and from
-# BASH_LINENO[2] for the hack of the hack).
-# So when suddenly source lookup of primitives through "review"
-# fails, this would be the place to look at.
-
-   [[ -z "$linenr" && "${FUNCNAME[2]}" == "evaluate" ]] &&
-      where "$lastword" "1"  "${BASH_LINENO[2]}"
-}
-
-#   code "$1" "$functionheader"                                      # preparing to delegate header creation to detokeniser
-#   code "$1 $name" "$functionheader"                                # preparing to delegate header creation to detokeniser
-#   lastword="$1"                                                    # global variable. setting header flags needs this one
-
-
 
 # arg1: add action for semicolon to execute to conclude[@]
 conclude()  { conclude+=("$@"); }
@@ -1042,7 +1014,7 @@ interpreted
 # --- experimental: delayed header creation  ---
 colon ':'
    code 'word'                                                       # parse space delimited word from input stream
-   code 'colonlate "$word"'                                          # generate synthetic name, associate with word
+   code 'colon "$word"'                                              # generate synthetic name, associate with word
    code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
    code "((s[++sp]=$magic))"                                         # allow check of structure
    code '((compiling=true))'

@@ -1,0 +1,13 @@
+provides: p
+
+\ parse a space delimited string, used as word name which
+\ source location is looked up and output as single line
+\ from that file. May be helpful for stack effects of colon
+\ words which are usually written on first line. Single line
+\ words like variables, constants etc will be shown completely.
+
+: p  ( -- )  ( stream: space delimited string )
+      word$ where$
+      dup 0 > if
+         >sed -n "${s[sp]}p" "${files[s[sp-1]]}"
+      then 2drop  ;

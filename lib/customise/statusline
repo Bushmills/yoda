@@ -38,6 +38,14 @@ create statusline   true ,
    spacing * + over < ;                      transient
 
 
+\ depth of call stack, corrected for base level.
+\ every error or break increase depth. This value
+\ is displayed as indicator for when a yoda restart
+\ may be desirable.
+: calls  ( -- u )
+   >s[++sp]="((${#FUNCNAME[@]}-6))"
+;
+
 \ 120 columns for full status line
 \ NOTE: define a version of .s which fits output into available space, truncated if necessary
 : .status  ( -- )
@@ -46,15 +54,16 @@ create statusline   true ,
 \     +------ space required
 \     |  +--- priority ( 1 is highest )
 \     |  |
-      98 9 plenty if "yoda version " type$ "v" env$        show0  then
-      57 7 plenty if                 "bits"    bits        show1  then
+     107 9 plenty if "yoda version " type$ "v" env$        show0  then
+      66 7 plenty if                 "bits"    bits        show1  then
        9 1 plenty if                           flags       show$  then
-      32 4 plenty if                 "files"   #files      show1  then
-      17 2 plenty if                 "unres"   #unresolved show1  then
-      24 3 plenty if                 "base"    base @      show1  then
-      41 5 plenty if                 "here"    here        show1  then
-      50 6 plenty if                 "rdepth"  rdepth      show1  then
-      80 8 plenty if                 "stack:"  type$   >r .s r>   then
+      18 4 plenty if                 "call"    calls       show1  then
+      41 4 plenty if                 "files"   #files      show1  then
+      28 2 plenty if                 "unres"   #unresolved show1  then
+      33 3 plenty if                 "base"    base @      show1  then
+      50 5 plenty if                 "here"    here        show1  then
+      59 6 plenty if                 "rdepth"  rdepth      show1  then
+      89 8 plenty if                 "stack:"  type$   >r .s r>   then
    drop
 ;
 

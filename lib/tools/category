@@ -1,0 +1,15 @@
+provides: category
+
+\ read a space delimited string from input stream,
+\ do a substring search that string in "category:" of word docs,
+\ print the contents of the "name:" field of matching files.
+\ said differently, show the words which belong to the searched category.
+
+: category ( -- )  ( input: space delimited string )
+   word$
+   >local filelist
+   >filelist=( $(grep -l "^category: .*${ss[-1]}.*" $doc/words/*) )
+   >((${#filelist[@]})) && awk '/^name:/ { print $2 }' "${filelist[@]}"
+   drop$  ;
+
+\ example:    category defin

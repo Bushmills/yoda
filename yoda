@@ -112,7 +112,7 @@ do                                                                   # loop thro
    [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
 done
 
-functionname_prefix="yoda"                                                   # prefix to bash function names,  _${nextname} will be appended upon header creation
+functionname_prefix="yoda"                                           # prefix to bash function names,  _${nextname} will be appended upon header creation
 nextname="1000"                                                      # names enumeration, initially. Can be any positive integer
 
 declare -ai r=() s=() m=()
@@ -140,6 +140,7 @@ declare -A wherefile                                                 # source fi
 declare -A whereline                                                 # source line
 declare -A lib                                                       # cache dependencies
 
+filehandle=1                                                         # 1=yoda. 0=tty.  >1=loaded source
 declare -a files=("tty")                                             # list of included files
 declare -a loaded                                                    # list of inclusion counters for included files
 
@@ -148,20 +149,21 @@ declare -a conclude=()                                               # compiler 
 declare -a lasterror
 lasterror=("" "-1" "0")
 
+
+
 # header flags:
 flagscount="0"
-inline=$((1<<flagscount++))                                          # compile function code rather than calls to function
-
-# all 0: don't optimise, copy literal code
-analyserflag="0"                                                     # shift by this number for next flag
-functionheader="$((1<<analyserflag++))"                              # create header
-atomiccode="$((1<<analyserflag++))"                                  # expand
-literalnumber="$((1<<analyserflag++))"                               # generate code to push number
-flowcontrol="$((1<<analyserflag++))"                                 # help recognise optimisation boundaries
-optimisationboundary="$((1<<analyserflag++))"
-literalstring="$((1<<analyserflag++))"                               # probably unnecessary
-inlined="$((1<<analyserflag++))"                                     # probably useless
-does="$((1<<analyserflag++))"                                        # probably useless
+newflag()  { (( $1 = 1<<flagscount++ )); }
+newflag inline
+newflag functionheader                                               # create header
+newflag atomiccode                                                   # expand
+newflag literalnumber                                                # generate code to push number
+newflag flowcontrol                                                  # help recognise optimisation boundaries
+newflag optimisationboundary
+newflag literalstring                                                # probably unnecessary
+newflag inlined                                                      # probably useless
+newflag does                                                         # probably useless
+newflag sourcelocation
 
 # when stack effect of words is known to optimiser, it will have
 # the possibility to determine whether stack items cached in
@@ -280,8 +282,10 @@ header()  {
    [[ -z "${headersstateless["$1"]}" ]] || echo "redefining $1"
    headersstateless["$1"]="$2"                                       # associate word with name
    flags["$1"]="0"                                                   # default to no flags
-   (( linenr < 0 )) ||                                               # not entered at keyboard
-      where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
+# this deals with loaded source files
+# but returns location of semicolon
+#   (( linenr < 0 )) ||                                               # not entered at keyboard
+#      where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
 }
 
 
@@ -300,17 +304,6 @@ header()  {
 #    informing optimiser/detokeniser about their nature, so it
 #    can respond in an appropriate way to body array entries.
 
-# sets analyser flag(s) arg1 for last code/atom compiled instruction.
-# something tricky with setting analyser flags when an inlinable word
-# was compiled to an immediate word which executes during compilation
-# of the word is was used in, because in that situation applies:
-#  - compilation state is on
-#  - compiler copies analyser flag setting code to new word
-analyserflag()  {
-   (( ${#body[@]} )) || error "attempted to mark code in $lastword as $2 while body empty"
-   (( analyser[-1] |= $1 ))
-}
-
 
 # return a new function name in variable name
 # arg1:word
@@ -319,11 +312,12 @@ newname()  {
    returned[0]="${functionname_prefix}_$((nextname++))"              # grab new xt, make a function name from it
 }
 
-sourcelocation()  {
-   [[ -z "$linenr" ]] &&
-   where "$lastword" "1" "$((BASH_LINENO[$1]))"                       # set source location to yoda, line of caller
-}
 
+# arg1: code token, arg2: code token type (opt)
+code()  {                                                            # literal code compiler
+   body+=("$1")
+   analyser+=("${2:-0}")                                             # default to no optimiser intervention
+}
 
 
 # doesn't actually do any optimizing.
@@ -364,14 +358,12 @@ optimise()  {                                                        # run code 
                unset -v "headersunresolved['$word']"                 # going to resolve word, remove from forward refs
             fi
             header "$word" "$name"                                   # create new header
-            if [[ "${FUNCNAME[4]}" == "evaluate" ]]; then
-               sourcelocation 5                                      # special case: colon word in yoda, created by "evaluate"
-            else
-               sourcelocation 3                                      # record file/line
-            fi
+            continue
+         elif (( bodyflag & sourcelocation )); then                  # source locatrion: set
+            where "$lastword" "${bodyline%% *}" "${bodyline##* }"    # set source location to yoda, line of caller
             continue
          elif (( bodyflag & atomiccode )); then                      # atomic code: expand
-            targetline="${atom[${bodyline}]}"
+            targetline="${atom[$bodyline]}"
          elif (( bodyflag & literalnumber )); then                   # number literal: generate code pushing the number
             targetline="((s[++sp]=$bodyline))"
          elif (( bodyflag & does )); then                            # does>
@@ -427,11 +419,6 @@ parse()  {
 
 # ----- compiler ----------------------------------------- #fold00
 
-# arg1: code token, arg2: code token type (opt)
-code()  {                                                            # literal code compiler
-   body+=("$1")
-   analyser+=("${2:-0}")                                             # default to no optimiser intervention
-}
 
 # atoms may be:
 #  - micro instructions
@@ -491,7 +478,6 @@ inout()  {
 }
 
 
-
 push()  {                                                            # leave it to detokeniser to generate code
    code "$1"   "$literalnumber"                                      # only insert value or expression, mark it.
 }                                                                    # "literalnumber" is a misnomer here. but at the end
@@ -535,7 +521,6 @@ constant()  {
    colon "$1"
    push "$2"
    semicolon
-   sourcelocation 1
    inline
    inout 0 1
 }
@@ -546,7 +531,6 @@ variable()  {
    (( "$1"="$dp" ))
    m[dp]="${2:-0}"
    constant "$1" "$((dp++))"
-   sourcelocation 1
 }
 
 
@@ -651,10 +635,6 @@ ctrl-c()  {                                                          # "break" i
    ((break == 2))  && cold
 }
 trap ctrl-c SIGINT
-
-# may come in handy with tput
-# resized()  { echo "resized"; }
-# trap foo SIGWINCH
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
@@ -969,7 +949,7 @@ atom["here"]='((s[++sp]=dp))'
 # ----- colon/semicolon ---------------------------------- #fold01
 
 
-colon ';'      # semicolon
+colon ';'
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
    code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'             # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
@@ -1128,7 +1108,6 @@ defer()  {                                                           # use in yo
    constant "$1" "$((dp))"
    use "${functionname_prefix}_\${m[$dp]}"
    ((m[dp++]="${headersstateless[$2]##*_}"))
-   sourcelocation 3
 }
 
 # example:  defer foo      ' bar is foo

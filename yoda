@@ -252,11 +252,6 @@ interpreted()   {
    unset -v 'headersstateless["$lastword"]'
 }
 
-where()  {                                                           # remember source location
-   wherefile["$1"]="$2"                                              # remember file handle
-   whereline["$1"]="$3"                                              # remember line nr
-}
-
 
 compiler_init()  {
    body=()
@@ -282,10 +277,6 @@ header()  {
    [[ -z "${headersstateless["$1"]}" ]] || echo "redefining $1"
    headersstateless["$1"]="$2"                                       # associate word with name
    flags["$1"]="0"                                                   # default to no flags
-# this deals with loaded source files
-# but returns location of semicolon
-#   (( linenr < 0 )) ||                                               # not entered at keyboard
-#      where "$lastword" "$((filehandle))" "$((linenr))"              # remember source location
 }
 
 
@@ -319,6 +310,10 @@ code()  {                                                            # literal c
    analyser+=("${2:-0}")                                             # default to no optimiser intervention
 }
 
+
+where()  {
+   code "$1 $2" "$sourcelocation"
+}
 
 # doesn't actually do any optimizing.
 # Function is limited to:
@@ -359,8 +354,9 @@ optimise()  {                                                        # run code 
             fi
             header "$word" "$name"                                   # create new header
             continue
-         elif (( bodyflag & sourcelocation )); then                  # source locatrion: set
-            where "$lastword" "${bodyline%% *}" "${bodyline##* }"    # set source location to yoda, line of caller
+         elif (( bodyflag & sourcelocation )); then                  # source location: set
+            wherefile["$lastword"]="${bodyline%% *}"                 # remember file handle
+            whereline["$lastword"]="${bodyline##* }"                 # remember line nr
             continue
          elif (( bodyflag & atomiccode )); then                      # atomic code: expand
             targetline="${atom[$bodyline]}"
@@ -482,26 +478,35 @@ push()  {                                                            # leave it 
    code "$1"   "$literalnumber"                                      # only insert value or expression, mark it.
 }                                                                    # "literalnumber" is a misnomer here. but at the end
 
-create()  {
+
+# arg1: wordname
+# arg2: filehandle
+# arg3: line number
+delayheader()  {
    [[ -z "$1" ]] && emptyname
    compiler_init
    code "$1" "$functionheader"
+   [[ -z "$2" ]] || where "$2" "$3"
+}
+
+nowheader()  {
+   delayheader "$1" "$2" "$3"
    optimise
 }
 
 
-# primitive wordname  functionname
+# primitive "wordname"  "functionname|code"
 primitive()  {
-   create "$1"
+   nowheader "$1" "$filehandle" "${BASH_LINENO[0]}"
    use "$2"
    inline
 }
 
-
 colon()  {
-   [[ -z "$1" ]] && emptyname
-   compiler_init
-   code "$1" "$functionheader"
+   tmp="${BASH_LINENO[0]}"                                           # assume not evaluate
+   [[ "${FUNCNAME[2]}" == "evaluate" ]] &&                           # but if evaluate
+      tmp="${BASH_LINENO[2]}"                                        # then linenumber from different array item
+   delayheader "$1" "$filehandle" "${linenr:-$tmp}"
 }
 
 # arg1: add action for semicolon to execute to conclude[@]
@@ -518,7 +523,7 @@ semicolon()  {
 
 
 constant()  {
-   colon "$1"
+   delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    push "$2"
    semicolon
    inline
@@ -530,7 +535,11 @@ constant()  {
 variable()  {
    (( "$1"="$dp" ))
    m[dp]="${2:-0}"
-   constant "$1" "$((dp++))"
+   delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
+   push "$((dp++))"
+   semicolon
+   inline
+   inout 0 1
 }
 
 
@@ -551,6 +560,23 @@ constant 'esc'                "27"
 constant 'bl'                 "32"
 constant 'bits'               "$bits"
 constant 'last'               "$last"
+
+
+# arg1: deferred word
+# arg2: initially deferred to, word name
+# example:  defer 'foo'  'bar'
+defer()  {                                                           # use in yoda source
+   delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
+   push "$((dp))"
+# NOTE: instead of use, code could be compiled through "code" and the left it to semicolon to create whole word
+   semicolon
+   use "${functionname_prefix}_\${m[$dp]}"
+   ((m[dp++]="${headersstateless[$2]##*_}"))
+   inline
+   inout 0 1
+}
+
+
 
 
 # ----- errors, traps, entry points----------------------- #fold00
@@ -1092,7 +1118,8 @@ semicolon
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
    code 'headersstateless["$word"]="${functionname_prefix}_${s[sp--]}"'
-   code 'whereline["$lastword"]="${linenr:-BASH_LINENO[2]}"'         # correct source line number for aliases in this file
+   code 'wherefile["$lastword"]="$filehandle"'
+   code 'whereline["$lastword"]="${linenr:-${BASH_LINENO[2]}}"'      # correct source line number for aliases in this file
 semicolon
 
 
@@ -1100,15 +1127,6 @@ semicolon
 
 # new deferred words are initialised to noop
 primitive 'noop' '(())'
-
-# arg1: deferred word
-# arg2: initially deferred to, word name
-# example:  defer 'foo'  'bar'
-defer()  {                                                           # use in yoda source
-   constant "$1" "$((dp))"
-   use "${functionname_prefix}_\${m[$dp]}"
-   ((m[dp++]="${headersstateless[$2]##*_}"))
-}
 
 # example:  defer foo      ' bar is foo
 colon "defer"                                                        # use in yoda program
@@ -1690,10 +1708,6 @@ compiled
 
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
-
-#colon '??'
-#   code 'echo "${#body[@]}"'
-#semicolon
 
 colon 'literal'
    code 'push "${s[sp--]}"'

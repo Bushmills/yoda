@@ -12,3 +12,5 @@ decription:          outputs an " ok" prompt while interpreting, followed by a d
 
 example:             none
 notes:               prompt is executed as part of the interactive interpreter loop "quit"
+                     and is now a deferred word, to allow simple replacement against custom
+                     prompts.

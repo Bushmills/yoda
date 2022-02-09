@@ -27,7 +27,16 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.1"   # 2022feb06,20:23    late headers: headers aren't created by defining words like create, variable, constant, : but instead
+v="0.6.2"   # 2022feb08,21:03    source locations are correct again: defining words inject a pseudo op with file handle, line number as
+#                                parameters. postprocessing will use those after header creation to set proper source data.
+#                                last is still updated during header creation, and contents will be wrong when read during compilation
+#                                of a word, as it will still refer to previous word. probably. Wrong, anyway. Would need defining words
+#                                to update last, rather than the postponed header word. Come to think of it, keeping update of last in
+#                                postponed header, and then in additionally just in colon should do. Alternatively, move it from postponed
+#                                header to code injecting the header creatioh pseudo op.
+#                                Done so now:  last is updated in delayheader, the word which inject header creation pseudo op. header,
+#                                which do so before, isn't involved in updating last any longer.
+#v="0.6.1"   # 2022feb06,20:23   late headers: headers aren't created by defining words like create, variable, constant, : but instead
 #                                by semicolon. defining words merely place word name and analyser flag into code buffer, expecting
 #                                detokeniser to do header creation. Consequence ist that for words failing compilation no headers are
 #                                created at all, which eliminates a potentially needed hide/reveal scheme to exclude words from being
@@ -273,7 +282,6 @@ compiler_init()  {
 ((last=dp++))                                                        # remedy: remember here, allot cell, define it as constant later.
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
-   m[last]="${2##*_}"
    [[ -z "${headersstateless["$1"]}" ]] || echo "redefining $1"
    headersstateless["$1"]="$2"                                       # associate word with name
    flags["$1"]="0"                                                   # default to no flags
@@ -486,6 +494,7 @@ delayheader()  {
    [[ -z "$1" ]] && emptyname
    compiler_init
    code "$1" "$functionheader"
+   m[last]="$nextname"
    [[ -z "$2" ]] || where "$2" "$3"
 }
 

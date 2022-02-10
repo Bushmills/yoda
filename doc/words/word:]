@@ -14,4 +14,5 @@ notes:               not very useful without prior [ inside of a definition:
                      "compiled" into a function, while ; without prior :  will
                      complain about inproper structure.
 
-
+standard:            No
+                     (I *think* that current standards don't demand a word named ])

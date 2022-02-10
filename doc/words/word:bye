@@ -6,3 +6,6 @@ contexts:            stateless
 category:            system
 
 decription:          exit from running program or script
+
+standard:            yes
+                     https://forth-standard.org/standard/tools/BYE

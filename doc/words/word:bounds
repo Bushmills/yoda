@@ -1,5 +1,5 @@
 name:                bounds
-stack:               ( start n -- limit start  )
+stack:               ( start n -- limit start )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
@@ -15,3 +15,7 @@ example:             10 5 bounds
 notes:               interestingly will repetitive execution of bounds on its
                      own results, when starting with 0 1, produce the fibonacci
                      sequence.
+
+standard:            no
+                     standard has no equivalent
+                     (but can be easily built from standard words)

@@ -12,3 +12,6 @@ description:         takes and discards input from input stream until ")" was en
 example:             ( yoda will ignore this )  hello
                      : foo  ( yoda will ignore this too )  hello ;
 notes:               similar to \ which will ignore text until end of line.
+
+standard:            yes
+                     https://forth-standard.org/standard/core/p

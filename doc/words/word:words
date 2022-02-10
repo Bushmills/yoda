@@ -8,3 +8,7 @@ category:            dictionary
 decription:          shows a listing of all known named words in sections of all
                      populated vocabularies.
 
+standard:            no.
+deviation:           "List the definition names in the first word list of the search order"
+                     yoda doesn't employ a traditional search order. Therefore can't words
+                     be displayed sorted according that search order.

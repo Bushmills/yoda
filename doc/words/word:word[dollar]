@@ -9,3 +9,6 @@ decription:          parses input for a string, delimited by space,
                      returns parsed string as $1 on return stack
 
 contexts:            stateless
+
+standard:            no.
+deviation:           Standard has no equivalent

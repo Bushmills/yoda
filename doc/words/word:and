@@ -1,8 +1,11 @@
 name:                and
-stack:               ( u1 u2 -- u3 )
+stack:               ( x1 x2 -- x3 )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
 category:            bitwise logic
 
 decription:          u3 is the result of bitwise ANDing u1 with u2
+
+standard:            yes
+                     https://forth-standard.org/standard/core/AND

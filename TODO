@@ -1,6 +1,8 @@
 --- todos solving problems, shortcomings, quirks
 - ticking a word with headers in more than one context vocabulary allows
   no control nor test over which version was ticked.
+- check version used for generating dependencies. Re-create dependencies
+  if version of yoda has changed.
 
 --- general todos, improvements, fancyness
 - let yoda choose editor or xeditor according the environment it runs in.

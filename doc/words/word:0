@@ -7,3 +7,6 @@ category:            constant
 
 decription:          push the value of zero to stack
 
+standard:            No
+deviation:           Standard has no equivalent.
+                     Closest thing to match are definitions created by CONSTANT

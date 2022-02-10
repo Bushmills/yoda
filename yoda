@@ -28,6 +28,7 @@
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
 v="0.6.3"   # 2022feb10,02:35    combined two arrays sourcefile and sourceline into single source
+#                                renamed former misnamed analyser flag "literalnumber" to push.
 # v="0.6.2"   # 2022feb08,21:03  source locations are correct again: defining words inject a pseudo op with file handle, line number as
 #                                parameters. postprocessing will use those after header creation to set proper source data.
 #                                last is still updated during header creation, and contents will be wrong when read during compilation
@@ -167,7 +168,7 @@ newflag()  { (( $1 = 1<<flagscount++ )); }
 newflag inline
 newflag functionheader                                               # create header
 newflag atomiccode                                                   # expand
-newflag literalnumber                                                # generate code to push number
+newflag push                                                         # generate code pushing a cell
 newflag flowcontrol                                                  # help recognise optimisation boundaries
 newflag optimisationboundary
 newflag literalstring                                                # probably unnecessary
@@ -313,9 +314,9 @@ name()  {
 
 
 # arg1: code token, arg2: code token type (opt)
-code()  {                                                            # literal code compiler
+code()  {                                                            # instruction stream injector
    body+=("$1")
-   analyser+=("${2:-0}")                                             # default to no optimiser intervention
+   analyser+=("${2:-0}")                                             # default to literal code
 }
 
 
@@ -355,7 +356,7 @@ optimise()  {                                                        # run code 
             word="$bodyline"                                         # word name of new word
             name="${headersunresolved[$word]}"                       # if forward ref, reuse function name of forward ref
             if [[ -z "$name" ]]; then
-               name "$word"                                       # not a forward ref: invent new name
+               name "$word"                                          # not a forward ref: invent new name
             else
                unset -v "headersunresolved['$word']"                 # going to resolve word, remove from forward refs
             fi
@@ -366,7 +367,7 @@ optimise()  {                                                        # run code 
             continue
          elif (( bodyflag & atomiccode )); then                      # atomic code: expand
             targetline="${atom[$bodyline]}"
-         elif (( bodyflag & literalnumber )); then                   # number literal: generate code pushing the number
+         elif (( bodyflag & push )); then                            # generate code pushing the number
             targetline="((s[++sp]=$bodyline))"
          elif (( bodyflag & does )); then                            # does>
             dodoes_at="$((${#target[@]}+1))"                         # remember end of target for splitting code (but only when whole word
@@ -481,14 +482,16 @@ inout()  {
 
 
 push()  {                                                            # leave it to detokeniser to generate code
-   code "$1"   "$literalnumber"                                      # only insert value or expression, mark it.
-}                                                                    # "literalnumber" is a misnomer here. but at the end
+   code "$1"   "$push"                                               # only insert value or expression, mark it.
+}
 
 
 
-                                                                     # variable last doesn't exist yet, but is used in header, and
-                                                                     # can't be defined earlier, because defining it calls header.
-((last=dp++))                                                        # remedy: remember here, allot cell, define it as constant later.
+# variable last doesn't exist yet, but is used in header, and
+# can't be defined earlier, because defining it calls header.
+# remedy: remember here, allot cell, define it as constant later.
+((last=dp++))
+
 # arg1: wordname
 # arg2: filehandle
 # arg3: line number
@@ -579,14 +582,13 @@ constant 'last'               "$last"
 defer()  {                                                           # use in yoda source
    delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    push "$((dp))"
-# NOTE: instead of use, code could be compiled through "code" and the left it to semicolon to create whole word
    semicolon
+# NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
    use "${functionname_prefix}_\${m[$dp]}"
    ((m[dp++]="${headersstateless[$2]##*_}"))
    inline
    inout 0 1
 }
-
 
 
 

@@ -80,9 +80,11 @@ table  deadoralive   bl ,  'o ,            \ dead and alive cell visualisation
 
 \ ----------- here is the real work done -----------
 
+
 : flip  ( -- arena neighbours )           \ always reading current alive states from one arena,
-   arena 2+ 2@        arena 2@            \ writing new states to other arena. Before next run,
-   arena 2+ 2!  2dup  arena 2!  ;         \ arenas are flipped with this, and new current arena returned
+   arena  2@                              \ writing new states to other arena. Before next run,
+   arena 2 + 2exchange                    \ arenas are flipped with this, and new current arena returned
+   2dup arena 2!  ;
 
 
 \ "code level" optimisation for inner loop

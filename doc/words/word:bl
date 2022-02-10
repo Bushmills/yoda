@@ -6,3 +6,6 @@ contexts:            stateless
 category:            constants, I/O
 
 decription:          push the ASCII of a space character
+
+standard:            yes
+                     https://forth-standard.org/standard/core/BL

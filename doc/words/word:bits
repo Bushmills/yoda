@@ -11,3 +11,6 @@ decription:          returns the number of bits an integer is wide. This is a
 example:             none
 notes:               maximum value should not exceed 63. This constant exists so that
                      yoda can provide words for both signed and unsigned operations
+
+standard:            no
+                     standard has no equivalent

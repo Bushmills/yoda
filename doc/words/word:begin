@@ -9,3 +9,11 @@ decription:          initiate one of these flow control constructs:
                      begin ... again
                      begin ... until
                      begin ... while ... repeat
+
+standard:            no
+deviation:           Compilation: ( C: -- dest )
+                     Put the next location for a transfer of control, dest,
+                     onto the control flow stack.
+
+                     yoda has no concept of branch destinations and can't
+                     therefore stack them.

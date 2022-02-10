@@ -17,3 +17,5 @@ notes:               for number input, a leading base indicator can be used with
                      of their respective radix, regardless of the value base has been
                      set to.
 
+standard:            yes
+                     https://forth-standard.org/standard/core/BASE

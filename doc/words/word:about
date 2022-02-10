@@ -15,3 +15,6 @@ decription:          reads a word from input stream, which is appended to a dir/
 example:             about about
 notes:               similar do doc, with the difference that file isn't opened in
                      an editor, but its contents merely displayed in the terminal
+
+standard:            no
+                     Standard has no equivalent

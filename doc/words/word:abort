@@ -1,10 +1,11 @@
 name:                abort
-stack:               ( ??? x -- )
-return stack:        ( -- )
-string stack:        ( -- )
+stack:               ( ??? -- )
+return stack:        ( ??? -- )
+string stack:        ( ??? -- )
 contexts:            stateless
 category:            system, flow control
 
-decription:          call error handler, passing a value of x, which is reported as such.
+decription:          execute warm start and quit
 
-notes:               in preparation of more flexible error management and response
+standard:            yes
+                     https://forth-standard.org/standard/core/ABORT

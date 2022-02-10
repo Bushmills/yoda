@@ -9,3 +9,6 @@ decription:          reserves n cells of memory, beginning at the address
                      produced by executing here.
                      negative n can be used to deallocate memory, but only
                      if deallocated memory block is the last block allocated.
+
+standard:            yes
+                     https://forth-standard.org/standard/core/ALLOT

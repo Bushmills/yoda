@@ -29,6 +29,8 @@
 # numbers in decimal. Mostly.
 v="0.6.3"   # 2022feb10,02:35    combined two arrays sourcefile and sourceline into single source
 #                                renamed former misnamed analyser flag "literalnumber" to push.
+#                                added 2exchange, removed 2+, 2-
+#                                abort and ?abort are now silent. j inlines.
 # v="0.6.2"   # 2022feb08,21:03  source locations are correct again: defining words inject a pseudo op with file handle, line number as
 #                                parameters. postprocessing will use those after header creation to set proper source data.
 #                                last is still updated during header creation, and contents will be wrong when read during compilation
@@ -663,7 +665,7 @@ newerror "nosource"        "no source for"
 newerror "stillcompiling"  "still compiling after"
 newerror "unbalancedstack" "unbalanced stack in file"
 newerror "unstructured"    "unstructured: missing"
-newerror "abort"           "abort"
+# newerror "abort"           "abort"
 newerror "shellerror"      "shell returned"
 newerror "filenotfound"    "file not found:"
 
@@ -1678,6 +1680,25 @@ inout 4 1
 
 # ----- compiler and word search related ----------------- #fold01
 
+
+#find$
+#( -- 0 | xt 1 | xt -1 )   ( $1 -- $1 | )
+
+
+#FIND
+#( c-addr -- c-addr 0 | xt 1 | xt -1 )
+
+#Find the definition named in the counted string at c-addr.
+#If the definition is not found, return c-addr and zero.
+#If the definition is found, return its execution token xt.
+#If the definition is immediate, also return one (1),
+#otherwise also return minus-one (-1).
+#For a given string, the values returned by FIND while compiling
+#may differ from those returned while not compiling.
+
+
+
+
 # word name as argument
 # arg1: word name
 # ( -- 0 | a )
@@ -1715,6 +1736,7 @@ colon "[']"
    code 'push "${s[sp--]}"'
 semicolon
 compiled
+
 
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
@@ -1874,7 +1896,7 @@ semicolon
 compiled
 
 primitive 'i' '((s[++sp]=i))'; inout 0 1
-evaluate ': j r@ ;'   ;  inout 0 1
+evaluate " ' r@ alias j";      inout 0 1
 
 colon 'next'
    code "((s[sp--] == $magic))|| { unstructured 'for'; return; }"
@@ -1983,15 +2005,6 @@ primitive 'warm'  'warm'
 primitive 'bye'  'exit 0'
 primitive 'exit'  'code "return"'; compiled
 primitive 'return'  'code "return \${s[sp--]}"'; compiled
-primitive 'abort'  'abort "${s[sp--]}"'                              # ( err -- )
-
-# ( f err -- )
-colon '?abort'
-   code '((s[sp-1]))&&abort "${s[sp]}"'
-   atom 'drop'
-   atom 'drop'
-semicolon
-
 
 
 
@@ -2008,9 +2021,6 @@ colon '1-'
 semicolon
 inline
 inout 1 1
-
-primitive '2+'   '((s[sp]=(s[sp]+2)&true))'; inout 1 1
-primitive '2-'   '((s[sp]=(s[sp]-2)&true))'; inout 1 1
 
 colon '2*'
    atom '2*'
@@ -2165,6 +2175,8 @@ primitive 'off'  '((m[s[sp--]]=false))';                     inout 1 0
 primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&true))';  inout 1 0
 primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))';  inout 1 0
 
+# replace contents of a against x1,
+# while returning former contents as x2
 # ( x1 a -- x2 )
 colon 'exchange'
    code '((tmp=m[s[sp]]))'
@@ -2172,6 +2184,24 @@ colon 'exchange'
    code '((s[--sp]=tmp))'
 semicolon
 inout 2 1
+
+# replace contents of a and a+cell against x1 x2,
+# while returning former contents as x3 x4
+# ( x1 x2 a -- x3 x4 )
+colon '2exchange'
+  code '((s1=s[sp--]))'
+  code '((s2=s[sp]))'
+  code '((s3=s[sp-1]))'
+  code '((s[sp]=m[s1]))'
+  code '((s[sp-1]=m[s1+1]))'
+  code '((m[s1]=s2))'
+  code '((m[s1+1]=s3))'
+semicolon
+inout 3 2
+
+
+
+
 
 colon 'here'
    atom 'here'
@@ -2610,6 +2640,8 @@ semicolon
 # ----- interactive mode --------------------------------- #fold01
 
 evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
+evaluate "' quit alias abort"
+evaluate ': ?abort  if abort then ;'                                 # ( f -- )
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents

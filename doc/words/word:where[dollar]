@@ -9,3 +9,7 @@ decription:          expects a word name as $1 on string stack, returns
                      file and line number of its source location, which
                      are returned as u1 and u2
 
+standard:            no
+                     standard has no equivalent
+
+

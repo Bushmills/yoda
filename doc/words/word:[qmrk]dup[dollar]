@@ -6,3 +6,6 @@ contexts:            stateless
 category:            strings
 
 decription:          duplicate top of string stack if it's not an empty string
+
+standard:            no
+                     standard has no equivalent

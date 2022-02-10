@@ -17,3 +17,6 @@ example:             : reverse3  swap rot ;   inline
 notes:               affects the most recently compiled word.
                      Should not have any effect on data words, as those are
                      inline compiled anyway.
+
+standard:            no
+                     standard has no equivalent

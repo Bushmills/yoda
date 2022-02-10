@@ -10,3 +10,6 @@ decription:          finalises a pictured number conversion sequence. the conver
 
 notes:               meant to be paired with <#
                      equivalent to    #> pack$   but much more efficient.
+
+standard:            no
+                     standard has no equivalent

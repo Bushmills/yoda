@@ -6,3 +6,6 @@ contexts:            stateless
 category:            dictionary, compiling
 
 decription:          prints the names of unresolved words, if any.
+
+standard:            no
+                     standard has no equivalent

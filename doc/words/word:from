@@ -18,3 +18,8 @@ decription:          read a string from input stream which is used as file name 
 
 notes:               a variant of from expecting file name on string stack exists as from$
                      from (or from$) can be nested.
+
+
+standard:            no
+                     standard has no direct equivalent
+                     similar to include

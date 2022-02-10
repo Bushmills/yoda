@@ -10,3 +10,6 @@ decription:          marks the header of the last word as discardable.
                      when loading the file they were defined in has completed.
                      This limits the scope on those words to inside the same
                      file only.
+
+standard:            no
+                     standard has no equivalent

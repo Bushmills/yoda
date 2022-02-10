@@ -17,3 +17,6 @@ decription:          creates a forward reference by the name of space delimited 
 
 notes:               contrary to "satisfy" does need not throw an error if a
                      word can't be resolved immediately.
+
+standard:            no
+                     standard has no equivalent

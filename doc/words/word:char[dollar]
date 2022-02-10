@@ -10,3 +10,6 @@ decription:          converts the ASCII of a character on stack to the character
 
 notes:               some limitations exist converting control characters, and
                      non-printable characters in general, to strings.
+
+standard:            no
+                     standard has no equivalent

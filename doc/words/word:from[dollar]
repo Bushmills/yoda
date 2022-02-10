@@ -16,3 +16,6 @@ example:             none
 notes:               this complements "from" which takes file name from
                      input stream instead.
                      "from$" are nestable
+
+standard:            no
+                     standard has no equivalent

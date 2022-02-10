@@ -18,3 +18,5 @@ notes:               In case of nest for ... next will the loop index of the
                      a for ... next generates simpler and therefore more
                      efficient code than a do ... loop
 
+standard:            no
+                     standard has no equivalent

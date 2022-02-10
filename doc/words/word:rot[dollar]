@@ -6,3 +6,6 @@ contexts:            stateless
 category:            string stack
 
 decription:          rearranges string stack such that third item is rotated to top
+
+standard:            no
+                     standard has no equivalent

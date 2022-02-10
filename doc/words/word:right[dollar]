@@ -17,3 +17,6 @@ notes:               right$ was once able to cut the specifed amount of characte
                      when u is higher than the number of chars.
                      It's possible that I'll eventually change right$ to restore the
                      former behaviour.
+
+standard:            no
+                     standard has no equivalent

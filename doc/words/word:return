@@ -16,3 +16,6 @@ decription:          compiles an exit from a function, akin to exit,
 notes:               A leftover from passing errors through words back to
                      quit. Possibly obsolescent now, but kept for the time
                      being. You shouldn't need this.
+
+standard:            no
+                     standard has no equivalent

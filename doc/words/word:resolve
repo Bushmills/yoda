@@ -27,3 +27,6 @@ notes:               resolve may be executed whenever it seem appropriate. You m
                      remain.
                      see also "instantresolve" for implicit execution of resolve in
                      interactive mode.
+
+standard:            no
+                     standard has no equivalent

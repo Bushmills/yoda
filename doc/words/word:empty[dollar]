@@ -6,3 +6,6 @@ contexts:            stateless
 category:            strings
 
 decription:          reinitialise the string stack
+
+standard:            no
+                     standard has no equivalent

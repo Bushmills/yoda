@@ -14,3 +14,6 @@ decription:          places a copy of remainder of input line on string stack,
 
 example:             : limit  ( u -- ) source$ count$ > unless done ;
                      10 limit ...      \ ignore rest of line if longer than 10 chars.
+
+standard:            no
+                     standard has no equivalent

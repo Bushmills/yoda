@@ -10,3 +10,6 @@ decription:          terminates compiling from current file. Akin to treating th
 
 notes:               best use is in conjunction with interpretative conditionals,
                      like lest or unless, while loading from file
+
+standard:            no
+                     standard has no equivalent

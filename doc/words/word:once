@@ -8,3 +8,6 @@ category:            loading from file
 decription:          examines whether currently loaded file has been loaded
                      already before, and ends loading from file in case it has.
 
+standard:            no
+                     standard has no equivalent
+

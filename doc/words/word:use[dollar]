@@ -23,3 +23,6 @@ notes:               use$ can be used on any wird type, regardless of whether it
                      prior to use$ - a constant, a created word, a colon word or other.
                      The word will lose its previous type and functionality completely,
                      and will simply execute the code assigned with use$
+
+standard:            no
+                     standard has no equivalent

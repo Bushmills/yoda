@@ -10,3 +10,6 @@ decription:          convert file handle u to filename $1
 example:             none
 notes:               filename is the canonical name of a file yoda has already read,
                      and is therefore displayed in the output from executing "files"
+
+standard:            no
+                     standard has no equivalent

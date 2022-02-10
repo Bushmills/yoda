@@ -8,3 +8,6 @@ decription:          prints top string stack item as string and removes it
                      from string stack.
 
 contexts:            stateless
+
+standard:            no
+                     standard has no equivalent

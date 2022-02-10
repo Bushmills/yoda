@@ -34,3 +34,5 @@ notes:               positive u1 and u2 are boundary safe, meaning they may
                      "abcdefgh"  -3  2 mid$  ->  "fg"   ( first two chars of "fgh" )
                      "abcdefgh"  -3 -2 mid$  ->  "f"    ( fgh with last two chars removed )
 
+standard:            no
+                     standard has no equivalent

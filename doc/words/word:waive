@@ -12,3 +12,6 @@ example:             none
 notes:               useful for conditional compilation, allowing to skip
                      blocks of code.
 
+standard:            no
+                     standard has no equivalent
+

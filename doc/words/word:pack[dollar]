@@ -10,3 +10,6 @@ decription:          packs a c-addr type string into a string of characters whic
 
 example:             none
 notes:               complementary with unpack$
+
+standard:            no
+                     standard has no equivalent

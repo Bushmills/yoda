@@ -14,3 +14,6 @@ notes:               none
                      from the right when a negative number was given, but that
                      behaviour was lost in course of implementing better support
                      for signed vs unsigned numbers.
+
+standard:            no
+                     standard has no equivalent

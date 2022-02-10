@@ -16,3 +16,6 @@ decription:          repeatedly reads a space delimited string from input line,
 example:             needs: hello red bg
 notes:               satisfy is an alias of needs: which has been provided for
                      better symmetry with provides:
+
+standard:            no
+                     standard has no equivalent

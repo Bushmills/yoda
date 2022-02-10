@@ -6,3 +6,6 @@ contexts:            stateless
 category:            string stack
 
 decription:          swaps the top two string stack items
+
+standard:            no
+                     standard has no equivalent

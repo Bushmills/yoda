@@ -7,3 +7,6 @@ category:            defining
 
 decription:          creates a variable with a name which is taken from string stack.
                      value of created value is initialised to 0
+
+standard:            no
+                     standard has no equivalent

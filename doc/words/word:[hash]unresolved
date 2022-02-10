@@ -6,3 +6,6 @@ contexts:            stateless
 category:            dictionary, compiling
 
 decription:          return the count of unresolved words
+
+standard:            no
+                     standard has no equivalent

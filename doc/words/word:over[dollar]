@@ -7,3 +7,6 @@ category:            strings
 
 decription:          push a duplicate of second item of string stack to string stack
 
+standard:            no
+                     standard has no equivalent
+

@@ -11,3 +11,6 @@ decription:          reads a word from input stream, which is appended to
                      forsh word, and the opened file containing some informative descriptions.
 
 example:             doc doc
+
+standard:            no
+                     standard has no equivalent

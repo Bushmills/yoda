@@ -11,3 +11,6 @@ decription:          compares alphabetic order of two strings $1, $2. a true fla
                      First character mismatch will determine sort order. If one
                      string is a substring of the other, the shorter string is considered
                      the "smaller" one.
+
+standard:            no
+                     standard has no equivalent

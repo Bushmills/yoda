@@ -22,3 +22,6 @@ decription:          compiles a conditional branch which causes the word, when
                      execution of rest of function only when flag f is true.
 
 example:             : foo   condition lest "is true" type$  ;
+
+standard:            no
+                     standard has no equivalent

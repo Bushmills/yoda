@@ -7,3 +7,6 @@ category:            loading
 
 decription:          push fully qualified path and name of the currently
                      loaded file to string stack
+
+standard:            no
+                     standard has no equivalent

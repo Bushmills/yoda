@@ -9,3 +9,6 @@ decription:          stores top string stack item at address u of strings memory
 
 example:             none
 notes:               see also here$, allot$, $@, $,
+
+standard:            no
+                     standard has no equivalent

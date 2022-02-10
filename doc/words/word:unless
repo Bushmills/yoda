@@ -30,3 +30,6 @@ decription:          compiles a conditional branch which causes the word, when
                      execution of rest of function only when flag f is false.
 
 example:             : protect  #unresolved unless "all resolved" type$  ;
+
+standard:            no
+                     standard has no equivalent

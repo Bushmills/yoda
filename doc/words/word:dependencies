@@ -27,3 +27,6 @@ notes:               should be executed to build or refresh if one of these
                      launch if no dependencies file exists. Therefore, often you'd
                      not need to execute `dependencies` yourself, as you can, prior
                      to starting yoda, simply delete an existing dependency file.
+
+standard:            no
+                     standard has no equivalent

@@ -10,3 +10,6 @@ decription:          unpacks string $1 to its components characters, represented
                      c is returned as count of ASCIIS stored.
 
 notes:               complementary with pack$
+
+standard:            no
+                     standard has no equivalent

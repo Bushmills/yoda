@@ -10,3 +10,6 @@ decription:          read x from memory location at address a1, then
 
 
 notes:               this does for cell sized contents what count does for bytes
+
+standard:            no
+                     standard has no equivalent

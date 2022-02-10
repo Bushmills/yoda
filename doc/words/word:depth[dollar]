@@ -6,3 +6,6 @@ contexts:            stateless
 category:            string stack
 
 decription:          returns number of items (strings) on string stack
+
+standard:            no
+                     standard has no equivalent

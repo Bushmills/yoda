@@ -8,3 +8,6 @@ category:            compiling
 decription:          attempt to compile the word whose name is in top string stack item
                      from library. Failure to do so results in a "word not found" error.
 
+standard:            no
+                     standard has no equivalent
+

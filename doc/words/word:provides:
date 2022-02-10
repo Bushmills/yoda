@@ -17,3 +17,6 @@ notes:               it is considered to supply "provides:" with actual run time
                      semantics, which would be to only keep those names which
                      appear on the list of provided words when loading a library.
                      All others would be trashed.
+
+standard:            no
+                     standard has no equivalent

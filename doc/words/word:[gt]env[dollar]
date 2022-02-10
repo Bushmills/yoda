@@ -8,3 +8,6 @@ category:            strings, environment
 decription:          write string $1 into environment variable with the name
                      specified by $2
 
+standard:            no
+                     standard has no equivalent
+

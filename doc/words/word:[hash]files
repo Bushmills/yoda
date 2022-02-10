@@ -7,3 +7,6 @@ category:            files
 
 decription:          produces the count of loaded files. Those are the files
                      whose names can be shown by executing "files"
+
+standard:            no
+                     standard has no equivalent

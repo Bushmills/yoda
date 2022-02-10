@@ -13,3 +13,6 @@ notes:               this function doesn't at this point respect value of number
                      but uses radix 10 for conversion. The string must therefore consist
                      of character 0...9 only, leading dash is permitted.
                      The string may also be a bash-computable expression.
+
+standard:            no
+                     standard has no equivalent

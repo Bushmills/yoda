@@ -12,3 +12,6 @@ decription:          splits remainder of input line into space delimited strings
                      words, the result flag f is true.
 
 notes:               Provides input for basing conditional compilation on
+
+standard:            no
+                     standard has no equivalent

@@ -12,3 +12,6 @@ decription:          read a space delimited string from input stream, discard th
                      the word can't be found by that name any longer, and the name is
                      free for reuse without yoda warning about redefinition.
 
+standard:            no
+                     standard has no equivalent
+

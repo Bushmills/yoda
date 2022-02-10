@@ -17,3 +17,7 @@ examples:            word "unless" has been defined with compile time semantics
                      of conditionally exiting the word (conceptualised as "jumping
                      to its end") while deviating interpret time semantics skip
                      evaluation of rest of the input line, conditionally.
+
+standard:            no
+                     standard has no direct equivalent
+                     closest standard word would be IMMEDIATE

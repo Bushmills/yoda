@@ -6,3 +6,6 @@ contexts:            stateless
 category:            strings
 
 decription:          flips case of all chars in $1.
+
+standard:            no
+                     standard has no equivalent

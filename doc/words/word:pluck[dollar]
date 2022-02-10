@@ -7,3 +7,6 @@ category:            strings
 
 decription:          adds a copy of third string stack item on top of string stack
 
+standard:            no
+                     standard has no equivalent
+

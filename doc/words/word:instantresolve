@@ -14,3 +14,6 @@ decription:          a variable, serving as flag to turn resolving of interpreta
 example:             instantresolve on
 notes:               a shortcut  +i exists for "instantresolve on"
                      a shortcut  -i exists for "instantresolve off"
+
+standard:            no
+                     standard has no equivalent

@@ -14,3 +14,6 @@ decription:          produces address of a variable, used as flag. When content
 example:             forwardrefs on
 notes:               a shortcut +f exists for "forwardrefs on"
                      a shortcut -f exists for "forwardrefs off"
+
+standard:            no
+                     standard has no equivalent

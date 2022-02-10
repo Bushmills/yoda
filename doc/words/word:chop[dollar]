@@ -9,3 +9,5 @@ decription:          splits top of string stack at space delimimiters into strin
                      all of them pushed to string stack. Returned u informs of the
                      string count places on string stack.
 
+standard:            no
+                     standard has no equivalent

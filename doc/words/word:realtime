@@ -16,3 +16,6 @@ notes:               chosen arithmetic model (bit per cell) must be large enough
                      but be aware that the fewer bits are available, the more frequently
                      an overflow and consequently numeric wraparound takes place - more
                      than 15 times per second when a 16 bit model was chosen.
+
+standard:            no
+                     standard has no equivalent

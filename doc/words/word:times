@@ -36,3 +36,6 @@ notes:               for the compiled version an experimental construct was
                      added to yoda, of which I'm at this point not sure
                      whether it will stay. Don't rely on presence of this
                      compiled version of times for all time to come.
+
+standard:            no
+                     standard has no equivalent

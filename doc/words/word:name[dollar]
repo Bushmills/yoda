@@ -10,3 +10,6 @@ decription:          produces name of word from execution token xt
 
 notes:               the reverse operation of ' (tick) which takes a word name and
                      produces its execution token.
+
+standard:            no
+                     standard has no equivalent

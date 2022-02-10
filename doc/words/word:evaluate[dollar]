@@ -9,3 +9,6 @@ decription:          takes a string from string stack and evaluates it as if it 
                      entered or read from file.
 
 example:             "3 5 * ." evaluate$
+
+standard:            no
+                     standard has no equivalent

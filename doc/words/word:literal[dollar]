@@ -17,3 +17,6 @@ decription:          take a string from string stack during compilation,
 
 example:             : foo  [ thisfile$ ] literal$ type$ ;
                      \ prints the name of the file in which foo was defined
+
+standard:            no
+                     standard has no equivalent

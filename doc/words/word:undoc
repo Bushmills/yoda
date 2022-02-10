@@ -12,3 +12,6 @@ decription:          looks for the next undocumented word, generates a documenta
 notes:               both editor and doc directories must be properly setup in order
                      for undoc to function.
 
+standard:            no
+                     standard has no equivalent
+

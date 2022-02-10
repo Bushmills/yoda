@@ -9,3 +9,6 @@ decription:          return version, subversion and subsubversion of currently
                      executing yoda
 
 contexts:            stateless
+
+standard:            no
+                     standard has no equivalent

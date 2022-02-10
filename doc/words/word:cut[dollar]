@@ -16,3 +16,6 @@ example:             "this foo could be rather nice if it was..."  "if" cut$
                         results in
                      "this foo could be rather nice "    ( on string stack )
                      12      ( count of removed chars, on stack )
+
+standard:            no
+                     standard has no equivalent

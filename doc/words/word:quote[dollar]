@@ -14,4 +14,7 @@ notes:               like a parameterless bracket$, provided because placing
                      collide with the already existing patterns for returning
                      single char ASCII values.
 
+standard:            no
+                     standard has no equivalent
+
 

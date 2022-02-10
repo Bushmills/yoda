@@ -9,3 +9,6 @@ decription:          push the name of the most recently defined word to string s
 
 note:                a quirk shows when using last$ after headerless: last$ will
                      still produce the name of the now headerless word.
+
+standard:            no
+                     standard has no equivalent

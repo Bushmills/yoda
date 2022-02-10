@@ -1,0 +1,13 @@
+name:                2exchange
+stack:               ( x1 x2 a -- x3 x4 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+decription:          replace memory contents at a, a+cell against x1, x2.
+                     Return the former contents as x3, x4.
+                     cell order at address is consistent with 2@ and 2!
+
+standard:            No
+                     Standards have no equivalent

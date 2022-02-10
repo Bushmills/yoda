@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -27,18 +27,19 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.2"   # 2022feb08,21:03    source locations are correct again: defining words inject a pseudo op with file handle, line number as
+v="0.6.3"   # 2022feb10,02:35    combined two arrays sourcefile and sourceline into single source
+# v="0.6.2"   # 2022feb08,21:03  source locations are correct again: defining words inject a pseudo op with file handle, line number as
 #                                parameters. postprocessing will use those after header creation to set proper source data.
 #                                last is still updated during header creation, and contents will be wrong when read during compilation
 #                                of a word, as it will still refer to previous word. probably. Wrong, anyway. Would need defining words
 #                                to update last, rather than the postponed header word. Come to think of it, keeping update of last in
 #                                postponed header, and then in additionally just in colon should do. Alternatively, move it from postponed
-#                                header to code injecting the header creatioh pseudo op.
+#                                header to code injecting the header creating pseudo op.
 #                                Done so now:  last is updated in delayheader, the word which inject header creation pseudo op. header,
 #                                which do so before, isn't involved in updating last any longer.
 #                                returned[] removed again, in favour of functions returning results in variables of same name as functions.
 #                                filehandle,line number in where pseudo op arg now seperated by : rather than by space.
-#v="0.6.1"   # 2022feb06,20:23   late headers: headers aren't created by defining words like create, variable, constant, : but instead
+# v="0.6.1"   # 2022feb06,20:23  late headers: headers aren't created by defining words like create, variable, constant, : but instead
 #                                by semicolon. defining words merely place word name and analyser flag into code buffer, expecting
 #                                detokeniser to do header creation. Consequence ist that for words failing compilation no headers are
 #                                created at all, which eliminates a potentially needed hide/reveal scheme to exclude words from being
@@ -95,7 +96,7 @@ v="0.6.2"   # 2022feb08,21:03    source locations are correct again: defining wo
 
 read -ra version <<< "${v//./ }"
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -147,8 +148,7 @@ done
 declare -a names                                                     # function name -> word name lookup
 declare -A headersunresolved                                         # forward referenced. Not searched.
 declare -a headerstransient                                          # transient headers.
-declare -A wherefile                                                 # source file
-declare -A whereline                                                 # source line
+declare -A where                                                     # file:line of source
 declare -A lib                                                       # cache dependencies
 
 filehandle=1                                                         # 1=yoda. 0=tty.  >1=loaded source
@@ -230,7 +230,7 @@ for i in {1..255}; do                                                # ascii->ch
    ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
 done
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 
@@ -242,7 +242,7 @@ trace()  {
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -288,7 +288,7 @@ header()  {
 }
 
 
-# ----- detokeniser / pretend optimiser ------------------ #FOLD00
+# ----- detokeniser / pretend optimiser ------------------ #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -362,9 +362,7 @@ optimise()  {                                                        # run code 
             header "$word" "$name"                                   # create new header
             continue
          elif (( bodyflag & sourcelocation )); then                  # source location: set
-# NOTE: consider using a single array for storing source location as file:line
-            wherefile["$lastword"]="${bodyline%%:*}"                 # remember file handle
-            whereline["$lastword"]="${bodyline##*:}"                 # remember line nr
+            where["$lastword"]="$bodyline"                           # remember source location
             continue
          elif (( bodyflag & atomiccode )); then                      # atomic code: expand
             targetline="${atom[$bodyline]}"
@@ -393,7 +391,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -421,7 +419,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 
 # atoms may be:
@@ -472,7 +470,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -592,9 +590,10 @@ defer()  {                                                           # use in yo
 
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
+   filehandle=0                                                      # 1=yoda. 0=tty.  >1=loaded source
    line=""                                                           # signal to evaluate to stop evaluation of current line
    linenr="-1"                                                       # signal to from to stop sending more lines to evaluate
    compiling="$false"                                                # interpret
@@ -677,7 +676,7 @@ trap ctrl-c SIGINT
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
@@ -735,7 +734,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -796,7 +795,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter, evaluate------------------------ #FOLD00
+# ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -869,7 +868,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -926,8 +925,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
-# ----- populating detokeniser --------------------------- #FOLD01
+# ----- primitives --------------------------------------- #fold00
+# ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -982,7 +981,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #FOLD01
+# ----- colon/semicolon ---------------------------------- #fold01
 
 
 colon ';'
@@ -1041,7 +1040,7 @@ see()  {
 primitive 'see' 'see'
 
 
-# ----- does> -------------------------------------------- #FOLD01
+# ----- does> -------------------------------------------- #fold01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1067,7 +1066,7 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   compiled
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1128,8 +1127,7 @@ semicolon
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
    code 'headersstateless["$word"]="${functionname_prefix}_${s[sp--]}"'
-   code 'wherefile["$lastword"]="$filehandle"'
-   code 'whereline["$lastword"]="${linenr:-${BASH_LINENO[2]}}"'      # correct source line number for aliases in this file
+   code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
 semicolon
 
 
@@ -1159,7 +1157,7 @@ colon 'is'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
-# ----- environment--------------------------------------- #FOLD01
+# ----- environment--------------------------------------- #fold01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
@@ -1193,7 +1191,7 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #FOLD01
+# ----- misc --------------------------------------------- #fold01
 
 primitive "\\"   'line=""';   compiled                               # single quoted single backslash because
 primitive "\\"   'line=""';   interpreted                            # double quoted escaped backslash rather than
@@ -1202,7 +1200,7 @@ primitive '('    "parse ')'"; compiled
 primitive '('    "parse ')'"; interpreted
 
 
-# ----- parameter stack ---------------------------------- #FOLD01
+# ----- parameter stack ---------------------------------- #fold01
 
 
 colon 'dup'
@@ -1305,7 +1303,7 @@ inline
 primitive 'depth'  '((s[++sp]=$sp))'
 primitive 'pick'   '((s[sp]=s[sp-s[sp]-1]))'
 
-# ----- return stack ------------------------------------- #FOLD01
+# ----- return stack ------------------------------------- #fold01
 
 colon 'r@'
    atom 'r@'
@@ -1352,7 +1350,7 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #FOLD01
+# ----- string stack ------------------------------------- #fold01
 
 primitive 'depth$'   's[++sp]="${#ss[@]}"'
 primitive 'empty$'   'ss=()'
@@ -1608,7 +1606,7 @@ inout 0 1
 
 
 
-# ----- numeric comparison ------------------------------- #FOLD01
+# ----- numeric comparison ------------------------------- #fold01
 
 primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
 primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
@@ -1676,7 +1674,7 @@ inline
 inout 4 1
 
 
-# ----- compiler and word search related ----------------- #FOLD01
+# ----- compiler and word search related ----------------- #fold01
 
 # word name as argument
 # arg1: word name
@@ -1783,7 +1781,7 @@ semicolon
 evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
 
 
-# ----- bit logic ---------------------------------------- #FOLD01
+# ----- bit logic ---------------------------------------- #fold01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
@@ -1995,7 +1993,7 @@ semicolon
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'
@@ -2099,7 +2097,7 @@ evaluate ": umin   2dup u> if swap then drop ;"
 evaluate ": umax   2dup u< if swap then drop ;"
 
 
-# ----- memory ------------------------------------------- #FOLD01
+# ----- memory ------------------------------------------- #fold01
 
 colon '@'
    atom '@'
@@ -2219,7 +2217,7 @@ primitive 'move'   'move'; inout 3 0
 
 
 
-# ----- character i/o ------------------------------------ #FOLD01
+# ----- character i/o ------------------------------------ #fold01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2333,7 +2331,7 @@ colon 'waive'
 semicolon
 
 
-# ----- pictured number conversion ----------------------- #FOLD01
+# ----- pictured number conversion ----------------------- #fold01
 
 # NOTE: consider to let # expect a double, but process lower
 # half only, so its stack complies with standard # while its
@@ -2367,7 +2365,7 @@ primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
-# ----- foward referencing support words ----------------- #FOLD01
+# ----- foward referencing support words ----------------- #fold01
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2526,7 +2524,7 @@ colon 'satisfy$'
 semicolon
 
 
-# ----- documentation ------------------------------------ #FOLD01
+# ----- documentation ------------------------------------ #fold01
 
 # arg1: word name
 # arg2: headerlist
@@ -2607,7 +2605,7 @@ colon 'about'
 semicolon
 
 
-# ----- interactive mode --------------------------------- #FOLD01
+# ----- interactive mode --------------------------------- #fold01
 
 evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
 
@@ -2627,7 +2625,7 @@ semicolon
 
 
 
-# ----- files -------------------------------------------- #FOLD01
+# ----- files -------------------------------------------- #fold01
 
 
 
@@ -2643,7 +2641,8 @@ evaluate ': list  "cat"    filename$  command$ ;'
 
 # return handle of source. 0=console, >0 correspond files handle
 # allows words to determine whether they're executed while loaded
-# from file or console.
+# from file or console, as well as the path/name of the file they're
+# loaded from.
 # ( -- u )
 colon 'source'
    push '${filehandle:-"0"}'
@@ -2658,7 +2657,7 @@ evaluate "' source alias thisfile"
 # ( -- )  ( -- $1 )
 primitive 'source$'  'ss+=("$line")'
 
-# check whether current source was had already been compiled before.
+# check whether current source had already been compiled from before.
 # most useful when used interpretatively in a file, for testing whether
 # it will be or has been reloaded, such as with "loaded lest done"
 # ( -- f )
@@ -2684,20 +2683,20 @@ evaluate ': thisfile$  source filename$ ;'
 
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
-    code 'unset "ss[-1]"'
-    code '[[ -z $tmp ]]&&emptyname'                                  # no name given
-    code '((${wherefile[$tmp]}))||nosource "$tmp"'                   # file handle empty or 0: no source available
-    push '${wherefile[$tmp]}'
-    push '${whereline[$tmp]}'
+    code 'unset -v "ss[-1]"'
+    code '[[ -z "$tmp" ]]&&emptyname'                                # no name given
+    code 'tmp1="${where[$tmp]}"'                                     # "file:line"
+    code '((${tmp1%%:*}))||nosource "$tmp"'                          # file handle empty or 0: no source available
+    push '${tmp1%%:*}'                                               # push file handle
+    push '${tmp1##*:}'                                               # push line number
 semicolon
 
+# ( -- )  ( input: word )
 evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
 
 
 
-
-
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 primitive empty  's=() sp=0'
 primitive rempty 'r=() rp=0'
 
@@ -2707,7 +2706,7 @@ primitive rempty 'r=() rp=0'
 evaluate ': _  empty rempty empty$  ;'                ; inline
 primitive 'words'    'words'
 primitive 'random'   '((s[++sp]=SRANDOM&true))'; inout 0 1           # ( -- u )        32 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))';        # a microseconds epoch, used for benchmarking
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))';     # a microseconds epoch, used for benchmarking
 primitive 'secs'     'sleep "${s[sp--]}"'
 
 colon 'version'
@@ -2716,10 +2715,10 @@ colon 'version'
    push '${version[2]}'
 semicolon
 
-# ----- experimental ------------------------------------- #FOLD01
+# ----- experimental ------------------------------------- #fold01
 
 
-# ----- launch ------------------------------------------- #FOLD00
+# ----- launch ------------------------------------------- #fold00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 config()  {

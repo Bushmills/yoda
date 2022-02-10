@@ -14,3 +14,5 @@ example:             \ this is a comment to end of line
                      : foo          \  this is a comment to end of line too
                          hello  ;
 
+standard:            yes
+                     https://forth-standard.org/standard/core/bs

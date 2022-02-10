@@ -11,10 +11,5 @@ example:             hex
                      : foo [ decimal ] 123 .  ;
 notes:               complemented by ]
 
-standard:            No
-deviation:           "[ is an immediate word."
-                     yoda doesn't know immediate words. It utilizes a concept
-                     mimicking the effects of immediate words to the extent that
-                     practical differences resulting from the differences shouldn't
-                     matter.
+standard:            yes
                      https://forth-standard.org/standard/core/Bracket

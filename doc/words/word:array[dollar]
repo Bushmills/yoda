@@ -8,3 +8,5 @@ category:            defining
 decription:          create an array with u cells allocated to it. Name of array is
                      taken from string stack
 
+standard:            no
+                     standard has no equivalent

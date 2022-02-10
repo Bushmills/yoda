@@ -1,11 +1,11 @@
-name:                d=
-stack:               ( x1 x2 x3 x4 -- f )
+name:                $=
+stack:               ( -- f )
 return stack:        ( -- )
-string stack:        ( -- )
+string stack:        ( $1 $2 -- )
 contexts:            stateless
-category:            compare, arithmetic
+category:            strings, comparison
 
-decription:          while taken from the doubles word set, it has its use with pairs of
-                     stack items too, which is why it has been added: returns true when
-                     (x1 == x3) AND (x2 == x4), false otherwise.
-
+decription:          compare two strings $1, $2. A true flag is produced when
+                     strings are identical.
+                     If one string is a substring of the other, strings are not
+                     considered identical.

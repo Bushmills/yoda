@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+#for word in word:dup; do
+words=(*)
+for word in "${words[@]}"; do
+   if [[ $(awk 'NR==1 { print $1 }' "$word") == "name:" ]]; then
+#      echo "$word"
+(())
+   else
+      echo "different: $word"   
+   fi
+done

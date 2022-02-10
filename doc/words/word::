@@ -16,3 +16,16 @@ example:             : foo hello ;
 notes:               the stacked values x1 and x2 are not meant to be exposed
                      to user. these are stacked for sanity checking the definition,
                      and consumed by semicolon.
+
+standard:            No
+deviation:           Create a definition for name, called a "colon definition".
+                     Enter compilation state and start the current definition,
+                     producing colon-sys.
+                     Append the initiation semantics given below to the current definition.
+
+                     : in yoda doesn't create a definition for name. Instead, it initiates
+                     populating a instruction and pseudo ops buffer, beginning with the
+                     pseudo op for header creation.
+                     semicolon (;) triggers creation of a definition.
+
+                     https://forth-standard.org/standard/core/Colon

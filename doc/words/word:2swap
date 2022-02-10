@@ -6,3 +6,6 @@ contexts:            stateless
 category:            stack
 
 description:         swap top two stack item pairs
+
+standard:            yes
+                     https://forth-standard.org/standard/core/TwoSWAP

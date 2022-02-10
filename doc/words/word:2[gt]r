@@ -9,3 +9,5 @@ decription:          transfers the top two stack items to return stack.
                      Item order remains unchanged - the item which was
                      top on stack will still be top on return stack.
 
+standard:            yes
+                     https://forth-standard.org/standard/core/TwotoR

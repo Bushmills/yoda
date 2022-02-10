@@ -6,3 +6,6 @@ contexts:            stateless
 category:            arithmetics
 
 decription:          multiply x1 with 2
+
+standard:            yes
+                     https://forth-standard.org/standard/core/TwoTimes

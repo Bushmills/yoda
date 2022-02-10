@@ -7,3 +7,6 @@ category:            stack, return stack
 
 decription:          moves two items from return stack to stack. Order of
                      items on stack will be identical as it was on return stack
+
+standard:            yes
+                     https://forth-standard.org/standard/core/TwoRfrom

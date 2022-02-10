@@ -6,3 +6,6 @@ contexts:            stateless
 category:            arithmetic
 
 decription:          decrement value of top of stack by one
+
+standard:            yes
+                     https://forth-standard.org/standard/core/OneMinus

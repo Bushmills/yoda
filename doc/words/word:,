@@ -7,5 +7,7 @@ category:            memory, allocation
 
 decription:          write x into memory at address indicated by "here" and
                      bump that address by the number of increments specified
-                      by "cell"
+                     by "cell"
 
+standard:            yes
+                     https://forth-standard.org/standard/core/Comma

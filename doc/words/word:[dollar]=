@@ -1,13 +1,10 @@
-created:             auto     (remove line after having checked and revised description)
 name:                $=
-stack:               ( -- )
+stack:               ( -- f )
 return stack:        ( -- )
-string stack:        ( -- )
+string stack:        ( $1 $2 -- )
 contexts:            stateless
-category:
-input stream:
+category:            strings, comparison
 
-decription:          none
-
-example:             none
-notes:               none
+decription:          compares two strings $1, $2. A true flag is produced if strings
+                     match. If one string is a substring of the other, the strings
+                     are considered not matching.

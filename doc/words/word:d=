@@ -1,11 +1,11 @@
-name:                $=
-stack:               ( -- f )
+name:                d=
+stack:               ( x1 x2 x3 x4 -- f )
 return stack:        ( -- )
-string stack:        ( $1 $2 -- )
+string stack:        ( -- )
 contexts:            stateless
-category:            strings, comparison
+category:            comparison
 
-decription:          compare two strings $1, $2. A true flag is produced when
-                     strings are identical.
-                     If one string is a substring of the other, strings are not
-                     considered identical.
+decription:          compare two cell pairs x1,x2 with x3,x4.
+                     Result f is true when both constituent cells of each
+                     pair match their respective counterpart, that is,
+                     when x1==x3 AND x2==x4, otherwise f is false.

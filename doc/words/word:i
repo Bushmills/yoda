@@ -9,4 +9,3 @@ decription:          return the loop index of the innermost loop. If there's no 
                      the returned value is meaningless.
                      i works with do ... loop type loops, with for ... next loops, and
                      also with interpreted "times" style loops.
-

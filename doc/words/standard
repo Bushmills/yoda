@@ -4,10 +4,12 @@
 #for word in word:dup; do
 words=(*)
 for word in "${words[@]}"; do
-   if [[ $(awk 'NR==1 { print $1 }' "$word") == "name:" ]]; then
-#      echo "$word"
+   read -r name _ < <(head -n1 "$word")
+   if [[ "$name" == "name:" ]]; then
+#      echo "name: $word"
 (())
    else
-      echo "different: $word"   
+      echo "different: $word"
+      echo "$name"
    fi
 done

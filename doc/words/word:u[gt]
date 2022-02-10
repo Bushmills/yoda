@@ -1,5 +1,5 @@
 name:                u>
-stack:               ( u1 u2 -- f )
+stack:               ( u1 u2 -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 category:            compare
@@ -8,3 +8,6 @@ decription:          return true if unsigned u1 is larger than unsigner u2,
                      otherwise false is returned
 
 contexts:            stateless
+
+standard:            yes
+                     https://forth-standard.org/standard/core/Umore

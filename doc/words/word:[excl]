@@ -7,3 +7,5 @@ category:            memory
 
 decription:          stores x at memory address a
 
+standard:            yes
+                     https://forth-standard.org/standard/core/Store

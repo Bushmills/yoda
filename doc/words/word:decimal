@@ -6,3 +6,5 @@ contexts:            stateless
 category:
 
 decription:          switches radix, used for number in- and output, to 10
+
+standard:            yes

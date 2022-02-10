@@ -8,3 +8,4 @@ category:            interpreter
 decription:          a loop, providing yoda an interactive mode for entering input
                      and executing it.
 
+standard:            yes

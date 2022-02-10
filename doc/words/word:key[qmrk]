@@ -12,3 +12,5 @@ decription:          return true flag if a character is available in
 
 notes:               key is blocking until a key is available. key? can
                      therefore be used to avoid blocking by key.
+
+standard:            yes

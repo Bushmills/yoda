@@ -10,3 +10,5 @@ decription:          use u as zero based index into stack and replace u
 
 notes:               0 pick  is equivalent to a dup operation, 1 pick corresponds
                      with an over operation.
+
+standard:            yes

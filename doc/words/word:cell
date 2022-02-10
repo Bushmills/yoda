@@ -7,3 +7,4 @@ category:            system
 
 decription:          returns as u the count of cells needed to store one integer.
 
+standard:            yes

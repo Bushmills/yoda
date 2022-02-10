@@ -9,3 +9,5 @@ input stream:        one space delimited string
 decription:          parses input stream for the name of a constant, creates that
                      constant and associates value x with it.
 
+standard:            yes
+

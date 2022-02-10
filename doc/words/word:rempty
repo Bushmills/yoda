@@ -14,3 +14,6 @@ notes:               a convenience word, supplied only because return stack in
                      push and keep items on it unintentionally, without yoda
                      balking at unexecutable code. Therefore has rempty been
                      provided to reset it easily when needed.
+
+standard:            no
+                     standard has no equivalent

@@ -7,3 +7,4 @@ category:            I/O
 
 decription:          advances cursor to begin of next line
 
+standard:            yes

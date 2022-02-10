@@ -6,3 +6,5 @@ contexts:            stateless
 category:            stack, info
 
 decription:          print a display of stack items
+
+standard:            yes

@@ -6,3 +6,6 @@ contexts:            stateless
 category:            strings
 
 decription:          display a dump of all string stack items.
+
+standard:            no
+                     standard has no equivalent

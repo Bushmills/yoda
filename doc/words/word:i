@@ -9,3 +9,10 @@ decription:          return the loop index of the innermost loop. If there's no 
                      the returned value is meaningless.
                      i works with do ... loop type loops, with for ... next loops, and
                      also with interpreted "times" style loops.
+
+standard:            no
+deviation:           Execution: ( -- n | u ) ( R: loop-sys -- loop-sys )
+
+                     As yoda caches loop-sys in a variable, rather than pushing it to
+                     return stack, loop-sys is not present on R
+                     https://forth-standard.org/standard/core/I

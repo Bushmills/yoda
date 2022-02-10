@@ -9,3 +9,6 @@ decription:          logical shift left of u1 by u2 positions,
                      yielding u3 as result
 
 notes:               >> is an alias of rshift
+standard:            no
+                     rshift is described by standard, but its
+                     alias >> isn't.

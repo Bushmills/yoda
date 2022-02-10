@@ -11,3 +11,10 @@ decription:          break out of a function early, preventing execution of
 notes:               makes often more sense in combination with some conditionals
                      guarding it. For a presentable alternative, hiding the flair
                      of unstructuredness of exit, see lest and unless.
+
+standard:            no
+deviation:           Execution:  ( -- ) ( R: nest-sys -- )
+                     "Return control to the calling definition specified by nest-sys."
+                     yoda doesn't use R for carrying nest-sys. Therefore can EXIT not
+                     return to nest-sys on R.
+                     https://forth-standard.org/standard/core/EXIT

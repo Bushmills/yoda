@@ -13,3 +13,6 @@ notes:               to obtain the execution token of a word, see '
                      This allows treating executable code as unnamed or
                      anonymous entity, what "lambdafication" is essentially
                      about.
+
+standard:            yes
+                     https://forth-standard.org/standard/core/EXECUTE

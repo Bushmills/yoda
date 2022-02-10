@@ -16,3 +16,8 @@ decription:          renders the last word headerless and produces its execution
 example:             : foo ... ;  headerless execute
 notes:               You may want to keep execution token, or access to the word
                      will be lost.
+
+standard:            no
+                     standard has no exact equivalent,
+                     :noname is a coarse approximation.
+                     https://forth-standard.org/standard/core/ColonNONAME

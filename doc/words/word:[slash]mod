@@ -6,3 +6,5 @@ contexts:            stateless
 category:            arithmetic
 
 decription:          divides the n1 by n2, returns remainder as n3, quotient as n4
+
+standard:            yes

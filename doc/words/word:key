@@ -14,3 +14,5 @@ notes:               due to translation of key character to key ASCII value, usi
                      key character as lookup index, not all keys deliver the
                      correct value. Some control keys will return 0 instead of their
                      value between 1 and 31. Among those are the Return key.
+
+standard:            yes

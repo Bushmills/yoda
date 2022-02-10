@@ -6,3 +6,5 @@ contexts:            stateless
 category:            memory
 
 decription:          reads character from a, increments a and places character on top
+
+standard:            yes

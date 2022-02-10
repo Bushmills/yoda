@@ -1,5 +1,5 @@
 name:                >
-stack:               ( n1 n2 -- 0 | -1 )
+stack:               ( n1 n2 -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
@@ -9,5 +9,5 @@ decription:          performs an arithmetic comparison on signed numbers n1 and 
                      replaces them against a true flag if n1 is greater than n2, or
                      a false flag in other cases.
 
-
-notes:               > is broken wrt numbers other than 0...maxint (2021dec30)
+standard:            yes
+                     https://forth-standard.org/standard/core/more

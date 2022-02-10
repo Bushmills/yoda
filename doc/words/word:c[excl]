@@ -9,3 +9,4 @@ decription:          stores a byte sized number c at memory address a.
                      c will be masked to lower 8 bits prior to storing
                      to make sure the stored number doesn't surpass byte size.
 
+standard:            yes

@@ -13,3 +13,5 @@ decription:          concludes a do ... +loop flow control construct, which caus
                      of initial loop index and loop limit will a jump to code following
                      do be executed, otherwise will loop data be cleaned up, and code
                      proceeds with code following +loop.
+
+standard:            yes

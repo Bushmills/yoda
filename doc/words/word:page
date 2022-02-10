@@ -6,3 +6,5 @@ contexts:            stateless
 category:            screen, I/O
 
 decription:          clears the console screen
+
+standard:            yes

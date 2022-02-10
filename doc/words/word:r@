@@ -6,3 +6,5 @@ contexts:            stateless
 category:            return stack
 
 decription:          place a copy of top of return stack on top of stack.
+
+standard:            yes

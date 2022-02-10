@@ -5,3 +5,6 @@ string stack:        ( -- )
 category:            I/O
 decription:          outputs unsigned number u1, padded with leading spaces to u2 chars.
 contexts:            stateless
+
+standard:            yes
+                     https://forth-standard.org/standard/core/UDotR

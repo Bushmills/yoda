@@ -12,3 +12,5 @@ decription:          calculates remainder resulting from dividing signed
 notes:               for the reason why sign is applied the way it is, please
                      check out /mod, and consider that adding remainder to
                      product of quotient and divisor must yield the original divident.
+
+standard:            yes

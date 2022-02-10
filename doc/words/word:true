@@ -4,3 +4,6 @@ return stack:        ( -- )
 string stack:        ( -- )
 decription:          returns a true flag (all bits set)
 contexts:            stateless
+
+standard:            yes
+                     https://forth-standard.org/standard/core/TRUE

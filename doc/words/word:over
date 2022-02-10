@@ -6,3 +6,5 @@ contexts:            stateless
 category:            stack
 
 decription:          pushs a copy of second stack item to stack
+
+standard:            yes

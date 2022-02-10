@@ -12,3 +12,10 @@ decription:          return the loop index of loop enclosing the innermost loop.
                      loops.
                      j also works with nested interpreted "times" style loops.
 
+standard:            no
+deviation:           Execution: ( -- n | u ) ( R: loop-sys1 loop-sys2 -- loop-sys1 loop-sys2 )
+                     "n | u is a copy of the next-outer loop index."
+                     As yoda caches loop-sys2 in a variable, rather than pushing it to
+                     return stack, loop-sys2 is not present on R, but loop-sys1 takes
+                     its place.
+                     https://forth-standard.org/standard/core/J

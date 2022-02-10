@@ -11,3 +11,5 @@ decription:          performs an arithmetic comparison on signed numbers n1 and 
 
 
 notes:               < is broken wrt numbers other than 0...maxint (2021dec30)
+
+standard:            yes

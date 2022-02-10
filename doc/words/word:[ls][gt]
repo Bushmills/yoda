@@ -7,3 +7,4 @@ category:            comparison
 
 decription:          compares x1 with x2, returns true if identical, false otherwise
 
+standard:            yes

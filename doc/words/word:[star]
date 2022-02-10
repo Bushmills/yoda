@@ -7,3 +7,5 @@ category:            arithmetics
 
 decription:          multiply signed integers n1 and n2, return product n3
 
+standard:            yes
+                     https://forth-standard.org/standard/core/Times

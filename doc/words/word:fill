@@ -8,3 +8,6 @@ decription:          fill u memory locations fromon a with c
 notes:               while c is meant to describe a character, fill will happily accept
                      non byte sized parameter for c, and fill memory with it.
                      That's possible because memory cells aren't byte sized with yoda.
+
+standard:            yes
+                     https://forth-standard.org/standard/core/FILL

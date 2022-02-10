@@ -7,3 +7,5 @@ category:            bit logic
 
 decription:          performs a bitwise OR of x1 with x2, which is returned
                      as x3
+
+standard:            yes

@@ -9,3 +9,6 @@ decription:          read numeric contents of environment variable $1 and place 
 
 example:             "LINES" env
 notes:               contents of environment variable may be an arithmetic expression
+
+standard:            no
+                     standard has no equivalent

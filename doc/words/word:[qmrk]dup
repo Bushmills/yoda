@@ -6,3 +6,5 @@ contexts:            stateless
 category:            stack
 
 decription:          duplicates x if value of x isn't zero
+
+standard:            yes

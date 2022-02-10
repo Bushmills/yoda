@@ -8,3 +8,6 @@ category:            stack
 decription:          insert a copy of top of stack underneath second of top
 
 notes:               the upside down version of over, some call it "under"
+
+standard:            yes
+                     https://forth-standard.org/standard/core/TUCK

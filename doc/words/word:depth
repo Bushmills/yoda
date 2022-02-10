@@ -7,3 +7,5 @@ category:            stack
 
 decription:          returns number of stack items (exclusive u)
 
+standard:            yes
+                     https://forth-standard.org/standard/core/DEPTH

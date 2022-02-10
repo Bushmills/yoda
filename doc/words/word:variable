@@ -18,3 +18,5 @@ example:             variable foo      \ create variable named foo
 notes:               variable belongs to the group of defining words,
                      as do create, constant, array, :, code:
 
+standard:            yes
+                     https://forth-standard.org/standard/core/VARIABLE

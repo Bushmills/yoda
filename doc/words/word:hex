@@ -8,3 +8,5 @@ category:            number conversion
 decription:          change radix ("number base") to 16, affecting numeric in- and
                      output
 
+standard:            yes
+                     https://forth-standard.org/standard/core/HEX

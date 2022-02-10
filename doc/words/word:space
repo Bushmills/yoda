@@ -6,3 +6,5 @@ contexts:            stateless
 category:            I/O
 
 decription:          output a space character
+
+standard:            yes

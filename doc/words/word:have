@@ -16,3 +16,6 @@ notes:               similar to ' , but doesn't throw an error if word not found
                      decision must be taken depending on whether a word exists.
 
                      Renamed former "exists" to have, as I wasn't really happy with former name.
+
+standard:            no
+                     standard has no equivalent.

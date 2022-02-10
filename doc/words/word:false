@@ -9,3 +9,6 @@ decription:          returns a flag representing false
 
 notes:               integer numbers are used to personate flags,
                      with zero representing false.
+
+standard:            yes
+                     https://forth-standard.org/standard/core/FALSE

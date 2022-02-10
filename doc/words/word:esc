@@ -9,3 +9,5 @@ decription:          a constant returning the ASCII value of Escape character.
 
 notes:               same as ^[
 
+standard:            no
+                     standard has no equivalent

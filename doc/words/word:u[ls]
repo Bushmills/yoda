@@ -1,10 +1,13 @@
 name:                u<
-stack:               ( u1 u2 -- f )
+stack:               ( u1 u2 -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 category:            compare
 
-decription:          return a true flag if unsigned u1 is smaller than unsigned u2,
+decription:          return a true flag if unsigned u1 is lower than unsigned u2,
                      otherwise a false flag is returned.
 
 contexts:            stateless
+
+standard:            yes
+                     https://forth-standard.org/standard/core/Uless

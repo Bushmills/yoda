@@ -7,3 +7,6 @@ category:            number formatting
 decription:          output unsigned number u., respecting radix stored in base
 
 contexts:            stateless
+
+standard:            yes
+                     https://forth-standard.org/standard/core/Ud

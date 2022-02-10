@@ -7,3 +7,4 @@ category:            arithmetics
 
 decription:          changes sign of number n1, which is returned as n2
 
+standard:            yes

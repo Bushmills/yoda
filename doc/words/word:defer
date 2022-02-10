@@ -16,3 +16,5 @@ decription:          reads a word name from input and creates a word which acts
 example:             defer foo     ' space is foo
 notes:               see also: is
                      it is probably a bad idea to assign its own run time semantics to it.
+
+standard:            yes

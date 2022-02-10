@@ -14,3 +14,5 @@ notes:               as an alternative to 'x  or  'x'  because getting escaping 
                      quote right in bash source wasn't alwas trivial.
                      In yoda source,  single chars with leading single quotes, or enclosed
                      by single quotes should always be a viable alternative to [char]
+
+standard:            yes

@@ -30,3 +30,6 @@ notes:               contrary to what the name suggests, "warm" doesn't really
                      for each warm start. Attempts to modify bash call stack with
                      the goal of removing the previous level of quit, or replacing
                      it with the new level, weren't successful yet.
+
+standard:            no
+                     standard has no equivalent

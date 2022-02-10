@@ -8,3 +8,6 @@ category:            I/O
 decription:          outputs n as signed integer, with a trailing space appended.
 
 notes:               respects contents of variable "base"
+
+standard:            yes
+                     https://forth-standard.org/standard/core/d

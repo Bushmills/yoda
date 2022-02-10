@@ -7,3 +7,5 @@ category:            stacks
 
 decription:          empties stack and string stack. shorthand for empty empty$
 
+standard:            No
+deviation:           Standard has no equivalent

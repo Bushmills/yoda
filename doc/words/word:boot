@@ -11,7 +11,10 @@ decription:          reads a space delimited string from input stream
                      name to cold start vector. (Well, almost - actually the
                      function name is written, but function names and execution
                      tokens bear a one-to-one relationship).
-                     Should the word not exists, it will be marked as forward reference,
+                     Should the word not exist, it will be marked as forward reference,
                      in the expectation that it will be available later.
 
 example:             boot quit
+
+standard:            no
+                     standard has no equivalent

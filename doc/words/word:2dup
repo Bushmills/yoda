@@ -6,3 +6,6 @@ contexts:            stateless
 category:            stack
 
 decription:          copy top two stack items
+
+standard:            yes
+                     https://forth-standard.org/standard/core/TwoDUP

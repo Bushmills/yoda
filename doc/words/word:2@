@@ -8,3 +8,5 @@ category:            memory
 decription:          fetches contents of two memory cells at address a and a+1, and
                      returns them on stack with item at a on top.
 
+standard:            yes
+                     https://forth-standard.org/standard/core/TwoFetch

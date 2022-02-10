@@ -6,3 +6,6 @@ contexts:            stateless
 category:            string stack
 
 decription:          remove and trash the topmost two items of string stack
+
+standard:            No
+                     Standard has no equivalent

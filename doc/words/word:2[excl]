@@ -7,3 +7,5 @@ category:            memory
 
 decription:          stores two stack items x1 and x2 at address a
 
+standard:            yes
+                     https://forth-standard.org/standard/core/TwoStore

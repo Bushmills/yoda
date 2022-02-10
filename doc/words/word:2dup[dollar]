@@ -7,3 +7,5 @@ category:            string stack
 
 decription:          duplicate the top two string stack items
 
+standard:            no
+                     Standard has no equivalent

@@ -28,9 +28,9 @@
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
 v="0.6.3"   # 2022feb10,02:35    combined two arrays sourcefile and sourceline into single source
-#                                renamed former misnamed analyser flag "literalnumber" to push.
-#                                added 2exchange, removed 2+, 2-
-#                                abort and ?abort are now silent. j inlines.
+#                                renamed former misnamed analyser flag "literalnumber" to push. added 2exchange, removed 2+, 2-
+#                                abort and ?abort are now silent. j inlines. version stamped dependencies, new version of yoda will
+#                                generate new dependencies file.
 # v="0.6.2"   # 2022feb08,21:03  source locations are correct again: defining words inject a pseudo op with file handle, line number as
 #                                parameters. postprocessing will use those after header creation to set proper source data.
 #                                last is still updated during header creation, and contents will be wrong when read during compilation
@@ -2504,8 +2504,9 @@ primitive 'have'   'have'                                            # ( -- f ) 
 evaluate ': lack  have 0= ;'                                         # ( -- f ) ( stream: bl delimited string )    word missing?
 
 generate_dependencies()  {                                           # library inclusion dependency file builder
-   grep -r "^provides: " "${libdirs[0]}" |
-   while read -r file words; do
+   { echo "$v version"
+     grep -r "^provides: " "${libdirs[0]}"
+   } | while read -r file words; do
       file="${file%:provides:}"
       file="${file#"${libdirs[0]}"/}"
 # "Double quote to prevent globbing and word splitting."
@@ -2759,9 +2760,10 @@ config()  {
    [[ -f "$HOME/$config" ]]  && { source "$HOME/$config"; return; }  # config in $HOME has priority over config in yoda dir
    [[ -f "$mydir/$config" ]] && source "$mydir/$config"
 }
-
-config                                                               #
-[[ -f "$dependencies" ]] ||generate_dependencies                     # dependency file missing?
+config
+[[ -f "$dependencies" ]] || generate_dependencies                    # no dependencies -> generate
+read _ tmp < <(grep '^version ' "$dependencies")                     # check version
+[[ "$tmp" == "$v" ]] || generate_dependencies                        # new yoda -> generate
 cache_dependencies                                                   # read dependencies into memory
 args=("$@")                                                          # read command line
 (( ${#args[@]} )) || read -rst 0.01 "args"                           # no command line specified: check whether commands are piped

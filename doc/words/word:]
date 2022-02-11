@@ -14,5 +14,7 @@ notes:               not very useful without prior [ inside of a definition:
                      "compiled" into a function, while ; without prior :  will
                      complain about inproper structure.
 
-standard:            No
-                     (I *think* that current standards don't demand a word named ])
+standard:            Not sure, due to possibly different interpretation of
+                     "switching compiler state to compiling" and to ]
+                     being useless when used outside of a colon definition.
+                     https://forth-standard.org/standard/right-bracket

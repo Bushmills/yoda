@@ -2,7 +2,7 @@ name:                [']
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            compileonly
+contexts:            compiled
 category:            dictionary
 input stream:        a word delimited string
 
@@ -13,3 +13,6 @@ decription:          fetches the next word delimited string from input stream,
                      An error is thrown if word can't be found
 
 example:             : foo  ['] words execute ;
+
+standard:            yes
+                     https://forth-standard.org/standard/core/BracketTick

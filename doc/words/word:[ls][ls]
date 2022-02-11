@@ -9,3 +9,7 @@ decription:          logical shift left of u1 by u2 positions,
                      yielding u3 as result
 
 notes:               << is an alias of lshift
+standard:            no
+                     lshift is described by standard, but its
+                     alias << isn't.
+                     https://forth-standard.org/standard/core/LSHIFT

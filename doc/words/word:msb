@@ -5,7 +5,8 @@ string stack:        ( -- )
 contexts:            stateless
 category:            constants
 
-decription:          returns the value of the number which only has the most
-                     significant bit set. This value depends on the number of
-                     bits chosen for cell width.
+decription:          produces a number which has only the most significant bit set.
+                     This value depends on the number of bits chosen for cell width.
 
+standard:            no
+                     standard has no equivalent

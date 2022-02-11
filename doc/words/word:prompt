@@ -14,3 +14,6 @@ example:             none
 notes:               prompt is executed as part of the interactive interpreter loop "quit"
                      and is now a deferred word, to allow simple replacement against custom
                      prompts.
+
+standard:            no
+                     standard has no equivalent

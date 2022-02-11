@@ -1,5 +1,5 @@
 name:                <>
-stack:               ( x1 x2 -- f )
+stack:               ( x1 x2 -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
@@ -8,3 +8,4 @@ category:            comparison
 decription:          compares x1 with x2, returns true if identical, false otherwise
 
 standard:            yes
+                     https://forth-standard.org/standard/core/ne

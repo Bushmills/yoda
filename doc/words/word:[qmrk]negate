@@ -1,9 +1,12 @@
 name:                ?negate
-stack:               ( n1 f -- n2 )
+stack:               ( n1 flag -- n2 )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
 category:            arithmetic
 
-decription:          conditionally negates a number. A non-zero f causes sign change
+decription:          conditionally negates a number. A non-zero flag causes sign change
                      to n1 which is returned as n2
+
+standard:            no
+                     standard has no equivalent

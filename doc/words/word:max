@@ -8,3 +8,5 @@ category:            arithmetics
 decription:          returns the greater of two signed numbers n1, n2
 
 standard:            yes
+                     https://forth-standard.org/standard/core/MAX
+

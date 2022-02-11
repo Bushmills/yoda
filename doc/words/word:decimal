@@ -8,3 +8,4 @@ category:
 decription:          switches radix, used for number in- and output, to 10
 
 standard:            yes
+                     https://forth-standard.org/standard/core/DECIMAL

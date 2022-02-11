@@ -7,4 +7,5 @@ category:            stack
 
 decription:          copy third stack item
 
-standard:            yes
+standard:            no
+                     standard has no equivalent

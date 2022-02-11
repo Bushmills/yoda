@@ -9,3 +9,4 @@ decription:          performs a bitwise OR of x1 with x2, which is returned
                      as x3
 
 standard:            yes
+                     https://forth-standard.org/standard/core/OR

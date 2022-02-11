@@ -1,10 +1,13 @@
 name:                <-
-stack:               ( a x1 -- )
+stack:               ( a x -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
 category:            memory
 
-decription:          store x1 in memory address a.
+decription:          store x in memory address a.
                      similar to ! but expecting reverse order of stack items.
 
+standard:            no
+                     standard has no equivalent, and
+                     would code corresponding semantics as "swap !"

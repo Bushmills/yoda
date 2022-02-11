@@ -9,6 +9,7 @@ decription:          use u as zero based index into stack and replace u
                      with the stack item indexed by it.
 
 notes:               0 pick  is equivalent to a dup operation, 1 pick corresponds
-                     with an over operation.
+                     to an over operation.
 
 standard:            yes
+                     https://forth-standard.org/standard/core/PICK

@@ -7,3 +7,6 @@ category:            memory
 
 decription:          writes false to memory address a
 
+standard:            no
+                     standard has no equivalent
+

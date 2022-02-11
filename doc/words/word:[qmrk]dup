@@ -8,3 +8,4 @@ category:            stack
 decription:          duplicates x if value of x isn't zero
 
 standard:            yes
+                     https://forth-standard.org/standard/core/qDUP

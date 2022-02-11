@@ -2,7 +2,7 @@ name:                literal
 stack:               ( x -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            compileonly
+contexts:            compiled
 category:            compiling
 
 decription:          take a number from stack during compilation,
@@ -16,3 +16,4 @@ notes:               before using literal, take action that the value
                      it expects is actually on stack.
 
 standard:            yes
+                     https://forth-standard.org/standard/core/LITERAL

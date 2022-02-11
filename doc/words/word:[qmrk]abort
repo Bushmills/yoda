@@ -5,8 +5,9 @@ string stack:        ( -- )
 contexts:            stateless
 category:            flow control, error handling
 
-decription:          a non-zero value for flag aborts, passing u as abort value to
-                     error handling.  if flag is zero, both flag und u are removed
-                     and execution continues.
+decription:          a non-zero value for flag aborts further execution and
+                     returns to interactive mode.
+                     if flag is zero, execution continues.
 
-notes:               not entirely unlike "assert" known from some other languages.
+standard:            no
+                     standard has no equivalent

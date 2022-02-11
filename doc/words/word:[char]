@@ -2,7 +2,7 @@ name:                [char]
 stack:               ( -- c )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            compileonly
+contexts:            compiled
 category:            input, character conversion
 input stream:        space delimited string (preferably single character, but not enforced)
 
@@ -16,3 +16,4 @@ notes:               as an alternative to 'x  or  'x'  because getting escaping 
                      by single quotes should always be a viable alternative to [char]
 
 standard:            yes
+                     https://forth-standard.org/standard/core/BracketCHAR

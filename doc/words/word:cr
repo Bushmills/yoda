@@ -8,3 +8,4 @@ category:            I/O
 decription:          advances cursor to begin of next line
 
 standard:            yes
+                     https://forth-standard.org/standard/core/CR

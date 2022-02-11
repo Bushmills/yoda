@@ -1,5 +1,6 @@
 name:                constant
-stack:               ( x -- )
+stack:               ( x -- )    ( defining word )
+                     ( -- x )    ( defined word )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
@@ -10,4 +11,5 @@ decription:          parses input stream for the name of a constant, creates tha
                      constant and associates value x with it.
 
 standard:            yes
+                     https://forth-standard.org/standard/core/CONSTANT
 

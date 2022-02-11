@@ -10,3 +10,4 @@ decription:          uncreases u1 by the number of memory cells needed to hold o
 notes:               yoda uses cell size of 1
 
 standard:            yes
+                     https://forth-standard.org/standard/core/CELLPlus

@@ -9,3 +9,7 @@ decription:          produce the file handle of the file from which source is cu
                      read and compiled from.
                      If not reading from a file, the handle of tty (0) is produced.
 
+standard:            collision
+deviation:           yoda's source is closer to standard's SOURCE-ID ( -- 0 | -1 | fileid )
+                     Renaming is considered.
+                     https://forth-standard.org/standard/file/SOURCE-ID

@@ -8,4 +8,4 @@ category:            I/O
 decription:          output x spaces
 
 standard:            yes
-
+                     https://forth-standard.org/standard/core/SPACES

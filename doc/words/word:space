@@ -8,3 +8,4 @@ category:            I/O
 decription:          output a space character
 
 standard:            yes
+                     https://forth-standard.org/standard/core/SPACE

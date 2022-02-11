@@ -7,4 +7,5 @@ category:            stack
 
 decription:          rearrange stack by rotating top element to third of top position
 
-standard:            yes
+standard:            no
+                     standard has no equivalent

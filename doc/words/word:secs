@@ -6,3 +6,6 @@ contexts:            stateless
 category:
 
 description:         pauses for u seconds
+
+standard:            no
+                     standard has no equivalent

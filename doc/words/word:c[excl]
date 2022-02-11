@@ -10,3 +10,4 @@ decription:          stores a byte sized number c at memory address a.
                      to make sure the stored number doesn't surpass byte size.
 
 standard:            yes
+                     https://forth-standard.org/standard/core/CStore

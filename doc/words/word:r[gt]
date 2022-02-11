@@ -10,3 +10,4 @@ decription:          removed an item from return stack and places it on top of s
 notes:               complementary with >r
 
 standard:            yes
+                     https://forth-standard.org/standard/core/Rfrom

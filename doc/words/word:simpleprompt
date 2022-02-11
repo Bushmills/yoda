@@ -13,3 +13,5 @@ example:             none
 notes:               a more powerful prompt, "newprompt", is in library file "prompt",
                      loaded by default at yoda start.
 
+standard:            no
+                     standard has no equivalent

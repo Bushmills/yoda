@@ -15,3 +15,4 @@ decription:          effectively a no ooperation, not compiling any code,
                      therefore leaving n1 on stack unmodified
 
 standard:            yes
+                     https://forth-standard.org/standard/core/CELLS

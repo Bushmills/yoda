@@ -1,5 +1,5 @@
 name:                compiling
-stack:               ( -- f )
+stack:               ( -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
@@ -8,3 +8,7 @@ category:            compiler
 decription:          returns a flag which indicates whether yoda is currently
                      interpreting or compiling
 
+standard:            no
+                     standard has no direct equivalent,
+                     and would code corresponding semantics as "state @"
+                     https://forth-standard.org/standard/core/STATE

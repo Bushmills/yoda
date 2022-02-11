@@ -15,3 +15,5 @@ notes:               simplequery$ is used to resolve deferred word "query$" with
                      is an alternative to simplequery$, called newquery$, in the library
                      which will loaded and activated autotically during yoda start.
 
+standard:            no
+                     standard has no equivalent

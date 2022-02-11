@@ -12,3 +12,6 @@ notes:               meant to be used within a pictured number conversion sequen
                      use without seems limited.
                      "sign" doesn "apply" sign, not does it change sign - it merely
                      prepends (or doesn't) a hyphen.
+
+standard:            I think so
+                     https://forth-standard.org/standard/core/SIGN

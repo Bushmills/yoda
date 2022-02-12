@@ -1771,7 +1771,7 @@ semicolon
 # trashed name as argument
 # ( -- )
 trash()  {
-   unset "headersstateless[$1]"
+   unset -v "headersstateless[$1]"
 }
 
 # trashed name from input stream
@@ -2677,14 +2677,14 @@ evaluate ': list  "cat"    filename$  command$ ;'
 # from file or console, as well as the path/name of the file they're
 # loaded from.
 # ( -- u )
-colon 'source'
+colon 'origin'
    push '${filehandle:-"0"}'
 semicolon
 inline
 inout 0 1
 
 # better symmetry with thisfile$
-evaluate "' source alias thisfile"
+evaluate "' origin alias thisfile"
 
 # copy remainder of input line to string stack without affecting it.
 # ( -- )  ( -- $1 )
@@ -2712,11 +2712,11 @@ evaluate ': once   loaded lest done ;'
 
 # produce name of currently loaded file
 # ( string: -- $1 )
-evaluate ': thisfile$  source filename$ ;'
+evaluate ': thisfile$  thisfile filename$ ;'
 
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
-    code 'unset -v "ss[-1]"'
+    code 'unset "ss[-1]"'
     code '[[ -z "$tmp" ]]&&emptyname'                                # no name given
     code 'tmp1="${where[$tmp]}"'                                     # "file:line"
     code '((${tmp1%%:*}))||nosource "$tmp"'                          # file handle empty or 0: no source available

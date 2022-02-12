@@ -8,5 +8,6 @@ category:            files
 decription:          produces handle of currently loading file, or 0 for console.
                      alias of source, provided for better symmetry with thisfile$
 
+notes:               thisfile is an alias of origin
 standard:            no
 deviation:           standard has no equivalent

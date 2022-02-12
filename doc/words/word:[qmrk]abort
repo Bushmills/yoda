@@ -10,4 +10,4 @@ decription:          a non-zero value for flag aborts further execution and
                      if flag is zero, execution continues.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

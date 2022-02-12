@@ -13,4 +13,4 @@ decription:          compares alphabetic order of two strings $1, $2. a true fla
                      the "smaller" one.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

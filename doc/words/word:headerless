@@ -18,6 +18,6 @@ notes:               You may want to keep execution token, or access to the word
                      will be lost.
 
 standard:            no
-                     standard has no exact equivalent,
+deviation:           standard has no exact equivalent,
                      :noname is a coarse approximation.
-                     https://forth-standard.org/standard/core/ColonNONAME
+url:                 https://forth-standard.org/standard/core/ColonNONAME

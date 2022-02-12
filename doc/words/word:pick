@@ -12,4 +12,4 @@ notes:               0 pick  is equivalent to a dup operation, 1 pick correspond
                      to an over operation.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/PICK
+url:                 https://forth-standard.org/standard/core/PICK

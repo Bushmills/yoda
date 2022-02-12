@@ -15,4 +15,4 @@ deviation:           Execution: ( -- n | u ) ( R: loop-sys -- loop-sys )
 
                      As yoda caches loop-sys in a variable, rather than pushing it to
                      return stack, loop-sys is not present on R
-                     https://forth-standard.org/standard/core/I
+url:                 https://forth-standard.org/standard/core/I

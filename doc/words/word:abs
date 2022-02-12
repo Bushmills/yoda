@@ -8,4 +8,4 @@ category:            arithmetics
 decription:          removes sign from number
 
 standard:            yes
-                     https://forth-standard.org/standard/core/ABS
+url:                 https://forth-standard.org/standard/core/ABS

@@ -19,4 +19,4 @@ notes:               leave can be used within all these loop constructs:
                      This is the unconditional version of ?leave
 
 standard:            yes
-                     https://forth-standard.org/standard/core/LEAVE
+url:                 https://forth-standard.org/standard/core/LEAVE

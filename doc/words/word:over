@@ -8,4 +8,4 @@ category:            stack
 decription:          push a copy of second stack item to stack
 
 standard:            yes
-                     https://forth-standard.org/standard/core/OVER
+url:                 https://forth-standard.org/standard/core/OVER

@@ -11,4 +11,4 @@ example:             "LINES" env
 notes:               contents of environment variable may be an arithmetic expression
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

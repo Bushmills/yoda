@@ -8,4 +8,4 @@ category:            string stack
 decription:          returns number of items (strings) on string stack
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

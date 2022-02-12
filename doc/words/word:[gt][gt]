@@ -10,5 +10,5 @@ decription:          logical shift left of u1 by u2 positions,
 
 notes:               >> is an alias of rshift
 standard:            no
-                     rshift is described by standard, but its
+deviation:           rshift is described by standard, but its
                      alias >> isn't.

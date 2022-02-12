@@ -8,4 +8,4 @@ category:            return stack
 decription:          place a copy of top of return stack on top of stack.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/RFetch
+url:                 https://forth-standard.org/standard/core/RFetch

@@ -9,5 +9,5 @@ decription:          store x in memory address a.
                      similar to ! but expecting reverse order of stack items.
 
 standard:            no
-                     standard has no equivalent, and
-                     would code corresponding semantics as "swap !"
+deviation:           standard has no equivalent
+                     identical semantics would be coded as "swap !"

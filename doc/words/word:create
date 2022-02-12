@@ -14,4 +14,4 @@ decription:          takes a space delimited string from input stream and create
 notes:               stack effect of word created with create is ( -- a )
 
 standard:            yes
-                     https://forth-standard.org/standard/core/CREATE
+url:                 https://forth-standard.org/standard/core/CREATE

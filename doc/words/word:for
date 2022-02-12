@@ -19,4 +19,4 @@ notes:               In case of nest for ... next will the loop index of the
                      efficient code than a do ... loop
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

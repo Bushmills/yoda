@@ -11,4 +11,4 @@ decription:          return version, subversion and subsubversion of currently
 contexts:            stateless
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

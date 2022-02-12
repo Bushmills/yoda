@@ -13,5 +13,5 @@ decription:          read a space delimited string from input stream, discard th
                      free for reuse without yoda warning about redefinition.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

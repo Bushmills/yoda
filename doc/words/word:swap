@@ -8,4 +8,4 @@ category:            stack
 decription:          reverse order of top two stack items
 
 standard:            yes
-                     https://forth-standard.org/standard/core/SWAP
+url:                 https://forth-standard.org/standard/core/SWAP

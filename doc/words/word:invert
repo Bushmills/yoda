@@ -8,4 +8,4 @@ category:            bit logic
 decription:          bitwise invert of u1
 
 standard:            yes
-                     https://forth-standard.org/standard/core/INVERT
+url:                 https://forth-standard.org/standard/core/INVERT

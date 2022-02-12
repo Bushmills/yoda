@@ -8,4 +8,4 @@ category:            stack
 decription:          drop top two stack items
 
 standard:            yes
-                     https://forth-standard.org/standard/core/TwoDROP
+url:                 https://forth-standard.org/standard/core/TwoDROP

@@ -8,4 +8,4 @@ category:            screen, I/O
 decription:          clears the console screen
 
 standard:            yes
-                     https://forth-standard.org/standard/facility/PAGE
+url:                 https://forth-standard.org/standard/facility/PAGE

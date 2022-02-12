@@ -9,4 +9,4 @@ decription:          a scaling operation on signed number, n4 being the quotient
                      of the product of n1, n2 divided by n3.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/TimesDiv
+url:                 https://forth-standard.org/standard/core/TimesDiv

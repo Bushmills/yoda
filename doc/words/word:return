@@ -18,4 +18,5 @@ notes:               A leftover from passing errors through words back to
                      being. You shouldn't need this.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
+                     may be removed from yoda anytime

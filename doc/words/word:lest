@@ -24,4 +24,4 @@ decription:          compiles a conditional branch which causes the word, when
 example:             : foo   condition lest "is true" type$  ;
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

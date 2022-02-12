@@ -8,4 +8,4 @@ category:            memory
 decription:          reads character from a, increments a and places character on top
 
 standard:            yes
-                     https://forth-standard.org/standard/core/COUNT
+url:                 https://forth-standard.org/standard/core/COUNT

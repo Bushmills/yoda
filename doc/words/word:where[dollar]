@@ -10,6 +10,6 @@ decription:          expects a word name as $1 on string stack, returns
                      are returned as u1 and u2
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 
 

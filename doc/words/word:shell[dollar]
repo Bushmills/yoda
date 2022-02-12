@@ -11,4 +11,4 @@ decription:          pass string $1 to shell for execution.
 example:             "uname -a" shell$
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

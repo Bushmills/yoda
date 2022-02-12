@@ -8,4 +8,4 @@ category:            stack, info
 decription:          print a display of stack items
 
 standard:            yes
-                     https://forth-standard.org/standard/tools/DotS
+url:                 https://forth-standard.org/standard/tools/DotS

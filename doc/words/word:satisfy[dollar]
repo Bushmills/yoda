@@ -9,5 +9,5 @@ decription:          attempt to compile the word whose name is in top string sta
                      from library. Failure to do so results in a "word not found" error.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

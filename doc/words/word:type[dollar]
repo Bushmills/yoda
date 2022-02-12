@@ -10,4 +10,4 @@ decription:          prints top string stack item as string and removes it
 contexts:            stateless
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

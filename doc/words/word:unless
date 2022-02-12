@@ -32,4 +32,4 @@ decription:          compiles a conditional branch which causes the word, when
 example:             : protect  #unresolved unless "all resolved" type$  ;
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

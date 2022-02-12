@@ -12,6 +12,6 @@ standard:            no
 deviation:           "Accept a line from the input source into the input buffer,
                      set >IN to zero, and interpret."
 
-                     Input processing doesn't use >IN as pointer into input line.
+                     Input processing doesn't use >IN as index into input line.
                      yoda doesn't have a variable >IN for this purpose, and
                      consequently can quit not set it to zero.

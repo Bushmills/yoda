@@ -17,4 +17,4 @@ decription:          reads a space delimited string from input stream
 example:             boot quit
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

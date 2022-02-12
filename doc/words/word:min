@@ -8,4 +8,4 @@ category:            arithmetics
 decription:          returns the lesser of two signed numbers
 
 standard:            yes
-                     https://forth-standard.org/standard/core/MIN
+url:                 https://forth-standard.org/standard/core/MIN

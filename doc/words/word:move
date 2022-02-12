@@ -11,4 +11,4 @@ decription:          copy u memory items contents beginning at a1 to the
                      source and target overlap.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/MOVE
+url:                 https://forth-standard.org/standard/core/MOVE

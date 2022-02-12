@@ -15,4 +15,4 @@ decription:          fetches the next word delimited string from input stream,
 example:             : foo  ['] words execute ;
 
 standard:            yes
-                     https://forth-standard.org/standard/core/BracketTick
+url:                 https://forth-standard.org/standard/core/BracketTick

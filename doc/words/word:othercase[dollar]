@@ -8,4 +8,4 @@ category:            strings
 decription:          flips case of all chars in $1.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

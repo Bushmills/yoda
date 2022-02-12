@@ -8,4 +8,4 @@ category:            system, flow control
 decription:          execute warm start and quit
 
 standard:            yes
-                     https://forth-standard.org/standard/core/ABORT
+url:                 https://forth-standard.org/standard/core/ABORT

@@ -9,4 +9,4 @@ decription:          compiles a call to the word within which recurse was used,
                      thereby causing the word to recurse into itself.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/RECURSE
+url:                 https://forth-standard.org/standard/core/RECURSE

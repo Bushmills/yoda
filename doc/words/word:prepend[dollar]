@@ -9,5 +9,5 @@ decription:          converts the ASCII value on top of stack to a character whi
                      is prepended to the top string stack item
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

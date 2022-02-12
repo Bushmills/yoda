@@ -12,4 +12,4 @@ notes:               some limitations exist converting control characters, and
                      non-printable characters in general, to strings.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

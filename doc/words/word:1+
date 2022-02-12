@@ -8,4 +8,4 @@ category:            arithmetics
 decription:          increments top of stack by one
 
 standard:            yes
-                     https://forth-standard.org/standard/core/OnePlus
+url:                 https://forth-standard.org/standard/core/OnePlus

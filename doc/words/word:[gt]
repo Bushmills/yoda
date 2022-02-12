@@ -10,4 +10,4 @@ decription:          performs an arithmetic comparison on signed numbers n1 and 
                      a false flag in other cases.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/more
+url:                 https://forth-standard.org/standard/core/more

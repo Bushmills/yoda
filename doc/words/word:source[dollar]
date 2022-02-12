@@ -16,4 +16,4 @@ example:             : limit  ( u -- ) source$ count$ > unless done ;
                      10 limit ...      \ ignore rest of line if longer than 10 chars.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

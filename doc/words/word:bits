@@ -13,4 +13,4 @@ notes:               maximum value should not exceed 63. This constant exists so
                      yoda can provide words for both signed and unsigned operations
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

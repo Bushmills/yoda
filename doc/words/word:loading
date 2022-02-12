@@ -9,4 +9,4 @@ decription:          produces a true flag f when executed while loading from fil
                      when executed from console, pushed flag f will be false.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -8,5 +8,5 @@ category:            memory
 decription:          write true to memory address a
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

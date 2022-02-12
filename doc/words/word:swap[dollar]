@@ -8,4 +8,4 @@ category:            string stack
 decription:          swaps the top two string stack items
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -16,4 +16,4 @@ notes:               as an alternative to 'x  or  'x'  because getting escaping 
                      by single quotes should always be a viable alternative to [char]
 
 standard:            yes
-                     https://forth-standard.org/standard/core/BracketCHAR
+url:                 https://forth-standard.org/standard/core/BracketCHAR

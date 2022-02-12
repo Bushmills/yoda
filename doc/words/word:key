@@ -16,4 +16,4 @@ notes:               due to translation of key character to key ASCII value, usi
                      value between 1 and 31. Among those are the Return key.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/KEY
+url:                 https://forth-standard.org/standard/core/KEY

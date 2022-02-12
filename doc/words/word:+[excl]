@@ -8,4 +8,4 @@ category:            memory, arithmetics
 decription:          adds x to contents at address a
 
 standard:            yes
-                     https://forth-standard.org/standard/core/PlusStore
+url:                 https://forth-standard.org/standard/core/PlusStore

@@ -16,3 +16,6 @@ notes:               reason for why that variable exists at all is the lack of a
                      through to code like prompt so the currently running quit loop
                      can be reused rather than another copy launched on top of current
                      call stack.
+
+standard:            no
+deviation:           standard has no equivalent

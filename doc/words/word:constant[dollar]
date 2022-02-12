@@ -13,4 +13,4 @@ notes:               don't confuse with $constant which creates a constant assoc
                      a string from string stack (as value, not as name, that is)
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

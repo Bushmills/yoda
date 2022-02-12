@@ -8,4 +8,4 @@ category:            arithmetics
 decription:          returns the lower of two unsigned numbers u1, u2
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

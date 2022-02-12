@@ -8,4 +8,4 @@ category:            memory
 decription:          reads a byte sized number c from address a
 
 standard:            yes
-                     https://forth-standard.org/standard/core/CFetch
+url:                 https://forth-standard.org/standard/core/CFetch

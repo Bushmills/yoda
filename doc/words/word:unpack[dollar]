@@ -12,4 +12,4 @@ decription:          unpacks string $1 to its components characters, represented
 notes:               complementary with pack$
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

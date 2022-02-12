@@ -7,4 +7,4 @@ decription:          outputs unsigned number u1, padded with leading spaces to u
 contexts:            stateless
 
 standard:            yes
-                     https://forth-standard.org/standard/core/UDotR
+url:                 https://forth-standard.org/standard/core/UDotR

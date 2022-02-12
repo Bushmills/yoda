@@ -9,4 +9,4 @@ decription:          changes first character in $1 to uppercase.
                      Remaining characters aren't affected.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -19,4 +19,4 @@ notes:               it is considered to supply "provides:" with actual run time
                      All others would be trashed.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

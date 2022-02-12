@@ -8,4 +8,4 @@ category:            bit logic
 decription:          logical shift left of u1 by u2 bit positions
 
 standard:            yes
-                     https://forth-standard.org/standard/core/LSHIFT
+url:                 https://forth-standard.org/standard/core/LSHIFT

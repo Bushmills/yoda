@@ -10,4 +10,4 @@ decription:          return true if unsigned u1 is larger than unsigner u2,
 contexts:            stateless
 
 standard:            yes
-                     https://forth-standard.org/standard/core/Umore
+url:                 https://forth-standard.org/standard/core/Umore

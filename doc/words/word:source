@@ -12,4 +12,4 @@ decription:          produce the file handle of the file from which source is cu
 standard:            collision
 deviation:           yoda's source is closer to standard's SOURCE-ID ( -- 0 | -1 | fileid )
                      Renaming is considered.
-                     https://forth-standard.org/standard/file/SOURCE-ID
+url:                 https://forth-standard.org/standard/file/SOURCE-ID

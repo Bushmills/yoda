@@ -8,5 +8,4 @@ category:            memory
 decription:          reads from memory at address a, returns read content as x
 
 standard:            yes
-                     https://forth-standard.org/standard/core/Fetch
-
+url:                 https://forth-standard.org/standard/core/Fetch

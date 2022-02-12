@@ -9,4 +9,4 @@ decription:          sets first char of string $1 to lowercase.
                      Remaining chars aren't touched.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

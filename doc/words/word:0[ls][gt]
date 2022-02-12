@@ -8,4 +8,4 @@ category:            comparison
 decription:          replaces x against a false flag if x was zero, a true flag otherwise
 
 standard:            yes
-                     https://forth-standard.org/standard/core/Zerone
+url:                 https://forth-standard.org/standard/core/Zerone

@@ -9,4 +9,4 @@ decription:          divides the product of n1, n2 by n3,
                      returns remainder as n4, quotient as n5
 
 standard:            not sure
-                     https://forth-standard.org/standard/core/TimesDivMOD
+url:                 https://forth-standard.org/standard/core/TimesDivMOD

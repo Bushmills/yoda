@@ -9,4 +9,4 @@ decription:          produces a number which has only the most significant bit s
                      This value depends on the number of bits chosen for cell width.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

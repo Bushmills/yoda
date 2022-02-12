@@ -13,4 +13,4 @@ decription:          returns an address which points to the next yet unallocated
 notes:               "allot" bumps "here"
 
 standard:            yes
-                     https://forth-standard.org/standard/core/HERE
+url:                 https://forth-standard.org/standard/core/HERE

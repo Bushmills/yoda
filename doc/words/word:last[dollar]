@@ -11,4 +11,4 @@ note:                a quirk shows when using last$ after headerless: last$ will
                      still produce the name of the now headerless word.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

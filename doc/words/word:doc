@@ -13,4 +13,4 @@ decription:          reads a word from input stream, which is appended to
 example:             doc doc
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

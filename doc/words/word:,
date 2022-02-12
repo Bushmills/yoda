@@ -10,4 +10,4 @@ decription:          write x into memory at address indicated by "here" and
                      by "cell"
 
 standard:            yes
-                     https://forth-standard.org/standard/core/Comma
+url:                 https://forth-standard.org/standard/core/Comma

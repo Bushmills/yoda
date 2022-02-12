@@ -11,4 +11,4 @@ decription:          compare two cell pairs x1,x2 with x3,x4.
                      when x1==x3 AND x2==x4, otherwise f is false.
 
 standard:            yes
-                     https://forth-standard.org/standard/double/DEqual
+url:                 https://forth-standard.org/standard/double/DEqual

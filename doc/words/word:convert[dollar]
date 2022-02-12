@@ -15,4 +15,4 @@ notes:               this function doesn't at this point respect value of number
                      The string may also be a bash-computable expression.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -8,4 +8,4 @@ category:            return stack
 decription:          drop top return stack item
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

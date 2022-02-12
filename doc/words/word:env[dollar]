@@ -9,4 +9,4 @@ decription:          read contents of environment variable with name on string s
                      the contents read are pushed as $2 to string stack.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

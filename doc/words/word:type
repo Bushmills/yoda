@@ -10,4 +10,4 @@ decription:          outputs u chars which are stored as a list of ASCIIs in
 contexts:            stateless
 
 standard:            yes
-                     https://forth-standard.org/standard/core/TYPE
+url:                 https://forth-standard.org/standard/core/TYPE

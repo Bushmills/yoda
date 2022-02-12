@@ -21,5 +21,5 @@ notes:               ?leave can be used with all these loop constructs:
                      see leave for an unconditional version of ?leave
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

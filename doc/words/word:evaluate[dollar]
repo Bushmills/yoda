@@ -11,4 +11,4 @@ decription:          takes a string from string stack and evaluates it as if it 
 example:             "3 5 * ." evaluate$
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -7,7 +7,4 @@ category:            flow control
 
 decription:          part of a begin ... while ... repeat flow control construct
 
-standard:            no
-deviation:           stack during compilation: ( C: dest -- orig dest )
-                     yoda has no concept of branch destinations, and can't
-                     therefore stack those.
+standard:            not sure

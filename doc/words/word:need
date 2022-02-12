@@ -19,4 +19,4 @@ notes:               contrary to "satisfy" does need not throw an error if a
                      word can't be resolved immediately.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

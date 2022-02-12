@@ -10,5 +10,5 @@ decription:          reads a word name from input stream, looks up its source
                      location and outputs it as dirs/file:line
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

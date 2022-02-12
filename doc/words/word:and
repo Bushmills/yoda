@@ -8,4 +8,4 @@ category:            bitwise logic
 decription:          u3 is the result of bitwise ANDing u1 with u2
 
 standard:            yes
-                     https://forth-standard.org/standard/core/AND
+url:                 https://forth-standard.org/standard/core/AND

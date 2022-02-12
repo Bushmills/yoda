@@ -9,4 +9,4 @@ decription:          produces handle of currently loading file, or 0 for console
                      alias of source, provided for better symmetry with thisfile$
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

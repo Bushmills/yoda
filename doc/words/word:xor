@@ -8,4 +8,4 @@ category:            bit logic
 decription:          performs a bitwise xor on x1 with x2, returns result as x3
 
 standard:            yes
-                     https://forth-standard.org/standard/core/XOR
+url:                 https://forth-standard.org/standard/core/XOR

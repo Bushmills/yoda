@@ -9,4 +9,4 @@ decription:          appends the character represented by its ASCII c to string 
                      resulting in $2
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

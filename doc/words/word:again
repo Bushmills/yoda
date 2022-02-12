@@ -8,9 +8,5 @@ category:            flow control
 decription:          conclude a begin ... again structure, by compiling code
                      which unconditionally jumps back to begin.
 
-standard:            no
-deviation:           stack during compilation:  ( C: dest -- )
-                     yoda has no concept of branch destinations and can't
-                     therefore stack them. As consequence will again not
-                     remove those.
-                     https://forth-standard.org/standard/core/AGAIN
+standard:            undecided
+url:                 https://forth-standard.org/standard/core/AGAIN

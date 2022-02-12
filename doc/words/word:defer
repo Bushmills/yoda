@@ -18,4 +18,4 @@ notes:               see also: is
                      it is probably a bad idea to assign its own run time semantics to it.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/DEFER
+url:                 https://forth-standard.org/standard/core/DEFER

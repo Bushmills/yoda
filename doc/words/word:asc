@@ -9,4 +9,4 @@ decription:          strips first character of string $1, converts and returns
                      it as ASCII value. An empty string delivers ASCII value of 0
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

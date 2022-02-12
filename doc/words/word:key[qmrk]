@@ -14,4 +14,4 @@ notes:               key is blocking until a key is available. key? can
                      therefore be used to avoid blocking by key.
 
 standard:            yes
-                     https://forth-standard.org/standard/facility/KEYq
+url:                 https://forth-standard.org/standard/facility/KEYq

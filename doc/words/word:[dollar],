@@ -9,4 +9,4 @@ decription:          writes $1 to address here$ of strings storage, then causes
                      here$ to point to the next free string storage location.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

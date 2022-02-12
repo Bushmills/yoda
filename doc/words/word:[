@@ -11,5 +11,5 @@ example:             hex
                      : foo [ decimal ] 123 .  ;
 notes:               complemented by ]
 
-standard:            I think so.
-                     https://forth-standard.org/standard/core/Bracket
+standard:            not sure
+url:                 https://forth-standard.org/standard/core/Bracket

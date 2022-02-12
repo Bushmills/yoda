@@ -9,4 +9,4 @@ decription:          conditionally negates a number. A non-zero flag causes sign
                      to n1 which is returned as n2
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

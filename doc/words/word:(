@@ -14,4 +14,4 @@ example:             ( yoda will ignore this )  hello
 notes:               similar to \ which will ignore text until end of line.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/p
+url:                 https://forth-standard.org/standard/core/p

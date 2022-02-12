@@ -21,4 +21,4 @@ examples:            word "unless" has been defined with compile time semantics
                      evaluation of rest of the input line, conditionally.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

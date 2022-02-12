@@ -9,4 +9,4 @@ decription:          copy the pair of stack items which is located underneath
                      the topmost pair of stack items to top of stack.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/TwoOVER
+url:                 https://forth-standard.org/standard/core/TwoOVER

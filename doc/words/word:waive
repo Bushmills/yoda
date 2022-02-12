@@ -13,5 +13,5 @@ notes:               useful for conditional compilation, allowing to skip
                      blocks of code.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

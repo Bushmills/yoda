@@ -8,4 +8,4 @@ category:            string stack
 decription:          duplicate top string stack item
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -8,4 +8,4 @@ category:            arithmetics
 decription:          adds n2 to n1 and removes n2
 
 standard:            yes
-                     https://forth-standard.org/standard/core/Plus
+url:                 https://forth-standard.org/standard/core/Plus

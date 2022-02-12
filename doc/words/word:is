@@ -12,4 +12,4 @@ decription:          reads the name of a word from input stream which must be th
                      execution of xt.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/IS
+url:                 https://forth-standard.org/standard/core/IS

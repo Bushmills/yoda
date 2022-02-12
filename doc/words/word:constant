@@ -11,5 +11,5 @@ decription:          parses input stream for the name of a constant, creates tha
                      constant and associates value x with it.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/CONSTANT
+url:                 https://forth-standard.org/standard/core/CONSTANT
 

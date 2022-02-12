@@ -10,5 +10,5 @@ decription:          picks u-most string of string stack and pushes it to top.
                      string stack item, a value of 1 has same effect as over$,
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

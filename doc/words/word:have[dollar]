@@ -9,4 +9,4 @@ decription:          examines whether a word with the name of top string stack i
                      exists, and returns its execution token, or 0 if it doesn't.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

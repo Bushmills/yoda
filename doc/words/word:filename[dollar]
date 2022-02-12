@@ -12,4 +12,4 @@ notes:               filename is the canonical name of a file yoda has already r
                      and is therefore displayed in the output from executing "files"
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

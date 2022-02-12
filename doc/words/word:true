@@ -6,4 +6,4 @@ decription:          returns a true flag (all bits set)
 contexts:            stateless
 
 standard:            yes
-                     https://forth-standard.org/standard/core/TRUE
+url:                 https://forth-standard.org/standard/core/TRUE

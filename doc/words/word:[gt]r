@@ -8,4 +8,4 @@ category:            stack, return stack
 decription:          move one item from stack to return stack
 
 standard:            yes
-                     https://forth-standard.org/standard/core/toR
+url:                 https://forth-standard.org/standard/core/toR

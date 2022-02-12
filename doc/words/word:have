@@ -18,4 +18,4 @@ notes:               similar to ' , but doesn't throw an error if word not found
                      Renamed former "exists" to have, as I wasn't really happy with former name.
 
 standard:            no
-                     standard has no equivalent.
+deviation:           standard has no equivalent.

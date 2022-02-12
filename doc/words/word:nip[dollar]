@@ -8,5 +8,5 @@ category:            strings
 decription:          remove and discard second from top string stack item
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

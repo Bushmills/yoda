@@ -10,4 +10,4 @@ decription:          insert a copy of top of string stack underneath
 contexts:            stateless
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

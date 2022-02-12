@@ -9,4 +9,4 @@ decription:          replaces n with false flag if n was 0 or positive
                      replaces n with true flag if n was negative
 
 standard:            yes
-                     https://forth-standard.org/standard/core/Zeroless
+url:                 https://forth-standard.org/standard/core/Zeroless

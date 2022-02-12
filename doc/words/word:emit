@@ -12,4 +12,4 @@ notes:               not all control characters can be printed with emit. Safe c
                      to output are those with ASCIIs in the range of $20 ... $7e
 
 standard:            yes
-                     https://forth-standard.org/standard/core/EMIT
+url:                 https://forth-standard.org/standard/core/EMIT

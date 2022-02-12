@@ -1,5 +1,5 @@
 name:                needed
-stack:               ( -- f )
+stack:               ( -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
@@ -9,9 +9,9 @@ input stream:        whole input line
 decription:          splits remainder of input line into space delimited strings,
                      which are tested as word names against being forward referenced.
                      If any appears among the forward referenced, that is, needed,
-                     words, the result flag f is true.
+                     words, the result flag is true.
 
 notes:               Provides input for basing conditional compilation on
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

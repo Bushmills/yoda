@@ -9,4 +9,4 @@ decription:          determine length of topmost string stack item $1,
                      and return it as u
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

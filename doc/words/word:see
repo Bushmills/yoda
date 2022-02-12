@@ -12,4 +12,4 @@ decription:          "decompile" a word and show its composition.
 example:             see u.
 
 standard:            yes
-                     https://forth-standard.org/standard/tools/SEE
+url:                 https://forth-standard.org/standard/tools/SEE

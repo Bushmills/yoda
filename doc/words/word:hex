@@ -9,4 +9,4 @@ decription:          change radix ("number base") to 16, affecting numeric in- a
                      output
 
 standard:            yes
-                     https://forth-standard.org/standard/core/HEX
+url:                 https://forth-standard.org/standard/core/HEX

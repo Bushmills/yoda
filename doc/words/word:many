@@ -13,4 +13,4 @@ decription:          repeats execution of the remainder of the input line until
 example:             many 3 secs page >free     \ periodically update display of "free" output
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

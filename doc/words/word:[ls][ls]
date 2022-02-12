@@ -12,4 +12,4 @@ notes:               << is an alias of lshift
 standard:            no
                      lshift is described by standard, but its
                      alias << isn't.
-                     https://forth-standard.org/standard/core/LSHIFT
+url:                 https://forth-standard.org/standard/core/LSHIFT

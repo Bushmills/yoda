@@ -18,4 +18,4 @@ example:             "this foo could be rather nice if it was..."  "if" cut$
                      12      ( count of removed chars, on stack )
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

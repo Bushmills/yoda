@@ -10,5 +10,5 @@ decription:          split string $1 at position u into two strings, returned as
                      rest of $1.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent
 

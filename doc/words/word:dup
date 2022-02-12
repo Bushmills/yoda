@@ -8,4 +8,4 @@ category:            stack
 decription:          duplicate top stack item
 
 standard:            yes
-                     https://forth-standard.org/standard/core/DUP
+url:                 https://forth-standard.org/standard/core/DUP

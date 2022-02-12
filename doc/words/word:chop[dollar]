@@ -10,4 +10,4 @@ decription:          splits top of string stack at space delimimiters into strin
                      string count places on string stack.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -18,4 +18,4 @@ notes:               needs: is an alias of satisfy, and has been provided for
                      better symmetry with provides:
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

@@ -13,4 +13,4 @@ notes:               for the reason why sign is applied the way it is, please
                      product of quotient and divisor must yield the original divident.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/MOD
+url:                 https://forth-standard.org/standard/core/MOD

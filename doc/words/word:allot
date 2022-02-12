@@ -11,4 +11,4 @@ decription:          reserves n cells of memory, beginning at the address
                      if deallocated memory block is the last block allocated.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/ALLOT
+url:                 https://forth-standard.org/standard/core/ALLOT

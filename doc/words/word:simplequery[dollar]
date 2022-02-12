@@ -16,4 +16,4 @@ notes:               simplequery$ is used to resolve deferred word "query$" with
                      which will loaded and activated autotically during yoda start.
 
 standard:            no
-                     standard has no equivalent
+deviation:           standard has no equivalent

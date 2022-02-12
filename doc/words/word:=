@@ -9,4 +9,4 @@ decription:          replaces top two stack items against true if they match,
                      or false otherwise.
 
 standard:            yes
-                     https://forth-standard.org/standard/core/Equal
+url:                 https://forth-standard.org/standard/core/Equal

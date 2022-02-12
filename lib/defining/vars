@@ -19,7 +19,7 @@ variable vars               \ link anchor as base of linked list through variabl
 : .var ( a -- )
     skim name$
     #16 ltype$
-    @ . cr  ;
+    @ . cr  ;   transient
 
 \ produce a table showing names and values of variables
 : .vars  ( -- )

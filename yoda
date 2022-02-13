@@ -521,8 +521,9 @@ primitive()  {
 
 colon()  {
    tmp="${BASH_LINENO[0]}"                                           # assume not evaluate
-   [[ "${FUNCNAME[2]}" == "evaluate" ]] &&                           # but if evaluate
-      tmp="${BASH_LINENO[2]}"                                        # then linenumber from different array item
+   (( filehandle == 1 )) &&                                          # if defined in yoda
+   [[ "${FUNCNAME[3]}" == "evaluate" ]] &&                           # by evaluate
+   tmp="${BASH_LINENO[3]}"                                           # then take line number from different entry
    delayheader "$1" "$filehandle" "${linenr:-$tmp}"
 }
 

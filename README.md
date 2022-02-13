@@ -16,8 +16,10 @@ aspects, described on the [Explore wiki page](https://github.com/Bushmills/yoda/
 
 In some respects does yoda differ from Forth.  Some example code, giving
 more tangible clues where and how yoda differs from Forth can be reached
-from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples)  
-Deviations from standard are identified in the [words descriptions](https://github.com/Bushmills/yoda/tree/main/doc/words)  
+from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples).  
+Deviations from standard are identified in the [words descriptions](https://github.com/Bushmills/yoda/tree/main/doc/words).  
+[These words](https://github.com/Bushmills/yoda/wiki/Compliant) are deemed to comply with standard.  
+
 Some differences are listed and commented on the [Differences wiki page](https://github.com/Bushmills/yoda/wiki/Differences).  
 
 My musings, ideas, plans and thoughts of possible changes can be found at

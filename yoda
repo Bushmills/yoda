@@ -1806,7 +1806,7 @@ evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
 colon 'compile,'
    code 'code "${functionname_prefix}_${s[sp--]}"'
 semicolon
-compiled
+#compiled
 
 
 

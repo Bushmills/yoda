@@ -27,7 +27,7 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.4"   # 2022feb12,00:02    : is stateless, therefore compilable.
+v="0.6.4"   # 2022feb12,00:02    : is stateless, therefore compilable. Preparing for vocabularies.
 # v="0.6.3"  # 2022feb10,02:35   combined two arrays sourcefile and sourceline into single source
 #                                renamed former misnamed analyser flag "literalnumber" to push. added 2exchange, removed 2+, 2-
 #                                abort and ?abort are now silent. j inlines. version stamped dependencies, new version of yoda will
@@ -817,6 +817,11 @@ invoke() {
 # interpret/compile the line passed as argument
 # in here most compiling and interpreting work is done.
 # time to split this thing up.
+
+declare -a wordlists
+declare -A only                                                      # only a dummy test vocabulary yet
+wordlists=("only" "headersstateless")                                # last voc is context
+
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
@@ -824,10 +829,17 @@ evaluate()  {
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
-      [[ -z "${headersstateless["$word"]}" ]] || {                   # word found in stateless dictionary
-         invoke "$word" "${headersstateless["$word"]}"               # compile or execute
-         continue
-      }
+
+# preparing for vocabularies
+# already searching through all vocabularies in wordlists
+      for ((wordlist=${#wordlists[@]}; wordlist;)); do
+         declare -n headerscontext="${wordlists[--wordlist]}"
+         [[ -z "${headerscontext["$word"]}" ]] || {                  # word found in next vocabulary  of voclist
+            invoke "$word" "${headerscontext["$word"]}"              # compile or execute
+            continue 2
+         }
+      done
+
       if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
          [[ -z "${headerscompileonly["$word"]}" ]] || {              # found in in compileonly while compiling
             ${headerscompileonly["$word"]}                           # word in there are inherently "immediate", therefore they're executed here
@@ -2768,7 +2780,7 @@ config()  {
 }
 config
 [[ -f "$dependencies" ]] || generate_dependencies                    # no dependencies -> generate
-read _ tmp < <(grep '^version ' "$dependencies")                     # check version
+read -r _ tmp < <(grep '^version ' "$dependencies")                  # check version
 [[ "$tmp" == "$v" ]] || generate_dependencies                        # new yoda -> generate
 cache_dependencies                                                   # read dependencies into memory
 args=("$@")                                                          # read command line

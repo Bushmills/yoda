@@ -10,5 +10,5 @@ decription:          return the loop index of the innermost loop. If there's no 
                      i works with do ... loop type loops, with for ... next loops, and
                      also with interpreted "times" style loops.
 
-standard:            I think so
+standard:            yes
 url:                 https://forth-standard.org/standard/core/I

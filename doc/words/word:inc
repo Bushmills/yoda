@@ -1,11 +1,11 @@
-name:                dec
+name:                inc
 stack:               ( a -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
 category:            arithmetic, memory
 
-decription:          decrement memory contents at address a by 1
+decription:          inrement memory contents at address a by 1
 
 standard:            no
 deviation:           standard has no equivalent

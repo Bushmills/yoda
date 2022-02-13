@@ -1,5 +1,5 @@
 name:                $>
-stack:               ( -- f )
+stack:               ( -- flag )
 return stack:        ( -- )
 string stack:        ( $1 $2 -- )
 contexts:            stateless

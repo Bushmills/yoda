@@ -1,5 +1,5 @@
 name:                lest
-stack:               ( f -- )
+stack:               ( flag -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            interpreting, compiling
@@ -9,7 +9,7 @@ notes:               complementary to "unless"
 
 
 context:             interpreting
-description:         execute remainder of line only if flag f is true.
+description:         execute remainder of line only if flag is true.
                      A false flag results in ignoring rest of line, as if
                      it was a comment.
 example:             false lest  this will be ignored

@@ -1,5 +1,5 @@
 name:                if
-stack:               ( f -- )
+stack:               ( flag -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            compileonly
@@ -7,7 +7,7 @@ category:            flow control
 
 decription:          start an "if ... then"  or  "if ... else ... then"
                      conditional sequence. Code code following if will be
-                     executed when flag f is true, skipped until "else" or "then"
+                     executed when flag is true, skipped until "else" or "then"
                      otherwise.
 
 notes:               stack diagram as depicted describes run time stack effect.

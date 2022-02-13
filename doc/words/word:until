@@ -1,5 +1,5 @@
 name:                until
-stack:               ( f -- )
+stack:               ( flag -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            compileonly
@@ -7,5 +7,5 @@ category:            flow control
 
 decription:          conclude a begin ... until flow control construct by compiling
                      code which performs a conditional jump back to begin. If flag
-                     f is true, the jump is not taken, and execution continues with
+                     is true, the jump is not taken, and execution continues with
                      code following until.

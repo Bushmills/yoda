@@ -1,5 +1,5 @@
 name:                key?
-stack:               ( -- f )
+stack:               ( -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless

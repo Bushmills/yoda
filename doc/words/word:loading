@@ -1,12 +1,12 @@
 name:                loading
-stack:               ( -- f )
+stack:               ( -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
 category:            file I/O
 
-decription:          produces a true flag f when executed while loading from file.
-                     when executed from console, pushed flag f will be false.
+decription:          produces a true flag when executed while loading from file.
+                     when executed from console, pushed flag will be false.
 
 standard:            no
 deviation:           standard has no equivalent

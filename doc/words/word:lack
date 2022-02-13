@@ -1,5 +1,5 @@
 name:                lack
-stack:               ( -- f )
+stack:               ( -- flag )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
@@ -7,7 +7,7 @@ category:            dictionary, conditional compilation
 
 input stream:        word name
 
-decription:           looks up word name in dictionary, returns true for word not found/
+decription:          looks up word name in dictionary, returns true for word not found/
                      undefined, or false if word exists.
 
 

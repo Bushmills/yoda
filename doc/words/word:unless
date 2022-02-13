@@ -1,5 +1,5 @@
 name:                unless
-stack:               ( f -- )
+stack:               ( flag -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            interpreting, compiling
@@ -10,8 +10,8 @@ notes:               complements "lest"
 
 context:             interpreting
 input stream:        whole line
-description:         execute remainder of line if flag f is false, which is
-                     the same as "execute rest of line unless flag f is true"
+description:         execute remainder of line if flag is false, which is
+                     the same as "execute rest of line unless flag is true"
                      A true flag therefore sets the condition for unless to
                      take exception of the default case "execute the rest",
                      and treats the remainder of the line as if it was a comment.

@@ -1802,6 +1802,13 @@ semicolon
 # ( -- xt )   # produces execution token and removes header of last word
 evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
 
+# ( xt -- )
+colon 'compile,'
+   code 'code "${functionname_prefix}_${s[sp--]}"'
+semicolon
+compiled
+
+
 
 # ----- bit logic ---------------------------------------- #fold01
 

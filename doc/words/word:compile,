@@ -1,0 +1,12 @@
+name:                compile,
+stack:               ( xt -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            compilation
+
+decription:          compile code which causes execution of xt into
+                     word under construction.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/COMPILEComma

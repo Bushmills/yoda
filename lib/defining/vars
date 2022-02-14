@@ -7,9 +7,9 @@ variable vars               \ link anchor as base of linked list through variabl
 
 : var ( create: -- )  ( run: -- a )
     vars link               \ add linked list item
-    here cell+ constant     \ skip cell to store xt for name
-    last @ ,                \ add xt
-    0 ,  ;                  \ initial variable data
+    here$ ,                 \ will store var name there
+    variable
+    last$  $,  ;
 
 \ variables are created like this:
 \ var foo
@@ -17,7 +17,7 @@ variable vars               \ link anchor as base of linked list through variabl
 
 \ output name and value of a single variable
 : .var ( a -- )
-    skim name$
+    skim $@
     #16 ltype$
     @ . cr  ;   transient
 

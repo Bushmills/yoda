@@ -1,4 +1,4 @@
-provides: vocabulary also previous only order forth
+provides: vocabulary also previous only order
 once
 
 \ not a finalised implementation, more a means to have a handle
@@ -6,22 +6,23 @@ once
 
 \ contexts and current as addresses in memory may become tricky
 : vocabulary
-    here$ constant
-    "dovoc " 
-    last @ name$ quote$
-    join$ use$  ;
-
-: also
-   >wordlists+=("${wordlists[-1]}")       
-;
-
-: previous
-   >((${#wordlists[@]}>1))&&unset "wordlists[-1]"
-;
+    create
+    "dovoc "
+    last$
+    >declare -A "${ss[-1]}"
+    quote$ join$ use$  ;
 
 \ only not populated yet, therefore also forth
 : only
-   >wordlists=("only" "forth")       
+   >wordlists=("forth" "only")
+;
+
+: also
+   >wordlists=("${wordlists[0]}" "${wordlists[@]}" )
+;
+
+: previous
+   >((${#wordlists[@]}>1))&&wordlists=("${wordlists[@]:1}")
 ;
 
 \ displayed order is backwards, but intention is to change voc order in wordlists
@@ -29,4 +30,6 @@ once
    >echo "${wordlists[@]}"
 ;
 
-vocabulary forth
+\ can't use vocabulary: vocabulary initialises word list, which
+\ would lead to emptying forth vocabulary.
+create forth  "dovoc "  last$ quote$ join$ use$

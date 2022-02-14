@@ -1,0 +1,13 @@
+name:                xt
+stack:               ( -- 0 | xt )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            forth
+category:            dictionary
+
+decription:          examines whether a word with the name of top string stack item
+                     exists, and returns its execution token, or 0 if it doesn't.
+
+notes:               xt is an alias of have$
+standard:            no
+deviation:           standard has no equivalent

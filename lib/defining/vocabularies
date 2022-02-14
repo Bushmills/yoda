@@ -1,35 +1,10 @@
-provides: vocabulary also previous only order
+provides: vocabulary
 once
 
-\ not a finalised implementation, more a means to have a handle
-\ on search order manipulation for testing purposes.
-
-\ contexts and current as addresses in memory may become tricky
 : vocabulary
-    create
-    "dovoc "
+    here$ constant
     last$
     >declare -A "${ss[-1]}"
-    quote$ join$ use$  ;
-
-\ only not populated yet, therefore also forth
-: only
-   >wordlists=("forth" "only")
+    $,
+    does> context !
 ;
-
-: also
-   >wordlists=("${wordlists[0]}" "${wordlists[@]}" )
-;
-
-: previous
-   >((${#wordlists[@]}>1))&&wordlists=("${wordlists[@]:1}")
-;
-
-\ displayed order is backwards, but intention is to change voc order in wordlists
-: order
-   >echo "${wordlists[@]}"
-;
-
-\ can't use vocabulary: vocabulary initialises word list, which
-\ would lead to emptying forth vocabulary.
-create forth  "dovoc "  last$ quote$ join$ use$

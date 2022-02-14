@@ -100,6 +100,7 @@ v="0.6.4"   # 2022feb12,00:02    : is stateless, therefore compilable. Preparing
 
 read -ra version <<< "${v//./ }"
 
+
 # ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
@@ -139,19 +140,19 @@ declare -i s1 s2 s3 s4                                               # temp vari
                                                                      # easier to read than "tmp, tmp2"
 declare -Ai flags                                                    # header flags (only inline left for now)
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
-headerslistlist=(
-         "headersstateless"                                          # searched during both interpreting and compiling
-         "headersinterpretonly"                                      # searched during compiling only
-         "headerscompileonly")                                       # searched during interpreting only
 
-declare -n headers="headersstateless"                                # headers is a vector- or pointer variable.
-for tmp in "${headerslistlist[@]}"; do
-   declare -A "$tmp"
-done
+# built-in vocabularies
+declare -A "only"
+declare -A "forth"
+declare -A "interpretonly"
+declare -A "compileonly"
+
+declare -a wordlists
+wordlists=("only" "forth")                                           # last voc is context
 
 declare -a names                                                     # function name -> word name lookup
-declare -A headersunresolved                                         # forward referenced. Not searched.
-declare -a headerstransient                                          # transient headers.
+declare -A unresolved                                                # forward referenced. Not searched.
+declare -a transient                                                 # transient headers.
 declare -A where                                                     # file:line of source
 declare -A lib                                                       # cache dependencies
 
@@ -258,14 +259,14 @@ inline()     { setheaderflag "$inline" ; }
 
 # move header to compiler context vocabulary
 compiled()  {
-   headerscompileonly["$lastword"]="${headersstateless["$lastword"]}"
-   unset -v 'headersstateless["$lastword"]'
+   compileonly["$lastword"]="${forth["$lastword"]}"
+   unset -v 'forth["$lastword"]'
 }
 
 # move header to interpreter context vocabulary
 interpreted()   {
-   headersinterpretonly["$lastword"]="${headersstateless["$lastword"]}"
-   unset -v 'headersstateless["$lastword"]'
+   interpretonly["$lastword"]="${forth["$lastword"]}"
+   unset -v 'forth["$lastword"]'
 }
 
 
@@ -286,8 +287,8 @@ compiler_init()  {
 # NOTE: leave it to header to prepend $functionname_prefix.
 header()  {
    lastword="$1"                                                     # global variable. setting header flags needs this one
-   [[ -z "${headersstateless["$1"]}" ]] || echo "redefining $1"
-   headersstateless["$1"]="$2"                                       # associate word with name
+   [[ -z "${forth["$1"]}" ]] || echo "redefining $1"
+   forth["$1"]="$2"                                                  # associate word with name
    flags["$1"]="0"                                                   # default to no flags
 }
 
@@ -357,11 +358,11 @@ optimise()  {                                                        # run code 
 # It's upon detokeniser to create header, which it is doing here and now.
 # NOTE: functional but ugly. Needs some taking care of here
             word="$bodyline"                                         # word name of new word
-            name="${headersunresolved[$word]}"                       # if forward ref, reuse function name of forward ref
+            name="${unresolved[$word]}"                              # if forward ref, reuse function name of forward ref
             if [[ -z "$name" ]]; then
                name "$word"                                          # not a forward ref: invent new name
             else
-               unset -v "headersunresolved['$word']"                 # going to resolve word, remove from forward refs
+               unset -v "unresolved['$word']"                        # going to resolve word, remove from forward refs
             fi
             header "$word" "$name"                                   # create new header
             continue
@@ -387,7 +388,7 @@ optimise()  {                                                        # run code 
 # a workaround is needed here too:  create ... does> ;   does without following code will let bash run into an empty function,
 # which bash doesn't like, and complain about.  Therefore this condition is caught here and acted upon.
      if (( ${#target[@]} > dodoes_at )); then                        # everything ok: there was code between does> and ; - extract and store it.
-        doescode[${headersstateless[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
+        doescode[${forth[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
         target=("${target[@]:0:$dodoes_at}")
      else                                                            # but does> without code ...
         unset "target[-1]"                                           # will cause to compile without any does run time action. no code behind does>
@@ -453,7 +454,7 @@ codebody()  {                                                        # inline co
 # rewrite run time semantics of most recently defined word
 # arg1: new run time code.
 use()  {
-   name="${headersstateless["$lastword"]}"                           # rewrites function "$name",
+   name="${forth["$lastword"]}"                           # rewrites function "$name",
    eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
 }
 
@@ -588,7 +589,7 @@ defer()  {                                                           # use in yo
    semicolon
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
    use "${functionname_prefix}_\${m[$dp]}"
-   ((m[dp++]="${headersstateless[$2]##*_}"))
+   ((m[dp++]="${forth[$2]##*_}"))
    inline
    inout 0 1
 }
@@ -745,20 +746,21 @@ pattern()  {                                                         # pattern i
 # forward refs create new forward refs, in which case resolving
 # will be repeated.
 totalheaders()  {
+# NOTE: change to take account of all vocabularies
    (( totalheaders =
-         ${#headersstateless[@]}
-       + ${#headerscompileonly[@]}
-       + ${#headersinterpretonly[@]}
-       + ${#headersunresolved[@]}
+         ${#forth[@]}
+       + ${#compileonly[@]}
+       + ${#interpretonly[@]}
+       + ${#unresolved[@]}
    ))
 }
 
 
 # create a forward ref by the name of arg1
 forwardref()  {
-   [[ -z ${headersunresolved["$word"]} ]] && {                       # don't re-forwardref and already forward ref'ed word
+   [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
       name "$1"                                                      # generate new function name
-      headersunresolved["$1"]="$name"                                # keep in unresolved vocabulary
+      unresolved["$1"]="$name"                                       # keep in unresolved vocabulary
    }
 }
 
@@ -766,7 +768,7 @@ forwardref()  {
 # tries by loading source immediately if available.
 # if source isn't available, a forward ref will be generated.
 satisfy1()  {
-   [[ -z ${headersstateless[$1]} ]] || return 0                      # word already defined, nothing to do
+   [[ -z ${forth[$1]} ]] || return 0                                 # word already defined, nothing to do
    local word="$1"
    [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
       forwardref "$word"                                             # yes: create forward ref only
@@ -783,7 +785,7 @@ resolving=0
 # doing so because resolving forward references may create
 # new forward references, which also need resolving.
 resolve()  {
-   (( ${#headersunresolved[@]} )) || return                          # only run if unresolved words exist
+   (( ${#unresolved[@]} )) || return                                 # only run if unresolved words exist
    ((resolving)) && return                                           # nesting into resolve doesn't get any more work done -
    local file                                                        #   we'll resolve anything open, or we don't, no matter
    local resolving=1                                                 #   how often resolve calls itself. This would only slow down
@@ -791,10 +793,10 @@ resolve()  {
    totalheaders                                                      # total headers count before inclusion
    until (( totalheaders == previousheaders )); do                   # loop until header count stabilises
       previousheaders="$totalheaders"
-      for word in "${!headersunresolved[@]}"; do                     # try to resolve all in unresolved vocabulary
+      for word in "${!unresolved[@]}"; do                            # try to resolve all in unresolved vocabulary
          satisfy1 "$word"                                            # satisfying a word can create new forward references
       done
-      ((${#headersunresolved[@]})) || break                          # no forwardrefs left: done
+      ((${#unresolved[@]})) || break                                 # no forwardrefs left: done
       totalheaders                                                   # total headers count now, after inclusion
    done
 }
@@ -818,10 +820,6 @@ invoke() {
 # in here most compiling and interpreting work is done.
 # time to split this thing up.
 
-declare -a wordlists
-declare -A only                                                      # only a dummy test vocabulary yet
-wordlists=("only" "headersstateless")                                # last voc is context
-
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
@@ -841,17 +839,17 @@ evaluate()  {
       done
 
       if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
-         [[ -z "${headerscompileonly["$word"]}" ]] || {              # found in in compileonly while compiling
-            ${headerscompileonly["$word"]}                           # word in there are inherently "immediate", therefore they're executed here
+         [[ -z "${compileonly["$word"]}" ]] || {                     # found in in compileonly while compiling
+            ${compileonly["$word"]}                                  # word in there are inherently "immediate", therefore they're executed here
             continue                                                 #     because that also deals with inline compilation.
          }
-         [[ -z "${headersunresolved["$word"]}" ]] || {               # found in unresolved while compiling
-            code "${headersunresolved[$word]}"                       # compile it
+         [[ -z "${unresolved["$word"]}" ]] || {                      # found in unresolved while compiling
+            code "${unresolved[$word]}"                              # compile it
             continue
          }
       else                                                           # interpreting
-         [[ -z "${headersinterpretonly["$word"]}" ]] || {            # word found in interpretonly
-            ${headersinterpretonly["$word"]}
+         [[ -z "${interpretonly["$word"]}" ]] || {                   # word found in interpretonly
+            ${interpretonly["$word"]}
             continue
          }
       fi
@@ -859,13 +857,15 @@ evaluate()  {
       (( m[forwardrefs] )) && {                                      #     and forward references enabled ...
          ((compiling)) && {                                          # still not successfully dealt with word. last resolve: in case of compiling ...
             forwardref "$word"  "$lastword"                          #     create a forward reference.
-            code "${headersunresolved["$word"]}"                     #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
+            code "${unresolved["$word"]}"                            #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
             continue                                                 # hope that it will eventually get resolved
          }
       }
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
          satisfy1 "$word" && {                                       # attempt to load word
-            ${headers["$word"]}                                      # successful: execute
+# NOTE: must run from current voc (or voc satisfy1 has
+#       compiled into. This may be another voc than forth
+            ${forth["$word"]}                                        # successful: execute
             continue
          }
       }
@@ -925,14 +925,14 @@ from()  {
    file="$(realpath "$file")"                                        # canonical or original name of file
    loaded "$file" || files[filehandle]="$file"                       # first time inclusion: add to files array
    readarray -t lines < "$file"                                      # read whole source into lines array
-   local headerstransient=()                                         # list of headers marked transient
+   local transient=()                                                # list of headers marked transient
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping
       evaluate "$line"                                               # process next line
       ((error | (linenr < 0)))&&break                                # source can flag "stop loading" with negative linenr
    done                                                              #   (warm and done do so)
-   for ((tmp=0; tmp<${#headerstransient[@]}; tmp++)); do             # trash transient headers
-      unset -v "headersstateless[${headerstransient[tmp]}]"
+   for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                    # trash transient headers
+      unset -v "forth[${transient[tmp]}]"
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    ((stackeffect == sp)) || unbalancedstack "$1"                     # demanding stack clean files with net effect zero.
@@ -1019,16 +1019,17 @@ semicolon
 
 primitive 'interpreted' 'interpreted'                                # move header to interpreter context vocabulary
 primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
-primitive 'transient'   'headerstransient+=("$lastword")'            # copy header to transient for later trashing
+primitive 'transient'   'transient+=("$lastword")'                   # copy header to transient for later trashing
 
 # ----- diagnostics -------------------------
 
 words() {
    local headers
-   for tmp in "${headerslistlist[@]}" "headersunresolved"; do
+#   for tmp in "${headerslistlist[@]}" "unresolved"; do
+   for tmp in "${wordlists[@]}" "interpretonly" "compileonly" "unresolved"; do
       declare -n headers="$tmp"
       (( ${#headers[@]} )) && {
-         printf '%s\n' "--- ${tmp#"headers"} ---"
+         printf '%s\n' "--- $tmp ---"
          printf  "%s  " "${!headers[@]}"
          printf '\n\n'
       }
@@ -1040,7 +1041,7 @@ words() {
 see()  {
    local headers
    word
-   for tmp in "${headerslistlist[@]}"; do
+   for tmp in "${wordlists[@]}" "interpretonly" "compileonly"; do
       declare -n headers="$tmp"
       [[ -z "${headers["$word"]}" ]] || {
          printf "found in %s:\n" "${tmp#"headers"}"
@@ -1067,7 +1068,7 @@ primitive 'see' 'see'
 # portion of does> to the original address push
 # compiled by create.
 dodoes()  {                                                          # append does> part to original address pushing create semantics
-   ${headersstateless[$lastword]}
+   ${forth[$lastword]}
    use  "s[++sp]=\"${s[sp--]}\"
          ${doescode[${FUNCNAME[1]}]}"
 }
@@ -1141,9 +1142,22 @@ semicolon
 # ' foo alias bar
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
-   code 'headersstateless["$word"]="${functionname_prefix}_${s[sp--]}"'
+   code 'forth["$word"]="${functionname_prefix}_${s[sp--]}"'
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
 semicolon
+
+
+# -> library
+#colon 'vocabulary'
+# ...
+#semicolon
+
+# vocabulary 'only'
+# vocabulary 'forth'
+
+#colon 'only'
+#colon 'forth'
+
 
 
 # -------------- deferred words ------------------
@@ -1168,7 +1182,7 @@ semicolon
 # grep is used here.
 colon 'is'
    code 'word'
-   code 'tmp="$(type "${headersstateless[$word]}"|grep "${functionname_prefix}_.*m\[")"'
+   code 'tmp="$(type "${forth[$word]}"|grep "${functionname_prefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
@@ -1716,7 +1730,7 @@ inout 4 1
 havearg() {
    local headers                                                     # meant to spare me from saving and restoring vectored headers variable
    word="$1"
-   for tmp in "${headerslistlist[@]}"; do                            # loop through all vocs we want to search
+   for tmp in "${wordlists[@]}" "interpretonly" "compileonly"; do
       declare -n headers="$tmp"                                      # vector headers to next vocabulary
       [[ -z "${headers["$word"]}" ]] || {                            # word in there?
          tmp="${headers["$word"]}"                                   #     yes: remember name
@@ -1731,7 +1745,8 @@ havearg() {
 # word name from input stream
 # ( -- 0 | a )
 have() {
-   local headers                                                     # meant to spare me from saving and restoring vectored headers variable
+# NOTE: local necessary here?
+#   local headers                                                     # meant to spare me from saving and restoring vectored headers variable
    word
    havearg "$word"
 }
@@ -1771,8 +1786,8 @@ primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 # can be used after a colon definition
 primitive 'inline'  'inline'                                         # ( -- )    set header flag for inline compilation
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
-primitive '.unresolved'  '((${#headersunresolved[@]}))&&printf "%s " "${!headersunresolved[@]}"'   # print unresolved
-primitive '#unresolved' '((s[++sp]=${#headersunresolved[@]}))'       # ( -- u )
+primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
+primitive '#unresolved' '((s[++sp]=${#unresolved[@]}))'              # ( -- u )
 primitive 'recurse' 'code "${functionname_prefix}_$((xt))"'; compiled   # ( -- )
 
 # apply run time semantic from string stack
@@ -1784,7 +1799,7 @@ semicolon
 # trashed name as argument
 # ( -- )
 trash()  {
-   unset -v "headersstateless[$1]"
+   unset -v "forth[$1]"
 }
 
 # trashed name from input stream
@@ -2016,7 +2031,7 @@ semicolon
 colon 'boot'
    code 'word'
    code 'satisfy1 "$word"'
-   code 'coldvector="${headersstateless["$word"]}"'                  # because writing it to cold start vector
+   code 'coldvector="${forth["$word"]}"'                  # because writing it to cold start vector
 semicolon                                                            # this way cold start entry points can be forward referenced
 
 primitive 'warm'  'warm'
@@ -2496,9 +2511,9 @@ primitive 'binary'   "m[$base]=2";  inout 0 0
 
 
 need()  {
-   [[ -z "${headersstateless[$1]}" ]] || return                      # only ask for forward if word isn't in any context voc
-   [[ -z "${headersinterpretonly[$1]}" ]] || return
-   [[ -z "${headerscompileonly[$1]}" ]] || return
+   [[ -z "${forth[$1]}" ]] || return                                 # only ask for forward if word isn't in any context voc
+   [[ -z "${interpretonly[$1]}" ]] || return
+   [[ -z "${compileonly[$1]}" ]] || return
    forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
 }
 
@@ -2511,7 +2526,7 @@ colon 'needed'                                                       # ( -- f ) 
    push "$false"
    code 'while [[ -n "$line" ]]; do'
    code 'word'
-   code '[[ -z "${headersunresolved["$word"]}" ]] || {'              # check unresolved status of word
+   code '[[ -z "${unresolved["$word"]}" ]] || {'                     # check unresolved status of word
    code '((s[sp]=true))'                                             # unresolved -> needed
    code 'line=""'                                                    # "wired or" - one needed is enough, skip rest
    code '}'
@@ -2619,7 +2634,7 @@ sanitise()  {
 }
 
 undoc()  {
-   for list in "${headerslistlist[@]}"; do                           # run through all header lists
+   for list in "${wordlists[@]}" "interpretonly" "compileonly"; do
       local headers
       declare -n headers="$list"
       for word in "${!headers[@]}"; do                               # run through all headers
@@ -2790,9 +2805,9 @@ files[1]="$(realpath "$0")"                                          # handles: 
 evaluate "${args[*]}"                                                # evaluate piped command, command line or default initial commands
 if [[ -n "$coldvector" ]]; then                                      # if cold launch point was specified, try to run.
    resolve                                                           # still unresolved words? try to resolve those.
-   if (( ${#headersunresolved[@]} )); then                           # still unresolved words
+   if (( ${#unresolved[@]} )); then                                  # still unresolved words
       printf "%s\n" "unresolved forward references:"
-      printf "%s\n" "${!headersunresolved[@]}"
+      printf "%s\n" "${!unresolved[@]}"
       printf "%s\n" "Run this not I will."
    else
       cold

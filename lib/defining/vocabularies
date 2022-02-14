@@ -1,0 +1,32 @@
+provides: vocabulary also previous only order forth
+once
+
+\ not a finalised implementation, more a means to have a handle
+\ on search order manipulation for testing purposes.
+
+\ contexts and current as addresses in memory may become tricky
+: vocabulary
+    here$ constant
+    "dovoc " 
+    last @ name$ quote$
+    join$ use$  ;
+
+: also
+   >wordlists+=("${wordlists[-1]}")       
+;
+
+: previous
+   >((${#wordlists[@]}>1))&&unset "wordlists[-1]"
+;
+
+\ only not populated yet, therefore also forth
+: only
+   >wordlists=("only" "forth")       
+;
+
+\ displayed order is backwards, but intention is to change voc order in wordlists
+: order
+   >echo "${wordlists[@]}"
+;
+
+vocabulary forth

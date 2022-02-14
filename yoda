@@ -27,7 +27,8 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.4"   # 2022feb12,00:02    : is stateless, therefore compilable. Preparing for vocabularies.
+v="0.6.4"    # 2022feb14,14:08   added dovoc
+# v="0.6.4"  # 2022feb12,00:02   : is stateless, therefore compilable. Preparing for vocabularies.
 # v="0.6.3"  # 2022feb10,02:35   combined two arrays sourcefile and sourceline into single source
 #                                renamed former misnamed analyser flag "literalnumber" to push. added 2exchange, removed 2+, 2-
 #                                abort and ?abort are now silent. j inlines. version stamped dependencies, new version of yoda will
@@ -568,6 +569,9 @@ variable 'instantresolve'     "1"
 variable 'callstack'          "0"
 variable 'base'               "10"
 
+variable 'current'            "0"
+variable 'context'            "0"
+
 constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"
 constant 'msb'                "$msb"
@@ -595,6 +599,9 @@ defer()  {                                                           # use in yo
 }
 
 
+dovoc()  {
+   wordlists[-1]="$1"
+}
 
 # ----- errors, traps, entry points----------------------- #fold00
 

@@ -149,7 +149,7 @@ declare -A "interpretonly"
 declare -A "compileonly"
 
 declare -a wordlists
-wordlists=("only" "forth")                                           # last voc is context
+wordlists=("forth" "only")                                           # last voc is context
 
 declare -a names                                                     # function name -> word name lookup
 declare -A unresolved                                                # forward referenced. Not searched.
@@ -213,7 +213,7 @@ false=0
 compiling="$false"                                                   # state flag: interpreting or compiling
 line=""                                                              # source line being worked on. modified during parsing and processing
 word=""                                                              # bl delimited string from line currently being processed
-lastword=""                                                          # most recently created word, set by create.
+lastword=""                                                          # most recently created word, set by defining words
 
 # xeditor runs detached from yoda process and doesn't block input
 # therefore an xeditor should open its own window
@@ -455,7 +455,7 @@ codebody()  {                                                        # inline co
 # rewrite run time semantics of most recently defined word
 # arg1: new run time code.
 use()  {
-   name="${forth["$lastword"]}"                           # rewrites function "$name",
+   name="${forth["$lastword"]}"                                      # rewrites function "$name",
    eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
 }
 
@@ -495,7 +495,7 @@ push()  {                                                            # leave it 
 # variable last doesn't exist yet, but is used in header, and
 # can't be defined earlier, because defining it calls header.
 # remedy: remember here, allot cell, define it as constant later.
-((last=dp++))
+#((last=dp++))
 
 # arg1: wordname
 # arg2: filehandle
@@ -504,7 +504,7 @@ delayheader()  {
    [[ -z "$1" ]] && emptyname
    compiler_init
    code "$1" "$functionheader"
-   m[last]="$xt"
+#   m[last]="$xt"
    [[ -z "$2" ]] || where "$2" "$3"
 }
 
@@ -581,7 +581,7 @@ constant '0'                  "0"
 constant 'esc'                "27"
 constant 'bl'                 "32"
 constant 'bits'               "$bits"
-constant 'last'               "$last"
+#constant 'last'               "$last"
 
 
 # arg1: deferred word
@@ -596,11 +596,6 @@ defer()  {                                                           # use in yo
    ((m[dp++]="${forth[$2]##*_}"))
    inline
    inout 0 1
-}
-
-
-dovoc()  {
-   wordlists[-1]="$1"
 }
 
 # ----- errors, traps, entry points----------------------- #fold00
@@ -835,12 +830,11 @@ evaluate()  {
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
 
-# preparing for vocabularies
-# already searching through all vocabularies in wordlists
-      for ((wordlist=${#wordlists[@]}; wordlist;)); do
-         declare -n headerscontext="${wordlists[--wordlist]}"
-         [[ -z "${headerscontext["$word"]}" ]] || {                  # word found in next vocabulary  of voclist
-            invoke "$word" "${headerscontext["$word"]}"              # compile or execute
+#      for wordlist in "${sm[m[context]]}" "${wordlists[@]}"; do
+      for wordlist in "${wordlists[@]}"; do
+         declare -n headers="${wordlist}"
+         [[ -z "${headers["$word"]}" ]] || {                         # word found in next vocabulary  of voclist
+            invoke "$word" "${headers["$word"]}"                     # compile or execute
             continue 2
          }
       done
@@ -1089,7 +1083,16 @@ dodoes()  {                                                          # append do
 # approaches I was thinking of.
 primitive 'does>'  'code "dodoes" "$does"';   compiled
 
-# ----- defining words ----------------------------------- #fold01
+
+
+# ----- runtime words ------------------------------------ #fold00
+
+dovoc()  {
+   wordlists[0]="$1"
+}
+
+
+# ----- defining words -----------------------------------
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1152,19 +1155,6 @@ colon 'alias'
    code 'forth["$word"]="${functionname_prefix}_${s[sp--]}"'
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
 semicolon
-
-
-# -> library
-#colon 'vocabulary'
-# ...
-#semicolon
-
-# vocabulary 'only'
-# vocabulary 'forth'
-
-#colon 'only'
-#colon 'forth'
-
 
 
 # -------------- deferred words ------------------

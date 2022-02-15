@@ -7,5 +7,5 @@ once
        >declare -gA "${ss[-1]}"
        $,                                               \ write vocabulary name to string memory
     does>
-       context !                                        \ index to vocabulary name is also the vocabulary "handle"
+       set-context                                      \ index to vocabulary name is also the vocabulary "handle"
 ;                                                       \ (means also, printing a voc name from "handle":   $@ type$

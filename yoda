@@ -30,7 +30,7 @@
 v="0.6.5"    # 2022feb14,14:08   next iteration vocabularies. Most has been switched already. current isn't used to compile to,
 #                                Adding empty vocabulary to voc list causes search to bomb. words displays multiple entries in
 #                                voc list multiple times.   vocabulary, only, previous, also, forth, context, order appear to be
-#                                functional. added trap, improved compile,
+#                                functional. added trap, improved compile, , definitions
 # v="0.6.4"  # 2022feb12,00:02   : is stateless, therefore compilable. Preparing for vocabularies.
 # v="0.6.3"  # 2022feb10,02:35   combined two arrays sourcefile and sourceline into single source
 #                                renamed former misnamed analyser flag "literalnumber" to push. added 2exchange, removed 2+, 2-
@@ -2459,17 +2459,17 @@ primitive 'forth'  "m[context]=\"$forthvoc\""
 colon 'only'
    code "m[current]=\"$onlyvoc\""
    code "m[context]=\"$onlyvoc\""
+   code 'declare -n contextvoc="only"'
    code 'wordlists=()'
 semicolon
 
 colon 'previous'
    code '((${#wordlists[@]}))&&{'
    code 'm[context]="${wordlists[0]}"'
+   code 'declare -n contextvoc="${strings[wordlists[0]]}"'
    code 'wordlists=("${wordlists[@]:1}")'
    code '}'
 semicolon
-
-
 
 
 colon 'order'
@@ -2483,6 +2483,13 @@ semicolon
 colon 'also'
    code 'wordlists=("${m[context]}" "${wordlists[@]}")'
 semicolon
+
+colon 'definitions'
+   code '((tmp=m[context]))'
+   code '((m[current]=tmp))'
+   code 'declare -n currentvoc="${strings[tmp]}"'
+semicolon
+
 
 # ----- foward referencing support words ----------------- #fold01
 

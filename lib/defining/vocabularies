@@ -3,8 +3,10 @@ once
 
 : vocabulary
     here$ constant
-    last$
-    >declare -A "${ss[-1]}"
-    $,
-    does> context !
+       last$
+       >declare -A "${ss[-1]}"
+       $,
+    does>
+       >declare -n contextvoc="${strings[s[sp]]}"
+       context !
 ;

@@ -8,7 +8,7 @@ category:            dictionary
 decription:          resets/initialises vocabulary search to only
 
 notes:               to return to initial launch state, execute after only:
-                     also forth definitions
+                     forth definitions
 
 standard:            yes
 url:                 https://forth-standard.org/standard/search/ONLY

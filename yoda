@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #fold00
+# ----- about -------------------------------------------- #FOLD00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- versions ----------------------------------------- #FOLD00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -33,7 +33,7 @@ v="0.6.5"    # 2022feb14,14:08   next iteration vocabularies.
 #                                functional. Few words remaining which should search all vocs in order search only context at this
 #                                point. No word order words. for context,  set-context provided right now, mirroring
 #                                set/get-current. Renamed wordlists to search
-#                                added trap, improved compile, shellchecked.
+#                                added trap, improved compile,
 # v="0.6.4"  # 2022feb12,00:02   : is stateless, therefore compilable. Preparing for vocabularies.
 # v="0.6.3"  # 2022feb10,02:35   combined two arrays sourcefile and sourceline into single source
 #                                renamed former misnamed analyser flag "literalnumber" to push. added 2exchange, removed 2+, 2-
@@ -108,7 +108,7 @@ v="0.6.5"    # 2022feb14,14:08   next iteration vocabularies.
 read -ra version <<< "${v//./ }"
 
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 shopt -s extglob
 shopt -u nullglob
@@ -254,7 +254,7 @@ for i in {1..255}; do                                                # ascii->ch
    ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
 done
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 comp=("" ":")
 
@@ -266,7 +266,7 @@ trace()  {
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- headers ------------------------------------------ #fold00
+# ----- headers ------------------------------------------ #FOLD00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -276,20 +276,15 @@ setheaderflag()  {                                                   # where aga
 
 inline()     { setheaderflag "$inline" ; }
 
-# move header to compiler context vocabulary
-compiled()  {
-   declare -n currentvoc="${strings[current]}"
-   compileonly["$lastword"]="${currentvoc["$lastword"]}"
+tovoc()  {
+   declare -n currentvoc="${strings[current]}" targetvoc="$1"
+   targetvoc["$lastword"]="${currentvoc["$lastword"]}"
    unset -v 'currentvoc["$lastword"]'
+   declare -n currentvoc targetvoc
 }
 
-# move header to interpreter context vocabulary
-interpreted()   {
-   declare -n currentvoc="${strings[current]}"
-   interpretonly["$lastword"]="${currentvoc["$lastword"]}"
-   unset -v 'currentvoc["$lastword"]'
-}
-
+compiled()     { tovoc "compileonly"; }                              # move last header to compiler context vocabulary
+interpreted()  { tovoc "interpretonly"; }                            # move last header to interpreter context vocabulary
 
 compiler_init()  {
    body=()
@@ -315,7 +310,7 @@ header()  {
 }
 
 
-# ----- detokeniser / pretend optimiser ------------------ #fold00
+# ----- detokeniser / pretend optimiser ------------------ #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -410,7 +405,8 @@ optimise()  {                                                        # run code 
 # a workaround is needed here too:  create ... does> ;   does without following code will let bash run into an empty function,
 # which bash doesn't like, and complain about.  Therefore this condition is caught here and acted upon.
      if (( ${#target[@]} > dodoes_at )); then                        # everything ok: there was code between does> and ; - extract and store it.
-        declare -An currentvoc="${strings[current]}"
+        declare -n currentvoc
+        declare -n currentvoc="${strings[current]}"
         doescode[${currentvoc[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
         target=("${target[@]:0:$dodoes_at}")
      else                                                            # but does> without code ...
@@ -419,7 +415,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -447,7 +443,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
+# ----- compiler ----------------------------------------- #FOLD00
 
 
 # atoms may be:
@@ -477,7 +473,7 @@ codebody()  {                                                        # inline co
 # rewrite run time semantics of most recently defined word
 # arg1: new run time code.
 use()  {
-   declare -An currentvoc="${strings[current]}"
+   declare -n currentvoc="${strings[current]}"
    name="${currentvoc["$lastword"]}"                                 # rewrites function "$name",
    eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
 }
@@ -499,7 +495,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -623,7 +619,7 @@ defer()  {                                                           # use in yo
 
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    filehandle=0                                                      # 1=yoda. 0=tty.  >1=loaded source
@@ -708,7 +704,7 @@ trap ctrl-c SIGINT
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
-# ----- patterns ----------------------------------------- #fold00
+# ----- patterns ----------------------------------------- #FOLD00
 
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
@@ -766,14 +762,14 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
 # will be repeated.
 totalheaders()  {
 # NOTE: change to take account of all vocabularies
-   declare -An currentvoc="${strings[current]}"
+   declare -n currentvoc="${strings[current]}"
    (( totalheaders =
          ${#currentvoc[@]}
        + ${#compileonly[@]}
@@ -831,7 +827,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter, evaluate------------------------ #fold00
+# ----- line interpreter, evaluate------------------------ #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -889,7 +885,7 @@ evaluate()  {
       }
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
          satisfy1 "$word" && {                                       # attempt to load word
-            declare -An currentvoc="${strings[current]}"
+            declare -n currentvoc="${strings[current]}"
             ${currentvoc["$word"]}                                   # successful: execute
             continue
          }
@@ -910,7 +906,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #fold00
+# ----- load source files -------------------------------- #FOLD00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -959,7 +955,7 @@ from()  {
    for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                    # trash transient headers
 # NOTE: transients may have been compiled to diffent vocabulary
 #  may have to record vocabulary along with header name
-      declare -An currentvoc="${strings[current]}"
+      declare -n currentvoc="${strings[current]}"
       unset -v "currentvoc[${transient[tmp]}]"
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
@@ -970,8 +966,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #fold00
-# ----- populating detokeniser --------------------------- #fold01
+# ----- primitives --------------------------------------- #FOLD00
+# ----- populating detokeniser --------------------------- #FOLD01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -1026,7 +1022,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #fold01
+# ----- colon/semicolon ---------------------------------- #FOLD01
 
 
 colon ';'
@@ -1085,7 +1081,7 @@ see()  {
 primitive 'see' 'see'
 
 
-# ----- does> -------------------------------------------- #fold01
+# ----- does> -------------------------------------------- #FOLD01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1097,7 +1093,7 @@ primitive 'see' 'see'
 # portion of does> to the original address push
 # compiled by create.
 dodoes()  {                                                          # append does> part to original address pushing create semantics
-   declare -An currentvoc="${strings[current]}"
+   declare -n currentvoc="${strings[current]}"
    ${currentvoc[$lastword]}
    use  "s[++sp]=\"${s[sp--]}\"
          ${doescode[${FUNCNAME[1]}]}"
@@ -1115,7 +1111,7 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 
 
-# ----- defining words ----------------------------------- #fold01
+# ----- defining words ----------------------------------- #FOLD01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1174,13 +1170,13 @@ semicolon
 # ' foo alias bar
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
-   declare -An currentvoc="${strings[current]}"
+   declare -n currentvoc="${strings[current]}"
    code 'currentvoc["$word"]="${functionname_prefix}_${s[sp--]}"'
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
 semicolon
 
 
-# ----- deferred words ----------------------------------- #fold01
+# ----- deferred words ----------------------------------- #FOLD01
 
 # new deferred words are initialised to noop
 primitive 'noop' '(())'
@@ -1202,12 +1198,12 @@ semicolon
 # grep is used here.
 colon 'is'
    code 'word'
-   declare -An currentvoc="${strings[current]}"
+   declare -n currentvoc="${strings[current]}"
    code 'tmp="$(type "${currentvoc[$word]}"|grep "${functionname_prefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
-# ----- environment--------------------------------------- #fold01
+# ----- environment--------------------------------------- #FOLD01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
@@ -1241,7 +1237,7 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #fold01
+# ----- misc --------------------------------------------- #FOLD01
 
 primitive "\\"   'line=""';   compiled                               # single quoted single backslash because
 primitive "\\"   'line=""';   interpreted                            # double quoted escaped backslash rather than
@@ -1250,7 +1246,7 @@ primitive '('    "parse ')'"; compiled
 primitive '('    "parse ')'"; interpreted
 
 
-# ----- parameter stack ---------------------------------- #fold01
+# ----- parameter stack ---------------------------------- #FOLD01
 
 
 colon 'dup'
@@ -1353,7 +1349,7 @@ inline
 primitive 'depth'  '((s[++sp]=$sp))'
 primitive 'pick'   '((s[sp]=s[sp-s[sp]-1]))'
 
-# ----- return stack ------------------------------------- #fold01
+# ----- return stack ------------------------------------- #FOLD01
 
 colon 'r@'
    atom 'r@'
@@ -1400,7 +1396,7 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #fold01
+# ----- string stack ------------------------------------- #FOLD01
 
 primitive 'depth$'   's[++sp]="${#ss[@]}"'
 primitive 'empty$'   'ss=()'
@@ -1656,7 +1652,7 @@ inout 0 1
 
 
 
-# ----- numeric comparison ------------------------------- #fold01
+# ----- numeric comparison ------------------------------- #FOLD01
 
 primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
 primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
@@ -1724,7 +1720,7 @@ inline
 inout 4 1
 
 
-# ----- compiler and word search related ----------------- #fold01
+# ----- compiler and word search related ----------------- #FOLD01
 
 
 #find$
@@ -1825,7 +1821,7 @@ semicolon
 # trashed name as argument
 # ( -- )
 trash()  {
-   declare -An currentvoc="${strings[current]}"
+   declare -n currentvoc="${strings[current]}"
    unset -v "currentvoc[$1]"
 }
 
@@ -1856,9 +1852,9 @@ semicolon
 evaluate "' have$ alias xt"
 
 
-# : foo ... ; noname
+# : foo ... ; headerless
 # ( -- xt )   # produces execution token and removes header of last word
-evaluate ': noname  last$ dup$ have$ trash$ ;'; inout 0 0
+evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
 
 # ( xt -- )
 colon 'compile,'
@@ -1866,7 +1862,7 @@ colon 'compile,'
 semicolon
 
 
-# ----- bit logic ---------------------------------------- #fold01
+# ----- bit logic ---------------------------------------- #FOLD01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
@@ -2070,7 +2066,7 @@ primitive 'return'  'code "return \${s[sp--]}"'; compiled
 
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '1+'
    atom '1+'
@@ -2171,7 +2167,7 @@ evaluate ": umin   2dup u> if swap then drop ;"
 evaluate ": umax   2dup u< if swap then drop ;"
 
 
-# ----- memory ------------------------------------------- #fold01
+# ----- memory ------------------------------------------- #FOLD01
 
 colon '@'
    atom '@'
@@ -2311,7 +2307,7 @@ primitive 'move'   'move'; inout 3 0
 
 
 
-# ----- character i/o ------------------------------------ #fold01
+# ----- character i/o ------------------------------------ #FOLD01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2425,7 +2421,7 @@ colon 'waive'
 semicolon
 
 
-# ----- pictured number conversion ----------------------- #fold01
+# ----- pictured number conversion ----------------------- #FOLD01
 
 # NOTE: consider to let # expect a double, but process lower
 # half only, so its stack complies with standard # while its
@@ -2459,7 +2455,7 @@ primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
-# ----- vocabularies ------------------------------------- #fold01
+# ----- vocabularies ------------------------------------- #FOLD01
 
 
 current="$onlyvoc"
@@ -2485,8 +2481,6 @@ colon 'order'
    code 'done'
    code 'printf "\ncurrent: %s\n" "${strings[current]}"'
 semicolon
-
-primitive 'words'    'words'
 current="$forthvoc"
 
 colon 'get-current'
@@ -2497,7 +2491,7 @@ primitive 'set-current'  '((current=s[sp--]))'
 primitive 'set-context'  'search[0]="${s[sp--]}"'
 
 
-# ----- foward referencing support words ----------------- #fold01
+# ----- foward referencing support words ----------------- #FOLD01
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2659,7 +2653,7 @@ colon 'satisfy$'
 semicolon
 
 
-# ----- documentation ------------------------------------ #fold01
+# ----- documentation ------------------------------------ #FOLD01
 
 # arg1: word name
 # arg2: headerlist
@@ -2744,7 +2738,7 @@ colon 'about'
 semicolon
 
 
-# ----- interactive mode --------------------------------- #fold01
+# ----- interactive mode --------------------------------- #FOLD01
 
 evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
 evaluate "' quit alias abort"
@@ -2766,7 +2760,7 @@ semicolon
 
 
 
-# ----- files -------------------------------------------- #fold01
+# ----- files -------------------------------------------- #FOLD01
 
 
 
@@ -2837,7 +2831,7 @@ evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
 
 
 
-# ----- convenience -------------------------------------- #fold01
+# ----- convenience -------------------------------------- #FOLD01
 primitive empty  's=() sp=0'
 primitive rempty 'r=() rp=0'
 
@@ -2845,7 +2839,7 @@ primitive rempty 'r=() rp=0'
 # since warm doesn't empty them any longer, a convenient
 # way to do so manually was needed.
 evaluate ': _  empty rempty empty$  ;'                ; inline
-
+primitive 'words'    'words'
 primitive 'random'   '((s[++sp]=SRANDOM&true))'; inout 0 1           # ( -- u )        32 bits random number
 primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))';     # a microseconds epoch, used for benchmarking
 primitive 'secs'     'sleep "${s[sp--]}"'
@@ -2857,7 +2851,7 @@ colon 'version'
 semicolon
 
 
-# ----- launch ------------------------------------------- #fold00
+# ----- launch ------------------------------------------- #FOLD00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 config()  {

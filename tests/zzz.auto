@@ -8,17 +8,17 @@ msb 1 <<        0 expected
 ( does number representation  make sense? )
 \ count bits in maxuint
 : foo  ( -- u )
-      0 maxuint  
-      begin ?dup while 
+      0 maxuint
+      begin ?dup while
          dup 1- and
-         >r 1+ r> 
+         >r 1+ r>
       repeat ;
-headerless execute  bits expected
+noname execute  bits expected
 maxint msb +    maxuint expected
 maxint msb -    maxuint expected
 maxint msb or   maxuint expected
 maxint msb xor  maxuint expected
-maxint     1+   1 <<  0 expected        
+maxint     1+   1 <<  0 expected
 maxuint    1+         0 expected
 
 \ finally a test which ought to produce an error

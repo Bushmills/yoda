@@ -31,8 +31,8 @@ v="0.6.5"    # 2022feb14,14:08   next iteration vocabularies.
 #                                words displays multiple entries in voc list multiple times.
 #                                vocabulary, only, also, previous, forth, order, set-current, get-current, definitions appear all to be
 #                                functional. Few words remaining which should search all vocs in order search only context at this
-#                                point. No word order words. for context,  set-context and get-context provided right now, mirroring
-#                                set/get-current.
+#                                point. No word order words. for context,  set-context provided right now, mirroring
+#                                set/get-current. Renamed wordlists to searchorder
 #                                added trap, improved compile,
 # v="0.6.4"  # 2022feb12,00:02   : is stateless, therefore compilable. Preparing for vocabularies.
 # v="0.6.3"  # 2022feb10,02:35   combined two arrays sourcefile and sourceline into single source
@@ -157,8 +157,8 @@ for tmp in "${builtinvocs[@]}"; do
    strings[sdp++]="$tmp"
 done
 
-declare -a wordlists
-wordlists=("$forthvoc" "$onlyvoc")
+declare -a searchorder
+searchorder=("$forthvoc" "$onlyvoc")
 
 # vocabularies are arrays - indexing an array can not be
 # done through indirection of array name, as would be
@@ -615,7 +615,7 @@ defer()  {                                                           # use in yo
    semicolon
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
    use "${functionname_prefix}_\${m[$dp]}"
-   declare -n contextvoc="${strings[wordlists[0]]}"
+   declare -n contextvoc="${strings[searchorder[0]]}"
    ((m[dp++]="${contextvoc[$2]##*_}"))                               # extract and comma xt from function
    inline
    inout 0 1
@@ -796,7 +796,7 @@ forwardref()  {
 # if source isn't available, a forward ref will be generated.
 satisfy1()  {
 # NOTE: should look through all vocabularies
-   declare -n contextvoc="${strings[wordlists[0]]}"
+   declare -n contextvoc="${strings[searchorder[0]]}"
    [[ -z ${contextvoc[$1]} ]] || return 0                            # word already defined, nothing to do
    local word="$1"
    [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
@@ -857,7 +857,7 @@ evaluate()  {
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
 # NOTE: template code for vocabulary list searching
-      for wordlist in "${wordlists[@]}"; do
+      for wordlist in "${searchorder[@]}"; do
          declare -n headers="${strings[wordlist]}"
          [[ -z "${headers[$word]}" ]] || {                         # word found in next vocabulary  of voclist
             invoke "$word" "${headers["$word"]}"                     # compile or execute
@@ -1053,7 +1053,7 @@ primitive 'transient'   'transient+=("$lastword")'                   # copy head
 
 words() {
    local headers
-   for tmp in "${wordlists[@]}" "$interpretonlyvoc" "$compileonlyvoc" "$unresolvedvoc"; do
+   for tmp in "${searchorder[@]}" "$interpretonlyvoc" "$compileonlyvoc" "$unresolvedvoc"; do
       vocabulary="${strings[tmp]}"
       declare -n headers="$vocabulary"
       (( ${#headers[@]} )) && {
@@ -1069,7 +1069,7 @@ words() {
 see()  {
    local headers
    word
-   for tmp in "${wordlists[@]}" "$interpretonlyvoc" "$compileonlyvoc"; do
+   for tmp in "${searchorder[@]}" "$interpretonlyvoc" "$compileonlyvoc"; do
       vocabulary="${strings[tmp]}"
       declare -n headers="$vocabulary"
       [[ -z "${headers["$word"]}" ]] || {
@@ -1751,7 +1751,7 @@ inout 4 1
 havearg() {
    local headers                                                     # meant to spare me from saving and restoring vectored headers variable
    word="$1"
-   for tmp in "${wordlists[@]}" "$interpretonlyvoc" "$compileonlyvoc"; do
+   for tmp in "${searchorder[@]}" "$interpretonlyvoc" "$compileonlyvoc"; do
       vocabulary="${strings[tmp]}"
       declare -n headers="$vocabulary"                               # vector headers to next vocabulary
       [[ -z "${headers["$word"]}" ]] || {                            # word in there?
@@ -2059,7 +2059,7 @@ semicolon
 colon 'boot'
    code 'word'
    code 'satisfy1 "$word"'
-   declare -n contextvoc="${strings[wordlists[0]]}"
+   declare -n contextvoc="${strings[searchorder[0]]}"
    code 'coldvector="${contextvoc["$word"]}"'                        # because writing it to cold start vector
 semicolon                                                            # this way cold start entry points can be forward referenced
 
@@ -2463,30 +2463,24 @@ primitive 'binary'   "m[$base]=2";  inout 0 0
 
 
 current="$onlyvoc"
-primitive 'forth'  "wordlists[0]=\"$forthvoc\""
-
-colon 'also'
-   code 'wordlists=("${wordlists[0]}" "${wordlists[@]}")'
-semicolon
+primitive 'forth'       "searchorder[0]=\"$forthvoc\""
+primitive 'also'        'searchorder=("${searchorder[0]}" "${searchorder[@]}")'
+primitive 'definitions' '((current=searchorder[0]))'
 
 colon 'only'
    code "current=\"$onlyvoc\""
-   code "wordlists=(\"$onlyvoc\"  \"$onlyvoc\")"
+   code "searchorder=(\"$onlyvoc\"  \"$onlyvoc\")"
 semicolon
 
 colon 'previous'
-   code '((${#wordlists[@]}>1))&&{'
-   code 'wordlists=("${wordlists[@]:1}")'
+   code '((${#searchorder[@]}>1))&&{'
+   code 'searchorder=("${searchorder[@]:1}")'
    code '}'
-semicolon
-
-colon 'definitions'
-   code '((current=wordlists[0]))'
 semicolon
 
 colon 'order'
    code 'printf "context:"'
-   code 'for tmp in "${wordlists[@]}"; do'
+   code 'for tmp in "${searchorder[@]}"; do'
    code 'printf " %s" "${strings[tmp]}"'
    code 'done'
    code 'printf "\ncurrent: %s\n" "${strings[current]}"'
@@ -2497,17 +2491,8 @@ colon 'get-current'
    push "current"
 semicolon
 
-colon 'set-current'
-   code '((current=s[sp--]))'
-semicolon
-
-colon 'get-context'
-   push "wordlists[0]"
-semicolon
-
-colon 'set-context'
-   code 'wordlists[0]="${s[sp--]}"'
-semicolon
+primitive 'set-current'  '((current=s[sp--]))'
+primitive 'set-context'  'searchorder[0]="${s[sp--]}"'
 
 
 # ----- foward referencing support words ----------------- #fold01
@@ -2592,7 +2577,7 @@ semicolon
 
 need()  {
 # NOTE: need to look through all vocs
-   declare -n contextvoc="${strings[wordlists[0]]}"
+   declare -n contextvoc="${strings[searchorder[0]]}"
    [[ -z "${contextvoc[$1]}" ]] || return                            # only ask for forward if word isn't in any context voc
    [[ -z "${interpretonly[$1]}" ]] || return
    [[ -z "${compileonly[$1]}" ]] || return

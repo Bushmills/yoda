@@ -1,0 +1,14 @@
+name:                only
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          resets/initialises vocabulary search to only
+
+notes:               to return to initial launch state, execute after only:
+                     also forth definitions
+
+standard:            yes
+url:                 https://forth-standard.org/standard/search/ONLY

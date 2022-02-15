@@ -1,0 +1,12 @@
+name:                get-current
+stack:               ( -- wid )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          read and return the identifier of the vocabulary
+                     into which headers of new words are placed.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/search/GET-CURRENT

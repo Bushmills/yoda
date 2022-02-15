@@ -1,0 +1,12 @@
+name:                definitions
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          make the current vocabulary identical to the first
+                     word list in list of searched word lists.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/search/DEFINITIONS

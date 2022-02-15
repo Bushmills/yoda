@@ -1,0 +1,15 @@
+name:                set-context
+stack:               ( wid -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          overwrite the first vocabulary in search order with wid
+
+notes:               meant to allow high level vocabulary run time while
+                     only the word list words needed for vocabularies are
+                     provided. Mirrors set-current
+
+standard:            no
+deviation:           standard has no equivalent

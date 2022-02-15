@@ -1,0 +1,13 @@
+name:                previous
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          remove first word list in list of searched word lists,
+                     if more than one exist.
+
+notes:               undoes a previous ALSO
+standard:            yes
+url:                 https://forth-standard.org/standard/search/PREVIOUS

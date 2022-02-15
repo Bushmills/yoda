@@ -1,0 +1,12 @@
+name:                order
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          display the list of searched word lists.
+                     Also display the current vocabulary.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/search/ORDER

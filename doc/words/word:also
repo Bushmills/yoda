@@ -1,0 +1,13 @@
+name:                also
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          adds a copy of first searched word list to list of
+                     searched word lists, that way creating the space to
+                     add another word list by overwriting the first entry.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/search/ALSO

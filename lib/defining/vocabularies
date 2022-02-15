@@ -2,11 +2,10 @@ provides: vocabulary
 once
 
 : vocabulary
-    here$ constant
+    here$ constant                                      \ constant points to string dp where voc name will be stored
        last$
-       >declare -A "${ss[-1]}"
-       $,
+       >declare -gA "${ss[-1]}"
+       $,                                               \ write vocabulary name to string memory
     does>
-       >declare -n contextvoc="${strings[s[sp]]}"
-       context !
-;
+       context !                                        \ index to vocabulary name is also the vocabulary "handle"
+;                                                       \ (means also, printing a voc name from "handle":   $@ type$

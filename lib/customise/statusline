@@ -74,8 +74,4 @@ create statusline   true ,
         .status deol cr deol
         restorecursor  ;
 
-
-\ NOTE: not pretty
-last$ xt convert
->trap ${functionname_prefix}_${ss[-1]} SIGWINCH
-drop$
+' redraw "SIGWINCH" trap

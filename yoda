@@ -27,7 +27,7 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.6"    # 2022feb16,02:33   prepared for better factoring multiple wordlists searches
+v="0.6.6"    # 2022feb16,02:33   prepared for better factoring multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
 # v="0.6.5"  # 2022feb14,14:08   next iteration vocabularies.
 #                                words displays multiple entries in voc list multiple times.
@@ -275,7 +275,6 @@ tovoc()  {
    declare -n targetvoc="$1"
    targetvoc["$lastword"]="${currentvoc["$lastword"]}"
    unset -v 'currentvoc["$lastword"]'
-   declare -n targetvoc
 }
 
 compiled()     { tovoc "compileonly"; }                              # move last header to compiler context vocabulary
@@ -1830,9 +1829,9 @@ semicolon
 evaluate "' have$ alias xt"
 
 
-# : foo ... ; headerless
+# : foo ... ; noname
 # ( -- xt )   # produces execution token and removes header of last word
-evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
+evaluate ': noname  last$ dup$ have$ trash$ ;'; inout 0 0
 
 # ( xt -- )
 colon 'compile,'
@@ -2437,45 +2436,45 @@ primitive 'binary'   "m[$base]=2";  inout 0 0
 # ----- vocabularies ------------------------------------- #fold01
 
 
-primitive 'get-current'  '((s[++sp]=current))'
-
-colon 'set-current'
-   code 'declare -n currentvoc'
-   code '((current=s[sp--]))'
-   code 'declare -n currentvoc=${strings[current]}'
+colon 'get-current'
+   push 'current'
 semicolon
 
-primitive 'get-context'  '((s[++sp]=${search[0]}))'
+colon 'get-context'
+   push 'search[0]'
+semicolon
+
+colon 'set-current'
+   code '((current=s[sp--]))'
+   code 'declare -n currentvoc="${strings[current]}"'
+semicolon
+
 primitive 'set-context'  'search[0]="${s[sp--]}"'
 
-current="$onlyvoc"
-primitive 'forth'       "search[0]=\"$forthvoc\""
-primitive 'also'        'search=("${search[0]}" "${search[@]}")'
+declare -n currentvoc                                                # appease shellcheck
+declare -n currentvoc="only"
 
 colon 'only'
    code "search=(\"$onlyvoc\"  \"$onlyvoc\")"
-   code 'declare -n currentvoc'
-   code "current=\"$onlyvoc\""
-   code 'declare -n currentvoc=${strings[current]}'
-semicolon
-
-colon 'previous'
-   code '((${#search[@]}>1))&&{'
-   code 'search=("${search[@]:1}")'
-   code '}'
+   code "((current=$onlyvoc))"
+   code 'declare -n currentvoc="${strings[current]}"'
 semicolon
 
 colon 'order'
    code 'printf "context:"'
-   code 'for tmp in "${search[@]}"; do'
-   code 'printf " %s" "${strings[tmp]}"'
+   code 'for wordlist in "${search[@]}"; do'
+   code 'printf " %s" "${strings[wordlist]}"'
    code 'done'
    code 'printf "\ncurrent: %s\n" "${strings[current]}"'
 semicolon
 
+primitive 'also'      'search=("${search[0]}" "${search[@]}")'
+primitive 'previous'  '((${#search[@]}>1))&&{ search=("${search[@]:1}"); }'
+primitive 'forth'     '((search[0]=forthvoc))'
+primitive 'words'     'words'
 evaluate ': definitions  get-context set-current  ;'
-primitive 'words'    'words'
-current="$forthvoc"
+
+declare -n currentvoc="forth"
 
 # ----- foward referencing support words ----------------- #fold01
 
@@ -2686,14 +2685,14 @@ sanitise()  {
 }
 
 undoc()  {
-   for tmp in "$forthvoc" "$onlyvoc" "$interpretonlyvoc" "$compileonlyvoc"; do
-      vocabulary="${strings[tmp]}"
-      local headers
-      declare -n headers="$vocabulary"
-      for word in "${!headers[@]}"; do                               # run through all headers
+   for wordlist in "$forthvoc" "$onlyvoc" "$interpretonlyvoc" "$compileonlyvoc"; do
+      vocabulary="${strings[wordlist]}"
+#      local contextvoc
+      declare -n contextvoc="$vocabulary"
+      for word in "${!contextvoc[@]}"; do                               # run through all headers
          sanitise "$word"
          [[ -f "$worddoc:$file" ]] || {                              # found one for which no doc file exists
-            undoc_template "$word" "${!headers}" >> "$worddoc:$file"
+            undoc_template "$word" "${!contextvoc}" >> "$worddoc:$file"
             editor "$worddoc:$file"
             return
          }

@@ -1,10 +1,10 @@
-thisfile$               " has been loaded "    join$
-loaded convert join$    " times"               join$
-type$ cr
+thisfile$            type$
+" has been loaded "  type$
+loaded . "times"     type$ cr
 
 once            \ stop loading if file has been loaded before already
 
 \ compile a word which (re-)loads the file with name of this file.
 : re            ( -- )      [ thisfile$ ] literal$ from$ ;  
 
-"first time load has compiled contents. reload be executing 're'" type$ cr
+"first time load has compiled contents. reload bye executing 're'" type$ cr

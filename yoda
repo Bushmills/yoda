@@ -27,7 +27,7 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.6"    # 2022feb16,02:33   prepared for better factoring multiple wordlists searches.
+v="0.6.6"    # 2022feb16,02:33   better factoring of multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
 # v="0.6.5"  # 2022feb14,14:08   next iteration vocabularies.
 #                                words displays multiple entries in voc list multiple times.
@@ -495,7 +495,15 @@ push()  {                                                            # leave it 
    code "$1"   "$push"                                               # only insert value or expression, mark it.
 }
 
-
+# compile a call to function associated with word arg1
+# arg1:word
+call()  {
+   local word
+   for word in "$@"; do
+      exists "$word" "${search[@]}" || notfound "$word"
+      code "${nameprefix}_${exists}"
+   done
+}
 
 # variable last doesn't exist yet, but is used in header, and
 # can't be defined earlier, because defining it calls header.
@@ -1728,17 +1736,6 @@ inout 4 1
 #may differ from those returned while not compiling.
 
 
-
-
-# word name as argument
-# arg1: word name
-# ( -- 0 | a )
-# NOTE: obsolescent
-havearg() {
-   exists "$1" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc"
-   ((s[++sp]=exists))
-}
-
 # word name from input stream
 # ( -- 0 | a )
 have() {
@@ -1754,8 +1751,7 @@ semicolon
 
 # NOTE: factor/reuse
 colon "[']"
-   code 'have'
-   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
+   call "'"
    code 'push "${s[sp--]}"'
 semicolon
 compiled
@@ -1825,7 +1821,8 @@ primitive 'last$'   'ss+=("$lastword")'; inout 0 0
 
 # similar to ' or find, but name from string stack rather than input stream
 colon 'have$'
-   code 'havearg "${ss[-1]}"'
+   code 'exists "${ss[-1]}" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc"'
+   push 'exists'
    code 'unset "ss[-1]"'
 semicolon
 
@@ -2456,10 +2453,12 @@ primitive 'set-context'  'search[0]="${s[sp--]}"'
 declare -n currentvoc                                                # appease shellcheck
 declare -n currentvoc="only"
 
+primitive 'also'      'search=("${search[0]}" "${search[@]}")'
+
 colon 'only'
-   code "search=(\"$onlyvoc\"  \"$onlyvoc\")"
-   code "((current=$onlyvoc))"
-   code 'declare -n currentvoc="${strings[current]}"'
+   code "search=()"
+   push "$onlyvoc"; call "set-context" "also"
+   push "onlyvoc" ; call "set-current"
 semicolon
 
 colon 'order'
@@ -2470,11 +2469,17 @@ colon 'order'
    code 'printf "\ncurrent: %s\n" "${strings[current]}"'
 semicolon
 
-primitive 'also'      'search=("${search[0]}" "${search[@]}")'
 primitive 'previous'  '((${#search[@]}>1))&&{ search=("${search[@]:1}"); }'
-primitive 'forth'     '((search[0]=forthvoc))'
 primitive 'words'     'words'
-evaluate ': definitions  get-context set-current  ;'
+
+colon 'forth'
+   push "forthvoc"
+   call "set-context"
+semicolon
+
+colon 'definitions'
+   call "get-context" "set-current"
+semicolon
 
 declare -n currentvoc="forth"
 
@@ -2657,7 +2662,7 @@ example:             none
 notes:               none
 standard:            no
 deviation:           ?
-url:                 https://forth-standard.org/standard/core/$1
+url:                 https://forth-standard.org/standard/core/${1^^}
 EOF
 }
 
@@ -2724,7 +2729,7 @@ semicolon
 
 evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
 evaluate "' quit alias abort"
-evaluate ': ?abort  if abort then ;'                                 # ( f -- )
+evaluate ': ?abort lest abort ;'                                 # ( f -- )
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents

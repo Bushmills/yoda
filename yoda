@@ -1055,13 +1055,12 @@ words() {
       (( ${#contextvoc[@]} )) && {
          printf '%s\n' "--- $vocabulary ---"
          printf  "%s  " "${!contextvoc[@]}"
-         printf '\n\n'
+         printf "\n\n"
       }
    done
 }
 
 
-# NOTE: factor context voc search.  see also  tick, undoc, forward refs
 see()  {
    local headers
    word
@@ -1717,8 +1716,35 @@ inline
 inout 4 1
 
 
-# ----- compiler and word search related ----------------- #fold01
+# ----- I/O ---------------------------------------------- #fold01
 
+# can be used after a colon definition
+primitive 'inline'  'inline'                                         # ( -- )    set header flag for inline compilation
+
+# parse input for string delimited by character specified by ASCII value on stack
+colon 'parse$'
+   code 'parse "${char[s[sp--]]}"'
+   code 'ss+=("$word")'
+semicolon
+
+evaluate ': word$  bl parse$ ;  inline'
+
+# ----- compiling words ---------------------------------- #fold01
+
+
+primitive 'compile,' "code \"${nameprefix}_\${s[sp--]}\""            # ( xt -- )
+primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
+evaluate ': literal  literal, ; compiled'
+
+# ( compile: $1 -- ) ( run: -- $1 )
+colon 'literal$'
+   code 'code "ss+=(\"${ss[-1]}\")"'
+   code 'unset "ss[-1]"'
+semicolon
+compiled
+
+
+# ----- compiler and word search related ----------------- #fold01
 
 #find$
 #( -- 0 | xt 1 | xt -1 )   ( $1 -- $1 | )
@@ -1735,42 +1761,27 @@ inout 4 1
 #For a given string, the values returned by FIND while compiling
 #may differ from those returned while not compiling.
 
-
-# word name from input stream
-# ( -- 0 | a )
-have() {
-   word
-   exists "$word" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc"
-   ((s[++sp]=exists))
-}
-
-colon "'"
-   code 'have'
-   code '((s[sp])) || notfound "$word"'                              # none left -> all searched, but not found.
-semicolon
-
-# NOTE: factor/reuse
-colon "[']"
-   call "'"
-   code 'push "${s[sp--]}"'
-semicolon
-compiled
-
-
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
 
-colon 'literal'
-   code 'push "${s[sp--]}"'
+colon "'"                                                            # ( -- xt ) ( stream: word )
+   code 'word'
+   code 'exists "$word" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc" || notfound "$word"'
+   push 'exists'
 semicolon
-compiled
 
-# ( compile: $1 -- ) ( run: -- $1 )
-colon 'literal$'
-   code 'code "ss+=(\"${ss[-1]}\")"'
+                                                                     # similar to find, but name from string stack rather than input stream
+colon 'have$'                                                        # ( -- 0|xt ) ( $1 -- )
+   code 'exists "${ss[-1]}" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc"'
    code 'unset "ss[-1]"'
+   push 'exists'
 semicolon
-compiled
+
+evaluate  ': have   word$ have$ ; inline'                            # ( -- f ) ( stream: word )    word existing?
+evaluate  ': lack   have  0=    ; inline'                            # ( -- f ) ( stream: word )    word missing?
+evaluate  ": [']   ' literal,   ; compiled"
+evaluate  "' have$ alias xt"
+
 
 # ' word  "signalname"  trap
 colon 'trap'
@@ -1782,8 +1793,6 @@ primitive 'execute' "${nameprefix}_\${s[sp--]}"                      # ( xt -- )
 primitive 'name$'   'ss+=("${names[s[sp--]]}")'                      # ( xt -- ) ( string: -- $1 )
 primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
-# can be used after a colon definition
-primitive 'inline'  'inline'                                         # ( -- )    set header flag for inline compilation
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
 primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
 primitive '#unresolved' '((s[++sp]=${#unresolved[@]}))'              # ( -- u )
@@ -1819,24 +1828,9 @@ semicolon
 # ( -- $1 )
 primitive 'last$'   'ss+=("$lastword")'; inout 0 0
 
-# similar to ' or find, but name from string stack rather than input stream
-colon 'have$'
-   code 'exists "${ss[-1]}" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc"'
-   push 'exists'
-   code 'unset "ss[-1]"'
-semicolon
-
-evaluate "' have$ alias xt"
-
-
 # : foo ... ; noname
 # ( -- xt )   # produces execution token and removes header of last word
 evaluate ': noname  last$ dup$ have$ trash$ ;'; inout 0 0
-
-# ( xt -- )
-colon 'compile,'
-   code "code \"${nameprefix}_\${s[sp--]}\""
-semicolon
 
 
 # ----- bit logic ---------------------------------------- #fold01
@@ -2032,7 +2026,7 @@ semicolon
 colon 'boot'
    code 'word'
    code 'satisfy1 "$word"'
-   code 'exists "$word" "current" "${search[@]}"'       # search current first because satisfy may have compiled it there
+   code 'exists "$word" "current" "${search[@]}"'                    # search current first because satisfy may have compiled it there
    code 'coldvector="${nameprefix}_${exists}"'
 semicolon
 
@@ -2289,15 +2283,6 @@ primitive 'move'   'move'; inout 3 0
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
 evaluate ': type  pack$ type$ ;'  ; inline;  inout 2 0
-
-# parse input for string delimited by character specified by ASCII value on stack
-colon 'parse$'
-   code 'parse "${char[s[sp--]]}"'
-   code 'ss+=("$word")'
-semicolon
-
-evaluate ': word$  bl parse$ ;  inline'
-
 # duplicating 'char functionality because quoting in evaluate
 # becomes sometimes hard when using ' ' for characters' ASCIIs
 colon '[char]'
@@ -2583,9 +2568,6 @@ colon 'needed'                                                       # ( -- f ) 
    code '}'
    code 'done'
 semicolon
-
-primitive 'have'   'have'                                            # ( -- f ) ( stream: bl delimited string )    word exists?
-evaluate ': lack  have 0= ;'                                         # ( -- f ) ( stream: bl delimited string )    word missing?
 
 generate_dependencies()  {                                           # library inclusion dependency file builder
    { echo "$v version"

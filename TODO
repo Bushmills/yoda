@@ -1,8 +1,6 @@
 --- todos solving problems, shortcomings, quirks
 - ticking a word with headers in more than one context vocabulary allows
   no control nor test over which version was ticked.
-- check version used for generating dependencies. Re-create dependencies
-  if version of yoda has changed.
 
 --- general todos, improvements, fancyness
 - let yoda choose editor or xeditor according the environment it runs in.
@@ -11,10 +9,6 @@
   index / index$ might cover a lot already. cut$ was added
 - left$, right$ with negative index didn't survive recent changes towards
   making yoda more unsigned-capable. Those may be desired.
-- hide header of currently compiled word until compilation completed.
-  can be done by classical hide/reveal,  by postponing header creation,
-  or by moving when compilation has completed.
-  postponing is probably the way to go: delegate to detokeniser.
 
 --- optimiser todos:
 - describe microinstructions effects to optimiser, using atom list

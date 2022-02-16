@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -108,7 +108,7 @@ v="0.6.5"    # 2022feb14,14:08   next iteration vocabularies.
 read -ra version <<< "${v//./ }"
 
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -136,7 +136,7 @@ do                                                                   # loop thro
    [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
 done
 
-functionname_prefix="yoda"                                           # prefix to bash function names,  _${xt} will be appended upon header creation
+nameprefix="yoda"                                                    # prefix to bash function names,  _${xt} will be appended upon header creation
 xt="1000"                                                            # names enumeration, initially. Can be any positive integer
 
 declare -ai r=() s=() m=()
@@ -191,13 +191,12 @@ newflag()  { (( $1 = 1<<flagscount++ )); }
 newflag inline
 newflag functionheader                                               # create header
 newflag atomiccode                                                   # expand
+newflag inlined                                                      # probably useless
 newflag push                                                         # generate code pushing a cell
+newflag does                                                         # rip code apart into define- and run time portions
+newflag sourcelocation                                               # store source location
 newflag flowcontrol                                                  # help recognise optimisation boundaries
 newflag optimisationboundary
-newflag literalstring                                                # probably unnecessary
-newflag inlined                                                      # probably useless
-newflag does                                                         # probably useless
-newflag sourcelocation
 
 # when stack effect of words is known to optimiser, it will have
 # the possibility to determine whether stack items cached in
@@ -254,7 +253,7 @@ for i in {1..255}; do                                                # ascii->ch
    ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
 done
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 comp=("" ":")
 
@@ -266,7 +265,7 @@ trace()  {
 pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -300,7 +299,7 @@ compiler_init()  {
 # arg2: function name
 # not allowed to generate function names because some names want
 # to be determined by caller
-# NOTE: leave it to header to prepend $functionname_prefix.
+# NOTE: leave it to header to prepend $nameprefix.
 header()  {
    declare -n currentvoc="${strings[current]}"
    [[ -z "${currentvoc["$1"]}" ]] || echo "redefining $1"
@@ -310,7 +309,7 @@ header()  {
 }
 
 
-# ----- detokeniser / pretend optimiser ------------------ #FOLD00
+# ----- detokeniser / pretend optimiser ------------------ #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -330,7 +329,7 @@ header()  {
 # arg1:word
 name()  {
    names[xt]="$1"                                                    # keep word name for .name, name$
-   name="${functionname_prefix}_$((xt++))"                           # grab new xt, make a function name from it
+   name="${nameprefix}_$((xt++))"                                    # grab new xt, make a function name from it
 }
 
 
@@ -369,11 +368,7 @@ optimise()  {                                                        # run code 
       bodyflag="${analyser[tmp]}"
       targetline="$bodyline"                                         # Default action: pass through
       if (( bodyflag )); then                                        # flags: examine
-         if (( bodyflag & functionheader )); then                    # test attempting to delegate header creation to detokeniserr
-# late headers: defining words don't create headers, but pass
-# word name with analyser flag "dunctionheader" to optimise.
-# It's upon detokeniser to create header, which it is doing here and now.
-# NOTE: functional but ugly. Needs some taking care of here
+         if (( bodyflag & functionheader )); then                    # create header pseudo op
             word="$bodyline"                                         # word name of new word
             name="${unresolved[$word]}"                              # if forward ref, reuse function name of forward ref
             if [[ -z "$name" ]]; then
@@ -415,7 +410,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -443,7 +438,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 
 # atoms may be:
@@ -495,7 +490,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 # make stack effect of word known, aiding the optimiser
@@ -610,7 +605,7 @@ defer()  {                                                           # use in yo
    push "$((dp))"
    semicolon
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
-   use "${functionname_prefix}_\${m[$dp]}"
+   use "${nameprefix}_\${m[$dp]}"
    declare -n contextvoc="${strings[search[0]]}"
    ((m[dp++]="${contextvoc[$2]##*_}"))                               # extract and comma xt from function
    inline
@@ -619,7 +614,7 @@ defer()  {                                                           # use in yo
 
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    filehandle=0                                                      # 1=yoda. 0=tty.  >1=loaded source
@@ -704,7 +699,7 @@ trap ctrl-c SIGINT
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
@@ -762,7 +757,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -827,7 +822,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter, evaluate------------------------ #FOLD00
+# ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -855,7 +850,7 @@ evaluate()  {
 # NOTE: template code for vocabulary list searching
       for wordlist in "${search[@]}"; do
          declare -n headers="${strings[wordlist]}"
-         [[ -z "${headers[$word]}" ]] || {                         # word found in next vocabulary  of voclist
+         [[ -z "${headers[$word]}" ]] || {                           # word found in next vocabulary  of voclist
             invoke "$word" "${headers["$word"]}"                     # compile or execute
             continue 2
          }
@@ -906,7 +901,7 @@ evaluate()  {
 
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -966,8 +961,8 @@ from()  {
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
-# ----- populating detokeniser --------------------------- #FOLD01
+# ----- primitives --------------------------------------- #fold00
+# ----- populating detokeniser --------------------------- #fold01
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -1022,7 +1017,7 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
-# ----- colon/semicolon ---------------------------------- #FOLD01
+# ----- colon/semicolon ---------------------------------- #fold01
 
 
 colon ';'
@@ -1081,7 +1076,7 @@ see()  {
 primitive 'see' 'see'
 
 
-# ----- does> -------------------------------------------- #FOLD01
+# ----- does> -------------------------------------------- #fold01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1111,7 +1106,7 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1171,12 +1166,12 @@ semicolon
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
    declare -n currentvoc="${strings[current]}"
-   code 'currentvoc["$word"]="${functionname_prefix}_${s[sp--]}"'
+   code 'currentvoc["$word"]="${nameprefix}_${s[sp--]}"'
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
 semicolon
 
 
-# ----- deferred words ----------------------------------- #FOLD01
+# ----- deferred words ----------------------------------- #fold01
 
 # new deferred words are initialised to noop
 primitive 'noop' '(())'
@@ -1199,15 +1194,15 @@ semicolon
 colon 'is'
    code 'word'
    declare -n currentvoc="${strings[current]}"
-   code 'tmp="$(type "${currentvoc[$word]}"|grep "${functionname_prefix}_.*m\[")"'
+   code 'tmp="$(type "${currentvoc[$word]}"|grep "${nameprefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
-# ----- environment--------------------------------------- #FOLD01
+# ----- environment--------------------------------------- #fold01
 # read number from environment variable with name on string stack
 # ( -- x )  ( string:  $1 -- )
 colon 'env'
-   push '${!ss[-1]}'
+   push '${!ss[-1]}&true'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -1237,7 +1232,7 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #FOLD01
+# ----- misc --------------------------------------------- #fold01
 
 primitive "\\"   'line=""';   compiled                               # single quoted single backslash because
 primitive "\\"   'line=""';   interpreted                            # double quoted escaped backslash rather than
@@ -1246,7 +1241,7 @@ primitive '('    "parse ')'"; compiled
 primitive '('    "parse ')'"; interpreted
 
 
-# ----- parameter stack ---------------------------------- #FOLD01
+# ----- parameter stack ---------------------------------- #fold01
 
 
 colon 'dup'
@@ -1349,7 +1344,7 @@ inline
 primitive 'depth'  '((s[++sp]=$sp))'
 primitive 'pick'   '((s[sp]=s[sp-s[sp]-1]))'
 
-# ----- return stack ------------------------------------- #FOLD01
+# ----- return stack ------------------------------------- #fold01
 
 colon 'r@'
    atom 'r@'
@@ -1396,7 +1391,7 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #FOLD01
+# ----- string stack ------------------------------------- #fold01
 
 primitive 'depth$'   's[++sp]="${#ss[@]}"'
 primitive 'empty$'   'ss=()'
@@ -1652,7 +1647,7 @@ inout 0 1
 
 
 
-# ----- numeric comparison ------------------------------- #FOLD01
+# ----- numeric comparison ------------------------------- #fold01
 
 primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
 primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
@@ -1720,7 +1715,7 @@ inline
 inout 4 1
 
 
-# ----- compiler and word search related ----------------- #FOLD01
+# ----- compiler and word search related ----------------- #fold01
 
 
 #find$
@@ -1752,7 +1747,7 @@ havearg() {
       declare -n headers="$vocabulary"                               # vector headers to next vocabulary
       [[ -z "${headers["$word"]}" ]] || {                            # word in there?
          tmp="${headers["$word"]}"                                   #     yes: remember name
-         [[ $tmp == ${functionname_prefix}* ]] || break              # can not tick data
+#         [[ $tmp == ${nameprefix}* ]] || break                       # can not tick data
          ((s[++sp]=${headers["$word"]##*_}))                         # convert name to "address" and push
          return                                                      # found word, stacked execution token
       }
@@ -1797,11 +1792,11 @@ compiled
 
 # ' word  "signalname"  trap
 colon 'trap'
-    code "trap \"${functionname_prefix}_\${s[sp--]}\" \"\${ss[-1]}\""
+    code "trap \"${nameprefix}_\${s[sp--]}\" \"\${ss[-1]}\""
     code 'unset "ss[-1]"'
 semicolon
 
-primitive 'execute' "${functionname_prefix}_\${s[sp--]}"             # ( xt -- )
+primitive 'execute' "${nameprefix}_\${s[sp--]}"                      # ( xt -- )
 primitive 'name$'   'ss+=("${names[s[sp--]]}")'                      # ( xt -- ) ( string: -- $1 )
 primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
@@ -1810,7 +1805,7 @@ primitive 'inline'  'inline'                                         # ( -- )   
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
 primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
 primitive '#unresolved' '((s[++sp]=${#unresolved[@]}))'              # ( -- u )
-primitive 'recurse' 'code "${functionname_prefix}_$((xt))"'; compiled   # ( -- )
+primitive 'recurse' 'code "${nameprefix}_$((xt))"'; compiled         # ( -- )
 
 # apply run time semantic from string stack
 colon 'use$'
@@ -1858,11 +1853,11 @@ evaluate ': headerless  last$ dup$ have$ trash$ ;'; inout 0 0
 
 # ( xt -- )
 colon 'compile,'
-   code "code \"${functionname_prefix}_\${s[sp--]}\""
+   code "code \"${nameprefix}_\${s[sp--]}\""
 semicolon
 
 
-# ----- bit logic ---------------------------------------- #FOLD01
+# ----- bit logic ---------------------------------------- #fold01
 
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
@@ -2066,7 +2061,7 @@ primitive 'return'  'code "return \${s[sp--]}"'; compiled
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'
@@ -2167,7 +2162,7 @@ evaluate ": umin   2dup u> if swap then drop ;"
 evaluate ": umax   2dup u< if swap then drop ;"
 
 
-# ----- memory ------------------------------------------- #FOLD01
+# ----- memory ------------------------------------------- #fold01
 
 colon '@'
    atom '@'
@@ -2307,7 +2302,7 @@ primitive 'move'   'move'; inout 3 0
 
 
 
-# ----- character i/o ------------------------------------ #FOLD01
+# ----- character i/o ------------------------------------ #fold01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
@@ -2421,7 +2416,7 @@ colon 'waive'
 semicolon
 
 
-# ----- pictured number conversion ----------------------- #FOLD01
+# ----- pictured number conversion ----------------------- #fold01
 
 # NOTE: consider to let # expect a double, but process lower
 # half only, so its stack complies with standard # while its
@@ -2455,7 +2450,7 @@ primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
-# ----- vocabularies ------------------------------------- #FOLD01
+# ----- vocabularies ------------------------------------- #fold01
 
 
 current="$onlyvoc"
@@ -2481,17 +2476,16 @@ colon 'order'
    code 'done'
    code 'printf "\ncurrent: %s\n" "${strings[current]}"'
 semicolon
+
+primitive 'words'    'words'
 current="$forthvoc"
 
-colon 'get-current'
-   push "current"
-semicolon
-
+primitive 'get-current'  '((s[++sp]=current))'
 primitive 'set-current'  '((current=s[sp--]))'
 primitive 'set-context'  'search[0]="${s[sp--]}"'
 
 
-# ----- foward referencing support words ----------------- #FOLD01
+# ----- foward referencing support words ----------------- #fold01
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2653,7 +2647,7 @@ colon 'satisfy$'
 semicolon
 
 
-# ----- documentation ------------------------------------ #FOLD01
+# ----- documentation ------------------------------------ #fold01
 
 # arg1: word name
 # arg2: headerlist
@@ -2738,7 +2732,7 @@ colon 'about'
 semicolon
 
 
-# ----- interactive mode --------------------------------- #FOLD01
+# ----- interactive mode --------------------------------- #fold01
 
 evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
 evaluate "' quit alias abort"
@@ -2760,7 +2754,7 @@ semicolon
 
 
 
-# ----- files -------------------------------------------- #FOLD01
+# ----- files -------------------------------------------- #fold01
 
 
 
@@ -2831,7 +2825,7 @@ evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
 
 
 
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 primitive empty  's=() sp=0'
 primitive rempty 'r=() rp=0'
 
@@ -2839,7 +2833,6 @@ primitive rempty 'r=() rp=0'
 # since warm doesn't empty them any longer, a convenient
 # way to do so manually was needed.
 evaluate ': _  empty rempty empty$  ;'                ; inline
-primitive 'words'    'words'
 primitive 'random'   '((s[++sp]=SRANDOM&true))'; inout 0 1           # ( -- u )        32 bits random number
 primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))';     # a microseconds epoch, used for benchmarking
 primitive 'secs'     'sleep "${s[sp--]}"'
@@ -2851,7 +2844,7 @@ colon 'version'
 semicolon
 
 
-# ----- launch ------------------------------------------- #FOLD00
+# ----- launch ------------------------------------------- #fold00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 config()  {

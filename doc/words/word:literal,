@@ -1,0 +1,23 @@
+name:                literal,
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            compiling
+
+decription:          generates code pushing top of stack as literal to stack.
+
+notes:               makes only sense to compile into a compile-only word which will,
+                     when executed while contructing a word, compile code to the word
+                     under construction. That code are the semantics of literal,.
+                     After completion of construction will that word, when executed, push
+                     to stack the number which was found on stack during compilation.
+                     Mirrors compile,
+                     Provided to implement literal
+                     May be removed again anytime
+
+example:             : foo  literal, ; compiled
+                     : ten [ 10 ] foo ;
+                     ten .  ( 10 )
+standard:            no
+deviation:           standard has no equivalent

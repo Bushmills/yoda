@@ -1,0 +1,31 @@
+provides: os shell: df ls cat cd most echo printf cp rm pwd mc
+once
+
+: doshell ( u -- )
+    "eval " $@ join$
+    bl append$
+    0 parse$ join$
+    shell$ ;         transient
+
+: shell:
+    here$ constant
+    last$ $,
+    does> doshell ;
+
+only forth
+vocabulary os
+also os definitions
+
+shell: df
+shell: ls
+shell: cat
+shell: cd
+shell: most
+shell: echo
+shell: printf
+shell: cp
+shell: rm
+shell: pwd
+shell: mc
+
+only os also forth definitions

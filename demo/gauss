@@ -1,0 +1,26 @@
+#!/usr/local/bin/yoda from
+needs: showcursor hidecursor screensize
+
+screensize
+constant lines
+constant rows
+lines array hash
+
+: gauss  ( u1 -- u2 ) 0 swap for random 1 and + next ;
+
+: hashnext  ( -- flag )
+   lines 1- gauss
+   dup hash dup @
+   dup rows u< 0= >r
+
+   r@ if 2drop drop
+   else  rot at '- emit inc
+   then  r> ;
+
+: race
+   hidecursor page
+   begin hashnext until
+   0 lines at
+   showcursor  ;
+
+race

@@ -7,30 +7,30 @@ For all settings, reasonable or at least hopefully functioning defaults
 have been set. Change those as needed. 0 turns them off, other values
 enable them, unless text is expected as paramter.
 
-default='boot quit'                   # command line used  when yoda was executed without command line
-trace=0                               # 1: become more chatty during execution
-log=0                                 # 1: writes execution of some actions to a log file
+default='boot quit'                    # command line used  when yoda was executed without command line
+trace=0                                # 1: become more chatty during execution
+log=0                                  # 1: writes execution of some actions to a log file
 codedump=0
-break=2                               # what do to after Ctrl-C: 0:return 1:exit 2:execute cold
-clean=1                               # 1: clean stacks on error
-callstack=0                           # 0: disable call stack print on error. n: show n items
+break=2                                # what do to after Ctrl-C: 0:return 1:exit 2:execute cold
+clean=1                                # 1: clean stacks on error
+callstack=0                            # 0: disable call stack print on error. n: show n items
 
-editor="vi"                           # editors run in console, not backgrounded
-xeditor="featherpad"                  # xeditors open window and are backgrounded
+editor="vi"                            # editors run in console, not backgrounded
+xeditor="featherpad"                   # xeditors open window and are backgrounded
 
-doc="$mydir/doc"                      # mydir is where yoda has determined to reside itself. set doc root
-worddoc_prefix="word"                 # each word doc file uses this string as base name
-worddoc="$doc/words/$worddoc_prefix"  # set directory and word doc prefix
+doc="$mydir/doc"                       # mydir is where yoda has determined to reside itself. set doc root
+worddoc_prefix="word"                  # each word doc file uses this string as base name
+worddoc="$doc/words/$worddoc_prefix"   # set directory and word doc prefix
 
-libdirs+="..."                        # add another directory to list where yoda looks for library files
-libdirs+=("/usr/local/lib/yoda")      # example: add literal directory path
-                                      #    first added directory is special, because it, and its subdirectories,
-                                      #    are scanned for forward referencable code.
-libdirs+=("$mydir")                   # example: add directory where yoda resides
-libdirs+=("$PWD")                     # example: add current directory
+libdirs+="..."                         # add another directory to list where yoda looks for library files
+libdirs+=("/usr/local/lib/yoda")       # example: add literal directory path
+                                       #    first added directory is special, because it, and its subdirectories,
+                                       #    are scanned for forward referencable code.
+libdirs+=("$mydir")                    # example: add directory where yoda resides
+libdirs+=("$PWD")                      # example: add current directory
 
-bits=n                                # set cell width. 16..63 are reasonable.
-                                      # be aware that 16 is a tad small for epoch or
-                                      # higher resolution time measurements.
-functionname_prefix="yoda"            # leading part of function names
-nextname="1000"                       # functions are numbered, starting with this number.
+bits=n                                 # set cell width. 16..63 are reasonable.
+                                       # be aware that 16 is a tad small for epoch or
+                                       # higher resolution time measurements.
+nameprefix="yoda"                      # leading part of function names
+xt="1000"                              # functions are numbered, starting with this number.

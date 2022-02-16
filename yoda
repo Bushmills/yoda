@@ -2448,7 +2448,7 @@ semicolon
 
 colon 'set-current'
    code '((current=s[sp--]))'
-   code 'declare -n currentvoc="${strings[current]}"'
+   code 'declare -gn currentvoc="${strings[current]}"'
 semicolon
 
 primitive 'set-context'  'search[0]="${s[sp--]}"'

@@ -27,7 +27,10 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.6"    # 2022feb16,02:33   better factoring of multiple wordlists searches.
+v="0.6.7"    # 2022feb17,21:05   detokeniser generates code for function calls from xt.
+#                                transient headers track the wordlist which was current when they there created, so that removal
+#                                can consult the proper wordlist.
+#v="0.6.6"   # 2022feb16,02:33   better factoring of multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
 #                                renamed terms and words related to wordlists for consistency.
 #                                added newwordlist$ and initwordlist.
@@ -187,14 +190,12 @@ flagscount="0"
 newflag()  { (( $1 = 1<<flagscount++ )); }
 newflag inline
 newflag functionheader                                               # create header
+newflag sourcelocation                                               # store source location
 newflag atomiccode                                                   # expand
 newflag inlined                                                      # probably useless
 newflag push                                                         # generate code pushing a cell
 newflag execute                                                      # generate code calling xt
 newflag does                                                         # rip code apart into define- and run time portions
-newflag sourcelocation                                               # store source location
-newflag flowcontrol                                                  # help recognise optimisation boundaries
-newflag optimisationboundary
 
 # when stack effect of words is known to optimiser, it will have
 # the possibility to determine whether stack items cached in
@@ -931,6 +932,20 @@ loaded()  {
    return $(( filehandle >= ${#files[@]}))
 }
 
+# trash transient headers
+notransients()  {
+   ((${#transient[@]})) && {                                         # only if any transients exist at all
+      local current currentwid="-1"                                  # make sure current will be declared, because local variables
+      for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                 #    don't inherit the indirection property
+         ((currentwid == "${transient[tmp]%% *}")) || {              # transients may have been compiled to diffent wordlist
+            currentwid="${transient[tmp]%% *}"                       # if so, change to wordlist with word in it
+            declare -n current="${strings[currentwid]}"              # and set indirection variable to array serving as word list
+         }
+         unset "current[${transient[tmp]##* }]"                      # remove header
+      done                                                           # repeat for all headers in list of transients
+   }
+}
+
 # nestable source include
 # this from differs from the colon word, as it doesn't
 # try the different ${libdirs[@}} directories.
@@ -951,18 +966,14 @@ from()  {
    [[ -f "$file" ]] || return 1                                      # file not found
    file="$(realpath "$file")"                                        # canonical or original name of file
    loaded "$file" || files[filehandle]="$file"                       # first time inclusion: add to files array
-   readarray -t lines < "$file"                                      # read whole source into lines array
+   readarray -t lines < "$file"                                      # read whole file into lines array
    local transient=()                                                # list of headers marked transient
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping
       evaluate "$line"                                               # process next line
       ((error | (linenr < 0)))&&break                                # source can flag "stop loading" with negative linenr
    done                                                              #   (warm and done do so)
-   for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                    # trash transient headers
-# NOTE: transients may have been compiled to diffent vocabulary
-#  may have to record vocabulary along with header name
-      unset -v "current[${transient[tmp]}]"
-   done
+   notransients                                                      # trash transient headers
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    ((stackeffect == sp)) || unbalancedstack "$1"                     # demanding stack clean files with net effect zero.
    ((loaded[filehandle]++))                                          # increment load counter, mark as loaded
@@ -1048,7 +1059,7 @@ semicolon
 
 primitive 'interpreted' 'interpreted'                                # move header to interpreter context vocabulary
 primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
-primitive 'transient'   'transient+=("$lastword")'                   # copy header to transient for later trashing
+primitive 'transient'   'transient+=("$currentwid $lastword")'       # copy header to transient for later trashing
 
 # ----- diagnostics -------------------------------------- #fold01
 
@@ -2433,17 +2444,21 @@ evaluate ': newwordlist$  here$ $, dup initwordlist ;'               # ( -- wid 
 colon 'get-current'
    push 'currentwid'
 semicolon
+inline
 
 colon 'get-context'
    push 'order[0]'
 semicolon
+inline
 
 colon 'set-current'
    code '((currentwid=s[sp--]))'
    code 'declare -gn current="${strings[currentwid]}"'
 semicolon
+inline
 
 primitive 'set-context'  'order[0]="${s[sp--]}"'
+inline
 
 declare -n current                                                   # appease shellcheck
 declare -n current="only"
@@ -2472,9 +2487,7 @@ colon 'forth'
    call "set-context"
 semicolon
 
-colon 'definitions'
-   call "get-context" "set-current"
-semicolon
+evaluate ': definitions get-context set-current ;'
 
 declare -n current="forth"
 

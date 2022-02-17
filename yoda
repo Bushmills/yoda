@@ -119,9 +119,9 @@ shopt -s extglob
 shopt -u nullglob
 
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
-break=2                                                              # break will return (0), exit (1) or execute coldvector (2)
-clean=1                                                              # empty stack on error/ctrl-c
-codedump=0
+declare -i break=2                                                   # break will return (0), exit (1) or execute coldvector (2)
+declare -i clean=1                                                   # empty stack on error/ctrl-c
+declare -i codedump=0
 
 read -r tmp _ < <(realpath "$0")
 mydir="${tmp%/*}"
@@ -153,35 +153,34 @@ declare -i s1 s2 s3 s4                                               # temp vari
 declare -Ai flags                                                    # header flags (only inline left for now)
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
 
-builtin_wordlists=("interpretonly" "compileonly" "unresolved" "only" "forth")
-
-for tmp in "${builtin_wordlists[@]}"; do
-   declare -A "$tmp"
-   (( ${tmp}wid = sdp ))
-   strings[sdp++]="$tmp"
+# naming:
+#  wordlist:     name of a wordlist
+#  wordlistwid:  wid of a wordlist
+# convert wid to wordlist:   $@    ( ${strings[wid]} )
+declare -a builtin_wordlists=("only" "forth" "interpretonly" "compileonly" "unresolved")
+for wordlist in "${builtin_wordlists[@]}"; do
+   declare -A "$wordlist"
+   (( ${wordlist}wid = sdp ))
+   strings[sdp++]="$wordlist"
 done
 
-declare -a order
-order=("$forthwid" "$onlywid")
-declare -n context="forth"
-
-currentwid="$forthwid"
-declare -n current="forth"
+declare -ai order=("$forthwid" "$onlywid")                           # only forth
+declare -n  context="${strings[order[0]]}"
+declare -i  currentwid="${order[0]}"                                 # definitions
+declare -n  current="${strings[currentwid]}"
 
 declare -a names                                                     # function name -> word name lookup
 declare -a transient                                                 # transient headers.
 declare -A where                                                     # file:line of source
 declare -A lib                                                       # cache dependencies
 
-filehandle=1                                                         # 1=yoda. 0=tty.  >1=loaded source
+declare -i filehandle=1                                              # 1=yoda. 0=tty.  >1=loaded source
 declare -a files=("tty")                                             # list of included files
 declare -a loaded                                                    # list of inclusion counters for included files
-
 declare -a conclude=()                                               # compiler words can add actions to array conclude, which
                                                                      # will be executed when semicolon executes
 declare -a lasterror
 lasterror=("" "-1" "0")
-
 
 # header flags:
 flagscount="0"
@@ -191,6 +190,7 @@ newflag functionheader                                               # create he
 newflag atomiccode                                                   # expand
 newflag inlined                                                      # probably useless
 newflag push                                                         # generate code pushing a cell
+newflag execute                                                      # generate code calling xt
 newflag does                                                         # rip code apart into define- and run time portions
 newflag sourcelocation                                               # store source location
 newflag flowcontrol                                                  # help recognise optimisation boundaries
@@ -210,6 +210,7 @@ default='from defaults'                                              # load defa
 # number of bits per cell.
 # one address increment is always a cell, this setting
 # won't change that.
+declare -i bits
 bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=48                                                              # 0...281,474,976,710,655
 #bits=32                                                              # 0...4,294,967,295
@@ -219,13 +220,12 @@ bits=63                                                              # Can't use
 #bits=11                                                              # covers 3 decimal digits signed numeric space
 #bits=8                                                               # 8 bits are nice for testing
 
-msb="$((1<<(bits-1)))"
-maxint="$((msb-1))"
-maxuint="$((maxint|msb))"
-true="$maxuint"
-false=0
-
-compiling="$false"                                                   # state flag: interpreting or compiling
+declare -i msb="1<<(bits-1)"
+declare -i maxint="msb-1"
+declare -i maxuint="maxint|msb"
+declare -i true="maxuint"
+declare -i false=0
+declare -i compiling="false"                                         # state flag: interpreting or compiling
 line=""                                                              # source line being worked on. modified during parsing and processing
 word=""                                                              # bl delimited string from line currently being processed
 lastword=""                                                          # most recently created word, set by defining words
@@ -240,11 +240,11 @@ editor="vi"
    editor="$xeditor"
 }
 
-magic=100000
-remagic()  { ((magic+=RANDOM+10000)); }
+declare -i magic=100000
+remagic()  { magic+=RANDOM+10000; }
 remagic
 
-declare -A asc=()                                                    # ascii table
+declare -Ai asc=()                                                   # ascii table
 declare -a char=()                                                   # character table
 for i in {1..255}; do                                                # ascii->char LUT for emit, pack$, char$
    char[i]="$(echo -en "\\x$(printf "%x" "$i")")"
@@ -253,7 +253,7 @@ done
 
 # ----- diagnostics  ------------------------------------- #fold00
 
-comp=("" ":")
+declare -a comp=("" ":")
 
 trace()  {
    printf "### %-1s %-20s %s\n" "${comp[compiling & 1]}" "[${FUNCNAME[1]}]" "$@"
@@ -301,7 +301,7 @@ header()  {
    lastword="$1"
    [[ -z "${current["$lastword"]}" ]] ||
       echo "redefining $lastword"
-   current["$lastword"]="$2"                                      # associate word with name
+   current["$lastword"]="$2"                                         # associate word with name
    flags["$lastword"]="0"                                            # default to no flags
 }
 
@@ -344,9 +344,11 @@ where()  {
 # doesn't actually do any optimizing.
 # Function is limited to:
 # - expanding atoms
-# - generating code pushing literals
+# - generating code for pushing literals
+# - generating code for function calls from xts
 # - dealing with does>
-# - postcompile creation headers
+# - delayed headers creation
+# - storing source location
 optimise()  {                                                        # run code generator on ${analyser[@]} data
    ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
    target=()
@@ -375,13 +377,15 @@ optimise()  {                                                        # run code 
             fi
             header "$word" "$name"                                   # create new header
             continue
-         elif (( bodyflag & sourcelocation )); then                  # source location: set
-            where["$lastword"]="$bodyline"                           # remember source location
-            continue
          elif (( bodyflag & atomiccode )); then                      # atomic code: expand
             targetline="${atom[$bodyline]}"
          elif (( bodyflag & push )); then                            # generate code pushing the number
             targetline="((s[++sp]=$bodyline))"
+         elif (( bodyflag & sourcelocation )); then                  # source location: set
+            where["$lastword"]="$bodyline"                           # remember source location
+            continue
+         elif (( bodyflag & execute )); then
+            targetline="${nameprefix}_${bodyline}"
          elif (( bodyflag & does )); then                            # does>
             dodoes_at="$((${#target[@]}+1))"                         # remember end of target for splitting code (but only when whole word
          fi                                                          # was compiled - we want to rip out all the run time code, after all.
@@ -463,7 +467,7 @@ codebody()  {                                                        # inline co
 # rewrite run time semantics of most recently defined word
 # arg1: new run time code.
 use()  {
-   name="${current["$lastword"]}"                                 # rewrites function "$name",
+   name="${current["$lastword"]}"                                    # rewrites function "$name",
    eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
 }
 
@@ -504,7 +508,7 @@ call()  {
    local word
    for word in "$@"; do
       exists "$word" "${order[@]}" || notfound "$word"
-      code "${nameprefix}_${exists}"
+      code "$exists"  "$execute"
    done
 }
 
@@ -540,8 +544,8 @@ primitive()  {
 colon()  {
    tmp="${BASH_LINENO[0]}"                                           # assume not evaluate
    (( filehandle == 1 )) &&                                          # if defined in yoda
-   [[ "${FUNCNAME[3]}" == "evaluate" ]] &&                           # by evaluate
-   tmp="${BASH_LINENO[3]}"                                           # then take line number from different entry
+   [[ "${FUNCNAME[2]}" == "evaluate" ]] &&                           # by evaluate
+   tmp="${BASH_LINENO[2]}"                                           # then take line number from different entry
    delayheader "$1" "$filehandle" "${linenr:-$tmp}"
 }
 
@@ -660,7 +664,7 @@ error()  {
 }
 
 declare -a errortext
-nexterror=0
+declare -i nexterror=0
 
 errornr()   {
    error="$1"
@@ -672,7 +676,7 @@ errornr()   {
 # to emulate Forth's create ... does> here. I'm
 # surprised that shellcheck finds this acceptable
 newerror() {
-   (( "$1" = nexterror ))                                            # assign new error number to error name
+   (( "$1"=nexterror ))                                              # assign new error number to error name
    eval "$1()  { errornr \"$1\" "\"\$*"\"; }"                        # synthesise error function with error name
    shift
    errortext[nexterror++]="$*"                                       # associate error message with error number
@@ -787,14 +791,14 @@ forwardref()  {
 exists()  {
    local word="$1"
    shift
-   exists=0
    for wid in "$@"; do
       declare -n context="${strings[wid]}"
       [[ -n "${context[$word]}" ]] && {
-         exists="${context[$word]##${nameprefix}_}"
+         exists="${context[$word]##*_}"
          return 0
       }
    done
+   exists=0
    return 1
 }
 
@@ -841,32 +845,30 @@ resolve()  {
 
 # text compiler and interpreter, the so-called outer interpreter
 
-# do a single word, which has already been found.
-# must still figure out run- or compile time action,
-# arg1: word
-# arg2: name found
-invoke() {
-   ((compiling)) || { $2;  return; }                                 # not compiling: execute function
-   ((${flags["$1"]}&inline)) && { codebody "$2"; return;  }          # inline:     compile function body
-   code "$2"                                                         # not inline: compile call to function
-}
-
-
 # interpret/compile the line passed as argument
 # in here most compiling and interpreting work is done.
 # time to split this thing up.
-
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
-   until [[ -z "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
+   while [[ -n "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
+# --- search word in order ---
       exists "$word" "${order[@]}" && {
-         invoke "$word" "${nameprefix}_${exists}"                    # word found: interpret or compile
+         ((compiling)) && {
+            ((${flags["$word"]}&inline)) && {                        # inline:     compile function body
+               codebody "${nameprefix}_${exists}"
+               continue
+            }
+            code "$exists"  "$execute"                               # not inline: compile call to function
+            continue
+         }
+         ${nameprefix}_${exists}                                     # not compiling: execute function
          continue                                                    # done processing this word
       }
+# --- word not found ---
       if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
          [[ -z "${compileonly["$word"]}" ]] || {                     # found in in compileonly while compiling
             ${compileonly["$word"]}                                  # word in there are inherently "immediate", therefore they're executed here
@@ -882,6 +884,7 @@ evaluate()  {
             continue
          }
       fi
+# --- words isn't interpret or compile only
       pattern "$word" && continue                                    # not found yet: try patterns (numbers, strings, chars, hashbang, shell commands)
       (( m[forwardrefs] )) && {                                      #     and forward references enabled ...
          ((compiling)) && {                                          # still not successfully dealt with word. last resolve: in case of compiling ...
@@ -892,7 +895,7 @@ evaluate()  {
       }
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
          satisfy1 "$word" && {                                       # attempt to load word
-            ${current["$word"]}                                   # successful: execute
+            ${current["$word"]}                                      # successful: execute
             continue
          }
       }
@@ -907,9 +910,6 @@ evaluate()  {
    done
    ((sp<0))&&stackunderflow
 }
-
-
-
 
 
 # ----- load source files -------------------------------- #fold00
@@ -1736,7 +1736,7 @@ evaluate ': word$  bl parse$ ;  inline'
 # ----- compiling words ---------------------------------- #fold01
 
 
-primitive 'compile,' "code \"${nameprefix}_\${s[sp--]}\""            # ( xt -- )
+primitive 'compile,' "code \"code \${s[sp--]}\" \"$execute\""        # ( xt -- )
 primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
 evaluate ': literal  literal, ; compiled'
 
@@ -1800,7 +1800,7 @@ primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
 primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
 primitive '#unresolved' '((s[++sp]=${#unresolved[@]}))'              # ( -- u )
-primitive 'recurse' 'code "${nameprefix}_$((xt))"'; compiled         # ( -- )
+primitive 'recurse' 'code "$xt" "$execute"'; compiled                # ( -- )
 
 # apply run time semantic from string stack
 colon 'use$'

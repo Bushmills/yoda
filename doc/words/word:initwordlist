@@ -1,0 +1,16 @@
+name:                initwordlist
+stack:               ( wid -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            wordlists
+
+decription:          declare/redeclare and empty the wordlist identified by wid.
+
+example:             a sure way to trash all headers of forth vocabulary:
+                     forth get-context initwordlist
+                     (use   >exit    if you accidentally executed this)
+
+standard:            I don't think so
+deviation:           haven't checked yet
+url:                 https://forth-standard.org/standard/core/INITWORDLIST

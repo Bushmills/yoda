@@ -1,0 +1,21 @@
+name:                newwordlist$
+stack:               ( -- wid )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            wordlists
+
+decription:          creates a new wordlist, identified by wid. A name will be associated
+                     with wid, which is specified as $1
+
+notes:               the associated name is not a header created, merely a string
+                     in string memory. As wordlists are represented by bash hashed arrays,
+                     this name will be used as array name. It can also easily be produced
+                     from wid.
+                     Because name is used to name the bash array, it must therefore be
+                     a name suitable as bash array name, disallowing some characters.
+                     Safe characters are alphanumerical characters and _
+                     To output the name of a given wid:   ( wid -- )   $@ type$
+
+standard:            no
+deviation:           standard has no equivalent

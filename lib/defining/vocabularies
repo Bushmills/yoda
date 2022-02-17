@@ -2,10 +2,8 @@ provides: vocabulary
 once
 
 : vocabulary
-    here$ constant                                      \ constant points to string dp where voc name will be stored
-       last$
-       >declare -gA "${ss[-1]}"
-       $,                                               \ write vocabulary name to string memory
-    does>
-       set-context                                      \ index to vocabulary name is also the vocabulary "handle"
-;                                                       \ (means also, printing a voc name from "handle":   $@ type$
+    word$
+    dup$ newwordlist$
+    constant$                                         \ constant points to string dp where voc name will be stored
+    does> set-context                                    \ index to vocabulary name is also the vocabulary "handle"
+;                                                     \ (means also, printing a voc name from "handle":   $@ type$

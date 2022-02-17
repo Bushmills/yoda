@@ -29,6 +29,9 @@
 # numbers in decimal. Mostly.
 v="0.6.6"    # 2022feb16,02:33   better factoring of multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
+#                                renamed terms and words related to wordlists for consistency.
+#                                added newwordlist$ and initwordlist.
+#                                factored some wordlist searching words
 # v="0.6.5"  # 2022feb14,14:08   next iteration vocabularies.
 #                                words displays multiple entries in voc list multiple times.
 #                                vocabulary, only, also, previous, forth, order, set-current, get-current, definitions appear all to be
@@ -150,21 +153,20 @@ declare -i s1 s2 s3 s4                                               # temp vari
 declare -Ai flags                                                    # header flags (only inline left for now)
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
 
-# built-in vocabularies
-builtinvocs=("interpretonly" "compileonly" "unresolved" "only" "forth")
+builtin_wordlists=("interpretonly" "compileonly" "unresolved" "only" "forth")
 
-for tmp in "${builtinvocs[@]}"; do
+for tmp in "${builtin_wordlists[@]}"; do
    declare -A "$tmp"
-   (( ${tmp}voc = sdp ))
+   (( ${tmp}wid = sdp ))
    strings[sdp++]="$tmp"
 done
 
-declare -a search
-search=("$forthvoc" "$onlyvoc")
-declare -n contextvoc="forth"
+declare -a order
+order=("$forthwid" "$onlywid")
+declare -n context="forth"
 
-current="$forthvoc"
-declare -n currentvoc="forth"
+currentwid="$forthwid"
+declare -n current="forth"
 
 declare -a names                                                     # function name -> word name lookup
 declare -a transient                                                 # transient headers.
@@ -271,14 +273,14 @@ setheaderflag()  {                                                   # where aga
 
 inline()     { setheaderflag "$inline" ; }
 
-tovoc()  {
-   declare -n targetvoc="$1"
-   targetvoc["$lastword"]="${currentvoc["$lastword"]}"
-   unset -v 'currentvoc["$lastword"]'
+towordlist()  {
+   declare -n towordlist="$1"
+   towordlist["$lastword"]="${current["$lastword"]}"
+   unset -v 'current["$lastword"]'
 }
 
-compiled()     { tovoc "compileonly"; }                              # move last header to compiler context vocabulary
-interpreted()  { tovoc "interpretonly"; }                            # move last header to interpreter context vocabulary
+compiled()     { towordlist "compileonly"; }                         # move last header to compiler context vocabulary
+interpreted()  { towordlist "interpretonly"; }                       # move last header to interpreter context vocabulary
 
 compiler_init()  {
    body=()
@@ -296,10 +298,11 @@ compiler_init()  {
 # to be determined by caller
 # NOTE: leave it to header to prepend $nameprefix.
 header()  {
-   [[ -z "${currentvoc["$1"]}" ]] || echo "redefining $1"
-   lastword="$1"                                                     # global variable. setting header flags needs this one
-   currentvoc["$1"]="$2"                                             # associate word with name
-   flags["$1"]="0"                                                   # default to no flags
+   lastword="$1"
+   [[ -z "${current["$lastword"]}" ]] ||
+      echo "redefining $lastword"
+   current["$lastword"]="$2"                                      # associate word with name
+   flags["$lastword"]="0"                                            # default to no flags
 }
 
 
@@ -394,7 +397,7 @@ optimise()  {                                                        # run code 
 # a workaround is needed here too:  create ... does> ;   does without following code will let bash run into an empty function,
 # which bash doesn't like, and complain about.  Therefore this condition is caught here and acted upon.
      if (( ${#target[@]} > dodoes_at )); then                        # everything ok: there was code between does> and ; - extract and store it.
-        doescode[${currentvoc[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
+        doescode[${current[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
         target=("${target[@]:0:$dodoes_at}")
      else                                                            # but does> without code ...
         unset "target[-1]"                                           # will cause to compile without any does run time action. no code behind does>
@@ -460,7 +463,7 @@ codebody()  {                                                        # inline co
 # rewrite run time semantics of most recently defined word
 # arg1: new run time code.
 use()  {
-   name="${currentvoc["$lastword"]}"                                 # rewrites function "$name",
+   name="${current["$lastword"]}"                                 # rewrites function "$name",
    eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
 }
 
@@ -500,7 +503,7 @@ push()  {                                                            # leave it 
 call()  {
    local word
    for word in "$@"; do
-      exists "$word" "${search[@]}" || notfound "$word"
+      exists "$word" "${order[@]}" || notfound "$word"
       code "${nameprefix}_${exists}"
    done
 }
@@ -514,9 +517,10 @@ call()  {
 # arg2: filehandle
 # arg3: line number
 delayheader()  {
-   [[ -z "$1" ]] && emptyname
+   lastword="$1"
+   [[ -z "$lastword" ]] && emptyname
    compiler_init
-   code "$1" "$functionheader"
+   code "$lastword" "$functionheader"
    [[ -z "$2" ]] || where "$2" "$3"
 }
 
@@ -603,8 +607,8 @@ defer()  {                                                           # use in yo
    semicolon
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
    use "${nameprefix}_\${m[$dp]}"
-   declare -n contextvoc="${strings[search[0]]}"
-   ((m[dp++]="${contextvoc[$2]##*_}"))                               # extract and comma xt from function
+   declare -n context="${strings[order[0]]}"
+   ((m[dp++]="${context[$2]##*_}"))                               # extract and comma xt from function
    inline
    inout 0 1
 }
@@ -762,7 +766,7 @@ pattern()  {                                                         # pattern i
 totalheaders()  {
 # NOTE: change to take account of all vocabularies
    (( totalheaders =
-         ${#currentvoc[@]}
+         ${#current[@]}
        + ${#compileonly[@]}
        + ${#interpretonly[@]}
        + ${#unresolved[@]}
@@ -784,10 +788,10 @@ exists()  {
    local word="$1"
    shift
    exists=0
-   for wordlist in "$@"; do
-      declare -n contextvoc="${strings[wordlist]}"
-      [[ -n "${contextvoc[$word]}" ]] && {
-         exists="${contextvoc[$word]##${nameprefix}_}"
+   for wid in "$@"; do
+      declare -n context="${strings[wid]}"
+      [[ -n "${context[$word]}" ]] && {
+         exists="${context[$word]##${nameprefix}_}"
          return 0
       }
    done
@@ -799,7 +803,7 @@ exists()  {
 # tries by loading source immediately if available.
 # if source isn't available, a forward ref will be generated.
 satisfy1()  {
-   exists "$1" "${search[@]}" && return 0                            # word already defined, nothing to do
+   exists "$1" "${order[@]}" && return 0                            # word already defined, nothing to do
    local word="$1"
    [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
       forwardref "$word"                                             # yes: create forward ref only
@@ -859,7 +863,7 @@ evaluate()  {
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
-      exists "$word" "${search[@]}" && {
+      exists "$word" "${order[@]}" && {
          invoke "$word" "${nameprefix}_${exists}"                    # word found: interpret or compile
          continue                                                    # done processing this word
       }
@@ -888,7 +892,7 @@ evaluate()  {
       }
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
          satisfy1 "$word" && {                                       # attempt to load word
-            ${currentvoc["$word"]}                                   # successful: execute
+            ${current["$word"]}                                   # successful: execute
             continue
          }
       }
@@ -957,7 +961,7 @@ from()  {
    for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                    # trash transient headers
 # NOTE: transients may have been compiled to diffent vocabulary
 #  may have to record vocabulary along with header name
-      unset -v "currentvoc[${transient[tmp]}]"
+      unset -v "current[${transient[tmp]}]"
    done
    ((compiling)) && stillcompiling "$1"                              # can't have that, files leaving a dangling compiler
    ((stackeffect == sp)) || unbalancedstack "$1"                     # demanding stack clean files with net effect zero.
@@ -1046,15 +1050,15 @@ primitive 'interpreted' 'interpreted'                                # move head
 primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
 primitive 'transient'   'transient+=("$lastword")'                   # copy header to transient for later trashing
 
-# ----- diagnostics -------------------------
+# ----- diagnostics -------------------------------------- #fold01
 
 words() {
-   for wordlist in "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc" "$unresolvedvoc"; do
-      vocabulary="${strings[wordlist]}"
-      declare -n contextvoc="$vocabulary"
-      (( ${#contextvoc[@]} )) && {
-         printf '%s\n' "--- $vocabulary ---"
-         printf  "%s  " "${!contextvoc[@]}"
+   for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid" "$unresolvedwid"; do
+      wordlist="${strings[wid]}"
+      declare -n context="$wordlist"
+      (( ${#context[@]} )) && {
+         printf '%s\n' "--- $wordlist ---"
+         printf  "%s  " "${!context[@]}"
          printf "\n\n"
       }
    done
@@ -1064,12 +1068,12 @@ words() {
 see()  {
    local headers
    word
-   for wordlist in "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc"; do
-      vocabulary="${strings[wordlist]}"
-      declare -n contextvoc="$vocabulary"
-      [[ -z "${contextvoc["$word"]}" ]] || {
-         printf "found in %s:\n" "$vocabulary"
-         tmp="${contextvoc["$word"]}"
+   for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid"; do
+      wordlist="${strings[wid]}"
+      declare -n context="$wordlist"
+      [[ -z "${context["$word"]}" ]] || {
+         printf "found in %s:\n" "$wordlist"
+         tmp="${context["$word"]}"
          [[ -z "$tmp" ]] && notfound
          type "$tmp"
       }
@@ -1092,7 +1096,7 @@ primitive 'see' 'see'
 # portion of does> to the original address push
 # compiled by create.
 dodoes()  {                                                          # append does> part to original address pushing create semantics
-   ${currentvoc[$lastword]}
+   ${current[$lastword]}
    use  "s[++sp]=\"${s[sp--]}\"
          ${doescode[${FUNCNAME[1]}]}"
 }
@@ -1168,7 +1172,7 @@ semicolon
 # ' foo alias bar
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
-   code 'currentvoc["$word"]="${nameprefix}_${s[sp--]}"'
+   code 'current["$word"]="${nameprefix}_${s[sp--]}"'
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
 semicolon
 
@@ -1195,7 +1199,7 @@ semicolon
 # grep is used here.
 colon 'is'
    code 'word'
-   code 'tmp="$(type "${currentvoc[$word]}"|grep "${nameprefix}_.*m\[")"'
+   code 'tmp="$(type "${current[$word]}"|grep "${nameprefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
@@ -1744,7 +1748,7 @@ semicolon
 compiled
 
 
-# ----- compiler and word search related ----------------- #fold01
+# ----- compiler and dictionary search related ----------- #fold01
 
 #find$
 #( -- 0 | xt 1 | xt -1 )   ( $1 -- $1 | )
@@ -1766,13 +1770,13 @@ primitive ']' '((compiling=true))'
 
 colon "'"                                                            # ( -- xt ) ( stream: word )
    code 'word'
-   code 'exists "$word" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc" || notfound "$word"'
+   code 'exists "$word" "${order[@]}" "$interpretonlywid" "$compileonlywid" || notfound "$word"'
    push 'exists'
 semicolon
 
                                                                      # similar to find, but name from string stack rather than input stream
 colon 'have$'                                                        # ( -- 0|xt ) ( $1 -- )
-   code 'exists "${ss[-1]}" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc"'
+   code 'exists "${ss[-1]}" "${order[@]}" "$interpretonlywid" "$compileonlywid"'
    code 'unset "ss[-1]"'
    push 'exists'
 semicolon
@@ -1807,7 +1811,7 @@ semicolon
 # trashed name as argument
 # ( -- )
 trash()  {
-   unset -v "currentvoc[$1]"
+   unset -v "current[$1]"
 }
 
 # trashed name from input stream
@@ -2026,7 +2030,7 @@ semicolon
 colon 'boot'
    code 'word'
    code 'satisfy1 "$word"'
-   code 'exists "$word" "current" "${search[@]}"'                    # search current first because satisfy may have compiled it there
+   code 'exists "$word" "currentwid" "${order[@]}"'                    # search current first because satisfy may have compiled it there
    code 'coldvector="${nameprefix}_${exists}"'
 semicolon
 
@@ -2417,48 +2421,54 @@ primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
-# ----- vocabularies ------------------------------------- #fold01
+# ----- vocabularies and wordlists ----------------------- #fold01
 
+
+colon 'initwordlist'                                                 # ( wid -- )
+   code 'declare -gA "${strings[s[sp--]]}=()"'
+semicolon
+
+evaluate ': newwordlist$  here$ $, dup initwordlist ;'               # ( -- wid )  ( $1 -- )
 
 colon 'get-current'
-   push 'current'
+   push 'currentwid'
 semicolon
 
 colon 'get-context'
-   push 'search[0]'
+   push 'order[0]'
 semicolon
 
 colon 'set-current'
-   code '((current=s[sp--]))'
-   code 'declare -gn currentvoc="${strings[current]}"'
+   code '((currentwid=s[sp--]))'
+   code 'declare -gn current="${strings[currentwid]}"'
 semicolon
 
-primitive 'set-context'  'search[0]="${s[sp--]}"'
+primitive 'set-context'  'order[0]="${s[sp--]}"'
 
-declare -n currentvoc                                                # appease shellcheck
-declare -n currentvoc="only"
+declare -n current                                                   # appease shellcheck
+declare -n current="only"
 
-primitive 'also'      'search=("${search[0]}" "${search[@]}")'
+primitive 'also'      'order=("${order[0]}" "${order[@]}")'
 
 colon 'only'
-   code "search=()"
-   push "$onlyvoc"; call "set-context" "also"
-   push "onlyvoc" ; call "set-current"
+   code "order=()"
+   push "$onlywid"; call "set-context" "also"
+   push "onlywid" ; call "set-current"
 semicolon
 
 colon 'order'
    code 'printf "context:"'
-   code 'for wordlist in "${search[@]}"; do'
-   code 'printf " %s" "${strings[wordlist]}"'
+   code 'for wid in "${order[@]}"; do'
+   code 'printf " %s" "${strings[wid]}"'
    code 'done'
-   code 'printf "\ncurrent: %s\n" "${strings[current]}"'
+   code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
 semicolon
 
-primitive 'previous'  '((${#search[@]}>1))&&{ search=("${search[@]:1}"); }'
+primitive 'previous'  '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
 primitive 'words'     'words'
 
 colon 'forth'
-   push "forthvoc"
+   push "forthwid"
    call "set-context"
 semicolon
 
@@ -2466,7 +2476,7 @@ colon 'definitions'
    call "get-context" "set-current"
 semicolon
 
-declare -n currentvoc="forth"
+declare -n current="forth"
 
 # ----- foward referencing support words ----------------- #fold01
 
@@ -2549,7 +2559,7 @@ declare -n currentvoc="forth"
 
 
 need()  {
-   exists "$1" "${search[@]}" "$interpretonlyvoc" "$compileonlyvoc" ||
+   exists "$1" "${order[@]}" "$interpretonlywid" "$compileonlywid" ||
    forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
 }
 
@@ -2670,13 +2680,13 @@ sanitise()  {
 }
 
 undoc()  {
-   for wordlist in "$forthvoc" "$onlyvoc" "$interpretonlyvoc" "$compileonlyvoc"; do
-      vocabulary="${strings[wordlist]}"
-      declare -n contextvoc="$vocabulary"
-      for word in "${!contextvoc[@]}"; do                               # run through all headers
+   for wid in "$forthwid" "$onlywid" "$interpretonlywid" "$compileonlywid"; do
+      wordlist="${strings[wid]}"
+      declare -n context="$wordlist"
+      for word in "${!context[@]}"; do                               # run through all headers
          sanitise "$word"
          [[ -f "$worddoc:$file" ]] || {                              # found one for which no doc file exists
-            undoc_template "$word" "${!contextvoc}" >> "$worddoc:$file"
+            undoc_template "$word" "${!context}" >> "$worddoc:$file"
             editor "$worddoc:$file"
             return
          }

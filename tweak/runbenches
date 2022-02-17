@@ -8,7 +8,7 @@ benches=("$@")
 runbenchesonce()  {
    for f in "${benches[@]}"; do
       file=$(realpath "$f")
-      echo $(date -u; yoda from "$file") >> $f.results
+      echo $(date -u; yoda 'version >echo $v;' from "$file" ) >> $f.results
       echo "$f"
       tail -5 $f.results
       echo

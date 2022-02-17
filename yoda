@@ -159,7 +159,6 @@ declare -A doescode                                                  # items ass
 # convert wid to wordlist:   $@    ( ${strings[wid]} )
 declare -a builtin_wordlists=("only" "forth" "interpretonly" "compileonly" "unresolved")
 for wordlist in "${builtin_wordlists[@]}"; do
-   declare -A "$wordlist"
    (( ${wordlist}wid = sdp ))
    strings[sdp++]="$wordlist"
 done

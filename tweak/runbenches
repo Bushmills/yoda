@@ -2,8 +2,11 @@
 # results are from a Dell latitude 7480 laptop with Intel Core i7-7600U CPU @ 2.8/3.9 GHz,
 # 8 GB RAM, running Debian bookworm, X11, bash version 5.1.16(1)
 
+benches=("$@")
+(( $# )) || benches=(*bench)
+
 runbenchesonce()  {
-   for f in *bench; do
+   for f in "${benches[@]}"; do
       file=$(realpath "$f")
       echo $(date -u; yoda from "$file") >> $f.results
       echo "$f"

@@ -7,8 +7,6 @@
 - input line history would be nice
 - string operations based on search and match are mostly absent.
   index / index$ might cover a lot already. cut$ was added
-- left$, right$ with negative index didn't survive recent changes towards
-  making yoda more unsigned-capable. Those may be desired.
 
 --- optimiser todos:
 - describe microinstructions effects to optimiser, using atom list

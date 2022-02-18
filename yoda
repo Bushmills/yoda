@@ -31,6 +31,7 @@ v="0.6.7"    # 2022feb17,21:05   detokeniser generates code for function calls f
 #                                transient headers track the wordlist which was current when they there created, so that removal
 #                                can consult the proper wordlist. Highlevelised only and forth.
 #                                Factored generating function names.
+#                                left$ right$ mid$ accept negative indici again.
 #v="0.6.6"   # 2022feb16,02:33   better factoring of multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
 #                                renamed terms and words related to wordlists for consistency.
@@ -1272,7 +1273,7 @@ inout 0 0
 
 
 
-# ----- misc --------------------------------------------- #fold01
+# ----- commenting --------------------------------------- #fold01
 
 primitive "\\"   'line=""';   compiled                               # single quoted single backslash because
 primitive "\\"   'line=""';   interpreted                            # double quoted escaped backslash rather than
@@ -1557,8 +1558,27 @@ primitive 'quote$' 'ss[-1]="\"${ss[-1]}\""'
 # "abcdefgh"   2 split$  type$      ab cdefgh         "split at left"
 # "abcdefgh"  -2 split$  type$      abcdef gh         "split at right"
 
-primitive 'left$'  'ss[-1]=${ss[-1]:0:s[sp--]}'
-primitive 'right$' 'ss[-1]=${ss[-1]:0-s[sp--]}'
+
+colon 'left$'
+   code '((tmp=s[sp--]))'
+   code '((tmp&msb))&&((tmp|=~maxuint))'
+   code 'ss[-1]=${ss[-1]:0:tmp}'
+semicolon
+
+colon 'right$'
+   code '((tmp=s[sp--]))'
+   code '((tmp&msb))&&((tmp|=~maxuint))'
+   code 'ss[-1]=${ss[-1]:0-tmp}'
+semicolon
+
+# ( u -- ) ( $1 -- $2 $3 )
+colon 'split$'
+   code '((tmp=s[sp--]))'
+   code '((tmp&msb))&&((tmp|=~maxuint))'
+   code 'ss+=("${ss[-1]:tmp}")'
+   code 'ss[-2]="${ss[-2]:0:tmp}"'
+semicolon
+
 
 # remove u1 chars from the left, return u2 chars from what remains
 # ( u1 u2 -- ) ( $1 -- $2 )
@@ -1567,11 +1587,6 @@ colon 'mid$'
    atom 'drop'
 semicolon
 
-# ( u -- ) ( $1 -- $2 $3 )
-colon 'split$'
-   code 'ss+=("${ss[-1]:s[sp]}")'
-   code 'ss[-2]="${ss[-2]:0:s[sp--]}"'
-semicolon
 
 colon 'join$'
    code 'ss[-2]+="${ss[-1]}"'

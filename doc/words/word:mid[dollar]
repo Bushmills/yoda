@@ -11,7 +11,8 @@ decription:          replaces $1 against a part of it, specified by first charac
 
 example:             "abcdefgh"  2 3 mid$       \ produces  "cde"
 
-notes:               positive u1 and u2 are boundary safe, meaning they may
+notes:               word has been moved to library
+                     positive u1 and u2 are boundary safe, meaning they may
                      refer to positions and lengths of extract string which don't
                      exist, as in   "abc"  10 20 mid$.  strings parts outside the
                      source string, $1, will be dealt with as empty string.

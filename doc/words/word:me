@@ -1,0 +1,13 @@
+name:                me
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            compiling
+
+decription:          compile code which pushs the the xt of the word to stack
+                     in which me was used. Result is that when that word runs,
+                     it's own xt is produced, allowing the word to self reference
+
+standard:            no
+deviation:           standard has no equivalent

@@ -29,7 +29,8 @@
 # numbers in decimal. Mostly.
 v="0.6.7"    # 2022feb17,21:05   detokeniser generates code for function calls from xt.
 #                                transient headers track the wordlist which was current when they there created, so that removal
-#                                can consult the proper wordlist.
+#                                can consult the proper wordlist. Highlevelised only and forth.
+#                                Factored generating function names.
 #v="0.6.6"   # 2022feb16,02:33   better factoring of multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
 #                                renamed terms and words related to wordlists for consistency.
@@ -261,7 +262,8 @@ trace()  {
 #                                                  ^^^  convert any non-zero to 1, used as array index
 }
 
-pretend()         { echo "${FUNCNAME[1]} pretends to $*"; }          # placeholder for use in unfinished code
+pretend()         {
+   echo "${FUNCNAME[1]} pretends to $*"; }                           # placeholder for use in unfinished code
 
 
 # ----- headers ------------------------------------------ #fold00
@@ -324,10 +326,21 @@ header()  {
 
 
 # return a new function name in variable name
-# arg1:word
+# arg1:xt
+# result: name:functionname
 name()  {
+   name="${nameprefix}_$1"                                           # create function name from xt as argument
+}
+
+
+# return a new function name in variable name
+# arg1:word
+# result: name:functionname
+newname()  {
    names[xt]="$1"                                                    # keep word name for .name, name$
-   name="${nameprefix}_$((xt++))"                                    # grab new xt, make a function name from it
+#   name "$((xt++))"
+   name "$xt"
+   ((xt++))
 }
 
 
@@ -372,7 +385,7 @@ optimise()  {                                                        # run code 
             word="$bodyline"                                         # word name of new word
             name="${unresolved[$word]}"                              # if forward ref, reuse function name of forward ref
             if [[ -z "$name" ]]; then
-               name "$word"                                          # not a forward ref: invent new name
+               newname "$word"                                       # not a forward ref: invent new name
             else
                unset -v "unresolved['$word']"                        # going to resolve word, remove from forward refs
             fi
@@ -386,7 +399,8 @@ optimise()  {                                                        # run code 
             where["$lastword"]="$bodyline"                           # remember source location
             continue
          elif (( bodyflag & execute )); then
-            targetline="${nameprefix}_${bodyline}"
+            name "$bodyline"                                         # convert xt to function name
+            targetline="$name"
          elif (( bodyflag & does )); then                            # does>
             dodoes_at="$((${#target[@]}+1))"                         # remember end of target for splitting code (but only when whole word
          fi                                                          # was compiled - we want to rip out all the run time code, after all.
@@ -611,9 +625,10 @@ defer()  {                                                           # use in yo
    push "$((dp))"
    semicolon
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
-   use "${nameprefix}_\${m[$dp]}"
+   name '${m['$dp']}'                                                 # convert xt to function name
+   use "$name"
    declare -n context="${strings[order[0]]}"
-   ((m[dp++]="${context[$2]##*_}"))                               # extract and comma xt from function
+   ((m[dp++]="${context[$2]##*_}"))                                  # extract and comma xt from function
    inline
    inout 0 1
 }
@@ -782,7 +797,7 @@ totalheaders()  {
 # create a forward ref by the name of arg1
 forwardref()  {
    [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
-      name "$1"                                                      # generate new function name
+      newname "$1"                                                   # generate new function name
       unresolved["$1"]="$name"                                       # keep in unresolved vocabulary
    }
 }
@@ -859,14 +874,16 @@ evaluate()  {
 # --- search word in order ---
       exists "$word" "${order[@]}" && {
          ((compiling)) && {
-            ((${flags["$word"]}&inline)) && {                        # inline:     compile function body
-               codebody "${nameprefix}_${exists}"
+            ((${flags["$word"]}&inline)) && {                        # inline: compile function body
+               name "$exists"                                        # convert xt to function name
+               codebody "$name"
                continue
             }
-            code "$exists"  "$execute"                               # not inline: compile call to function
+            code "$exists" "$execute"                                # not inline: compile call to function
             continue
          }
-         ${nameprefix}_${exists}                                     # not compiling: execute function
+         name "$exists"                                              # not compiling: convert xt to function name
+         $name                                                       # execute function
          continue                                                    # done processing this word
       }
 # --- word not found ---
@@ -1060,6 +1077,12 @@ semicolon
 primitive 'interpreted' 'interpreted'                                # move header to interpreter context vocabulary
 primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
 primitive 'transient'   'transient+=("$currentwid $lastword")'       # copy header to transient for later trashing
+primitive 'inline'  'inline'                                         # don't compile call, instead compile body code
+
+colon 'compiling'
+   push 'compiling'
+semicolon
+
 
 # ----- diagnostics -------------------------------------- #fold01
 
@@ -1077,7 +1100,7 @@ words() {
 
 
 see()  {
-   local headers
+   local context
    word
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid"; do
       wordlist="${strings[wid]}"
@@ -1183,7 +1206,8 @@ semicolon
 # ' foo alias bar
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
-   code 'current["$word"]="${nameprefix}_${s[sp--]}"'
+   code 'name "${s[sp--]}"'                                          # convert xt to function name
+   code 'current["$word"]="$name"'
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
 semicolon
 
@@ -1731,10 +1755,8 @@ inline
 inout 4 1
 
 
-# ----- I/O ---------------------------------------------- #fold01
+# ----- line i/o ----------------------------------------- #fold01
 
-# can be used after a colon definition
-primitive 'inline'  'inline'                                         # ( -- )    set header flag for inline compilation
 
 # parse input for string delimited by character specified by ASCII value on stack
 colon 'parse$'
@@ -1744,12 +1766,35 @@ semicolon
 
 evaluate ': word$  bl parse$ ;  inline'
 
+
+# read line, push to string stack
+# TODO: configurable attributes
+keybuf=""
+
+colon 'simplequery$'
+   code 'ss+=("")'
+   code 'IFS="" read -er -i "$keybuf" "ss[-1]"'                      # key? may have put chars into keybuf
+   code 'keybuf=""'
+semicolon
+inout 0 0
+
+defer       'query$' 'simplequery$'
+
+colon 'evaluate$'
+   code 'local tib="${ss[-1]}"'
+   code 'unset "ss[-1]"'
+   code 'evaluate "$tib"'
+semicolon
+inline
+
+
 # ----- compiling words ---------------------------------- #fold01
 
 
 primitive 'compile,' "code \"code \${s[sp--]}\" \"$execute\""        # ( xt -- )
 primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
 evaluate ': literal  literal, ; compiled'
+evaluate  ': me "xt" env literal, ; compiled'
 
 # ( compile: $1 -- ) ( run: -- $1 )
 colon 'literal$'
@@ -1797,10 +1842,10 @@ evaluate  ': lack   have  0=    ; inline'                            # ( -- f ) 
 evaluate  ": [']   ' literal,   ; compiled"
 evaluate  "' have$ alias xt"
 
-
 # ' word  "signalname"  trap
 colon 'trap'
-    code "trap \"${nameprefix}_\${s[sp--]}\" \"\${ss[-1]}\""
+    code 'name "${s[sp--]}"'                                         # convert xt to function name
+    code 'trap "$name" "${ss[-1]}"'
     code 'unset "ss[-1]"'
 semicolon
 
@@ -2042,7 +2087,8 @@ colon 'boot'
    code 'word'
    code 'satisfy1 "$word"'
    code 'exists "$word" "currentwid" "${order[@]}"'                    # search current first because satisfy may have compiled it there
-   code 'coldvector="${nameprefix}_${exists}"'
+   code 'name "$exists"'                                               # convert xt to function name
+   code 'coldvector="$name"'
 semicolon
 
 primitive 'warm'  'warm'
@@ -2307,7 +2353,6 @@ semicolon
 compiled
 
 
-keybuf=""
 colon 'key'
    code 'if [[ -z "$keybuf" ]]; then'                                # key? may have put chars into keybuf
    code 'IFS="" read -rsn1 tmp'                                      # keybuf empty: read from console
@@ -2333,23 +2378,6 @@ semicolon
 inout 0 1
 
 
-# read line, push to string stack
-# TODO: configurable attributes
-colon 'simplequery$'
-   code 'ss+=("")'
-   code 'IFS="" read -er -i "$keybuf" "ss[-1]"'                      # key? may have put chars into keybuf
-   code 'keybuf=""'
-semicolon
-inout 0 0
-
-
-colon 'evaluate$'
-   code 'local tib="${ss[-1]}"'
-   code 'unset "ss[-1]"'
-   code 'evaluate "$tib"'
-semicolon
-inline
-
 colon 'spaces'
    code '((s1=s[sp--]))'
    code '((s1&msb))||printf "%${s1}s" ""'
@@ -2357,7 +2385,6 @@ semicolon
 inout 1 0
 
 
-defer       'query$' 'simplequery$'
 evaluate ': ltype$    dup$ type$ count$ - spaces ;'; inout 1 0       # ( u -- ) (string: $1 -- )
 evaluate ': rtype$    dup$ count$ - spaces type$ ;'; inout 1 0       # ( u -- ) (string: $1 -- )
 primitive  'cr'      'printf "\n"';                  inout 0 0
@@ -2365,15 +2392,11 @@ primitive  'space'   'printf " "' ;                  inout 0 0
 primitive  'page'    'clear'      ;                  inout 0 0
 
 
-colon 'compiling'
-   push 'compiling'
-semicolon
-
 primitive 'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
 defer     'prompt'       'simpleprompt'
 
 
-# ----- file i/o -----------------------------------------
+# ----- file i/o ----------------------------------------- #fold01
 
 
 # load file whose name is given on string stack
@@ -2461,15 +2484,9 @@ primitive 'set-context'  'order[0]="${s[sp--]}"'
 inline
 
 declare -n current                                                   # appease shellcheck
-declare -n current="only"
+declare -n current="only"                                            # compile to only vocabulary
 
 primitive 'also'      'order=("${order[0]}" "${order[@]}")'
-
-colon 'only'
-   code "order=()"
-   push "$onlywid"; call "set-context" "also"
-   push "onlywid" ; call "set-current"
-semicolon
 
 colon 'order'
    code 'printf "context:"'
@@ -2481,15 +2498,14 @@ semicolon
 
 primitive 'previous'  '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
 primitive 'words'     'words'
-
-colon 'forth'
-   push "forthwid"
-   call "set-context"
-semicolon
-
+evaluate ': forth  [ "forthwid" env ] literal set-context ;'
 evaluate ': definitions get-context set-current ;'
 
-declare -n current="forth"
+primitive 'onlyonly'  'order=(); s[++sp]="$onlywid"'
+evaluate ': only onlyonly set-context definitions also ;'
+evaluate 'trash onylonly'
+
+declare -n current="forth"                                        # compile to forth vocabulary
 
 # ----- foward referencing support words ----------------- #fold01
 
@@ -2820,7 +2836,6 @@ semicolon
 
 # ( -- )  ( input: word )
 evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
-
 
 
 # ----- convenience -------------------------------------- #fold01

@@ -27,12 +27,13 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.7"    # 2022feb17,21:05   detokeniser generates code for function calls from xt.
+v="0.6.8"    # 2022feb18,16:49   moved mid$ to library, renamed needed to neededanyof, added needed and needed$, renamed waive to omit
+# v="0.6.7"  # 2022feb17,21:05   detokeniser generates code for function calls from xt.
 #                                transient headers track the wordlist which was current when they there created, so that removal
 #                                can consult the proper wordlist. Highlevelised only and forth.
 #                                Factored generating function names.
 #                                left$ right$ split$ mid$ accept negative indici again.
-#v="0.6.6"   # 2022feb16,02:33   better factoring of multiple wordlists searches.
+# v="0.6.6"  # 2022feb16,02:33   better factoring of multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
 #                                renamed terms and words related to wordlists for consistency.
 #                                added newwordlist$ and initwordlist.
@@ -2091,13 +2092,6 @@ colon 'split$'
    code 'ss[-2]="${ss[-2]:0:tmp}"'
 semicolon
 
-
-# remove u1 chars from the left, return u2 chars from what remains
-# ( u1 u2 -- ) ( $1 -- $2 )
-evaluate ': mid$ swap negate right$ left$ ;'
-
-
-
 colon 'join$'
    code 'ss[-2]+="${ss[-1]}"'
    code 'unset "ss[-1]"'
@@ -2425,8 +2419,8 @@ semicolon
 evaluate ': from word$ from$ ;'
 primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
 
-# ignore block of source lines up to next empty line
-colon 'waive'
+# omit block of source lines up to next empty line
+colon 'omit'
    code 'until (( linenr > ${#lines[@]} )); do'
    code 'line="${lines[linenr++]}"'
    code '[[ -z "$line" ]] && break'
@@ -2616,7 +2610,15 @@ colon 'need'                                                         # ( -- )  (
    code 'need "$word" ""'                                            # empty arg indicates explicit need, no referer
 semicolon
 
-colon 'needed'                                                       # ( -- f ) ( stream: bl delimited strings, whole input line )
+colon 'needed$'                                                      # ( -- f ) ( $1 -- )
+   code '[[ -z "${unresolved[${ss[-1]}]}" ]]'                        # check unresolved status of word
+   push '$??true:false'                                              # return result
+   code 'unset "ss[-1]"'
+semicolon
+
+evaluate ': needed word$ needed$ ; inline'                           # ( -- f ) ( stream: bl delimited string )
+
+colon 'neededanyof'                                                  # ( -- f ) ( stream: bl delimited strings, whole input line )
    push "$false"
    code 'while [[ -n "$line" ]]; do'
    code 'word'

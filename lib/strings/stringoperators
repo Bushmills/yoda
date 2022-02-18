@@ -1,0 +1,7 @@
+provides: mid$
+
+needed mid$ unless omit
+\ remove u1 chars from the left, return u2 chars from what remains
+\ ( u1 u2 -- ) ( $1 -- $2 )
+: mid$  swap negate right$ left$ ;
+

@@ -28,6 +28,9 @@
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
 v="0.6.8"    # 2022feb18,16:49   moved mid$ to library, renamed needed to neededanyof, added needed and needed$, renamed waive to omit
+#                                can put (multi line) sections of high level code into bash source, which will be evaluated
+#                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
+#                                more flexible. env has been redefined to make use of push$.
 # v="0.6.7"  # 2022feb17,21:05   detokeniser generates code for function calls from xt.
 #                                transient headers track the wordlist which was current when they there created, so that removal
 #                                can consult the proper wordlist. Highlevelised only and forth.
@@ -931,6 +934,13 @@ evaluate()  {
    ((sp<0))&&stackunderflow
 }
 
+# evaluate block of hi-level source code
+highlevel()  {
+   while read -r lineofsource; do
+      evaluate "$lineofsource"
+   done
+}
+
 
 # ----- load source files -------------------------------- #fold00
 
@@ -1080,10 +1090,6 @@ primitive 'interpreted' 'interpreted'                                # move head
 primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
 primitive 'transient'   'transient+=("$currentwid $lastword")'       # copy header to transient for later trashing
 primitive 'inline'  'inline'                                         # don't compile call, instead compile body code
-
-colon 'compiling'
-   push 'compiling'
-semicolon
 
 
 # ----- diagnostics -------------------------------------- #fold01
@@ -1239,39 +1245,6 @@ colon 'is'
    code 'tmp="$(type "${current[$word]}"|grep "${nameprefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
-
-# ----- environment--------------------------------------- #fold01
-# read number from environment variable with name on string stack
-# ( -- x )  ( string:  $1 -- )
-colon 'env'
-   push '${!ss[-1]}&true'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-inout 0 1
-
-# store $1 in bash environment variable with name $2
-# ( x -- ) ( string:  $1 -- )
-colon '>env'
-   code 'eval "${ss[-1]}=$((s[sp--]))"'
-   code 'unset "ss[-1]"'
-semicolon
-inout 1 0
-
-
-# read string from environment variable with name on string stack
-# ( string:  $1 -- $2 )
-primitive 'env$' 'ss[-1]="${!ss[-1]}"'; inout 0 0
-
-# store string $1 in bash environment variable with name $2
-# ( string:  $1 $2 -- )
-colon '>env$'
-   code 'eval "${ss[-1]}=${ss[-2]}"'
-   code 'unset "ss[-1]"'
-   code 'unset "ss[-1]"'
-semicolon
-inout 0 0
-
 
 
 # ----- commenting --------------------------------------- #fold01
@@ -1535,13 +1508,25 @@ semicolon
 inline
 
 
-# ----- compiling words ---------------------------------- #fold01
+# ----- compiler, dictionary search related ----------- #fold01
 
+primitive '[' '((compiling=false))'; compiled
+primitive ']' '((compiling=true))'
+
+# ( -- ) ( $1 -- )
+colon 'push$'
+   code 'code "((s[++sp]=${ss[-1]}))"'
+   code 'unset "ss[-1]"'
+semicolon
+compiled
 
 primitive 'compile,' "code \"code \${s[sp--]}\" \"$execute\""        # ( xt -- )
 primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
-evaluate ': literal  literal, ; compiled'
-evaluate  ': me "xt" env literal, ; compiled'
+
+highlevel << 'EOT'
+: literal  literal, ; compiled          ( x -- )
+: compiling [ "compiling" ] push$ ;     ( -- flag )
+EOT
 
 # ( compile: $1 -- ) ( run: -- $1 )
 colon 'literal$'
@@ -1550,26 +1535,6 @@ colon 'literal$'
 semicolon
 compiled
 
-
-# ----- compiler and dictionary search related ----------- #fold01
-
-#find$
-#( -- 0 | xt 1 | xt -1 )   ( $1 -- $1 | )
-
-
-#FIND
-#( c-addr -- c-addr 0 | xt 1 | xt -1 )
-
-#Find the definition named in the counted string at c-addr.
-#If the definition is not found, return c-addr and zero.
-#If the definition is found, return its execution token xt.
-#If the definition is immediate, also return one (1),
-#otherwise also return minus-one (-1).
-#For a given string, the values returned by FIND while compiling
-#may differ from those returned while not compiling.
-
-primitive '[' '((compiling=false))'; compiled
-primitive ']' '((compiling=true))'
 
 colon "'"                                                            # ( -- xt ) ( stream: word )
    code 'word'
@@ -1584,10 +1549,12 @@ colon 'have$'                                                        # ( -- 0|xt
    push 'exists'
 semicolon
 
-evaluate  ': have   word$ have$ ; inline'                            # ( -- f ) ( stream: word )    word existing?
-evaluate  ': lack   have  0=    ; inline'                            # ( -- f ) ( stream: word )    word missing?
-evaluate  ": [']   ' literal,   ; compiled"
-evaluate  "' have$ alias xt"
+highlevel << 'EOT'
+: have   word$ have$ ; inline      ( -- f ) ( stream: word ) \ word existing?
+: lack   have  0=    ; inline      ( -- f ) ( stream: word ) \  word missing?
+: [']   ' literal,   ; compiled
+' have$ alias xt
+EOT
 
 # ' word  "signalname"  trap
 colon 'trap'
@@ -1635,17 +1602,36 @@ semicolon
 # ( -- $1 )
 primitive 'last$'   'ss+=("$lastword")'; inout 0 0
 
+
+#find$
+#( -- 0 | xt 1 | xt -1 )   ( $1 -- $1 | )
+
+#FIND
+#( c-addr -- c-addr 0 | xt 1 | xt -1 )
+
+#Find the definition named in the counted string at c-addr.
+#If the definition is not found, return c-addr and zero.
+#If the definition is found, return its execution token xt.
+#If the definition is immediate, also return one (1),
+#otherwise also return minus-one (-1).
+#For a given string, the values returned by FIND while compiling
+#may differ from those returned while not compiling.
+
+
+
+
 # ----- bit logic ---------------------------------------- #fold01
 
+colon    'invert';  atom 'invert'; semicolon; inline
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
 primitive 'xor'     '((s[sp-1]^=s[sp--]))'
 primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
 primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
-evaluate "' lshift alias <<"
-evaluate "' rshift alias >>"
-colon    'invert';  atom 'invert'; semicolon; inline
-
+highlevel << 'EOT'
+' lshift alias <<
+' rshift alias >>
+EOT
 
 
 # ----- flow control -------------------------------------
@@ -1725,8 +1711,10 @@ colon 'for'
 semicolon
 compiled
 
-primitive 'i' '((s[++sp]=i))'; inout 0 1
-evaluate " ' r@ alias j";      inout 0 1
+highlevel << 'EOT'
+: i   [ "i" ] push$ ; inline
+' r@ alias j"
+EOT
 
 colon 'next'
    code "((s[sp--] == $magic))|| { unstructured 'for'; return; }"
@@ -1874,10 +1862,11 @@ colon  '2/'
 semicolon
 inout 1 1
 
-evaluate ': cells ;'      ; compiled  ; inout 1 1
-evaluate ': cells ;'      ; interpreted; inout 1 1
-evaluate ': cell+ 1+ ;'   ; inline;      inout 1 1
-
+highlevel << 'EOT'
+: cells ; compiled
+: cells ; interpreted
+: cell+ 1+ ; inline
+EOT
 
 
 #                     msb&    msb&
@@ -1907,12 +1896,14 @@ colon '*/mod'
 semicolon
 inout 3 2
 
-evaluate ': */     */mod nip ;'         ; inline; inout 3 1          # truncated, symmetric
-evaluate ': /mod   1 -rot  */mod  ;'    ;         inout 2 2          # truncated, symmetric
-evaluate ': *      1 */    ;'           ; inline; inout 2 1
-evaluate ': /      /mod nip  ;'         ; inline; inout 2 1          # truncated, symmetric
-evaluate ': mod    /mod drop  ;'        ; inline; inout 2 1          # sign according  n1 == n2*(n1/n2)+remainder
-evaluate ': %      50 */ dup 0< 1 or + 2/ ;'  ; inline; inout 2 1    # percentage rounded, not truncated
+highlevel << 'EOT'
+: */     */mod nip ;     inline                 \ truncated, symmetric
+: /mod   1 -rot  */mod ;                        \ truncated, symmetric
+: *      1 */   ;        inline
+: /      /mod nip  ;     inline                 \ truncated, symmetric
+: mod    /mod drop  ;    inline                 \ sign according  n1 == n2*(n1/n2)+remainder
+: %      50 */ dup 0< 1 or + 2/ ;  inline       \ percentage rounded, not truncated
+EOT
 
 colon 'negate'
    atom 'negate'
@@ -1935,11 +1926,12 @@ inline
 inout 1 1
 
 
-evaluate ": min    2dup >  if swap then drop ;"
-evaluate ": max    2dup <  if swap then drop ;"
-evaluate ": umin   2dup u> if swap then drop ;"
-evaluate ": umax   2dup u< if swap then drop ;"
-
+highlevel << 'EOT'
+: min    2dup >  if swap then drop ;
+: max    2dup <  if swap then drop ;
+: umin   2dup u> if swap then drop ;
+: umax   2dup u< if swap then drop ;
+EOT
 
 # ----- string stack operators---------------------------- #fold01
 
@@ -2031,11 +2023,7 @@ colon 'type$'
 semicolon
 inline
 
-colon 'count$'
-   push '${#ss[-1]}'
-   code 'unset "ss[-1]"'
-semicolon
-inline
+evaluate ': count$  [ "${#ss[-1]}" ] push$ drop$ ; inline'
 
 
 # ( $1 -- $2 )
@@ -2124,10 +2112,7 @@ semicolon
 # "123"     "abcd" 1 insert$  -> "a123bcd"
 
 primitive 'allot$' '((sdp+=s[sp--]))'
-
-colon 'here$'
-   push 'sdp'
-semicolon
+evaluate ': here$  [ "sdp" ] push$ ;'
 
 colon '$,'
    code 'strings[sdp++]="${ss[s-1]}"'
@@ -2192,18 +2177,33 @@ primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0          # ( c -- ) 
 primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
 inout 1 0
 
-# convert a string representation of a number
-# or arithmetic expression to an integer.
-# respects base
-# ( -- x ) (string: $1 -- )
-colon 'convert$'
-   push '${m[base]}#${ss[-1]}'
+
+# ----- environment--------------------------------------- #fold01
+
+# read number from environment variable with name on string stack
+evaluate ': env  [ "${!ss[-1]}&true" ] push$ drop$ ;'                # ( -- x )  ( string:  $1 -- )
+
+# store $1 in bash environment variable with name $2
+# ( x -- ) ( string:  $1 -- )
+colon '>env'
+   code 'eval "${ss[-1]}=$((s[sp--]))"'
    code 'unset "ss[-1]"'
 semicolon
-inline
-inout 0 1
+inout 1 0
 
 
+# read string from environment variable with name on string stack
+# ( string:  $1 -- $2 )
+primitive 'env$' 'ss[-1]="${!ss[-1]}"'; inout 0 0
+
+# store string $1 in bash environment variable with name $2
+# ( string:  $1 $2 -- )
+colon '>env$'
+   code 'eval "${ss[-1]}=${ss[-2]}"'
+   code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
+semicolon
+inout 0 0
 
 
 # ----- memory ------------------------------------------- #fold01
@@ -2250,10 +2250,6 @@ semicolon
 inline
 inout 3 0
 
-
-primitive 'skim'    '((s[++sp]=m[s[sp]++]))'; inout 1 2
-primitive 'count'   '((s[++sp]=m[s[sp]++]&255))'; inout 1 2
-
 colon '<-'                                                           # ( a x -- )   swap !
    code '((m[s[sp]]="s[sp--]"))'
    atom 'drop'
@@ -2268,7 +2264,7 @@ inline
 inout 2 0
 
 primitive 'on'   '((m[s[sp--]]=true))';               inout 1 0
-primitive 'off'  '((m[s[sp--]]=false))';                     inout 1 0
+primitive 'off'  '((m[s[sp--]]=false))';              inout 1 0
 primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&true))';  inout 1 0
 primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))';  inout 1 0
 
@@ -2296,15 +2292,7 @@ colon '2exchange'
 semicolon
 inout 3 2
 
-
-
-
-
-colon 'here'
-   atom 'here'
-semicolon
-inline
-inout 0 1
+evaluate ': here [ "dp" ] push$ ; inline'
 
 colon 'allot'
    atom 'allot'
@@ -2391,14 +2379,14 @@ colon 'spaces'
 semicolon
 inout 1 0
 
+highlevel << 'EOT'
+: ltype$    dup$ type$ count$ - spaces ;                   \ ( u -- ) (string: $1 -- )
+: rtype$    dup$ count$ - spaces type$ ;                   \ ( u -- ) (string: $1 -- )
+EOT
 
-evaluate ': ltype$    dup$ type$ count$ - spaces ;'; inout 1 0       # ( u -- ) (string: $1 -- )
-evaluate ': rtype$    dup$ count$ - spaces type$ ;'; inout 1 0       # ( u -- ) (string: $1 -- )
 primitive  'cr'      'printf "\n"';                  inout 0 0
 primitive  'space'   'printf " "' ;                  inout 0 0
 primitive  'page'    'clear'      ;                  inout 0 0
-
-
 primitive 'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
 defer     'prompt'       'simpleprompt'
 
@@ -2414,10 +2402,10 @@ colon 'from$'
    code 'from "$file"||filenotfound "$file"'
 semicolon
 
-# load file whose name is parsed from input
-# ( -- ) ( input: parse word )
-evaluate ': from word$ from$ ;'
-primitive '#files' '((s[++sp]=${#files[@]}))'; inout 0 1
+highlevel << EOT
+: from word$ from$ ;
+: #files [ "\${#files[@]}" ] push$ ; inline
+EOT
 
 # omit block of source lines up to next empty line
 colon 'omit'
@@ -2444,19 +2432,21 @@ colon '#'                                                            # : #
 semicolon                                                            # ;
 inout 1 1
 
-evaluate "' prepend$ alias hold"             ; inline; inout 1 0     # ( c -- ) ( string: $1 -- $2 )
-evaluate ': <#       ""  ;'                  ; inline; inout 0 0     # ( -- ) ( string: -- $2 )
-evaluate ': #s       begin # dup 0= until ;' ; inout 1 1             # ( x1 -- x2 ) ( string: $1 -- $2 )
-evaluate ": sign     0< lest '-' hold ;"     ; inout 1 0             # ( f -- ) ( string: $1 -- $2 )
-evaluate "' drop alias #>$"                  ; inline; inout 1 0     # ( x -- )
-evaluate ': #>type   #>$ type$ ;'            ; inline; inout 1 0     # ( x -- ) ( string:  $1 -- )
-evaluate ': #>       #>$ here here unpack$ ;'; inout 1 2             # ( x -- a n ) ( string:  $1 -- )
-evaluate ': uconvert <# #s #>$ ;'            ; inout 1 0             # ( u -- ) (string: -- $1 )
-evaluate ': convert  dup abs uconvert sign ;'; inout 1 0             # ( u -- ) (string: -- $1 )
-evaluate ': .         convert type$ space ;' ; inout 1 0             # ( n -- )
-evaluate ': u.       uconvert type$ space ;' ; inout 1 0             # ( u -- )
-evaluate ': .r       >r  convert r> rtype$ ;'; inout 2 0             # ( n u -- )
-evaluate ': u.r      >r uconvert r> rtype$ ;'; inout 2 0             # ( u1 u2 -- )
+highlevel << 'EOT'
+' prepend$ alias hold                inline                \ ( c -- ) ( string: $1 -- $2 )
+: <#       ""  ;                     inline                \ ( -- ) ( string: -- $2 )
+: #s       begin # dup 0= until ;                          \ ( x1 -- x2 ) ( string: $1 -- $2 )
+: sign     0< lest '-' hold ;                              \ ( f -- ) ( string: $1 -- $2 )
+' drop alias #>$                     inline                \ ( x -- )
+: #>type   #>$ type$ ;               inline                \ ( x -- ) ( string:  $1 -- )
+: #>       #>$ here here unpack$ ;                         \ ( x -- a n ) ( string:  $1 -- )
+: uconvert <# #s #>$ ;                                     \ ( u -- ) (string: -- $1 )
+: convert  dup abs uconvert sign ;                         \ ( u -- ) (string: -- $1 )
+: .         convert type$ space ;                          \ ( n -- )
+: u.       uconvert type$ space ;                          \ ( u -- )
+: .r       >r  convert r> rtype$ ;                         \ ( n u -- )
+: u.r      >r uconvert r> rtype$ ;                         \ ( u1 u2 -- )
+EOT
 
 primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
@@ -2464,18 +2454,16 @@ primitive 'binary'   "m[$base]=2";  inout 0 0
 
 # ----- vocabularies and wordlists ----------------------- #fold01
 
-
-# doesn't belong here but can't put into header and related section because of strings
-# : foo ... ; noname
-# ( -- xt )   # produces execution token and removes header of last word
-evaluate ': noname  last$ dup$ xt trash$ ;'; inout 0 0
-
+highlevel << 'EOT'
+\ produces execution token and removes header of last word
+\ : foo ... ; noname
+: noname  ( -- xt )  last$ dup$ xt trash$ ;
+: me  [ "xt" ] push$  literal, ; compiled
+EOT
 
 colon 'initwordlist'                                                 # ( wid -- )
    code 'declare -gA "${strings[s[sp--]]}=()"'
 semicolon
-
-evaluate ': newwordlist$  here$ $, dup initwordlist ;'               # ( -- wid )  ( $1 -- )
 
 colon 'get-current'
    push 'currentwid'
@@ -2511,12 +2499,14 @@ semicolon
 
 primitive 'previous'  '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
 primitive 'words'     'words'
-evaluate ': forth  [ "forthwid" env ] literal set-context ;'
-evaluate ': definitions get-context set-current ;'
 
 primitive 'onlyonly'  'order=(); s[++sp]="$onlywid"'
-evaluate ': only onlyonly set-context definitions also ;'
-evaluate 'trash onylonly'
+highlevel << 'EOT'
+: forth  [ "forthwid" ] push$ set-context ;
+: definitions get-context set-current ;
+: only onlyonly set-context definitions also ;
+trash onylonly
+EOT
 
 declare -n current="forth"                                        # compile to forth vocabulary
 
@@ -2685,6 +2675,7 @@ semicolon
 
 # ----- documentation ------------------------------------ #fold01
 
+# NOTE: whole undoc section is library candidate
 # arg1: word name
 # arg2: headerlist
 undoc_template()  {
@@ -2769,9 +2760,11 @@ semicolon
 
 # ----- interactive mode --------------------------------- #fold01
 
-evaluate ': quit warm begin query$ evaluate$ resolve prompt again ;'
-evaluate "' quit alias abort"
-evaluate ': ?abort lest abort ;'                                 # ( f -- )
+highlevel << 'EOT'
+: quit warm begin query$ evaluate$ resolve prompt again ;
+' quit alias abort
+: ?abort lest abort ;                                                \ ( f -- )
+EOT
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents
@@ -2799,9 +2792,6 @@ colon 'filename$'
    code 'ss+=("${files[s[sp--]]}")'
 semicolon
 inline
-
-evaluate ': edit  "editor" filename$  command$ ;'
-evaluate ': list  "cat"    filename$  command$ ;'
 
 # return handle of source. 0=console, >0 correspond files handle
 # allows words to determine whether they're executed while loaded
@@ -2839,11 +2829,11 @@ colon 'done'
    code 'linenr="-1"'                                                # signal "all done" to from
 semicolon
 
-evaluate ': once   loaded lest done ;'
 
-# produce name of currently loaded file
-# ( string: -- $1 )
-evaluate ': thisfile$  thisfile filename$ ;'
+highlevel << 'EOT'
+: thisfile$  thisfile filename$ ;                                    ( string: -- $1 )  \ produce name of currently loaded file
+: once   loaded lest done ;
+EOT
 
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
@@ -2855,9 +2845,6 @@ colon 'where$'
     push '${tmp1##*:}'                                               # push line number
 semicolon
 
-# ( -- )  ( input: word )
-evaluate ': where word$ where$ swap filename$ type$ [char] : emit u. ;'
-
 
 # ----- convenience -------------------------------------- #fold01
 primitive empty  's=() sp=0'
@@ -2866,7 +2853,6 @@ primitive rempty 'r=() rp=0'
 # empty stack and string stack
 # since warm doesn't empty them any longer, a convenient
 # way to do so manually was needed.
-evaluate ': _  empty rempty empty$  ;'                ; inline
 primitive 'random'   '((s[++sp]=SRANDOM&true))'; inout 0 1           # ( -- u )        32 bits random number
 primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))';     # a microseconds epoch, used for benchmarking
 primitive 'secs'     'sleep "${s[sp--]}"'

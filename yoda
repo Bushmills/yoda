@@ -31,7 +31,7 @@ v="0.6.7"    # 2022feb17,21:05   detokeniser generates code for function calls f
 #                                transient headers track the wordlist which was current when they there created, so that removal
 #                                can consult the proper wordlist. Highlevelised only and forth.
 #                                Factored generating function names.
-#                                left$ right$ mid$ accept negative indici again.
+#                                left$ right$ split$ mid$ accept negative indici again.
 #v="0.6.6"   # 2022feb16,02:33   better factoring of multiple wordlists searches.
 #                                reduced number of occurances where pointer variable to context vocabulary had to be un- and redeclared.
 #                                renamed terms and words related to wordlists for consistency.
@@ -1432,275 +1432,6 @@ inout 0 1
 
 primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
-# ----- string stack ------------------------------------- #fold01
-
-primitive 'depth$'   's[++sp]="${#ss[@]}"'
-primitive 'empty$'   'ss=()'
-primitive 'dup$'     'ss+=("${ss[-1]}")'
-primitive '?dup$'    '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'
-primitive 'drop$'    'unset "ss[-1]"'
-primitive 'over$'    'ss+=("${ss[-2]}")'
-primitive 'pluck$'   'ss+=("${ss[-3]}")'
-primitive 'pick$'    'ss+=("${ss[-s[sp--]-1]}")'
-
-colon '2dup$'
-   code 'ss+=("${ss[-2]}")'
-   code 'ss+=("${ss[-2]}")'
-semicolon
-inline
-
-colon '2drop$'
-   code 'unset "ss[-1]"'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-
-colon '2swap$'
-   code 'tmp="${ss[-4]}"; ss[-4]="${ss[-2]}"; ss[-2]="$tmp"'
-   code 'tmp="${ss[-3]}"; ss[-3]="${ss[-1]}"; ss[-1]="$tmp"'
-semicolon
-inline
-
-colon 'swap$'
-   code 'tmp="${ss[-2]}"; ss[-2]="${ss[-1]}"; ss[-1]="$tmp"'
-semicolon
-inline
-
-colon 'nip$'
-   code 'ss[-2]="${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-
-colon 'tuck$'
-   code 'ss+=("${ss[-1]}"); ss[-2]="${ss[-3]}"; ss[-3]="${ss[-1]}"'
-semicolon
-inline
-
-colon 'rot$'
-   code 'tmp="${ss[-1]}"; ss[-1]="${ss[-3]}"; ss[-3]="${ss[-2]}"; ss[-2]="$tmp"'
-semicolon
-inline
-
-colon '-rot$'
-   code 'tmp="${ss[-1]}"; ss[-1]="${ss[-2]}"; ss[-2]="${ss[-3]}"; ss[-3]="$tmp"'
-semicolon
-inline
-
-# results may not be what is expected: this removes *all* white space,
-# not just leading and trailing white space. Actually a mistake, which
-# I'll now try to sell as feature.
-# or not. too specific, I better add some more general replace$ function
-# ( string: $1 -- $2 )
-#primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'
-
-#primitive '-leading$'  'ss[-1]="${ss[-1]//^[[:space:]]*/}"'
-#primitive '-trailing$'  'ss[-1]="${ss[-1]//[[:space:]]*$/}"'
-#evaluate ': trim$  -leading$ -trailing$ ;'
-
-# ( -- u )  string: ( $1 $2 -- $3 )     remove  $2* from $1, return removed chars count
-colon 'cut$'
-   push '${#ss[-2]}'
-   code 'ss[-2]="${ss[-2]%${ss[-1]}*}"'
-   code '((s[sp]-=${#ss[-2]}))'
-   code 'unset "ss[-1]"'
-semicolon
-
-# count substring occurances
-# : #substrings  swap$ 0 begin over$ cut$ while 1+ repeat 2drop$ ;
-# -leading$:  ${myVar##*( )}
-# -trailing$: ${myVar%%*( )}
-
-colon '.ss'
-   code '((${#ss[@]})) &&'
-   code 'printf "\"%s\" " "${ss[@]}"'
-semicolon
-
-colon 'type$'
-   code 'printf "%s" "${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-
-colon 'count$'
-   push '${#ss[-1]}'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-
-
-# ( $1 -- $2 )
-primitive 'uppercase1$'   'ss[-1]="${ss[-1]^}"'                      # foobar -> Foobar
-primitive 'lowercase1$'   'ss[-1]="${ss[-1],}"'                      # FooBar -> fooBar
-primitive 'othercase1$'   'ss[-1]="${ss[-1]~}"'                      # fooBar -> FooBar
-primitive 'uppercase$'    'ss[-1]="${ss[-1]^^}"'                     # FooBar -> FOOBAR
-primitive 'lowercase$'    'ss[-1]="${ss[-1],,}"'                     # FooBar -> foobar
-primitive 'othercase$'    'ss[-1]="${ss[-1]~~}"'                     # FooBar -> fOObAR
-
-# split string into single words at white space, return count of resulting single word strings.
-# ( -- u )   ss: ( $ -- $1 $2 $3 §.. $u )
-colon 'chop$'
-   code 'tmp="${ss[-1]}"'
-   code 'unset "ss[-1]"'
-   code '((s1=${#ss[@]}))'
-   code 'ss+=($tmp)'
-   push '${#ss[@]}-s1'
-semicolon
-
-# ( $1 -- $2 )
-primitive 'quote$' 'ss[-1]="\"${ss[-1]}\""'
-
-# ---------- command ---------      - output -        ----- mnemonic -----
-# "abcdefgh"   2 left$   type$      ab                "keep 2 left"
-# "abcdefgh"  -2 left$   type$      abcdef            "keep left all but last 2"
-# "abcdefgh"   2 right$  type$      gh                "keep 2 right"
-# "abcdefgh"  -2 right$  type$      cdefgh            "keep right all but first 2"
-# "abcdefgh"   2 split$  type$      ab cdefgh         "split at left"
-# "abcdefgh"  -2 split$  type$      abcdef gh         "split at right"
-
-
-colon 'left$'
-   code '((tmp=s[sp--]))'
-   code '((tmp&msb))&&((tmp|=~maxuint))'
-   code 'ss[-1]=${ss[-1]:0:tmp}'
-semicolon
-
-colon 'right$'
-   code '((tmp=s[sp--]))'
-   code '((tmp&msb))&&((tmp|=~maxuint))'
-   code 'ss[-1]=${ss[-1]:0-tmp}'
-semicolon
-
-# ( u -- ) ( $1 -- $2 $3 )
-colon 'split$'
-   code '((tmp=s[sp--]))'
-   code '((tmp&msb))&&((tmp|=~maxuint))'
-   code 'ss+=("${ss[-1]:tmp}")'
-   code 'ss[-2]="${ss[-2]:0:tmp}"'
-semicolon
-
-
-# remove u1 chars from the left, return u2 chars from what remains
-# ( u1 u2 -- ) ( $1 -- $2 )
-colon 'mid$'
-   code 'ss[-1]=${ss[-1]:s[sp-1]:s[sp--]}'
-   atom 'drop'
-semicolon
-
-
-colon 'join$'
-   code 'ss[-2]+="${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-
-colon '$='
-   code '[[ ${ss[-1]} != ${ss[-2]} ]]'
-   push '(-$?)&true'
-   code 'unset "ss[-1]"'
-   code 'unset "ss[-1]"'
-semicolon
-
-colon '$<'
-   code '[[ ${ss[-1]} > ${ss[-2]} ]]'
-   push '($?-1)&true'
-   code 'unset "ss[-1]"'
-   code 'unset "ss[-1]"'
-semicolon
-
-colon '$>'
-   code '[[ ${ss[-1]} < ${ss[-2]} ]]'
-   push '($?-1)&true'
-   code 'unset "ss[-1]"'
-   code 'unset "ss[-1]"'
-semicolon
-
-# "nice"    "this is a very *** foo"   "***" replace$    ->   "this is a very nice foo"
-# "nope"    "this is a very *** foo"   "?" replace$      ->   "this is a very *** foo"
-# "123"     "abcd" 1 insert$  -> "a123bcd"
-
-primitive 'allot$' '((sdp+=s[sp--]))'
-
-colon 'here$'
-   push 'sdp'
-semicolon
-
-colon '$,'
-   code 'strings[sdp++]="${ss[s-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-
-
-# push string array item u to string stack
-# ( u -- ) ( -- $1 )
-primitive '$@'  'ss+=("${strings[s[sp--]]}")';  inline
-
-# store string stack item in string array
-# ( u -- )  ( $1 -- )
-colon '$!'
-   code 'strings[s[sp--]]="${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-
-
-# --- mixed mode operations, exchanges between stack and string stack ---
-# remove first character from top of string stack, push its ASCII value
-# on stack, or 0 if no char, empty string.
-# ( -- c )  ( $1 -- $2 )
-asc()  {
-   if [[ -z "${ss[-1]}" ]]; then
-      ((s[++sp]=0))
-   else
-      ((s[++sp]=${asc[${ss[-1]:0:1}]}))
-      ss[-1]="${ss[-1]:1}"
-   fi
-}
-
-primitive  'asc'    'asc'
-primitive  'char$'  'ss+=("${char[s[sp--]]}")'
-
-
-# $ -> a -- n
-unpackstring()  {
-   string="${ss[-1]}"
-   unset "ss[-1]"
-   ((tmp="${#string}", s1=s[sp]))
-   for ((len=0; tmp--;)); do
-      ((m[s1++]="asc[${string:len++:1}]"))
-   done
-   ((s[sp]="$len"))
-}
-
-primitive 'unpack$' 'unpackstring'
-
-# ( a n -- ) ( string: -- $ )
-colon 'pack$'
-   atom 's1'
-   atom 's2'
-   code '((sp-=2))'
-   code 'tmp=""'
-   code 'for ((; s1--; )); do tmp+="${char[m[s2++]]}"; done'
-   code 'ss+=("$tmp")'
-semicolon
-inout 2 0
-
-primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0          # ( c -- ) ( string: $1 -- $2 )
-primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
-inout 1 0
-
-# convert a string representation of a number
-# or arithmetic expression to an integer.
-# respects base
-# ( -- x ) (string: $1 -- )
-colon 'convert$'
-   push '${m[base]}#${ss[-1]}'
-   code 'unset "ss[-1]"'
-semicolon
-inline
-inout 0 1
-
-
-
 
 # ----- numeric comparison ------------------------------- #fold01
 
@@ -1902,11 +1633,6 @@ semicolon
 # name of last word to string stack
 # ( -- $1 )
 primitive 'last$'   'ss+=("$lastword")'; inout 0 0
-
-# : foo ... ; noname
-# ( -- xt )   # produces execution token and removes header of last word
-evaluate ': noname  last$ dup$ have$ trash$ ;'; inout 0 0
-
 
 # ----- bit logic ---------------------------------------- #fold01
 
@@ -2214,6 +1940,278 @@ evaluate ": umin   2dup u> if swap then drop ;"
 evaluate ": umax   2dup u< if swap then drop ;"
 
 
+# ----- string stack operators---------------------------- #fold01
+
+primitive 'depth$'   's[++sp]="${#ss[@]}"'
+primitive 'empty$'   'ss=()'
+primitive 'dup$'     'ss+=("${ss[-1]}")'
+primitive '?dup$'    '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'
+primitive 'drop$'    'unset "ss[-1]"'
+primitive 'over$'    'ss+=("${ss[-2]}")'
+primitive 'pluck$'   'ss+=("${ss[-3]}")'
+primitive 'pick$'    'ss+=("${ss[-s[sp--]-1]}")'
+
+colon '2dup$'
+   code 'ss+=("${ss[-2]}")'
+   code 'ss+=("${ss[-2]}")'
+semicolon
+inline
+
+colon '2drop$'
+   code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+
+colon '2swap$'
+   code 'tmp="${ss[-4]}"; ss[-4]="${ss[-2]}"; ss[-2]="$tmp"'
+   code 'tmp="${ss[-3]}"; ss[-3]="${ss[-1]}"; ss[-1]="$tmp"'
+semicolon
+inline
+
+colon 'swap$'
+   code 'tmp="${ss[-2]}"; ss[-2]="${ss[-1]}"; ss[-1]="$tmp"'
+semicolon
+inline
+
+colon 'nip$'
+   code 'ss[-2]="${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+
+colon 'tuck$'
+   code 'ss+=("${ss[-1]}"); ss[-2]="${ss[-3]}"; ss[-3]="${ss[-1]}"'
+semicolon
+inline
+
+colon 'rot$'
+   code 'tmp="${ss[-1]}"; ss[-1]="${ss[-3]}"; ss[-3]="${ss[-2]}"; ss[-2]="$tmp"'
+semicolon
+inline
+
+colon '-rot$'
+   code 'tmp="${ss[-1]}"; ss[-1]="${ss[-2]}"; ss[-2]="${ss[-3]}"; ss[-3]="$tmp"'
+semicolon
+inline
+
+# results may not be what is expected: this removes *all* white space,
+# not just leading and trailing white space. Actually a mistake, which
+# I'll now try to sell as feature.
+# or not. too specific, I better add some more general replace$ function
+# ( string: $1 -- $2 )
+#primitive 'trim$'  'ss[-1]="${ss[-1]//[[:space:]]/}"'
+
+#primitive '-leading$'  'ss[-1]="${ss[-1]//^[[:space:]]*/}"'
+#primitive '-trailing$'  'ss[-1]="${ss[-1]//[[:space:]]*$/}"'
+#evaluate ': trim$  -leading$ -trailing$ ;'
+
+# ( -- u )  string: ( $1 $2 -- $3 )     remove  $2* from $1, return removed chars count
+colon 'cut$'
+   push '${#ss[-2]}'
+   code 'ss[-2]="${ss[-2]%${ss[-1]}*}"'
+   code '((s[sp]-=${#ss[-2]}))'
+   code 'unset "ss[-1]"'
+semicolon
+
+# count substring occurances
+# : #substrings  swap$ 0 begin over$ cut$ while 1+ repeat 2drop$ ;
+# -leading$:  ${myVar##*( )}
+# -trailing$: ${myVar%%*( )}
+
+colon '.ss'
+   code '((${#ss[@]})) &&'
+   code 'printf "\"%s\" " "${ss[@]}"'
+semicolon
+
+colon 'type$'
+   code 'printf "%s" "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+
+colon 'count$'
+   push '${#ss[-1]}'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+
+
+# ( $1 -- $2 )
+primitive 'uppercase1$'   'ss[-1]="${ss[-1]^}"'                      # foobar -> Foobar
+primitive 'lowercase1$'   'ss[-1]="${ss[-1],}"'                      # FooBar -> fooBar
+primitive 'othercase1$'   'ss[-1]="${ss[-1]~}"'                      # fooBar -> FooBar
+primitive 'uppercase$'    'ss[-1]="${ss[-1]^^}"'                     # FooBar -> FOOBAR
+primitive 'lowercase$'    'ss[-1]="${ss[-1],,}"'                     # FooBar -> foobar
+primitive 'othercase$'    'ss[-1]="${ss[-1]~~}"'                     # FooBar -> fOObAR
+
+# split string into single words at white space, return count of resulting single word strings.
+# ( -- u )   ss: ( $ -- $1 $2 $3 §.. $u )
+colon 'chop$'
+   code 'tmp="${ss[-1]}"'
+   code 'unset "ss[-1]"'
+   code '((s1=${#ss[@]}))'
+   code 'ss+=($tmp)'
+   push '${#ss[@]}-s1'
+semicolon
+
+# ( $1 -- $2 )
+primitive 'quote$' 'ss[-1]="\"${ss[-1]}\""'
+
+# ---------- command ---------      - output -        ----- mnemonic -----
+# "abcdefgh"   2  left$   type$      ab                "keep 2 left"
+# "abcdefgh"  -2  left$   type$      abcdef            "keep left all but last 2"
+# "abcdefgh"   2  right$  type$      gh                "keep 2 right"
+# "abcdefgh"  -2  right$  type$      cdefgh            "keep right all but first 2"
+# "abcdefgh"   2  split$  type$      ab cdefgh         "split at left"
+# "abcdefgh"  -2  split$  type$      abcdef gh         "split at right"
+# "abcdefgh"   3  2 mid$  type$      de                "abcdefgh" -> "defgh" -> "de"
+# "abcdefgh"  -3  2 mid$  type$      fg                "abcdefgh" -> "fgh"   -> "fg"
+# "abcdefgh"   3 -2 mid$  type$      def               "abcdefgh" -> "defgh" -> "def"
+# "abcdefgh"  -3 -2 mid$  type$      f                 "abcdefgh" -> "fgh"   -> "f"
+
+
+colon 'left$'
+   code '((tmp=s[sp--]))'
+   code '((tmp&msb))&&((tmp|=~maxuint))'
+   code 'ss[-1]=${ss[-1]:0:tmp}'
+semicolon
+
+colon 'right$'
+   code '((tmp=s[sp--]))'
+   code '((tmp&msb))&&((tmp|=~maxuint))'
+   code 'ss[-1]=${ss[-1]:0-tmp}'
+semicolon
+
+# ( u -- ) ( $1 -- $2 $3 )
+colon 'split$'
+   code '((tmp=s[sp--]))'
+   code '((tmp&msb))&&((tmp|=~maxuint))'
+   code 'ss+=("${ss[-1]:tmp}")'
+   code 'ss[-2]="${ss[-2]:0:tmp}"'
+semicolon
+
+
+# remove u1 chars from the left, return u2 chars from what remains
+# ( u1 u2 -- ) ( $1 -- $2 )
+evaluate ': mid$ swap negate right$ left$ ;'
+
+
+
+colon 'join$'
+   code 'ss[-2]+="${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+
+colon '$='
+   code '[[ ${ss[-1]} != ${ss[-2]} ]]'
+   push '(-$?)&true'
+   code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
+semicolon
+
+colon '$<'
+   code '[[ ${ss[-1]} > ${ss[-2]} ]]'
+   push '($?-1)&true'
+   code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
+semicolon
+
+colon '$>'
+   code '[[ ${ss[-1]} < ${ss[-2]} ]]'
+   push '($?-1)&true'
+   code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
+semicolon
+
+# "nice"    "this is a very *** foo"   "***" replace$    ->   "this is a very nice foo"
+# "nope"    "this is a very *** foo"   "?" replace$      ->   "this is a very *** foo"
+# "123"     "abcd" 1 insert$  -> "a123bcd"
+
+primitive 'allot$' '((sdp+=s[sp--]))'
+
+colon 'here$'
+   push 'sdp'
+semicolon
+
+colon '$,'
+   code 'strings[sdp++]="${ss[s-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+
+
+# push string array item u to string stack
+# ( u -- ) ( -- $1 )
+primitive '$@'  'ss+=("${strings[s[sp--]]}")';  inline
+
+# store string stack item in string array
+# ( u -- )  ( $1 -- )
+colon '$!'
+   code 'strings[s[sp--]]="${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+
+
+# --- mixed mode operations, exchanges between stack and string stack ---
+# remove first character from top of string stack, push its ASCII value
+# on stack, or 0 if no char, empty string.
+# ( -- c )  ( $1 -- $2 )
+asc()  {
+   if [[ -z "${ss[-1]}" ]]; then
+      ((s[++sp]=0))
+   else
+      ((s[++sp]=${asc[${ss[-1]:0:1}]}))
+      ss[-1]="${ss[-1]:1}"
+   fi
+}
+
+primitive  'asc'    'asc'
+primitive  'char$'  'ss+=("${char[s[sp--]]}")'
+
+
+# $ -> a -- n
+unpackstring()  {
+   string="${ss[-1]}"
+   unset "ss[-1]"
+   ((tmp="${#string}", s1=s[sp]))
+   for ((len=0; tmp--;)); do
+      ((m[s1++]="asc[${string:len++:1}]"))
+   done
+   ((s[sp]="$len"))
+}
+
+primitive 'unpack$' 'unpackstring'
+
+# ( a n -- ) ( string: -- $ )
+colon 'pack$'
+   atom 's1'
+   atom 's2'
+   code '((sp-=2))'
+   code 'tmp=""'
+   code 'for ((; s1--; )); do tmp+="${char[m[s2++]]}"; done'
+   code 'ss+=("$tmp")'
+semicolon
+inout 2 0
+
+primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0          # ( c -- ) ( string: $1 -- $2 )
+primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
+inout 1 0
+
+# convert a string representation of a number
+# or arithmetic expression to an integer.
+# respects base
+# ( -- x ) (string: $1 -- )
+colon 'convert$'
+   push '${m[base]}#${ss[-1]}'
+   code 'unset "ss[-1]"'
+semicolon
+inline
+inout 0 1
+
+
+
+
 # ----- memory ------------------------------------------- #fold01
 
 colon '@'
@@ -2471,6 +2469,12 @@ primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
 # ----- vocabularies and wordlists ----------------------- #fold01
+
+
+# doesn't belong here but can't put into header and related section because of strings
+# : foo ... ; noname
+# ( -- xt )   # produces execution token and removes header of last word
+evaluate ': noname  last$ dup$ xt trash$ ;'; inout 0 0
 
 
 colon 'initwordlist'                                                 # ( wid -- )

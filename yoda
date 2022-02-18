@@ -1713,7 +1713,7 @@ compiled
 
 highlevel << 'EOT'
 : i   [ "i" ] push$ ; inline
-' r@ alias j"
+' r@ alias j
 EOT
 
 colon 'next'

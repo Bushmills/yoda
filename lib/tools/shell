@@ -1,0 +1,3 @@
+provides: edit list
+needed edit lest : edit  "editor" filename$  command$ ;
+needed list lest : list  "cat"    filename$  command$ ;

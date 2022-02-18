@@ -1,0 +1,7 @@
+provides: where
+once
+: where ( -- )  ( input: word )
+   word$ where$
+   swap filename$ type$
+   [char] : emit u. ;
+

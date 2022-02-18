@@ -1,7 +1,13 @@
-provides: mid$
+provides: mid$ convert$
 
 needed mid$ unless omit
 \ remove u1 chars from the left, return u2 chars from what remains
-\ ( u1 u2 -- ) ( $1 -- $2 )
+( u1 u2 -- ) ( $1 -- $2 )
 : mid$  swap negate right$ left$ ;
 
+needed convert$ unless omit
+\ convert a string representation of a number
+\ or arithmetic expression to an integer.
+\ respects base
+( -- x ) ( string: $1 -- )
+: convert$ [ "${m[base]}#${ss[-1]}" ] push$ drop$ ; inline

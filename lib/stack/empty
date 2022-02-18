@@ -1,0 +1,7 @@
+provides: _
+once
+: _  ( ??? -- )  ( $??? -- )  ( r: ??? -- )
+    empty
+    rempty
+    empty$
+; inline

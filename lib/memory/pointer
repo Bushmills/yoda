@@ -1,0 +1,4 @@
+provides: count skim
+
+needed count lest : count ( a -- a+1 c )      [ "m[s[sp]++]&255" ] push$ ;
+needed skim  lest : skim  ( a -- a+cell x )   [ "m[s[sp]++]"     ] push$ ;

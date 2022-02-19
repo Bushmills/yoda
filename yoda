@@ -936,7 +936,7 @@ evaluate()  {
 }
 
 # evaluate block of hi-level source code
-highlevel()  {
+include()  {
    while read -r lineofsource; do
       evaluate "$lineofsource"
    done
@@ -1009,7 +1009,6 @@ from()  {
    ((loaded[filehandle]++))                                          # increment load counter, mark as loaded
    return 0
 }
-
 
 
 # ----- primitives --------------------------------------- #fold00
@@ -1357,9 +1356,6 @@ colon '?dup'
 semicolon
 inline
 
-#primitive 'depth'  '((s[++sp]=$sp))'
-#primitive 'pick'   '((s[sp]=s[sp-s[sp]-1]))'
-
 # ----- return stack ------------------------------------- #fold01
 
 colon 'r@'
@@ -1403,9 +1399,6 @@ colon '2r>'
 semicolon
 inline
 inout 0 1
-
-
-#primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
 
 # ----- numeric comparison ------------------------------- #fold01
@@ -1485,8 +1478,6 @@ colon 'parse$'
    code 'ss+=("$word")'
 semicolon
 
-#evaluate ': word$  bl parse$ ;  inline'
-
 
 # read line, push to string stack
 # TODO: configurable attributes
@@ -1499,7 +1490,6 @@ colon 'simplequery$'
 semicolon
 inout 0 0
 
-#defer       'query$' 'simplequery$'
 
 colon 'evaluate$'
    code 'local tib="${ss[-1]}"'
@@ -1509,7 +1499,7 @@ semicolon
 inline
 
 
-# ----- compiler, dictionary search related ----------- #fold01
+# ----- compiler, dictionary search related -------------- #fold01
 
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
@@ -1545,49 +1535,6 @@ colon 'have$'                                                        # ( -- 0|xt
    code 'unset "ss[-1]"'
    push 'exists'
 semicolon
-
-
-highlevel << 'EOT'
-: literal    ( x -- )
-      literal, ;
-      compiled
-
-: compiling  ( -- flag )
-      [ "compiling" ] push$ ;
-      inline
-
-: depth      ( ?? -- ?? u )
-      [ "sp" ] push$ ;
-      inline
-
-: pick       ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
-      [ "s[sp-s[sp--]-1]" ] push$ ;
-      inline
-
-: rdepth     ( -- u )
-      [ "rp" ] push$ ;
-      inline
-
-: word$   ( -- ) ( -- $1 )
-      bl parse$ ;
-      inline
-
-: have    ( -- 0|xt ) ( stream: word )    \ word exists?
-      word$ have$ ;
-      inline
-
-: lack    ( -- flag ) ( stream: word )    \  word missing?
-      have  0=    ;
-      inline
-
-: [']     ( -- ) ( stream: word )
-      ' literal,   ;
-      compiled
-
-defer query$
-' simplequery$ is query$
-' have$ alias xt
-EOT
 
 # ' word  "signalname"  trap
 colon 'trap'
@@ -1661,10 +1608,6 @@ primitive 'or'      '((s[sp-1]|=s[sp--]))'
 primitive 'xor'     '((s[sp-1]^=s[sp--]))'
 primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
 primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
-highlevel << 'EOT'
-' lshift alias <<
-' rshift alias >>
-EOT
 
 
 # ----- flow control -------------------------------------
@@ -1743,11 +1686,6 @@ colon 'for'
    push "$magic"                                                     # allow check of structure and empty function
 semicolon
 compiled
-
-highlevel << 'EOT'
-: i   [ "i" ] push$ ; inline
-' r@ alias j
-EOT
 
 colon 'next'
    code "((s[sp--] == $magic))|| { unstructured 'for'; return; }"
@@ -1895,12 +1833,6 @@ colon  '2/'
 semicolon
 inout 1 1
 
-highlevel << 'EOT'
-: cells ; compiled
-: cells ; interpreted
-: cell+ 1+ ; inline
-EOT
-
 
 #                     msb&    msb&
 #  s3 s2 s1 -- r q  s1^s2^s3  s2^s3
@@ -1929,15 +1861,6 @@ colon '*/mod'
 semicolon
 inout 3 2
 
-highlevel << 'EOT'
-: */     */mod nip ;     inline                 \ truncated, symmetric
-: /mod   1 -rot  */mod ;                        \ truncated, symmetric
-: *      1 */   ;        inline
-: /      /mod nip  ;     inline                 \ truncated, symmetric
-: mod    /mod drop  ;    inline                 \ sign according  n1 == n2*(n1/n2)+remainder
-: %      50 */ dup 0< 1 or + 2/ ;  inline       \ percentage rounded, not truncated
-EOT
-
 colon 'negate'
    atom 'negate'
 semicolon
@@ -1959,12 +1882,6 @@ inline
 inout 1 1
 
 
-highlevel << 'EOT'
-: min    2dup >  if swap then drop ;
-: max    2dup <  if swap then drop ;
-: umin   2dup u> if swap then drop ;
-: umax   2dup u< if swap then drop ;
-EOT
 
 # ----- string stack operators---------------------------- #fold01
 
@@ -2055,8 +1972,6 @@ colon 'type$'
    code 'unset "ss[-1]"'
 semicolon
 inline
-
-evaluate ': count$  [ "${#ss[-1]}" ] push$ drop$ ; inline'
 
 
 # ( $1 -- $2 )
@@ -2325,8 +2240,6 @@ colon '2exchange'
 semicolon
 inout 3 2
 
-evaluate ': here [ "dp" ] push$ ; inline'
-
 colon 'allot'
    atom 'allot'
 semicolon
@@ -2343,8 +2256,6 @@ colon 'fill'
 semicolon
 inout 3 0
 
-# ( a u -- )
-evaluate ': erase   0 fill ;'    ; inline; inout 2 0                 # 0 -> m[a++],  u times
 
 # ( a1 a2 u -- )
 move()  {                                                            # deals with destination overlapping source
@@ -2371,7 +2282,6 @@ primitive 'move'   'move'; inout 3 0
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
-evaluate ': type  pack$ type$ ;'  ; inline;  inout 2 0
 # duplicating 'char functionality because quoting in evaluate
 # becomes sometimes hard when using ' ' for characters' ASCIIs
 colon '[char]'
@@ -2412,10 +2322,6 @@ colon 'spaces'
 semicolon
 inout 1 0
 
-highlevel << 'EOT'
-: ltype$    dup$ type$ count$ - spaces ;                   \ ( u -- ) (string: $1 -- )
-: rtype$    dup$ count$ - spaces type$ ;                   \ ( u -- ) (string: $1 -- )
-EOT
 
 primitive  'cr'      'printf "\n"';                  inout 0 0
 primitive  'space'   'printf " "' ;                  inout 0 0
@@ -2435,10 +2341,7 @@ colon 'from$'
    code 'from "$file"||filenotfound "$file"'
 semicolon
 
-highlevel << EOT
-: from word$ from$ ;
-: #files [ "\${#files[@]}" ] push$ ; inline
-EOT
+
 
 # omit block of source lines up to next empty line
 colon 'omit'
@@ -2465,34 +2368,15 @@ colon '#'                                                            # : #
 semicolon                                                            # ;
 inout 1 1
 
-highlevel << 'EOT'
-' prepend$ alias hold                inline                \ ( c -- ) ( string: $1 -- $2 )
-: <#       ""  ;                     inline                \ ( -- ) ( string: -- $2 )
-: #s       begin # dup 0= until ;                          \ ( x1 -- x2 ) ( string: $1 -- $2 )
-: sign     0< lest '-' hold ;                              \ ( f -- ) ( string: $1 -- $2 )
-' drop alias #>$                     inline                \ ( x -- )
-: #>type   #>$ type$ ;               inline                \ ( x -- ) ( string:  $1 -- )
-: #>       #>$ here here unpack$ ;                         \ ( x -- a n ) ( string:  $1 -- )
-: uconvert <# #s #>$ ;                                     \ ( u -- ) (string: -- $1 )
-: convert  dup abs uconvert sign ;                         \ ( u -- ) (string: -- $1 )
-: .         convert type$ space ;                          \ ( n -- )
-: u.       uconvert type$ space ;                          \ ( u -- )
-: .r       >r  convert r> rtype$ ;                         \ ( n u -- )
-: u.r      >r uconvert r> rtype$ ;                         \ ( u1 u2 -- )
-EOT
 
 primitive 'decimal'  "m[$base]=10"; inout 0 0
 primitive 'hex'      "m[$base]=16"; inout 0 0
 primitive 'binary'   "m[$base]=2";  inout 0 0
 
+
+
 # ----- vocabularies and wordlists ----------------------- #fold01
 
-highlevel << 'EOT'
-\ produces execution token and removes header of last word
-\ : foo ... ; noname
-: noname  ( -- xt )  last$ dup$ xt trash$ ;
-: me  [ "xt" ] push$  literal, ; compiled
-EOT
 
 colon 'initwordlist'                                                 # ( wid -- )
    code 'declare -gA "${strings[s[sp--]]}=()"'
@@ -2532,16 +2416,19 @@ semicolon
 
 primitive 'previous'  '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
 primitive 'words'     'words'
-
 primitive 'onlyonly'  'order=(); s[++sp]="$onlywid"'
-highlevel << 'EOT'
+
+
+include << 'end'
 : forth  [ "forthwid" ] push$ set-context ;
 : definitions get-context set-current ;
 : only onlyonly set-context definitions also ;
 trash onylonly
-EOT
-
+end
 declare -n current="forth"                                        # compile to forth vocabulary
+
+
+
 
 # ----- foward referencing support words ----------------- #fold01
 
@@ -2639,7 +2526,7 @@ colon 'needed$'                                                      # ( -- f ) 
    code 'unset "ss[-1]"'
 semicolon
 
-evaluate ': needed word$ needed$ ; inline'                           # ( -- f ) ( stream: bl delimited string )
+
 
 colon 'neededanyof'                                                  # ( -- f ) ( stream: bl delimited strings, whole input line )
    push "$false"
@@ -2696,8 +2583,8 @@ colon 'satisfy'
    code  'line=""'
 semicolon
 
-evaluate "' satisfy alias needs:"
 
+#
 # satisfy references from top string stack item
 # ( $1 -- )
 colon 'satisfy$'
@@ -2792,12 +2679,12 @@ semicolon
 
 
 # ----- interactive mode --------------------------------- #fold01
+#include << 'end'
+#: quit warm begin query$ evaluate$ resolve prompt again ;
+#' quit alias abort
+#: ?abort lest abort ;                                                \ ( f -- )
+#end
 
-highlevel << 'EOT'
-: quit warm begin query$ evaluate$ resolve prompt again ;
-' quit alias abort
-: ?abort lest abort ;                                                \ ( f -- )
-EOT
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents
@@ -2837,24 +2724,10 @@ semicolon
 inline
 inout 0 1
 
-# better symmetry with thisfile$
-evaluate "' origin alias thisfile"
 
 # copy remainder of input line to string stack without affecting it.
 # ( -- )  ( -- $1 )
 primitive 'source$'  'ss+=("$line")'
-
-# check whether current source had already been compiled from before.
-# most useful when used interpretatively in a file, for testing whether
-# it will be or has been reloaded, such as with "loaded lest done"
-# ( -- f )
-colon 'loaded'
-   push 'loaded[filehandle]'
-semicolon
-
-colon 'loading'
-   push 'linenr<0?false:true '
-semicolon
 
 # stop loading file
 colon 'done'
@@ -2863,10 +2736,142 @@ colon 'done'
 semicolon
 
 
-highlevel << 'EOT'
-: thisfile$  thisfile filename$ ;                                    ( string: -- $1 )  \ produce name of currently loaded file
-: once   loaded lest done ;
-EOT
+# ----- high level --------------------------------------- #fold01
+
+include << 'end'
+: i   [ "i" ] push$ ; inline
+' r@ alias j
+
+: #files [ "${#files[@]}" ] push$ ; inline
+
+: cells ; compiled
+: cells ; interpreted
+: cell+ 1+ ; inline
+
+: literal    ( x -- )
+      literal, ;
+      compiled
+
+: compiling  ( -- flag )
+      [ "compiling" ] push$ ;
+      inline
+
+: depth      ( ?? -- ?? u )
+      [ "sp" ] push$ ;
+      inline
+
+: pick       ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
+      [ "s[sp-s[sp--]-1]" ] push$ ;
+      inline
+
+: rdepth     ( -- u )
+      [ "rp" ] push$ ;
+      inline
+
+: word$   ( -- ) ( -- $1 )
+      bl parse$ ;
+      inline
+
+: have    ( -- 0|xt ) ( stream: word )    \ word exists?
+      word$ have$ ;
+      inline
+
+: lack    ( -- flag ) ( stream: word )    \  word missing?
+      have  0=    ;
+      inline
+
+: [']     ( -- ) ( stream: word )
+      ' literal,   ;
+      compiled
+
+defer query$
+' simplequery$ is query$
+' have$ alias xt
+
+: */     */mod nip ;     inline                 \ truncated, symmetric
+: /mod   1 -rot  */mod ;                        \ truncated, symmetric
+: *      1 */   ;        inline
+: /      /mod nip  ;     inline                 \ truncated, symmetric
+: mod    /mod drop  ;    inline                 \ sign according  n1 == n2*(n1/n2)+remainder
+: %      50 */ dup 0< 1 or + 2/ ;  inline       \ percentage rounded, not truncated
+: min    2dup >  if swap then drop ;
+: max    2dup <  if swap then drop ;
+: umin   2dup u> if swap then drop ;
+: umax   2dup u< if swap then drop ;
+' lshift alias <<
+' rshift alias >>
+
+
+( a u -- )
+: type    pack$ type$ ;  inline
+: erase   0 fill ; inline                                   \  0 -> m[a++],  u times
+: count$  [ "${#ss[-1]}" ] push$ drop$ ; inline
+: here [ "dp" ] push$ ; inline
+: ltype$    dup$ type$ count$ - spaces ;                   \ ( u -- ) (string: $1 -- )
+: rtype$    dup$ count$ - spaces type$ ;                   \ ( u -- ) (string: $1 -- )
+: from word$ from$ ;
+' prepend$ alias hold                inline                \ ( c -- ) ( string: $1 -- $2 )
+: <#       ""  ;                     inline                \ ( -- ) ( string: -- $2 )
+: #s       begin # dup 0= until ;                          \ ( x1 -- x2 ) ( string: $1 -- $2 )
+: sign     0< lest '-' hold ;                              \ ( f -- ) ( string: $1 -- $2 )
+' drop alias #>$                     inline                \ ( x -- )
+: #>type   #>$ type$ ;               inline                \ ( x -- ) ( string:  $1 -- )
+: #>       #>$ here here unpack$ ;                         \ ( x -- a n ) ( string:  $1 -- )
+: uconvert <# #s #>$ ;                                     \ ( u -- ) (string: -- $1 )
+: convert  dup abs uconvert sign ;                         \ ( u -- ) (string: -- $1 )
+: .         convert type$ space ;                          \ ( n -- )
+: u.       uconvert type$ space ;                          \ ( u -- )
+: .r       >r  convert r> rtype$ ;                         \ ( n u -- )
+: u.r      >r uconvert r> rtype$ ;                         \ ( u1 u2 -- )
+
+\ produces execution token and removes header of last word
+\ : foo ... ; noname
+: noname  ( -- xt )  last$ dup$ xt trash$ ;
+: me  [ "xt" ] push$  literal, ; compiled
+
+: needed word$ needed$ ; inline                           \ ( -- f ) ( stream: bl delimited string )
+' satisfy alias needs:
+
+
+: quit ( ??? -- )
+      warm
+      begin
+         query$ evaluate$
+         resolve
+         prompt
+      again ;
+
+' quit alias abort
+: ?abort  ( f -- )
+      lest abort ;
+
+\ better symmetry with thisfile$
+' origin alias thisfile
+
+\ check whether current source had already been compiled from before.
+\ most useful when used interpretatively in a file, for testing whether
+\ it will be or has been reloaded, such as with "loaded lest done"
+\ returned u is the count the file has been loaded.
+: loaded  ( -- u )
+      [ "loaded[filehandle]" ] push$ ;
+inline
+
+\ true: loading from file?,  false: interactive (console).
+\ pipe or redirection to yoda is indicated as loading from file, with file name path/yoda
+: loading ( -- flag )
+      [ "linenr<0?false:true" ] push$ ;
+inline
+
+: thisfile$ ( -- ) ( -- $1 )      \ produce name of currently loaded file
+      thisfile filename$ ;
+inline
+
+: once  ( -- )                   \ prevent reloading file
+      loaded lest done ;
+end
+
+
+# ----- convenience -------------------------------------- #fold01
 
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
@@ -2879,7 +2884,6 @@ colon 'where$'
 semicolon
 
 
-# ----- convenience -------------------------------------- #fold01
 primitive empty  's=() sp=0'
 primitive rempty 'r=() rp=0'
 

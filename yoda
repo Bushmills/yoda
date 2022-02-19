@@ -31,7 +31,7 @@ v="0.6.8"    # 2022feb18,16:49   moved mid$ to library, renamed needed to needed
 #                                can put (multi line) sections of high level code into bash source, which will be evaluated
 #                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
 #                                more flexible. env has been redefined to make use of push$.
-#                                regrouping words to pull hilevel together into consecutive sections
+#                                regrouping words to pull hilevel together into consecutive sections, categorised them (editor folds)
 # v="0.6.7"  # 2022feb17,21:05   detokeniser generates code for function calls from xt.
 #                                transient headers track the wordlist which was current when they there created, so that removal
 #                                can consult the proper wordlist. Highlevelised only and forth.
@@ -962,6 +962,23 @@ loaded()  {
    return $(( filehandle >= ${#files[@]}))
 }
 
+
+# trashed name as argument
+# ( -- )
+trash()  {
+# NOTE: issue with flags: headers can concurrently reside in
+# multiple word lists, while there's only a single flags list.
+# that trashing functions associated with trashed headers if
+# they are set as inline dangerous - it may hypothetically trash
+# the function of a word which wasn't set inline, and therefore
+# referenced by compiled calls.
+# Therefore removal of function has been commented out for now:
+# (( ${flags[$1]} & inline)) && unset -f ${current["$1"]}
+# Headers will still be removed:
+   unset -v "current[$1]"
+# trace "trashed word $1 in ${strings[$currentwid]}"
+}
+
 # trash transient headers
 notransients()  {
    ((${#transient[@]})) && {                                         # only if any transients exist at all
@@ -971,7 +988,7 @@ notransients()  {
             currentwid="${transient[tmp]%% *}"                       # if so, change to wordlist with word in it
             declare -n current="${strings[currentwid]}"              # and set indirection variable to array serving as word list
          }
-         unset "current[${transient[tmp]##* }]"                      # remove header
+         trash "${transient[tmp]##* }"                               # remove header
       done                                                           # repeat for all headers in list of transients
    }
 }
@@ -1557,12 +1574,6 @@ colon 'use$'
    code 'use "${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
-
-# trashed name as argument
-# ( -- )
-trash()  {
-   unset -v "current[$1]"
-}
 
 # trashed name from input stream
 # ( -- )
@@ -2423,7 +2434,7 @@ include << 'end'
 : forth  [ "forthwid" ] push$ set-context ;
 : definitions get-context set-current ;
 : only onlyonly set-context definitions also ;
-trash onylonly
+trash onlyonly
 end
 declare -n current="forth"                                        # compile to forth vocabulary
 
@@ -2739,137 +2750,252 @@ semicolon
 # ----- high level --------------------------------------- #fold01
 
 include << 'end'
-: i   [ "i" ] push$ ; inline
+\ ----- flow control ------------------------------------- #fold02
+( -- x )
+: i            [ "i" ] push$ ;                                 inline
+
+( -- x )
 ' r@ alias j
 
-: #files [ "${#files[@]}" ] push$ ; inline
+\ ----- stack -------------------------------------------- #fold02
 
-: cells ; compiled
-: cells ; interpreted
-: cell+ 1+ ; inline
+( ?? -- ?? u )
+: depth        [ "sp" ] push$ ;                                inline
 
-: literal    ( x -- )
-      literal, ;
-      compiled
+( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
+: pick         [ "s[sp-s[sp--]-1]" ] push$ ;                   inline
 
-: compiling  ( -- flag )
-      [ "compiling" ] push$ ;
-      inline
+( -- u )
+: rdepth       [ "rp" ] push$ ;                                inline
 
-: depth      ( ?? -- ?? u )
-      [ "sp" ] push$ ;
-      inline
 
-: pick       ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
-      [ "s[sp-s[sp--]-1]" ] push$ ;
-      inline
+\ ----- arithmetics -------------------------------------- #fold02
 
-: rdepth     ( -- u )
-      [ "rp" ] push$ ;
-      inline
+\ truncated, symmetric
+( n1 n2 n3 -- n4 )
+: */           */mod nip ;                                     inline
 
-: word$   ( -- ) ( -- $1 )
-      bl parse$ ;
-      inline
+\ truncated, symmetric
+( n1 n2 -- n3 n4 )
+: /mod         1 -rot  */mod ;
 
-: have    ( -- 0|xt ) ( stream: word )    \ word exists?
-      word$ have$ ;
-      inline
+( n1 n2 -- n3 )
+: *            1 */   ;                                        inline
 
-: lack    ( -- flag ) ( stream: word )    \  word missing?
-      have  0=    ;
-      inline
+\ truncated, symmetric
+( n1 n2 -- n3 )
+: /            /mod nip  ;                                     inline
 
-: [']     ( -- ) ( stream: word )
-      ' literal,   ;
-      compiled
+\ sign according  n1 == n2*(n1/n2)+remainder
+( n1 n2 -- n3 )
+: mod          /mod drop  ;                                    inline
+
+\ percentage rounded, not truncated
+( n1 n2 -- n3 )
+: %             50 */ dup 0< 1 or + 2/ ;  inline
+
+( n1 n2 -- n1|n2 )
+: min          2dup >  if nip exit then drop ;
+
+( n1 n2 -- n1|n2 )
+: max          2dup <  if nip exit then drop ;
+
+( u1 u2 -- u1|u2 )
+: umin         2dup u> if nip exit then drop ;
+
+( u1 u2 -- u1|u2 )
+: umax         2dup u< if nip exit then drop ;
+
+( x1 -- x2 )
+: cells        ;                                               compiled
+
+( x1 -- x2 )
+: cells        ;                                               interpreted
+
+( x1 -- x2 )
+: cell+        1+ ;                                            inline
+
+( x1 u -- x2 )
+' lshift alias <<
+
+( x1 u -- x2 )
+' rshift alias >>
+
+\ ----- memory ------------------------------------------- #fold02
+
+\  0 -> m[a++],  u times
+( a u -- )
+: erase        0 fill ;                                        inline
+
+( -- a )
+: here         [ "dp" ] push$ ;                                inline
+
+
+
+( -- u )
+( $1 -- )
+: count$       [ "${#ss[-1]}" ] push$ drop$ ;                  inline
+
+
+\ ----- i/o ---------------------------------------------- #fold02
+( a u -- )
+: type         pack$ type$ ;                                   inline
+
+( u -- )
+( $1 -- )
+: ltype$       dup$ type$ count$ - spaces ;
+
+( u -- )
+( $1 -- )
+: rtype$       dup$ count$ - spaces type$ ;
+
+( -- )
+( -- $1 )
+: word$        bl parse$ ;                                     inline
 
 defer query$
 ' simplequery$ is query$
+
+
+\ ----- pictured number conversion ----------------------- #fold02
+( c -- )
+( $1 -- $2 )
+' prepend$ alias hold                                          inline
+
+( -- )
+(  -- $2 )
+: <#           ""  ;                                           inline
+
+( x1 -- x2 )
+( $1 -- $2 )
+: #s           begin # dup 0= until ;
+
+( f -- )
+( $1 -- $2 )
+: sign         0< lest '-' hold ;
+
+( x -- )
+' drop alias #>$                                               inline
+
+( x -- )
+( $1 -- )
+: #>type       #>$ type$ ;                                     inline
+
+( x -- a n )
+( $1 -- )
+: #>           #>$ here here unpack$ ;
+
+( u -- )
+( -- $1 )
+: uconvert     <# #s #>$ ;
+
+( u -- )
+( -- $1 )
+: convert      dup abs uconvert sign ;
+
+( n -- )
+: .            convert type$ space ;
+
+( u -- )
+: u.           uconvert type$ space ;
+
+( n u -- )
+: .r           >r  convert r> rtype$ ;
+
+( u1 u2 -- )
+: u.r          >r uconvert r> rtype$ ;
+
+\ ----- dictionary and compiling ------------------------- #fold02
+
 ' have$ alias xt
-
-: */     */mod nip ;     inline                 \ truncated, symmetric
-: /mod   1 -rot  */mod ;                        \ truncated, symmetric
-: *      1 */   ;        inline
-: /      /mod nip  ;     inline                 \ truncated, symmetric
-: mod    /mod drop  ;    inline                 \ sign according  n1 == n2*(n1/n2)+remainder
-: %      50 */ dup 0< 1 or + 2/ ;  inline       \ percentage rounded, not truncated
-: min    2dup >  if swap then drop ;
-: max    2dup <  if swap then drop ;
-: umin   2dup u> if swap then drop ;
-: umax   2dup u< if swap then drop ;
-' lshift alias <<
-' rshift alias >>
-
-
-( a u -- )
-: type    pack$ type$ ;  inline
-: erase   0 fill ; inline                                   \  0 -> m[a++],  u times
-: count$  [ "${#ss[-1]}" ] push$ drop$ ; inline
-: here [ "dp" ] push$ ; inline
-: ltype$    dup$ type$ count$ - spaces ;                   \ ( u -- ) (string: $1 -- )
-: rtype$    dup$ count$ - spaces type$ ;                   \ ( u -- ) (string: $1 -- )
-: from word$ from$ ;
-' prepend$ alias hold                inline                \ ( c -- ) ( string: $1 -- $2 )
-: <#       ""  ;                     inline                \ ( -- ) ( string: -- $2 )
-: #s       begin # dup 0= until ;                          \ ( x1 -- x2 ) ( string: $1 -- $2 )
-: sign     0< lest '-' hold ;                              \ ( f -- ) ( string: $1 -- $2 )
-' drop alias #>$                     inline                \ ( x -- )
-: #>type   #>$ type$ ;               inline                \ ( x -- ) ( string:  $1 -- )
-: #>       #>$ here here unpack$ ;                         \ ( x -- a n ) ( string:  $1 -- )
-: uconvert <# #s #>$ ;                                     \ ( u -- ) (string: -- $1 )
-: convert  dup abs uconvert sign ;                         \ ( u -- ) (string: -- $1 )
-: .         convert type$ space ;                          \ ( n -- )
-: u.       uconvert type$ space ;                          \ ( u -- )
-: .r       >r  convert r> rtype$ ;                         \ ( n u -- )
-: u.r      >r uconvert r> rtype$ ;                         \ ( u1 u2 -- )
 
 \ produces execution token and removes header of last word
 \ : foo ... ; noname
-: noname  ( -- xt )  last$ dup$ xt trash$ ;
-: me  [ "xt" ] push$  literal, ; compiled
+( -- xt )
+: noname       last$ dup$ xt trash$ ;
 
-: needed word$ needed$ ; inline                           \ ( -- f ) ( stream: bl delimited string )
+( -- )         \ compile time
+( -- x )       \ run time
+: me           [ "xt" ] push$  literal, ;                      compiled
+
+( -- f )
+( stream: word )
+: needed       word$ needed$ ;                                 inline
+
 ' satisfy alias needs:
 
+( x -- )
+: literal      literal, ;                                      compiled
 
-: quit ( ??? -- )
-      warm
-      begin
-         query$ evaluate$
-         resolve
-         prompt
-      again ;
+( -- flag )
+: compiling    [ "compiling" ] push$ ;                         inline
 
+\ word exists?
+( -- 0|xt )
+( stream: word )
+: have         word$ have$ ;                                   inline
+
+\  word missing?
+( -- flag )
+( stream: word )
+: lack         have  0=    ;                                   inline
+
+( -- )
+( stream: word )
+: [']          ' literal,   ;                                  compiled
+
+\ ----- unsorted ----------------------------------------- #fold02
+
+( ??? -- )
+: quit         warm
+               begin
+                  query$ evaluate$
+                  resolve
+                  prompt
+               again ;
+
+( ??? -- )
 ' quit alias abort
-: ?abort  ( f -- )
-      lest abort ;
+
+( f -- )
+: ?abort       lest abort ;
+
+
+\ ----- files and loading -------------------------------- #fold02
+
+( -- u )
+: #files       [ "${#files[@]}" ] push$ ;                      inline
+
+( -- )
+( stream: filename )
+: from         word$ from$ ;
 
 \ better symmetry with thisfile$
+( -- u )
 ' origin alias thisfile
 
 \ check whether current source had already been compiled from before.
 \ most useful when used interpretatively in a file, for testing whether
 \ it will be or has been reloaded, such as with "loaded lest done"
 \ returned u is the count the file has been loaded.
-: loaded  ( -- u )
-      [ "loaded[filehandle]" ] push$ ;
-inline
+( -- u )
+: loaded       [ "loaded[filehandle]" ] push$ ;                inline
 
 \ true: loading from file?,  false: interactive (console).
-\ pipe or redirection to yoda is indicated as loading from file, with file name path/yoda
-: loading ( -- flag )
-      [ "linenr<0?false:true" ] push$ ;
-inline
+\ pipe or redirection is indicated as loading from file.
+( -- flag )
+: loading      [ "linenr<0?false:true" ] push$ ;               inline
 
-: thisfile$ ( -- ) ( -- $1 )      \ produce name of currently loaded file
-      thisfile filename$ ;
-inline
+\ produce name of currently loaded file
+( -- )
+( -- $1 )
+: thisfile$    thisfile filename$ ;                            inline
 
-: once  ( -- )                   \ prevent reloading file
-      loaded lest done ;
+\ prevent reloading file
+( -- )
+: once         loaded lest done ;
+
 end
-
 
 # ----- convenience -------------------------------------- #fold01
 

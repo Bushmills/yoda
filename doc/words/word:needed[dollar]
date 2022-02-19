@@ -1,0 +1,13 @@
+name:                needed$
+stack:               ( -- flag )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            dictionary
+
+decription:          examine forward references for word with name given by
+                     string $1. Return true if word is forward referenced,
+                     false otherwise
+
+standard:            no
+deviation:           standard has no equivalent

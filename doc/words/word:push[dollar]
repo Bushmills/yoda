@@ -1,0 +1,20 @@
+name:                push$
+stack:               ( -- )         compile time
+                     ( -- x )       run time
+return stack:        ( -- )
+string stack:        ( $1 -- )      compile time
+                     ( -- )         run time
+contexts:            compileonly
+category:            compiling
+
+decription:          during compilation a string $1 is taken from string stack. That string
+                     must, when evaluated by bash, produce a number. Code is compiled to
+                     push a number with string as expression, to be evaluated at
+                     run time.
+
+example:             : foo [ "RANDOM" ] push$ ;
+                     compiles to foo the code:
+                     ((s[++sp]=RANDOM))
+
+standard:            no
+deviation:           standard has no equivalent

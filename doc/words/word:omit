@@ -1,0 +1,15 @@
+name:                omit
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            loading
+
+decription:          while loading from file, skip over the next consecutive block
+                     of non-empty lines. Treat all line up to the next empty line
+                     as comments.
+
+notes:               useful for conditional compilation, in combination with
+                     have, lack, needed, and lest, unless for flow control.
+standard:            no
+deviation:           standard has no equivalent

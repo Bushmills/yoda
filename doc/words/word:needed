@@ -4,14 +4,10 @@ return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
 category:            dictionary, loading file, conditional compilation
-input stream:        whole input line
+input stream:        word
 
-decription:          splits remainder of input line into space delimited strings,
-                     which are tested as word names against being forward referenced.
-                     If any appears among the forward referenced, that is, needed,
-                     words, the result flag is true.
-
-notes:               Provides input for basing conditional compilation on
+decription:          examine forward references for word as read from input.
+                     Return true if word is forward referenced, false otherwise
 
 standard:            no
 deviation:           standard has no equivalent

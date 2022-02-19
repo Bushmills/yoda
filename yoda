@@ -31,6 +31,7 @@ v="0.6.8"    # 2022feb18,16:49   moved mid$ to library, renamed needed to needed
 #                                can put (multi line) sections of high level code into bash source, which will be evaluated
 #                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
 #                                more flexible. env has been redefined to make use of push$.
+#                                regrouping words to pull hilevel together into consecutive sections
 # v="0.6.7"  # 2022feb17,21:05   detokeniser generates code for function calls from xt.
 #                                transient headers track the wordlist which was current when they there created, so that removal
 #                                can consult the proper wordlist. Highlevelised only and forth.
@@ -1356,8 +1357,8 @@ colon '?dup'
 semicolon
 inline
 
-primitive 'depth'  '((s[++sp]=$sp))'
-primitive 'pick'   '((s[sp]=s[sp-s[sp]-1]))'
+#primitive 'depth'  '((s[++sp]=$sp))'
+#primitive 'pick'   '((s[sp]=s[sp-s[sp]-1]))'
 
 # ----- return stack ------------------------------------- #fold01
 
@@ -1404,7 +1405,7 @@ inline
 inout 0 1
 
 
-primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
+#primitive 'rdepth'  '((s[++sp]=rp))'; inout 0 1
 
 
 # ----- numeric comparison ------------------------------- #fold01
@@ -1484,7 +1485,7 @@ colon 'parse$'
    code 'ss+=("$word")'
 semicolon
 
-evaluate ': word$  bl parse$ ;  inline'
+#evaluate ': word$  bl parse$ ;  inline'
 
 
 # read line, push to string stack
@@ -1498,7 +1499,7 @@ colon 'simplequery$'
 semicolon
 inout 0 0
 
-defer       'query$' 'simplequery$'
+#defer       'query$' 'simplequery$'
 
 colon 'evaluate$'
    code 'local tib="${ss[-1]}"'
@@ -1523,10 +1524,6 @@ compiled
 primitive 'compile,' "code \"code \${s[sp--]}\" \"$execute\""        # ( xt -- )
 primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
 
-highlevel << 'EOT'
-: literal  literal, ; compiled          ( x -- )
-: compiling [ "compiling" ] push$ ;     ( -- flag )
-EOT
 
 # ( compile: $1 -- ) ( run: -- $1 )
 colon 'literal$'
@@ -1549,10 +1546,46 @@ colon 'have$'                                                        # ( -- 0|xt
    push 'exists'
 semicolon
 
+
 highlevel << 'EOT'
-: have   word$ have$ ; inline      ( -- f ) ( stream: word ) \ word existing?
-: lack   have  0=    ; inline      ( -- f ) ( stream: word ) \  word missing?
-: [']   ' literal,   ; compiled
+: literal    ( x -- )
+      literal, ;
+      compiled
+
+: compiling  ( -- flag )
+      [ "compiling" ] push$ ;
+      inline
+
+: depth      ( ?? -- ?? u )
+      [ "sp" ] push$ ;
+      inline
+
+: pick       ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
+      [ "s[sp-s[sp--]-1]" ] push$ ;
+      inline
+
+: rdepth     ( -- u )
+      [ "rp" ] push$ ;
+      inline
+
+: word$   ( -- ) ( -- $1 )
+      bl parse$ ;
+      inline
+
+: have    ( -- 0|xt ) ( stream: word )    \ word exists?
+      word$ have$ ;
+      inline
+
+: lack    ( -- flag ) ( stream: word )    \  word missing?
+      have  0=    ;
+      inline
+
+: [']     ( -- ) ( stream: word )
+      ' literal,   ;
+      compiled
+
+defer query$
+' simplequery$ is query$
 ' have$ alias xt
 EOT
 

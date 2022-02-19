@@ -31,7 +31,8 @@ v="0.6.8"    # 2022feb18,16:49   moved mid$ to library, renamed needed to needed
 #                                can put (multi line) sections of high level code into bash source, which will be evaluated
 #                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
 #                                more flexible. env has been redefined to make use of push$.
-#                                regrouping words to pull hilevel together into consecutive sections, categorised them (editor folds)
+#                                regrouping words to pull hilevel together into consecutive sections, categorised them (editor folds).
+#                                removed inout construct
 # v="0.6.7"  # 2022feb17,21:05   detokeniser generates code for function calls from xt.
 #                                transient headers track the wordlist which was current when they there created, so that removal
 #                                can consult the proper wordlist. Highlevelised only and forth.
@@ -204,12 +205,6 @@ newflag push                                                         # generate 
 newflag execute                                                      # generate code calling xt
 newflag does                                                         # rip code apart into define- and run time portions
 
-# when stack effect of words is known to optimiser, it will have
-# the possibility to determine whether stack items cached in
-# variables can remain and passed in there, rather than pushing
-# them out to stack, only to be retrieved again by next word.
-declare -A stackin=()
-declare -A stackout=()
 declare -A atom=()                                                   # a table with token -> code mappings.
 
 # what to execute when no command line args given
@@ -512,13 +507,6 @@ stateless()   {
 # ----- defining words ----------------------------------- #fold00
 
 
-# make stack effect of word known, aiding the optimiser
-inout()  {
-   stackin["$lastword"]="$1"
-   stackout["$lastword"]="$2"
-}
-
-
 push()  {                                                            # leave it to detokeniser to generate code
    code "$1"   "$push"                                               # only insert value or expression, mark it.
 }
@@ -588,7 +576,6 @@ constant()  {
    push "$2"
    semicolon
    inline
-   inout 0 1
 }
 
 
@@ -601,7 +588,6 @@ variable()  {
    push "$((dp++))"
    semicolon
    inline
-   inout 0 1
 }
 
 
@@ -631,12 +617,11 @@ defer()  {                                                           # use in yo
    push "$((dp))"
    semicolon
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
-   name '${m['$dp']}'                                                 # convert xt to function name
+   name "\${m[$dp]}"                                                 # convert xt to function name
    use "$name"
    declare -n context="${strings[order[0]]}"
    ((m[dp++]="${context[$2]##*_}"))                                  # extract and comma xt from function
    inline
-   inout 0 1
 }
 
 
@@ -1028,8 +1013,7 @@ from()  {
 }
 
 
-# ----- primitives --------------------------------------- #fold00
-# ----- populating detokeniser --------------------------- #fold01
+# ----- populating detokeniser --------------------------- #fold00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -1084,6 +1068,9 @@ atom['rdrop']='((r--))'
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
 
+
+
+# ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 
@@ -1097,8 +1084,8 @@ compiled
 colon ':'
    code 'word'                                                       # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
-   code "((s[++sp]=\${#body[@]}))"                                   # allow check of empty function
-   code "((s[++sp]=$magic))"                                         # allow check of structure
+   push '${#body[@]}'                                                # allow check of empty function
+   push "$magic"                                                     # allow check of proper nesting
    code '((compiling=true))'
 semicolon
 # ----------------------------------------------
@@ -1280,41 +1267,35 @@ colon 'dup'
    atom 'dup'
 semicolon
 inline
-inout 1 2
 
 colon 'drop'
    atom 'drop'
 semicolon
 inline
-inout 1 0
 
 colon 'over'
    atom 'over'
 semicolon
 inline
-inout 2 3
 
 colon 'pluck'
    atom 'pluck'
 semicolon
 inline
-inout 3 4
 
 colon '2dup'
    atom 'over'
    atom 'over'
 semicolon
 inline
-inout 2 4
 
-primitive '2drop' '((sp-=2))'; inout 2 0
+primitive '2drop' '((sp-=2))';
 
 colon '2over'
    push 's[sp-3]'
    push 's[sp-3]'
 semicolon
 inline
-inout 4 6
 
 colon 'swap'
    atom 'tmp=s2'
@@ -1322,7 +1303,6 @@ colon 'swap'
    atom 's1=tmp'
 semicolon
 inline
-inout 2 2
 
 colon '2swap'
    atom 'tmp=s4'
@@ -1332,14 +1312,12 @@ colon '2swap'
    atom 's3=s1'
    atom 's1=tmp'
 semicolon
-inout 4 4
 
 colon 'nip'
    atom 's2=s1'
    atom 'drop'
 semicolon
 inline
-inout 2 1
 
 colon 'tuck'
    atom 'dup'
@@ -1347,7 +1325,6 @@ colon 'tuck'
    atom 's3=s1'
 semicolon
 inline
-inout 2 3
 
 colon 'rot'
    atom 'tmp=s1'
@@ -1356,7 +1333,6 @@ colon 'rot'
    atom 's2=tmp'
 semicolon
 inline
-inout 3 3
 
 colon '-rot'
    atom 'tmp=s1'
@@ -1365,7 +1341,6 @@ colon '-rot'
    atom 's3=tmp'
 semicolon
 inline
-inout 3 3
 
 colon '?dup'
    code '((s[sp])) &&'
@@ -1379,25 +1354,21 @@ colon 'r@'
    atom 'r@'
 semicolon
 inline
-inout 0 1
 
 colon 'rdrop'
    atom 'rdrop'
 semicolon
 inline
-inout 0 0
 
 colon '>r'
    atom '>r'
 semicolon
 inline
-inout 1 0
 
 colon 'r>'
    atom 'r>'
 semicolon
 inline
-inout 0 1
 
 # ( x1 x2 -- )  ( return: -- x1 x2 )
 colon '2>r'
@@ -1406,7 +1377,6 @@ colon '2>r'
    atom 'drop'
 semicolon
 inline
-inout 1 0
 
 # ( -- x1 x2 )  ( return: x1 x2 -- )
 colon '2r>'
@@ -1415,7 +1385,6 @@ colon '2r>'
    code '((rp--))'
 semicolon
 inline
-inout 0 1
 
 
 # ----- numeric comparison ------------------------------- #fold01
@@ -1483,7 +1452,6 @@ colon 'd='
    code '((s[sp]=(s1==s3&s2==s[sp])?true:false))'
 semicolon
 inline
-inout 4 1
 
 
 # ----- line i/o ----------------------------------------- #fold01
@@ -1505,7 +1473,6 @@ colon 'simplequery$'
    code 'IFS="" read -er -i "$keybuf" "ss[-1]"'                      # key? may have put chars into keybuf
    code 'keybuf=""'
 semicolon
-inout 0 0
 
 
 colon 'evaluate$'
@@ -1566,8 +1533,8 @@ primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
 primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
-primitive '#unresolved' '((s[++sp]=${#unresolved[@]}))'              # ( -- u )
 primitive 'recurse' 'code "$xt" "$execute"'; compiled                # ( -- )
+
 
 # apply run time semantic from string stack
 colon 'use$'
@@ -1591,7 +1558,7 @@ semicolon
 
 # name of last word to string stack
 # ( -- $1 )
-primitive 'last$'   'ss+=("$lastword")'; inout 0 0
+primitive 'last$'   'ss+=("$lastword")'
 
 
 #find$
@@ -1621,14 +1588,14 @@ primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
 primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
 
 
-# ----- flow control -------------------------------------
+# ----- flow control ------------------------------------- #fold01
 
 remagic
 
 colon 'if'
    code 'code "if ((s[sp--])); then"'
-   push "\${#body[@]}"                                               # allow check of empty function
-   push "$magic"                                                     # allow check of structure and empty function
+   push '${#body[@]}'                                                # allow check of empty function
+   push "$magic"                                                     # allow check of structure
 semicolon
 compiled
 
@@ -1653,8 +1620,8 @@ remagic
 
 colon 'begin'
    code 'code "while :; do"'
-   push "\${#body[@]}"                                               # allow check of empty function
-   push "$magic"                                                     # allow check of structure and empty function
+   push '${#body[@]}'                                                # allow check of empty function
+   push "$magic"                                                     # allow check of structure
 semicolon
 compiled
 
@@ -1693,7 +1660,7 @@ colon 'for'
    code 'code "((r[++rp]=i))"'
    code 'code "((i=s[sp--]))"'
    code 'code "for ((; i--; )); do"'
-   push "\${#body[@]}"                                               # allow check of empty function
+   push '${#body[@]}'                                                # allow check of empty function
    push "$magic"                                                     # allow check of structure and empty function
 semicolon
 compiled
@@ -1716,7 +1683,6 @@ colon 'bounds'
    code '((s[sp]=s2))'
 semicolon
 inline
-inout 2 2
 
 remagic
 dodo()  {
@@ -1816,33 +1782,29 @@ colon '1+'
    atom '1+'
 semicolon
 inline
-inout 1 1
 
 colon '1-'
    atom '1-'
 semicolon
 inline
-inout 1 1
 
 colon '2*'
    atom '2*'
 semicolon
 inline
-inout 1 1
 
 
-primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'; inout 2 1
-primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'; inout 2 1
+primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'
+primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'
 
 # floored 2/
-#primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'  ; inout 1 1
+#primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'
 
 colon  '2/'
    atom 's1'
 #   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'                        # floored
    code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'             # symmetric
 semicolon
-inout 1 1
 
 
 #                     msb&    msb&
@@ -1870,33 +1832,28 @@ colon '*/mod'
    code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
    code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
 semicolon
-inout 3 2
 
 colon 'negate'
    atom 'negate'
 semicolon
 inline
-inout 1 1
 
 colon '?negate'
    code '((s[sp--]))&&'
    atom 'negate'
 semicolon
 inline
-inout 2 1
 
 colon 'abs'
    code '((s[sp]&msb))&&'
    atom 'negate'
 semicolon
 inline
-inout 1 1
 
 
 
 # ----- string stack operators---------------------------- #fold01
 
-primitive 'depth$'   's[++sp]="${#ss[@]}"'
 primitive 'empty$'   'ss=()'
 primitive 'dup$'     'ss+=("${ss[-1]}")'
 primitive '?dup$'    '[[ -z ${ss[-1]} ]] || ss+=("${ss[-1]}")'
@@ -2071,7 +2028,6 @@ semicolon
 # "123"     "abcd" 1 insert$  -> "a123bcd"
 
 primitive 'allot$' '((sdp+=s[sp--]))'
-evaluate ': here$  [ "sdp" ] push$ ;'
 
 colon '$,'
    code 'strings[sdp++]="${ss[s-1]}"'
@@ -2130,17 +2086,15 @@ colon 'pack$'
    code 'for ((; s1--; )); do tmp+="${char[m[s2++]]}"; done'
    code 'ss+=("$tmp")'
 semicolon
-inout 2 0
 
-primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'; inout 1 0          # ( c -- ) ( string: $1 -- $2 )
+primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'                     # ( c -- ) ( string: $1 -- $2 )
 primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
-inout 1 0
 
 
 # ----- environment--------------------------------------- #fold01
 
 # read number from environment variable with name on string stack
-evaluate ': env  [ "${!ss[-1]}&true" ] push$ drop$ ;'                # ( -- x )  ( string:  $1 -- )
+#evaluate ': env  [ "${!ss[-1]}&true" ] push$ drop$ ;'                # ( -- x )  ( string:  $1 -- )
 
 # store $1 in bash environment variable with name $2
 # ( x -- ) ( string:  $1 -- )
@@ -2148,12 +2102,10 @@ colon '>env'
    code 'eval "${ss[-1]}=$((s[sp--]))"'
    code 'unset "ss[-1]"'
 semicolon
-inout 1 0
-
 
 # read string from environment variable with name on string stack
 # ( string:  $1 -- $2 )
-primitive 'env$' 'ss[-1]="${!ss[-1]}"'; inout 0 0
+primitive 'env$' 'ss[-1]="${!ss[-1]}"'
 
 # store string $1 in bash environment variable with name $2
 # ( string:  $1 $2 -- )
@@ -2162,7 +2114,6 @@ colon '>env$'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
-inout 0 0
 
 
 # ----- memory ------------------------------------------- #fold01
@@ -2171,23 +2122,20 @@ colon '@'
    atom '@'
 semicolon
 inline
-inout 1 1
 
 colon '!'
    code '((m[s[sp--]]=s[sp-1]))'
    atom 'drop'
 semicolon
 inline
-inout 2 0
 
-primitive 'c@'  '((s[sp]=m[s[sp]]&255))'; inout 1 1
+primitive 'c@'  '((s[sp]=m[s[sp]]&255))'
 
 colon 'c!'
    code '((m[s[sp--]]=s[sp-1]&255))'
    atom 'drop'
 semicolon
 inline
-inout 2 0
 
 
 # ( a -- [a+cell] [a] )
@@ -2197,7 +2145,6 @@ colon '2@'
    code '((s[sp]=m[s1]))'
 semicolon
 inline
-inout 1 2
 
 
 # ( [a+cell] [a] a -- )
@@ -2207,25 +2154,22 @@ colon '2!'
    code '((m[s1]=s[sp--]))'
 semicolon
 inline
-inout 3 0
 
 colon '<-'                                                           # ( a x -- )   swap !
    code '((m[s[sp]]="s[sp--]"))'
    atom 'drop'
 semicolon
-inout 2 0
 
 colon '+!'
    code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&true))'
    atom 'drop'
 semicolon
 inline
-inout 2 0
 
-primitive 'on'   '((m[s[sp--]]=true))';               inout 1 0
-primitive 'off'  '((m[s[sp--]]=false))';              inout 1 0
-primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&true))';  inout 1 0
-primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))';  inout 1 0
+primitive 'on'   '((m[s[sp--]]=true))'
+primitive 'off'  '((m[s[sp--]]=false))'
+primitive 'inc'  '((m[s[sp--]]=(m[s[sp]]+1)&true))'
+primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))'
 
 # replace contents of a against x1,
 # while returning former contents as x2
@@ -2235,7 +2179,6 @@ colon 'exchange'
    code '((m[s[sp]]=s[sp-1]))'
    code '((s[--sp]=tmp))'
 semicolon
-inout 2 1
 
 # replace contents of a and a+cell against x1 x2,
 # while returning former contents as x3 x4
@@ -2249,23 +2192,20 @@ colon '2exchange'
   code '((m[s1]=s2))'
   code '((m[s1+1]=s3))'
 semicolon
-inout 3 2
 
 colon 'allot'
    atom 'allot'
 semicolon
 inline
-inout 1 0
 
-primitive ',' '((m[dp++]=s[sp--]))';  inout 1 0
+primitive ',' '((m[dp++]=s[sp--]))'
 
 # c -> m[a++],  u times
 # ( a u c -- )
 colon 'fill'
    code '((s1=s[sp--], s2=s[sp--], s3=s[sp--]))'
-   code 'for ((;s2--;)); do ((m[s3++] = s1)); done'                  # c -> m[a++],  u times
+   code 'for ((;s2--;)); do ((m[s3++]=s1)); done'                    # c -> m[a++],  u times
 semicolon
-inout 3 0
 
 
 # ( a1 a2 u -- )
@@ -2284,7 +2224,7 @@ move()  {                                                            # deals wit
 }
 
 # ( a1 a2 u -- )
-primitive 'move'   'move'; inout 3 0
+primitive 'move'   'move'
 
 
 
@@ -2292,7 +2232,7 @@ primitive 'move'   'move'; inout 3 0
 # ----- character i/o ------------------------------------ #fold01
 
 # given an ASCII, print the character
-primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'; inout 1 0
+primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
 # duplicating 'char functionality because quoting in evaluate
 # becomes sometimes hard when using ' ' for characters' ASCIIs
 colon '[char]'
@@ -2312,7 +2252,6 @@ colon 'key'
    push 'tmp'                                                        # push ASCII
    code 'keybuf="${keybuf:1}"'                                       # strip key from keybuf
 semicolon
-inout 0 1
 
 colon 'key?'
    code '[[ -z "$keybuf" ]] || { s+=("$true"); return; }'            # key in keybuf: yes, flag "key ready"
@@ -2324,19 +2263,17 @@ colon 'key?'
    code 'fi'
    push 'false'
 semicolon
-inout 0 1
 
 
 colon 'spaces'
    code '((s1=s[sp--]))'
    code '((s1&msb))||printf "%${s1}s" ""'
 semicolon
-inout 1 0
 
 
-primitive  'cr'      'printf "\n"';                  inout 0 0
-primitive  'space'   'printf " "' ;                  inout 0 0
-primitive  'page'    'clear'      ;                  inout 0 0
+primitive  'cr'      'printf "\n"'
+primitive  'space'   'printf " "'
+primitive  'page'    'clear'
 primitive 'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
 defer     'prompt'       'simpleprompt'
 
@@ -2353,7 +2290,7 @@ colon 'from$'
 semicolon
 
 
-
+# NOTE: test with tabs and spaces instead of empty lines
 # omit block of source lines up to next empty line
 colon 'omit'
    code 'until (( linenr > ${#lines[@]} )); do'
@@ -2377,26 +2314,15 @@ colon '#'                                                            # : #
    code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;
-inout 1 1
-
-
-primitive 'decimal'  "m[$base]=10"; inout 0 0
-primitive 'hex'      "m[$base]=16"; inout 0 0
-primitive 'binary'   "m[$base]=2";  inout 0 0
-
 
 
 # ----- vocabularies and wordlists ----------------------- #fold01
 
-
+# NOTE: consider use of generated word list names, like wordlist_$wid
+# use anychar names on yoda side, generated names on bash side.
 colon 'initwordlist'                                                 # ( wid -- )
    code 'declare -gA "${strings[s[sp--]]}=()"'
 semicolon
-
-colon 'get-current'
-   push 'currentwid'
-semicolon
-inline
 
 colon 'get-context'
    push 'order[0]'
@@ -2412,11 +2338,11 @@ inline
 primitive 'set-context'  'order[0]="${s[sp--]}"'
 inline
 
+
+# --- populate only voc ---
 declare -n current                                                   # appease shellcheck
 declare -n current="only"                                            # compile to only vocabulary
-
 primitive 'also'      'order=("${order[0]}" "${order[@]}")'
-
 colon 'order'
    code 'printf "context:"'
    code 'for wid in "${order[@]}"; do'
@@ -2424,21 +2350,16 @@ colon 'order'
    code 'done'
    code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
 semicolon
-
 primitive 'previous'  '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
 primitive 'words'     'words'
 primitive 'onlyonly'  'order=(); s[++sp]="$onlywid"'
-
-
 include << 'end'
-: forth  [ "forthwid" ] push$ set-context ;
-: definitions get-context set-current ;
-: only onlyonly set-context definitions also ;
-trash onlyonly
+: forth        [ "forthwid" ] push$ set-context ;
+: only         onlyonly set-context get-context set-current also ;
 end
+
+trash onlyonly
 declare -n current="forth"                                        # compile to forth vocabulary
-
-
 
 
 # ----- foward referencing support words ----------------- #fold01
@@ -2550,16 +2471,17 @@ colon 'neededanyof'                                                  # ( -- f ) 
    code 'done'
 semicolon
 
+
+
 generate_dependencies()  {                                           # library inclusion dependency file builder
+   local provided
    { echo "$v version"
      grep -r "^provides: " "${libdirs[0]}"
    } | while read -r file words; do
+      read -ra provided <<< "$words"
       file="${file%:provides:}"
       file="${file#"${libdirs[0]}"/}"
-# "Double quote to prevent globbing and word splitting."
-# I actually *want* word splitting here, for fprint to produce one line per space delimited word
-# shellcheck disable=SC2086
-      printf "%-31s $file\n" $words
+      printf "%-31s $file\n" "${provided[@]}"
    done > "$dependencies"
 }
 
@@ -2733,7 +2655,6 @@ colon 'origin'
    push '${filehandle:-"0"}'
 semicolon
 inline
-inout 0 1
 
 
 # copy remainder of input line to string stack without affecting it.
@@ -2750,7 +2671,13 @@ semicolon
 # ----- high level --------------------------------------- #fold01
 
 include << 'end'
+
+only forth
+: definitions  get-context set-current ;
+definitions
+
 \ ----- flow control ------------------------------------- #fold02
+
 ( -- x )
 : i            [ "i" ] push$ ;                                 inline
 
@@ -2768,6 +2695,8 @@ include << 'end'
 ( -- u )
 : rdepth       [ "rp" ] push$ ;                                inline
 
+( -- u )
+: depth$       [ "${#ss[@]}" ] push$ ;                         inline
 
 \ ----- arithmetics -------------------------------------- #fold02
 
@@ -2815,6 +2744,9 @@ include << 'end'
 ( x1 -- x2 )
 : cell+        1+ ;                                            inline
 
+( n -- d )
+: s>d          dup 0<  ;                                       inline
+
 ( x1 u -- x2 )
 ' lshift alias <<
 
@@ -2830,12 +2762,16 @@ include << 'end'
 ( -- a )
 : here         [ "dp" ] push$ ;                                inline
 
-
-
 ( -- u )
 ( $1 -- )
 : count$       [ "${#ss[-1]}" ] push$ drop$ ;                  inline
 
+( -- u )
+: here$        [ "sdp" ] push$ ;                               inline
+
+( -- x )
+( string:  $1 -- )
+: env          [ "${!ss[-1]}+0&true" ] push$ drop$ ;           inline
 
 \ ----- i/o ---------------------------------------------- #fold02
 ( a u -- )
@@ -2906,6 +2842,12 @@ defer query$
 : u.r          >r uconvert r> rtype$ ;
 
 \ ----- dictionary and compiling ------------------------- #fold02
+
+( -- wid )
+: get-current  [ "currentwid" ] push$  ;                       inline
+
+( -- u )
+: #unresolved  [ "${#unresolved[@]}" ] push$ ;                 inline
 
 ' have$ alias xt
 
@@ -2999,6 +2941,11 @@ end
 
 # ----- convenience -------------------------------------- #fold01
 
+primitive 'decimal'  "m[$base]=10"
+primitive 'hex'      "m[$base]=16"
+primitive 'binary'   "m[$base]=2"
+
+
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
     code 'unset "ss[-1]"'
@@ -3016,8 +2963,8 @@ primitive rempty 'r=() rp=0'
 # empty stack and string stack
 # since warm doesn't empty them any longer, a convenient
 # way to do so manually was needed.
-primitive 'random'   '((s[++sp]=SRANDOM&true))'; inout 0 1           # ( -- u )        32 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))';     # a microseconds epoch, used for benchmarking
+primitive 'random'   '((s[++sp]=SRANDOM&true))'                      # ( -- u )        32 bits random number
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))'      # a microseconds epoch, used for benchmarking
 primitive 'secs'     'sleep "${s[sp--]}"'
 
 colon 'version'

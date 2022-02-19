@@ -1,0 +1,17 @@
+name:                s>d
+stack:               ( n -- d )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            artihmetic, number conversion
+
+decription:          convert single signed number to signed double
+
+notes:               Even though yoda doesn't have support for double length arithmetics,
+                     there may be a case where s>d may become useful, which is when
+                     currently non-standard parameter passed to pictured number conversion
+                     becomes standard compliant, requiring to pass a double length number
+                     to <# # #s #>
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/StoD

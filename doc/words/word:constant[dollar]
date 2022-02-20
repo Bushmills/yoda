@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            defining
 
-decription:          A defining word for creating constants. Name of a created constant
+description:         A defining word for creating constants. Name of a created constant
                      is taken from string stack, with value x associated with it.
 
 example:             10 "ten" constant$

@@ -5,7 +5,7 @@ string stack:        ( $1 -- $1 $1 )
 contexts:            stateless
 category:            string stack
 
-decription:          duplicate top string stack item
+description:         duplicate top string stack item
 
 standard:            no
 deviation:           standard has no equivalent

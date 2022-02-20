@@ -4,7 +4,7 @@ contexts:            stateless
 category:            dictionary
 input stream:        whole input line
 
-decription:          splits remainder of input line into space delimited strings,
+description:         splits remainder of input line into space delimited strings,
                      which are tested as word names against being forward referenced.
                      If any appears among the forward referenced, that is, needed,
                      words, the result flag is true, otherwise false.

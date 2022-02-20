@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            constants, logic
 
-decription:          returns a flag representing false
+description:         returns a flag representing false
 
 notes:               integer numbers are used to personate flags,
                      with zero representing false.

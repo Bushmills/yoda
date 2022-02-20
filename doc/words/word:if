@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          start an "if ... then"  or  "if ... else ... then"
+description:         start an "if ... then"  or  "if ... else ... then"
                      conditional sequence. Code code following if will be
                      executed when flag is true, skipped until "else" or "then"
                      otherwise.

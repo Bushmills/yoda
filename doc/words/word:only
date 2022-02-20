@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          resets/initialises vocabulary search to only
+description:         resets/initialises vocabulary search to only
 
 notes:               to return to initial launch state, execute after only:
                      forth definitions

@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            pictured number conversion, string stack
 
-decription:          converts all (remaining) digits of x, respecting current
+description:         converts all (remaining) digits of x, respecting current
                      radix, to characters, which are prepended to $1
 
 

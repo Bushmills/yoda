@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            memory
 
-decription:          stores x at memory address a
+description:         stores x at memory address a
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/Store

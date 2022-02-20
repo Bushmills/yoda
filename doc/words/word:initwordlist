@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            wordlists
 
-decription:          declare/redeclare and empty the wordlist identified by wid.
+description:         declare/redeclare and empty the wordlist identified by wid.
 
 example:             a sure way to trash all headers of forth vocabulary:
                      forth get-context initwordlist

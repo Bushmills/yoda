@@ -16,7 +16,7 @@ example:             false lest  this will be ignored
 
 
 context:             compiling
-decription:          compiles a conditional branch which causes the word, when
+description:         compiles a conditional branch which causes the word, when
                      executed, to skip all remaining code until end of function
                      if flag f is false. Or, said differently, will allow
                      execution of rest of function only when flag f is true.

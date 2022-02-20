@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            dictionary
 
-decription:          produces name of word from execution token xt
+description:         produces name of word from execution token xt
 
 
 notes:               the reverse operation of ' (tick) which takes a word name and

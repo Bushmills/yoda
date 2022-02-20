@@ -5,4 +5,4 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics, system
 
-decription:          largest unsigned number which can be represented with the chosen model
+description:         largest unsigned number which can be represented with the chosen model

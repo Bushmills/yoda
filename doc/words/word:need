@@ -6,7 +6,7 @@ contexts:            stateless
 category:            compiling, dictionary, system
 input stream:        space delimited string
 
-decription:          creates a forward reference by the name of space delimited string,
+description:         creates a forward reference by the name of space delimited string,
                      parsed from input stream. As consequence can that word be compiled
                      into other words. Resolving takes place automatically at appropriate
                      times, or can be forced by executing "resolve", assuming the word can

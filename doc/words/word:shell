@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            system
 
-decription:          a variable, used as flag to turn off or on passing unknown
+description:         a variable, used as flag to turn off or on passing unknown
                      words for execution to shell.
 
 

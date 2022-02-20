@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics
 
-decription:          removes sign from number
+description:         removes sign from number
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/ABS

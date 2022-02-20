@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            time
 
-decription:          return the number of microseconds elapsed since 1970jan1.
+description:         return the number of microseconds elapsed since 1970jan1.
                      Similar to epoch, but with higher resolution.
 
 

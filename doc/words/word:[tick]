@@ -5,7 +5,7 @@ string stack:        ( -- )
 category:            dictionary, wordlists
 input stream:        parses a space delimited string as word name, which is looked up
 
-decription:          returns the so called execution token of the next word which name
+description:         returns the so called execution token of the next word which name
                      is taken from input stream. The execution token is a single cell
                      sized integer which identifies the word, and can be used to execute
                      it (see "execute")

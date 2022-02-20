@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            I/O
 
-decription:          Returns ASCII value of a pressed key as c on stack. In case
+description:         Returns ASCII value of a pressed key as c on stack. In case
                      characters are buffered and waiting to be read, key takes
                      the next buffered key and removes it from buffer. When input
                      buffer is empty, key will wait until a key was pressed.

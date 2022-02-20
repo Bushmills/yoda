@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            strings
 
-decription:          pushs the value of "sdp" as u, which, analog to here and
+description:         pushs the value of "sdp" as u, which, analog to here and
                      dp, is an index to first unused address, but referring to
                      a memory section dedicated to holding strings.
 

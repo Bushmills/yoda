@@ -4,7 +4,7 @@ return stack:        ( -- )
 string stack:        ( -- )
 category:            number formatting
 
-decription:          output unsigned number u., respecting radix stored in base
+description:         output unsigned number u., respecting radix stored in base
 
 contexts:            stateless
 

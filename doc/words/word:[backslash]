@@ -6,7 +6,7 @@ contexts:            interpreting, compiling
 category:
 input stream:        whole line
 
-decription:          read an discard all remaining input from input line, thereby
+description:         read an discard all remaining input from input line, thereby
                      removing it from further interpretation. As consequence is
                      text from input treated a comment.
 

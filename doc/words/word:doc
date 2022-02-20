@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            info
 
-decription:          reads a word from input stream, which is appended to
+description:         reads a word from input stream, which is appended to
                      a (currently hardcoded) dir $doc, then used as path/file
                      opened in an editor. Ideally "word" is the name of an existing
                      forsh word, and the opened file containing some informative descriptions.

@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            number conversion
 
-decription:          meant for use during pictured number conversion, the character c
+description:         meant for use during pictured number conversion, the character c
                      is prepended to the string on string stack, allowing to insert
                      characters of choice into the number in process of being converted.
 

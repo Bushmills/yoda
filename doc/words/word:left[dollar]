@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            strings
 
-decription:          return the u first chars of $1 and return them as $2.
+description:         return the u first chars of $1 and return them as $2.
                      if u is equal of bigger than the number of chars in $1,
                      the whole string $1 is returned as $2
 

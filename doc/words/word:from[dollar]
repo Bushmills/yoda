@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            loading
 
-decription:          use top string stack item as file name, or path & file name,
+description:         use top string stack item as file name, or path & file name,
                      and load source from that file. If path is specified, only
                      that location is attempted to open file. Files names without
                      a path (i.e. containing no "/" characters) are searched through

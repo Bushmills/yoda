@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            return stack
 
-decription:          returns number of items on return stack
+description:         returns number of items on return stack
 
 standard:            no
 deviation:           standard has no equivalent

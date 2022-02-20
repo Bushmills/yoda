@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack
 
-decription:          push a copy of second stack item to stack
+description:         push a copy of second stack item to stack
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/OVER

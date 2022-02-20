@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            memory
 
-decription:          read x from memory location at address a1, then
+description:         read x from memory location at address a1, then
                      increment a1 by cell to give a2
 
 

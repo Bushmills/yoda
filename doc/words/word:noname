@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          renders the last word headerless and produces its execution
+description:         renders the last word headerless and produces its execution
                      token xt. For defing the word, prior to use of "headerless",
                      a name is still needed. That name can of course be a throwaway
                      dummy name.

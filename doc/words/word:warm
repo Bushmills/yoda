@@ -6,7 +6,7 @@ contexts:            stateless
 category:            system
 input stream:        whole line
 
-decription:          initialises all stacks, clears input line, sets number base
+description:         initialises all stacks, clears input line, sets number base
                      to decimal, stops file loading, enters interpretation state.
 
 notes:               contrary to what the name suggests, "warm" doesn't really

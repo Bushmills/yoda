@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack
 
-decription:          copy the pair of stack items which is located underneath
+description:         copy the pair of stack items which is located underneath
                      the topmost pair of stack items to top of stack.
 
 standard:            yes

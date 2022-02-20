@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compiling
 category:            flow control
 
-decription:          break out of a function early, preventing execution of
+description:         break out of a function early, preventing execution of
                      code following exit.
 
 notes:               makes often more sense in combination with some conditionals

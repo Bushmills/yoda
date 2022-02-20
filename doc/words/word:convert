@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            number conversion
 
-decription:          converts signed number n1 to a string which is pushed
+description:         converts signed number n1 to a string which is pushed
                      to string stack. Respects base.
                      Change of name is considered.
 

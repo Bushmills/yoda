@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            strings
 
-decription:          changes case of all chars in $1 to lower
+description:         changes case of all chars in $1 to lower
 
 standard:            no
 deviation:           standard has no equivalent

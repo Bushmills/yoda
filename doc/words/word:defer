@@ -6,7 +6,7 @@ contexts:            stateless
 category:            defining
 input stream:        space delimited string
 
-decription:          reads a word name from input and creates a word which acts
+description:         reads a word name from input and creates a word which acts
                      as execution vector: initially bound to no operation, it will
                      have no effect (apart from wasting a few CPU cycles). By means
                      of the word "is" can semantics of any word be assigned to the

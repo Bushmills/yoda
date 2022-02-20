@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics, flow control helper
 
-decription:          converts start, count parameters to do ... loop compatible
+description:         converts start, count parameters to do ... loop compatible
                      limit, start parameters.
 
 example:             10 5 bounds

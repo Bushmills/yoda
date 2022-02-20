@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            loading
 
-decription:          while loading from file, skip over the next consecutive block
+description:         while loading from file, skip over the next consecutive block
                      of non-empty lines. Treat all line up to the next empty line
                      as comments.
 

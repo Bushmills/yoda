@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            number conversion
 
-decription:          finalises a pictured number conversion sequence. the converted
+description:         finalises a pictured number conversion sequence. the converted
                      number is provided as top of string stack
 
 notes:               meant to be paired with <#

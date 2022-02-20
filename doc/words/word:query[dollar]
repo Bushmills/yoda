@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            I/O, strings
 
-decription:          prompt for a line of input, store it as top string stack item.
+description:         prompt for a line of input, store it as top string stack item.
                      query$ is now a deferred word, allowing simple replacement against
                      a custom version of query$
 

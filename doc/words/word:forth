@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          the vocabulary ("word list") containing the majority of
+description:         the vocabulary ("word list") containing the majority of
                      yoda's core words. Vocabulary runtime semantics are to
                      replace the first word list in the list of searched word
                      lists, thereby becoming the first word list searched.

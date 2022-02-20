@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack
 
-decription:          returns number of stack items (exclusive u)
+description:         returns number of stack items (exclusive u)
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/DEPTH

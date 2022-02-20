@@ -5,5 +5,5 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          start of a do ... loop or  do ... +loop flow control contruct
+description:         start of a do ... loop or  do ... +loop flow control contruct
 

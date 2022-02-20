@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            string stack
 
-decription:          converts the ASCII of a character on stack to the character
+description:         converts the ASCII of a character on stack to the character
                      represented as string and pushed onto string stack
 
 notes:               some limitations exist converting control characters, and

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          set the vocabulary into which headers of new words are placed.
+description:         set the vocabulary into which headers of new words are placed.
 
 standard:            yes
 url:                 https://forth-standard.org/standard/search/SET-CURRENT

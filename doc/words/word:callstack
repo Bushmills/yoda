@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            customising
 
-decription:          a variable which determines whether any and what number of call stack
+description:         a variable which determines whether any and what number of call stack
                      items will be displayed in case of an error.
                      The value can be set to an initial value specified in yoda.conf, but
                      also changed any time, by writing the desired value to this variable.

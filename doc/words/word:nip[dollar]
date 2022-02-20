@@ -5,7 +5,7 @@ string stack:        ( $1 $2 -- )
 contexts:            stateless
 category:            strings
 
-decription:          remove and discard second from top string stack item
+description:         remove and discard second from top string stack item
 
 standard:            no
 deviation:           standard has no equivalent

@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            file, string
 
-decription:          convert file handle u to filename $1
+description:         convert file handle u to filename $1
 
 example:             none
 notes:               filename is the canonical name of a file yoda has already read,

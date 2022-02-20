@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            strings
 
-decription:          places double quotes around top of string stack
+description:         places double quotes around top of string stack
 
 notes:               like a parameterless bracket$, provided because placing
                      literal strings containing double quotes on string stack

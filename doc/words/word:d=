@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            comparison
 
-decription:          compare two cell pairs x1,x2 with x3,x4.
+description:         compare two cell pairs x1,x2 with x3,x4.
                      Result flag is true when both constituent cells of each
                      pair match their respective counterpart, that is,
                      when x1==x3 AND x2==x4, otherwise flag is false.

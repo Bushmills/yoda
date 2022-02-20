@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            I/O
 
-decription:          outputs signed number n, padded with leading spaces to u chars.
+description:         outputs signed number n, padded with leading spaces to u chars.
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/DotR

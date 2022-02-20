@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          trash the header of the word whose name is on string stack.
+description:         trash the header of the word whose name is on string stack.
 
 standard:            no
 deviation:           standard has no equivalent

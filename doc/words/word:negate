@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics
 
-decription:          changes sign of number n1, which is returned as n2
+description:         changes sign of number n1, which is returned as n2
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/NEGATE

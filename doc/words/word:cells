@@ -7,11 +7,11 @@ category:            arithmetics, system
 
 
 context:             interpreting
-decription:          returns as n2 the count of cells needed to store n1 integers
+description:         returns as n2 the count of cells needed to store n1 integers
 
 
 context:             compiling
-decription:          effectively a no ooperation, not compiling any code,
+description:         effectively a no ooperation, not compiling any code,
                      therefore leaving n1 on stack unmodified
 
 standard:            yes

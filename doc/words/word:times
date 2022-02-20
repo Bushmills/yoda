@@ -9,7 +9,7 @@ input stream:        whole input line
 
 
 context:             interpreted
-decription:          repeat execution of remainder of input line u times.
+description:         repeat execution of remainder of input line u times.
                      The count of remaining executions of input line can
                      be produced by execution of i.  In case of nested
                      execution of times can the count of remaining
@@ -22,7 +22,7 @@ example:             3 times  cr  4 times   j . i .  space
 
 
 context:             compiled
-decription:          repeat execution of remainder of word u times.
+description:         repeat execution of remainder of word u times.
                      The count of remaining executions of input line can
                      be produced by execution of i.  In case of nested
                      execution of times can the count of remaining

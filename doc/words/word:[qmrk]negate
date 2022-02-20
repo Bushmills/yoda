@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetic
 
-decription:          conditionally negates a number. A non-zero flag causes sign change
+description:         conditionally negates a number. A non-zero flag causes sign change
                      to n1 which is returned as n2
 
 standard:            no

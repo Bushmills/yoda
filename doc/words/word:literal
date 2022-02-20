@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compiled
 category:            compiling
 
-decription:          take a number from stack during compilation,
+description:         take a number from stack during compilation,
                      compile it into currently build definition such
                      that the number will be pushed to stack when
                      the definition executes.

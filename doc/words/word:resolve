@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            compiler
 
-decription:          performs a resolve run if any unresolved references exist.
+description:         performs a resolve run if any unresolved references exist.
                      resolve may repeat the attempt when new forward
                      references are created as result of resolving others. When
                      no more unresolved references exist, or no more forward

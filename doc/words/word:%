@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetic
 
-decription:          calculate n2 percent of n1, round it, return it as n3
+description:         calculate n2 percent of n1, round it, return it as n3
 
 standard:            no
 deviation:           standard has no equivalent

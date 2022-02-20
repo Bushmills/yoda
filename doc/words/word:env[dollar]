@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            strings, environment
 
-decription:          read contents of environment variable with name on string stack
+description:         read contents of environment variable with name on string stack
                      the contents read are pushed as $2 to string stack.
 
 standard:            no

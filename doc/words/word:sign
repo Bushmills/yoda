@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            number conversion
 
-decription:          prepend a hyphen ("-") to top of string stack item if n is negative
+description:         prepend a hyphen ("-") to top of string stack item if n is negative
 
 notes:               meant to be used within a pictured number conversion sequence,
                      "sign" doesn't require being used within <#  #>, though its

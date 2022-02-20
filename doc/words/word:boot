@@ -6,7 +6,7 @@ contexts:            stateless
 category:            system
 input stream:        space delimited string
 
-decription:          reads a space delimited string from input stream
+description:         reads a space delimited string from input stream
                      and writes the excution token of the word with that
                      name to cold start vector. (Well, almost - actually the
                      function name is written, but function names and execution

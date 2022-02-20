@@ -4,16 +4,10 @@ return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
 input:               ( word )
-category:            defining, vocabularies
+category:            defining, wordlists, vocabularies
 
-decription:          read a space delimited string from input, create a vocabulary with
+description:         read a space delimited string from input, create a vocabulary with
                      the name of that string.
 
-notes:               due to vocabulary name also used as name for the bash array which
-                     serves as wordlist, naming is currently restricted to characters
-                     which are acceptable for bash variable names. Use of characters
-                     a..z, A..Z, 0..9 and _ is safe.
-
-standard:            yes
-deviation:           mentioned naming restriction applies currently
-url:
+standard:            no
+deviation:           standard has no equivalent

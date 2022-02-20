@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            files
 
-decription:          returns a file load counter u. first time a file is loaded the
+description:         returns a file load counter u. first time a file is loaded the
                      counter contains 0, which gets increment each time the file is
                      loaded, therefore can this value be used as flag for initial loading
                      vs reload detection.

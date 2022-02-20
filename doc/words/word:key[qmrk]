@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            I/O
 
-decription:          return true flag if a character is available in
+description:         return true flag if a character is available in
                      input buffer, false otherwise.
                      Characters become available in input buffer when
                      a key is pressed.

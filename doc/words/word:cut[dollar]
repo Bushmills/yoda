@@ -6,7 +6,7 @@ contexts:            stateless
 category:            string stack
 input stream:
 
-decription:          searches for first occurance of $2 in $1, then remove matching
+description:         searches for first occurance of $2 in $1, then remove matching
                      string and rest of string until end of string from $1. Return
                      the resulting string as $3. u is pushed to stack, informing how
                      many characters were removed from $1.

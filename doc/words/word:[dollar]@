@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            strings
 
-decription:          push a string taken from string memory location u
+description:         push a string taken from string memory location u
                      to string stack.
 
 notes:               complementary to $!

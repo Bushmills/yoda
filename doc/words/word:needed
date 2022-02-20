@@ -6,7 +6,7 @@ contexts:            stateless
 category:            dictionary, loading file, conditional compilation
 input stream:        word
 
-decription:          examine forward references for word as read from input.
+description:         examine forward references for word as read from input.
                      Return true if word is forward referenced, false otherwise
 
 standard:            no

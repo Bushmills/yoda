@@ -6,7 +6,7 @@ contexts:            stateless
 category:            compiling
 input stream:        whole input line
 
-decription:          repeatedly reads a space delimited string from input line,
+description:         repeatedly reads a space delimited string from input line,
                      until input line has been consumed. Each string is taken as
                      name of a word, which is, if not already present, compiled
                      from its source file. Should no source file exist or be known,

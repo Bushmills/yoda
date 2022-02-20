@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          initiate one of these flow control constructs:
+description:         initiate one of these flow control constructs:
                      begin ... again
                      begin ... until
                      begin ... while ... repeat

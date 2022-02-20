@@ -6,7 +6,7 @@ contexts:            stateless
 category:            I/O, interpreting
 input stream:        whole line
 
-decription:          places a copy of remainder of input line on string stack,
+description:         places a copy of remainder of input line on string stack,
                      without affeceting input stream.
                      This means, interpreting will continue unchanged, but
                      there'll be a copy of not yet executed input on string stack,

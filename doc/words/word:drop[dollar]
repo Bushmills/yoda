@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            strings
 
-decription:          discard top string stack item
+description:         discard top string stack item
 
 standard:            no
 deviation:           standard has no equivalent

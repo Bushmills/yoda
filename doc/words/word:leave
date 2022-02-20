@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compiled
 category:            flow control
 
-decription:          jump to end of loop. Loop parameters will be cleaned up, and
+description:         jump to end of loop. Loop parameters will be cleaned up, and
                      execution continues after end of loop.
 
 notes:               leave can be used within all these loop constructs:

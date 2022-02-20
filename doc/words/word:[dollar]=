@@ -5,6 +5,6 @@ string stack:        ( $1 $2 -- )
 contexts:            stateless
 category:            strings, comparison
 
-decription:          compares two strings $1, $2. A true flag is produced if strings
+description:         compares two strings $1, $2. A true flag is produced if strings
                      match. If one string is a substring of the other, the strings
                      are considered not matching.

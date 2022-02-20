@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          examine forward references for word with name given by
+description:         examine forward references for word with name given by
                      string $1. Return true if word is forward referenced,
                      false otherwise
 

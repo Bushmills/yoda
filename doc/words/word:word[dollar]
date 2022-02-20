@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 category:            input
 input stream:        space delimited string
 
-decription:          parses input for a string, delimited by space,
+description:         parses input for a string, delimited by space,
                      returns parsed string as $1 on return stack
 
 contexts:            stateless

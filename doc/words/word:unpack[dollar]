@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            strings
 
-decription:          unpacks string $1 to its components characters, represented
+description:         unpacks string $1 to its components characters, represented
                      by numeric ASCII values, and stored at addresses a ... a+c-1.
                      c is returned as count of ASCIIS stored.
 

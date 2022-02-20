@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            memory
 
-decription:          read and return x2 from address, then replace memory contents by x1
+description:         read and return x2 from address, then replace memory contents by x1
 
 standard:            no
 deviation:           standard has no equivalent

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            comparison
 
-decription:          replaces n with false flag if n was 0 or positive
+description:         replaces n with false flag if n was 0 or positive
                      replaces n with true flag if n was negative
 
 standard:            yes

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack, info
 
-decription:          print a display of stack items
+description:         print a display of stack items
 
 note:                not a yoda core word, but included from library
 standard:            yes

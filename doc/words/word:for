@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          initiates a for ... next flow control construct, executing
+description:         initiates a for ... next flow control construct, executing
                      a loop u times. A value of 0 for u will result in no
                      excecution of for ... next body.
                      Loop index can be produced by execution of i, starting with

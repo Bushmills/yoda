@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          conclude a begin ... until flow control construct by compiling
+description:         conclude a begin ... until flow control construct by compiling
                      code which performs a conditional jump back to begin. If flag
                      is true, the jump is not taken, and execution continues with
                      code following until.

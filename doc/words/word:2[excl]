@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            memory
 
-decription:          stores two stack items x1 and x2 at address a
+description:         stores two stack items x1 and x2 at address a
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/TwoStore

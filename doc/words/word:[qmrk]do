@@ -5,4 +5,4 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          begin of a ?do ... loop   or   ?do ... +loop flow control construct
+description:         begin of a ?do ... loop   or   ?do ... +loop flow control construct

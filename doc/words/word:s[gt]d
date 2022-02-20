@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            artihmetic, number conversion
 
-decription:          convert single signed number to signed double
+description:         convert single signed number to signed double
 
 notes:               Even though yoda doesn't have support for double length arithmetics,
                      there may be a case where s>d may become useful, which is when

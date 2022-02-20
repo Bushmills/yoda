@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            pictured number conversion
 
-decription:          places an empty string on string stack, which will be used
+description:         places an empty string on string stack, which will be used
                      to buffer converted number output.
 
 notes:               meant to be used in a <# ... #> sequence,  "..." being the

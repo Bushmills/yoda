@@ -7,7 +7,7 @@ category:            dictionary, conditional compilation
 
 input stream:        word name
 
-decription:          looks up word name in dictionary, returns 0 for word not found/
+description:         looks up word name in dictionary, returns 0 for word not found/
                      undefined, or the execution token associated with word.
 
 

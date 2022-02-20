@@ -6,7 +6,7 @@ contexts:            stateless
 category:            file loading
 input stream:        space delimited string
 
-decription:          read a string from input stream which is used as file name for
+description:         read a string from input stream which is used as file name for
                      reading a file and evaluating its contents.
                      File names without path are considered libraries, and all directories
                      of ${libdirs[@]} - which is a configuration item - are searched for

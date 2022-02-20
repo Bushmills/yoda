@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            number conversion
 
-decription:          change radix ("number base") to 16, affecting numeric in- and
+description:         change radix ("number base") to 16, affecting numeric in- and
                      output
 
 standard:            yes

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack
 
-decription:          duplicate top stack item
+description:         duplicate top stack item
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/DUP

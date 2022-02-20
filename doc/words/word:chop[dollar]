@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 $3 ... $u+1 )
 contexts:            stateless
 category:            strings
 
-decription:          splits top of string stack at space delimimiters into strings,
+description:         splits top of string stack at space delimimiters into strings,
                      all of them pushed to string stack. Returned u informs of the
                      string count places on string stack.
 

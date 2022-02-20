@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetic, memory
 
-decription:          inrement memory contents at address a by 1
+description:         inrement memory contents at address a by 1
 
 standard:            no
 deviation:           standard has no equivalent

@@ -4,7 +4,7 @@ return stack:        ( -- )
 string stack:        ( -- )
 category:            compare
 
-decription:          return true if unsigned u1 is larger than unsigner u2,
+description:         return true if unsigned u1 is larger than unsigner u2,
                      otherwise false is returned
 
 contexts:            stateless

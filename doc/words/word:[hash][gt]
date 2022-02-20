@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 category:            pictured number conversion, I/O
 input stream:
 
-decription:          meant to be used between at the end of a <# ... sequence, its operation
+description:         meant to be used between at the end of a <# ... sequence, its operation
                      is part of converting an integer to a string of characters, stored in
                      memory (contrasting with "a string stored on string stack"). #> will
                      finalise conversion, then unpack string to a list of ASCII values, stored

@@ -6,7 +6,7 @@ contexts:            stateless
 category:            info
 input stream:        word name
 
-decription:          reads a word from input stream, which is appended to a dir/name
+description:         reads a word from input stream, which is appended to a dir/name
                      $worddoc, then used as path/file of a file whose contents are
                      displayed. Ideally "word" is the name of an existing yoda word,
                      which has already been described ("documemented"), in which case

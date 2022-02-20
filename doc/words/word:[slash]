@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetic
 
-decription:          signed division of n1 by n2. quotient is returned as n3
+description:         signed division of n1 by n2. quotient is returned as n3
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/Div

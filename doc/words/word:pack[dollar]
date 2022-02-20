@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            strings
 
-decription:          packs a c-addr type string into a string of characters which
+description:         packs a c-addr type string into a string of characters which
                      is pushed to string stack.
 
 example:             none

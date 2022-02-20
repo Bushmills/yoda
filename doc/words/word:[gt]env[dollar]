@@ -5,7 +5,7 @@ string stack:        ( $1 $2 -- )
 contexts:            stateless
 category:            strings, environment
 
-decription:          write string $1 into environment variable with the name
+description:         write string $1 into environment variable with the name
                      specified by $2
 
 standard:            no

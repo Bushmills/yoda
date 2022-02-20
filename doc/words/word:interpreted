@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary, compilation
 
-decription:          moves the header of the most recently defined word into
+description:         moves the header of the most recently defined word into
                      the interpret-only context vocabulary. The result is that
                      the word can only be found during interpretation, but not
                      during compilation.

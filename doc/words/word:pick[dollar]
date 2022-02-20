@@ -5,7 +5,7 @@ string stack:        ( ... $1 $0 -- ... $1 $0 $u )
 contexts:            stateless
 category:            strings
 
-decription:          picks u-most string of string stack and pushes it to top.
+description:         picks u-most string of string stack and pushes it to top.
                      counting is 0 based: a value of 0 for u duplicates top
                      string stack item, a value of 1 has same effect as over$,
 

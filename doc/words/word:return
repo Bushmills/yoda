@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control, system
 
-decription:          compiles an exit from a function, akin to exit,
+description:         compiles an exit from a function, akin to exit,
                      but also returns a return value x, which can be
                      examined and responded to by the calling function.
                      This return has no meaning for and within yoda programs.

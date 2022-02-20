@@ -5,12 +5,7 @@ string stack:        ( $1 -- )
 contexts:            compileonly
 category:            strings, compiling
 
-decription:
-
-example:             none
-notes:               none
-
-decription:          take a string from string stack during compilation,
+description:         take a string from string stack during compilation,
                      compile it into currently build definition such
                      that the string will be pushed to string stack when
                      the definition executes.

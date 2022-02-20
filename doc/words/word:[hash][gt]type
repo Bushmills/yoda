@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            number conversion, I/O
 
-decription:          completes a pictured number conversion sequence, by
+description:         completes a pictured number conversion sequence, by
                      finalising the buffered converted number, outputting
                      it, and cleaning up stacks.
                      meant to be used in conjunction with <#

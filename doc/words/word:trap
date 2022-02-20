@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            system
 
-decription:          execute xt on occurance of a signal named $1
+description:         execute xt on occurance of a signal named $1
 
 standard:            no
 deviation:           standard has no equivalent

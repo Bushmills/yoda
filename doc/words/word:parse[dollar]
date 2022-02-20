@@ -6,7 +6,7 @@ contexts:            stateless
 category:
 input stream:        a string, delimited by c
 
-decription:          parses input for a character with ASCII c. Removes the portion
+description:         parses input for a character with ASCII c. Removes the portion
                      up to and including that character from input, and places it as
                      top item on string stack, delimiter c excluded.
                      The whole line will be removed (i.e. emptied) and pushed to

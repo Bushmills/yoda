@@ -6,7 +6,7 @@ contexts:            interpreting
 category:            flow control
 input stream:        none. but checks terminal key available status
 
-decription:          repeats execution of the remainder of the input line until
+description:         repeats execution of the remainder of the input line until
                      a key was pressed.
 
 

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            memory
 
-decription:          reads character from a, increments a and places character on top
+description:         reads character from a, increments a and places character on top
 
 notes:               word has been moved to library
 standard:            yes

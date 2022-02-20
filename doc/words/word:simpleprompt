@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            status, I/O
 
-decription:          shows a simple ok prompt. By default resolving the deferred
+description:         shows a simple ok prompt. By default resolving the deferred
                      word "prompt" with the purpose of replacing it with a more
                      powerful prompt.
 

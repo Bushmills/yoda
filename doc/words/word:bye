@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            system
 
-decription:          exit from running program or script
+description:         exit from running program or script
 
 standard:            yes
 url:                 https://forth-standard.org/standard/tools/BYE

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            number conversion
 
-decription:          a variable, containing the radix ("number base") applied when
+description:         a variable, containing the radix ("number base") applied when
                      converting integers to strings or vice versa. Any value from
                      2 to 36 is considered a valid radix.
                      words decimal, hex and binary have been defined for setting

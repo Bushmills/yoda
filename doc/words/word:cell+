@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 contexts:            system, arithmetics
 
-decription:          uncreases u1 by the number of memory cells needed to hold one integer
+description:         uncreases u1 by the number of memory cells needed to hold one integer
 
 notes:               yoda uses cell size of 1
 

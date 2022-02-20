@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack
 
-decription:          discard top stack item
+description:         discard top stack item
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/DROP

@@ -5,7 +5,7 @@ string stack:        ( ??? -- )
 contexts:            stateless
 category:            strings
 
-decription:          reinitialise the string stack
+description:         reinitialise the string stack
 
 standard:            no
 deviation:           standard has no equivalent

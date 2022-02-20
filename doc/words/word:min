@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics
 
-decription:          returns the lesser of two signed numbers
+description:         returns the lesser of two signed numbers
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/MIN

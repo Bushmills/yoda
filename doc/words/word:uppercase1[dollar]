@@ -5,7 +5,7 @@ string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            strings
 
-decription:          changes first character in $1 to uppercase.
+description:         changes first character in $1 to uppercase.
                      Remaining characters aren't affected.
 
 standard:            no

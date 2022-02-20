@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          make the current vocabulary identical to the first
+description:         make the current vocabulary identical to the first
                      word list in list of searched word lists.
 
 standard:            yes

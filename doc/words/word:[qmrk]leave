@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          jump to end of loop conditinally. If flag is not false, loop parameters
+description:         jump to end of loop conditinally. If flag is not false, loop parameters
                      will be cleaned up, and execution continues after end of
                      loop. If flag is false, execution continues with the word following
                      ?leave.

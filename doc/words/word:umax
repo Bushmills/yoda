@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics
 
-decription:          returns the unsigned larger number of u1 and u2
+description:         returns the unsigned larger number of u1 and u2
 
 standard:            no
 deviation:           standard has no equivalent

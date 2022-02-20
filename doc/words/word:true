@@ -2,7 +2,7 @@ name:                true
 stack:               ( -- -1 )
 return stack:        ( -- )
 string stack:        ( -- )
-decription:          returns a true flag (all bits set)
+description:         returns a true flag (all bits set)
 contexts:            stateless
 
 standard:            yes

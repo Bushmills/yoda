@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack
 
-decription:          use u as zero based index into stack and replace u
+description:         use u as zero based index into stack and replace u
                      with the stack item indexed by it.
 
 notes:               0 pick  is equivalent to a dup operation, 1 pick corresponds

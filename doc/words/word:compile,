@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            compilation
 
-decription:          compile code which causes execution of xt into
+description:         compile code which causes execution of xt into
                      word under construction.
 
 standard:            yes

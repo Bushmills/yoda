@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            file, compiling
 
-decription:          produce the file handle of the file from which source is currently
+description:         produce the file handle of the file from which source is currently
                      read and compiled from.
                      If not reading from a file, the handle of tty (0) is produced.
 

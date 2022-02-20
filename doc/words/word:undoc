@@ -5,7 +5,7 @@ string stack:        ( -- )
 category:            doc
 contexts:            stateless
 
-decription:          looks for the next undocumented word, generates a documentation
+description:         looks for the next undocumented word, generates a documentation
                      template, then launches editor on it. This is what I use for
                      documenting yet undocumented words.
 

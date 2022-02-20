@@ -6,7 +6,7 @@ contexts:            compiled
 category:            input, character conversion
 input stream:        space delimited string (preferably single character, but not enforced)
 
-decription:          read a space delimited string from input, and produce the
+description:         read a space delimited string from input, and produce the
                      ASCII if its first character, pushed on stack as c.
                      Possibly more characters in that string will be ignored.
 

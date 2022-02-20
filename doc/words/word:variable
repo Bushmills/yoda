@@ -3,7 +3,7 @@ stack:               ( -- )
                      ( -- a )  created variables
 return stack:        ( -- )
 string stack:        ( -- )
-decription:          fetches a space delimited string from input stream, creates
+description:         fetches a space delimited string from input stream, creates
                      a variable with this name and allocated one cell to the
                      variable to hold data.
                      Such created variables push, when executed, the address where

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:
 
-decription:          probably unnecessary - was used to manually "pad" conditionals as
+description:         probably unnecessary - was used to manually "pad" conditionals as
                      bash doesn't allow those to contain no code. As that's now checked
                      and reacted to automatically, the original need for noop has evaporated.
 

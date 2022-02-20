@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            interpreting
 category:            compiler
 
-decription:          switches compiler state to compiling
+description:         switches compiler state to compiling
 
 notes:               not very useful without prior [ inside of a definition:
                      "switching compiler state to compiling" doesn't actually

@@ -5,7 +5,7 @@ string stack:        ( $1 -- )
 contexts:            stateless
 category:            environment
 
-decription:          read numeric contents of environment variable $1 and place on stack
+description:         read numeric contents of environment variable $1 and place on stack
 
 example:             "LINES" env
 notes:               contents of environment variable may be an arithmetic expression

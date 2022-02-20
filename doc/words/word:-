@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics
 
-decription:          subtract n2 from n1, difference is returned as n3
+description:         subtract n2 from n1, difference is returned as n3
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/Minus

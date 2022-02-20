@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            compiling
 
-decription:          generates code pushing top of stack as literal to stack.
+description:         generates code pushing top of stack as literal to stack.
 
 notes:               makes only sense to compile into a compile-only word which will,
                      when executed while contructing a word, compile code to the word

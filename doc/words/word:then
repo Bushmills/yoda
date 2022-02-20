@@ -5,4 +5,4 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-decription:          part of an if ... then  or  if ... else ... then flow control construct
+description:         part of an if ... then  or  if ... else ... then flow control construct

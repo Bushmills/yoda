@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            tools
 
-decription:          opens a source file by number in the configured editor.
+description:         opens a source file by number in the configured editor.
                      Obtain a list of source files and their associated
                      number by executing "files"
 

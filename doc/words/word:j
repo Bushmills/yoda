@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            flow control
 
-decription:          return the loop index of loop enclosing the innermost loop.
+description:         return the loop index of loop enclosing the innermost loop.
                      If there's no such loop, the returned value is meaningless.
                      j works with do ... loop type loops, and also with for ... next
                      loops, including different type of loops for innermost and surrounding

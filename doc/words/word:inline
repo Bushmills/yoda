@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            compilation
 
-decription:          compiling words into new words will normally result in a
+description:         compiling words into new words will normally result in a
                      function call. Tagging a just compiled word with "inline"
                      instructs the compiler to insert the code the functions
                      contains instead.

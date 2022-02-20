@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetic
 
-decription:          divides the n1 by n2, returns remainder as n3, quotient as n4
+description:         divides the n1 by n2, returns remainder as n3, quotient as n4
 
 standard:            I think so
                      must check whether signs matches those of standard

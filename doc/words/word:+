@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics
 
-decription:          adds n2 to n1 and removes n2
+description:         adds n2 to n1 and removes n2
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/Plus

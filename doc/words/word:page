@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            screen, I/O
 
-decription:          clears the console screen
+description:         clears the console screen
 
 standard:            yes
 url:                 https://forth-standard.org/standard/facility/PAGE

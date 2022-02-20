@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            defining words
 
-decription:          as part of user created defining words does does> mark the
+description:         as part of user created defining words does does> mark the
                      begin of runtime code, contrasting with compile time code
                      before does> was encountered.
                      A defining word in which does> is used consists of two parts:

@@ -5,4 +5,4 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics, system
 
-decription:          pushs the largest value of the largest signed integer to stack.
+description:         pushs the largest value of the largest signed integer to stack.

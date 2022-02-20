@@ -5,7 +5,7 @@ string stack:        ( $1 $2 -- )
 contexts:            stateless
 category:            strings, comparison
 
-decription:          compares alphabetic order of two strings $1, $2. a true flag
+description:         compares alphabetic order of two strings $1, $2. a true flag
                      is returned when position matching characters in $1 are
                      alphabetically sorted ahead of corresponding characters in $2.
                      First character mismatch will determine sort order. If one

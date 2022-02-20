@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            arithmetics
 
-decription:          calculates remainder resulting from dividing signed
+description:         calculates remainder resulting from dividing signed
                      integers n1/n2 and returns it as n3
 
 notes:               for the reason why sign is applied the way it is, please

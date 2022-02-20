@@ -5,7 +5,7 @@ string stack:        ( -- $1 )
 contexts:            stateless
 category:            dictionary, compilation
 
-decription:          push the name of the most recently defined word to string stack
+description:         push the name of the most recently defined word to string stack
 
 note:                a quirk shows when using last$ after noname: last$ will
                      still produce the name of the now headerless word.

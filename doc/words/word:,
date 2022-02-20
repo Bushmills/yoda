@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            memory, allocation
 
-decription:          write x into memory at address indicated by "here" and
+description:         write x into memory at address indicated by "here" and
                      bump that address by the number of increments specified
                      by "cell"
 

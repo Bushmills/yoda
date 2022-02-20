@@ -6,7 +6,7 @@ contexts:            interpreting
 category:            compilation, dictionary
 input stream:        space delimited string
 
-decription:          begin compilation of a high level "colon" definition.
+description:         begin compilation of a high level "colon" definition.
                      A space delimited word is taken from input stream and
                      used as name for the new definition. After that follow
                      code, which will be compiled and associated with the

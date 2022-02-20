@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            file I/O
 
-decription:          produces a true flag when executed while loading from file.
+description:         produces a true flag when executed while loading from file.
                      when executed from console, pushed flag will be false.
 
 standard:            no

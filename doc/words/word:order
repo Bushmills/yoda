@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary
 
-decription:          display the list of searched word lists.
+description:         display the list of searched word lists.
                      Also display the current vocabulary.
 
 standard:            yes

@@ -5,7 +5,7 @@ string stack:        ( $1 $2 -- )
 contexts:            stateless
 category:            string, shell
 
-decription:          execute $1 as shell command, passing "$2" as command line parameter(s)
+description:         execute $1 as shell command, passing "$2" as command line parameter(s)
 
 standard:            no
 deviation:           standard has no equivalent

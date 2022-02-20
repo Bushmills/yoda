@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            I/O
 
-decription:          outputs n as signed integer, with a trailing space appended.
+description:         outputs n as signed integer, with a trailing space appended.
 
 notes:               respects contents of variable "base"
 

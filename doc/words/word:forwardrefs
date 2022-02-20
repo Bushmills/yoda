@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary, compilation
 
-decription:          produces address of a variable, used as flag. When content
+description:         produces address of a variable, used as flag. When content
                      aren't zero, use of unknown words in colon definition won't
                      result in error, but in creating a forward reference for later
                      resolving.

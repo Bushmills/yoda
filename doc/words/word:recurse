@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            compileonly
 category:            compiling
 
-decription:          compiles a call to the word within which recurse was used,
+description:         compiles a call to the word within which recurse was used,
                      thereby causing the word to recurse into itself.
 
 standard:            yes

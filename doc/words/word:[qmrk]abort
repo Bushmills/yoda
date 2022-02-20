@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            flow control, error handling
 
-decription:          a non-zero value for flag aborts further execution and
+description:         a non-zero value for flag aborts further execution and
                      returns to interactive mode.
                      if flag is zero, execution continues.
 

@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            memory
 
-decription:          store x in memory address a.
+description:         store x in memory address a.
                      similar to ! but expecting reverse order of stack items.
 
 standard:            no

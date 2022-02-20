@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            stack
 
-decription:          rearrange stack by rotating third element to top
+description:         rearrange stack by rotating third element to top
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/ROT

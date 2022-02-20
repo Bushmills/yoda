@@ -5,7 +5,7 @@ string stack:        ( -- )
 contexts:            stateless
 category:            interpretation, dictionary
 
-decription:          a variable, serving as flag to turn resolving of interpretative
+description:         a variable, serving as flag to turn resolving of interpretative
                      forward references on. When enabled will unknown words, entered
                      at interpretation time, be resolved immediately from portlib. If
                      a word was resolved successfully, it will be executed directly

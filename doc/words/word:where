@@ -6,7 +6,7 @@ contexts:            stateless
 category:            dictionary
 input stream:        word name
 
-decription:          reads a word name from input stream, looks up its source
+description:         reads a word name from input stream, looks up its source
                      location and outputs it as dirs/file:line
 
 standard:            no

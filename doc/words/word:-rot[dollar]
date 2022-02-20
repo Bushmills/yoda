@@ -5,7 +5,7 @@ string stack:        ( $1 $2 $3 -- $3 $1 $2 )
 contexts:            stateless
 category:            string stack
 
-decription:          moves top string stack item below the third item from top
+description:         moves top string stack item below the third item from top
 
 example:             none
 notes:               none

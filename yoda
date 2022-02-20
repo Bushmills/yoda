@@ -2765,7 +2765,13 @@ definitions
 
 \ ----- memory ------------------------------------------- #fold02
 
-\  0 -> m[a++],  u times
+( a -- a+1 c )
+: count        [ "m[s[sp]++]&255" ] push$ ;                    inline
+
+( a -- a+cell x )
+: skim         [ "m[s[sp]++]"     ] push$ ;                    inline
+
+\ 0 -> m[a++],  u times
 ( a u -- )
 : erase        0 fill ;                                        inline
 

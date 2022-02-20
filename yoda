@@ -1135,6 +1135,15 @@ primitive 'inline'  'inline'                                         # don't com
 # ----- diagnostics -------------------------------------- #fold01
 
 words() {
+   local context
+   declare -n context="wordlist_${order[0]}"
+   (( ${#context[@]} )) && {
+      printf  "%s  " "${!context[@]}"
+      printf "\n"
+   }
+}
+
+wordsplus() {
    local context wid
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid" "$unresolvedwid"; do
       wordlist="wordlist_$wid"
@@ -1146,6 +1155,7 @@ words() {
       }
    done
 }
+
 
 
 see()  {
@@ -2390,9 +2400,10 @@ colon 'order'
    code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
 semicolon
 
-primitive 'previous'  '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
-primitive 'words'     'words'
-primitive 'onlyonly'  'order=(); s[++sp]="$onlywid"'
+primitive 'previous' '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
+primitive 'words'    'words'
+primitive 'words+'   'wordsplus'
+primitive 'onlyonly' 'order=(); s[++sp]="$onlywid"'
 
 include << 'end'
 : forth        [ "forthwid" ] push$ set-context ;

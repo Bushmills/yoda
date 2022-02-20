@@ -104,22 +104,30 @@ needed to find dump, then read and compile it prior to executing it.
 For managing conditional compilation, these words exist:
 
          need
-         needed
-         resolve
-         have
+         needed, needed$
+         neededanyof
+         have, have$
          lack
-         satisfy, needs:
-         dependencies
+         omit
+         resolve
+         satisfy, satisfy:, needs:, provides:, dependencies
 
-needed   can be used to test a list of words against forward reference. A flag
-         is produced, reflecting the result of the test.
-         needed consumes the while input line. Each space delimited string is
-         treated as a potential word name, and its forward reference status
-         examined. Any hit causes needed to return true.
-         This flag can be conditionally responded to with flow control constructs
+neededanyof
+         test a list of words against forward reference. A flag is produced,
+         reflecting the result of the test.
+         needed consumes the whole input line. Each space delimited string is
+         treated as a word name, and its forward reference is status examined.
+         Any match results in a returned true flag.
+         This flag can be conditionally reacted  to with flow control constructs
          like "lest" and "unless". Example:
-         needed foo bar
-         unless done       ( next line! )
+         neededanyof foo bar
+         unless done       ( put on next line! )
+
+needed, needed$
+         test a single words against forward reference. A flag is produced,
+         reflecting the result of the test.
+         while needed parses word name from input stream, needed$ takes it
+         from string stack.
 
 need     creates a forward reference explicitely. Execution of resolve will attempt
          to resolve all forward references.
@@ -127,8 +135,15 @@ need     creates a forward reference explicitely. Execution of resolve will atte
          automatically. With forwardrefs on, executing "instantresolve on" will also
          resolve words entered for instant execution immediately
 
-have     check whether a word exists, return execution token or 0
+have, have$
+         check whether a word exists, return execution token or false.
+         while haveparses word name from input stream, have$ takes it
+         from string stack.
+
 lack     check whether a word exists, return flag (logical not of result from have)
+
+omit     skip input until empty line was found. This allows to conditionally leap
+         over a section of consecutive lines of source.
 
 resolve  tries to locate source files of all remaining forward references and loads
          them. forwardrefs are turned on, so that forward referenced words can create
@@ -140,10 +155,14 @@ provides: followed by one or several space delimited word names. used to buildin
          code for which definitions, so the file path and name can be produces when
          source of a word needs to be included.
 
-satisfy	 these are aliases. They read the remainder of input line and try to immediately
-needs:   resolve each word read from line, without going through forward references.
+satisfy, needs:
+         these are aliases. They read the remainder of input line and try to immediately
+         resolve each word read from line, without going through forward references.
          name "needs" is offered as alias because it pairs nicely with "provides:",
          while "satisfy" may be more suited for interactive use.
+
+satisfy$ like satisfy, but taking input from top string stack item. That item may be
+         a space delimited list of words.
 
 dependencies  rebuilds the dependency database. only needs to be done if base doesn't
          exist or is outdated. base becomes outdated when new library files are added

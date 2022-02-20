@@ -4,7 +4,9 @@ receive some suggestions here for what to do as second first steps:
 1. show the available words (referred to as "the dictionary") by
    executing  "words":
 
-      `words`
+      `words`           ( shows contents of a single wordlist only )
+      `words+`          ( shows all wordlists in order, and additionally
+                          compileonly, interpretonly, unresolved if populated)
 
    You may discover a handful of functions (usually refered to as "words",
    but sometimes "functions" in the context of yoda because that's how they're

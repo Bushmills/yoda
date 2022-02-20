@@ -3,13 +3,12 @@
 
 needs: expected
 
-\ quite a mix of shell commands and yoda words
 : runtests
    >tests=($(realpath $(find -type f -name "*.auto"|sort)))
    >s[++sp]="${#tests[@]}"
    0 do
       >ss+=(${tests[i]})
-      dup$  
+      dup$
       >ss[-1]="${ss[-1]##*/}"
       20 ltype$ cr
       canary >r
@@ -17,7 +16,7 @@ needs: expected
       r> canary expected
       rdepth 2 expected
       depth 0 expected
-   loop 
+   loop
  ;
 
 runtests

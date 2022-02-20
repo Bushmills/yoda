@@ -30,6 +30,9 @@
 v="0.6.9"    # 2022feb20,00:48   decoupled wordlist array names and vacabulary names. Consequently may vocabularies be anychar names,
 #                                rather than being restricted to array name friendly chars. wordlists array are named according the
 #                                pattern  wordlist_$wid. header flags now per wordlist, rather than one single global array.
+#                                renamed detokeniser flag execute to call. codebody expects xt as arg now. added protected header flag,
+#                                protect flag modifier, setting protect in noname, is. trash won't trash code bodies when protected
+#                                header flag was set.
 # v="0.6.8"  # 2022feb18,16:49   moved mid$ to library, renamed needed to neededanyof, added needed and needed$, renamed waive to omit
 #                                can put (multi line) sections of high level code into bash source, which will be evaluated
 #                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
@@ -180,13 +183,14 @@ for wordlist in "${builtin_wordlists[@]}"; do
 done
 
 declare -ai order=("$forthwid" "$onlywid")                           # only forth
-declare -n  context="wordlist_${order[0]}"                           # set pointer variables to array name of wordlists
 declare -i  currentwid="${order[0]}"                                 # definitions
+
+declare -n  context="wordlist_${order[0]}"                           # set pointer variables to array name of wordlists
 declare -n  current="wordlist_$currentwid"
 declare -n  flags="flags_$currentwid"                                # pointer var to vocabulary specific header flags
 
 declare -a names                                                     # xt -> name
-declare -a transient                                                 # transient headers.
+declare -a transients                                                # transient headers.
 declare -A where                                                     # source location file:line
 declare -A lib                                                       # dependencies cache
 
@@ -199,8 +203,8 @@ declare -a lasterror
 lasterror=("" "-1" "0")
 
 # header flags:
-inline=1                                                             # to inlined words no function call are compiled.
-                                                                     # Instead is their code compiled into new words.
+inline=1                                                             # inlined words compile code rather than function call.
+protected=2                                                          # protect code body against trashing when set.
 # detokeniser flags:
 flagscount="0"
 newflag()  { (( $1 = 1<<flagscount++ )); }
@@ -208,7 +212,7 @@ newflag functionheader                                               # create he
 newflag sourcelocation                                               # store source location
 newflag atomiccode                                                   # expand
 newflag push                                                         # generate code pushing a cell
-newflag execute                                                      # generate code calling xt
+newflag call                                                         # generate code calling xt
 newflag does                                                         # rip code apart into define- and run time portions
 
 declare -A atom=()                                                   # a table with token -> code mappings.
@@ -283,6 +287,7 @@ setheaderflag()  {                                                   # where aga
 }
 
 inline()     { setheaderflag "$inline" ; }
+protect()    { setheaderflag "$protected"; }
 
 # move headers, along with header flags, between wordlists
 # header is assumed in current vocabulary, where it was
@@ -334,9 +339,13 @@ exists()  {
    local context word="$1"                                           # this is what we're looking for
    shift
    for wid in "$@"; do                                               # in these word lists
+      declare -n context
+      declare -n flags
       declare -n context="wordlist_$wid"                             # make next wordlist visible
+      declare -n flags="flags_$wid"
       [[ -n "${context[$word]}" ]] && {                              # word found in it?
-         exists=("${context[$word]##*_}" "${flags[$word]}" )         # yes: return xt and flags as result
+#trace "word:$word fn:${context[$word]} flags:${flags[$word]}"
+         exists=("${context[$word]##*_}" "${flags[$word]}")          # yes: return xt and flags as result
          return 0
       }
    done                                                              # not yet found: loop through all wids in arguments
@@ -436,7 +445,7 @@ optimise()  {                                                        # run code 
          elif (( bodyflag & sourcelocation )); then                  # source location: set
             where["$lastword"]="$bodyline"                           # remember source location
             continue
-         elif (( bodyflag & execute )); then
+         elif (( bodyflag & call )); then
             name "$bodyline"                                         # convert xt to function name
             targetline="$name"
          elif (( bodyflag & does )); then                            # does>
@@ -508,13 +517,14 @@ atom()  {
 
 
 codebody()  {                                                        # inline compiler
+   name "$1"                                                         # xt to function name
    while read -r tmp; do
       [[ "${tmp:0:1}" == "{" ]] &&
       while read -r tmp; do
          [[ "${tmp:0:1}" == "}" ]] && break
          code "$tmp"
       done
-   done < <(type "$1")
+   done < <(type "$name")
 }
 
 # rewrite run time semantics of most recently defined word
@@ -558,7 +568,7 @@ call()  {
    local word
    for word in "$@"; do
       exists "$word" "${order[@]}" || notfound "$word"
-      code "${exists[0]}"  "$execute"
+      code "${exists[0]}"  "$call"
    done
 }
 
@@ -890,23 +900,23 @@ resolve()  {
 # time to split this thing up, as it's getting a tad unwieldy
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
-   local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
+   local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), for error reporting.
    while [[ -n "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
 # --- search word in order ---
-      exists "$word" "${order[@]}" && {
+      exists "$word" "${order[@]}" && {                              # stateless word found?
+         tmp="${exists[0]}"
          ((compiling)) && {
-            ((exists[1]&inline)) && {                                # inline: compile function body
-               name "${exists[0]}"                                   # convert xt to function name
-               codebody "$name"
+            ((exists[1]&inline)) && {
+               codebody "$tmp"                                       # inline: compile function body
                continue
             }
-            code "${exists[0]}" "$execute"                           # not inline: compile call to function
+            code "$tmp" "$call"                                      # not inline: compile call to function
             continue
          }
-         name "${exists[0]}"                                         # not compiling: convert xt to function name
+         name "$tmp"                                                 # not compiling: convert xt to function name
          $name                                                       # execute function
          continue                                                    # done processing this word
       }
@@ -981,35 +991,58 @@ loaded()  {
 }
 
 
+# arg1: wid
+# arg2: any for alternative set of options
+set-current()  {
+   currentwid="$1"
+   declare -gn current="wordlist_$currentwid"
+   declare -gn flags="flags_$currentwid"
+}
+
+
 # trashed name as argument
+# expects word in current
 # ( -- )
 trash()  {
-# NOTE: issue with flags: headers can concurrently reside in
-# multiple word lists, while there's only a single flags list.
-# that trashing functions associated with trashed headers if
-# they are set as inline dangerous - it may hypothetically trash
-# the function of a word which wasn't set inline, and therefore
-# referenced by compiled calls.
-# Therefore removal of function has been commented out for now:
-# (( ${flags[$1]} & inline)) && unset -f ${current["$1"]}
-# Headers will still be removed:
+   local current
+# seems that by using local current, option -g with
+# declare will not address the proper set of arrays,
+# but can't use set-current without -g
+   declare -n current="wordlist_$currentwid"
+   declare -n flags="flags_$currentwid"
+#   set-current "$currentwid" "n"
+
+   tmp="${flags[$1]}"
+#   trace "$1 flags:$tmp"
+   (((tmp&inline) && (!(tmp&protected)))) && {
+#      trace "trashing code of $1"
+      unset -f "${current[$1]}"
+   }
+#   trace "trashing flag&header of $1 in wid $currentwid"
    unset -v "current[$1]"
    unset -v "flags[$1]"
-# trace "trashed word $1 in ${strings[$currentwid]}"
 }
+
 
 # trash transient headers
 notransients()  {
-   local current flags
-   ((${#transient[@]})) && {                                         # only if any transients exist at all
-      local current currentwid="-1"                                  # make sure current will be declared, because local variables
-      for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                 #    don't inherit the indirection property
-         ((currentwid == "${transient[tmp]%% *}")) || {              # transients may have been compiled to diffent wordlist
-            currentwid="${transient[tmp]%% *}"                       # if so, change to wordlist with word in it
-               declare -n current="wordlist_$currentwid"             # set indirection variable to array serving as word list
-               declare -n flags="flags_$currentwid"                  # set indirection variable to flags of that word list
-         }
-         trash "${transient[tmp]##* }"                               # remove header
+   ((${#transients[@]})) && {                                        # only if any transients exist at all
+      local current flags currentwid wid transient word
+      currentwid="-1"                                                # make sure current will be declared, because local variables
+#trace "${#transients[@]} transients"
+      for transient in "${transients[@]}"; do
+         wid="${transient%% *}"                                      # wid of transient
+         word="${transient##* }"                                     # transient word
+#trace "transient $word in wid $wid"
+         ((currentwid == wid)) || set-current "$wid"                 # must change wids
+
+#trace "asking to trash $word"
+#   set-current "$wid"
+#::: empty ??
+#   trace "#names: ${#current[@]}, names: ${current[*]}"
+#   trace "#flags: ${#flags[@]}, flags: ${flags[*]}"
+
+         trash "$word"                                               # remove header
       done                                                           # repeat for all headers in list of transients
    }
 }
@@ -1035,7 +1068,7 @@ from()  {
    file="$(realpath "$file")"                                        # canonical or original name of file
    loaded "$file" || files[filehandle]="$file"                       # first time inclusion: add to files array
    readarray -t lines < "$file"                                      # read whole file into lines array
-   local transient=()                                                # list of headers marked transient
+   local transients=()                                               # list of headers marked transient
    for ((linenr=0; linenr<${#lines[@]};)); do                        # looping through line number, not through lines so that
       line="${lines[linenr++]}"                                      #   source can change line numbers for jumping
       evaluate "$line"                                               # process next line
@@ -1126,11 +1159,29 @@ colon ':'
 semicolon
 # ----------------------------------------------
 
-primitive 'interpreted' 'interpreted'                                # move header to interpreter context vocabulary
-primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary
-primitive 'transient'   'transient+=("$currentwid $lastword")'       # copy header to transient for later trashing
-primitive 'inline'  'inline'                                         # don't compile call, instead compile body code
+primitive 'interpreted' 'interpreted'                                # move header to interpreter context vocabulary.
+primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary.
 
+colon 'transient'
+   code 'transients+=("$currentwid $lastword")'                      # copy header to transients for later trashing.
+#   code 'trace "added ($currentwid $lastword) for count of ${#transients[@]} transients"'
+semicolon
+
+# don't compile call, instead compile body code.
+colon 'inline'
+#   code 'trace "currentwid=$currentwid, lastword=$lastword, #words=${#current[@]}, #flags=${#flags[@]}"'
+   code 'inline'
+semicolon
+
+primitive 'protect'  'protect'                                       # protect code body against trashing.
+
+colon 'vocs'
+   code 'echo "currentwid=$currentwid, ${strings[currentwid]}"'
+   code 'echo "${flags[@]}"'
+   code 'echo "${!flags[@]}"'
+   code 'echo "${current[@]}"'
+   code 'echo "${!current[@]}"'
+semicolon
 
 # ----- diagnostics -------------------------------------- #fold01
 
@@ -1542,7 +1593,7 @@ colon 'push$'
 semicolon
 compiled
 
-primitive 'compile,' "code \"code \${s[sp--]}\" \"$execute\""        # ( xt -- )
+primitive 'compile,' "code \"code \${s[sp--]}\" \"$call\""           # ( xt -- )
 primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
 
 
@@ -1580,7 +1631,7 @@ primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
 primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
-primitive 'recurse' 'code "$xt" "$execute"'; compiled                # ( -- )
+primitive 'recurse' 'code "$xt" "$call"'; compiled                   # ( -- )
 
 
 # apply run time semantic from string stack
@@ -1812,7 +1863,7 @@ colon 'boot'
    code 'word'
    code 'satisfy1 "$word"'
    code 'exists "$word" "currentwid" "${order[@]}"'                    # search current first because satisfy may have compiled it there
-   code 'name "${exists[0]}"'                                               # convert xt to function name
+   code 'name "${exists[0]}"'                                          # convert xt to function name
    code 'coldvector="$name"'
 semicolon
 
@@ -2369,8 +2420,10 @@ semicolon                                                            # ;
 # use anychar names on yoda side, generated names on bash side.
 colon 'initwordlist'                                                 # ( wid -- )
    code '((tmp=s[sp--]))'
-   code 'declare -gA "wordlist_$tmp=()"'                             # word to function name
-   code 'declare -ga "flags_$tmp=()"'                                # word to header flags
+#   code 'trace "declare -gA flags_$tmp=()"'
+#   code 'trace "declare -gA wordlist_$tmp=()"'
+   code 'declare -gA "flags_$tmp=()"'                                  # word to function name and header flags
+   code 'declare -gA "wordlist_$tmp=()"'                               # word to function name and header flags
 semicolon
 
 colon 'get-context'
@@ -2378,19 +2431,18 @@ colon 'get-context'
 semicolon
 inline
 
+
 colon 'set-current'
-   code '((currentwid=s[sp--]))'
-   code 'declare -gn current="wordlist_$currentwid"'
+   code 'set-current "${s[sp--]}"'
 semicolon
 inline
 
 primitive 'set-context'  'order[0]="${s[sp--]}"'
-inline
 
 
 # --- populate only voc ---
-declare -n current="wordlist_$onlywid"                               # compile to only vocabulary
-declare -n flags="flags_$onlywid"                                    # compile to only vocabulary
+set-current "$onlywid"
+
 primitive 'also'      'order=("${order[0]}" "${order[@]}")'
 colon 'order'
    code 'printf "context:"'
@@ -2403,16 +2455,16 @@ semicolon
 primitive 'previous' '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
 primitive 'words'    'words'
 primitive 'words+'   'wordsplus'
-primitive 'onlyonly' 'order=(); s[++sp]="$onlywid"'
+primitive 'onlyonly' 'order=("$onlywid")'
 
 include << 'end'
 : forth        [ "forthwid" ] push$ set-context ;
-: only         onlyonly set-context get-context set-current also ;
+: definitions  get-context set-current ;
+: only         onlyonly also definitions ;
 end
 
 trash onlyonly
-declare -n current="wordlist_$forthwid"                              # compile to forth vocabulary
-declare -n flags="flags_$forthwid"                                   # compile to forth vocabulary
+set-current "$forthwid"
 
 
 # ----- foward referencing support words ----------------- #fold01
@@ -2727,9 +2779,7 @@ semicolon
 
 include << 'end'
 
-only forth
-: definitions  get-context set-current ;
-definitions
+only forth definitions
 
 \ ----- flow control ------------------------------------- #fold02
 

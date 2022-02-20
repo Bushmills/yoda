@@ -8,7 +8,7 @@ category:            dictionary
 description:         overwrite the first vocabulary in search order with wid
 
 notes:               meant to allow high level vocabulary run time while
-                     only the word list words needed for vocabularies are
+                     only the wordlist words needed for vocabularies are
                      provided. Mirrors set-current
 
 standard:            no

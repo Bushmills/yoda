@@ -1,0 +1,12 @@
+name:                words+
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+description:         shows a listing of words in all populated wordlists of search order,
+                     as well as those in compileonly, interpretonly and unresolved vocabularies.
+
+standard:            no.
+deviation:           standard has no equivalent

@@ -12,7 +12,7 @@ description:         moves the header of the most recently defined word into
 
 notes:               Useful specifically for an interpretative version of words
                      with the same name as those which have been moved to the
-                     compile-only vocabulary, for achieving different run- and
+                     compileonly vocabulary, for achieving different run- and
                      compile time semantics for words with identical names.
 
 examples:            word "unless" has been defined with compile time semantics

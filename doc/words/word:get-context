@@ -9,6 +9,6 @@ description:         returns the token of the first word list in list of
                      searched word lists.
 
 notes:               mostly provided for word definitions while other word list
-                     accessing words aren't available
+                     accessing words aren't available.
 standard:            no
 deviation:           standard has no equivalent

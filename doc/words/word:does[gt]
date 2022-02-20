@@ -26,5 +26,11 @@ notes:               see also use and use$.
                      demonstrated by second line of example. Both versions produce
                      equivalent, but not identical code.
 
-standard:            I think so
+standard:            yes
+deviation:           (possibly:)
+                     As I seem to remember having seen something about allowing multiple does>
+                     following a single create, I'm not quite sure. Standard doesn't seem to
+                     mention this as a requirement, therefore could does> be compliant.
+                     However, yoda can't deal with multiple does> in one single defining word.
+
 url:                 https://forth-standard.org/standard/core/DOES

@@ -5,10 +5,6 @@ string stack:        ( -- )
 contexts:            stateless
 category:            dictionary
 
-description:         shows a listing of all known named words in sections of all
-                     populated vocabularies.
+description:         shows a listing of names in first word list of search order.
 
-standard:            no.
-deviation:           "List the definition names in the first word list of the search order"
-                     yoda doesn't employ a traditional search order. Therefore can't words
-                     be displayed sorted according that search order.
+standard:            yes

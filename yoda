@@ -28,8 +28,8 @@
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
 v="0.6.9"    # 2022feb20,00:48   decoupled wordlist array names and vacabulary names. Consequently may vocabularies be anychar names,
-#                                rather than being restricted to array name friendly chars.  wordlists array are named according the
-#                                pattern  wordlist_$wid.
+#                                rather than being restricted to array name friendly chars. wordlists array are named according the
+#                                pattern  wordlist_$wid. header flags now per wordlist, rather than one single global array.
 # v="0.6.8"  # 2022feb18,16:49   moved mid$ to library, renamed needed to neededanyof, added needed and needed$, renamed waive to omit
 #                                can put (multi line) sections of high level code into bash source, which will be evaluated
 #                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
@@ -164,7 +164,6 @@ declare -i sp=0 rp=0 dp=0 sdp=0
 declare -a ss=()
 declare -i s1 s2 s3 s4                                               # temp variables to hold stack items s[-1] ... s[-4]
                                                                      # easier to read than "tmp, tmp2"
-declare -Ai flags                                                    # header flags (only inline left for now)
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
 
 # naming:
@@ -173,16 +172,18 @@ declare -A doescode                                                  # items ass
 # convert wid to wordlist:   $@    ( ${strings[wid]} )
 declare -a builtin_wordlists=("only" "forth" "interpretonly" "compileonly" "unresolved")
 for wordlist in "${builtin_wordlists[@]}"; do
-   declare -A "wordlist_$sdp"                                        # this is the name of the wordlist array, named "wordlist_$wid"
-   declare -n "$wordlist"="wordlist_$sdp"                            # allow referencing builtins by name without indirection ( ${unresolved[...]} )
-   (( ${wordlist}wid = sdp ))                                        # builtins can also be refered by wid, assigned here
+   declare -Ai "flags_$sdp"                                          # header flags per vocabulary
+   declare -A  "wordlist_$sdp"                                       # this is the name of the wordlist array, named "wordlist_$wid"
+   declare -n  "$wordlist"="wordlist_$sdp"                           # allow referencing builtins by name without indirection ( ${unresolved[...]} )
+   ((${wordlist}wid=sdp))                                            # builtins can also be refered by wid, assigned here
    strings[sdp++]="$wordlist"                                        # finally associate wid with name.
 done
 
 declare -ai order=("$forthwid" "$onlywid")                           # only forth
-declare -i  currentwid="${order[0]}"                                 # definitions
 declare -n  context="wordlist_${order[0]}"                           # set pointer variables to array name of wordlists
+declare -i  currentwid="${order[0]}"                                 # definitions
 declare -n  current="wordlist_$currentwid"
+declare -n  flags="flags_$currentwid"                                # pointer var to vocabulary specific header flags
 
 declare -a names                                                     # xt -> name
 declare -a transient                                                 # transient headers.
@@ -198,18 +199,20 @@ declare -a lasterror
 lasterror=("" "-1" "0")
 
 # header flags:
+inline=1                                                             # to inlined words no function call are compiled.
+                                                                     # Instead is their code compiled into new words.
+# detokeniser flags:
 flagscount="0"
 newflag()  { (( $1 = 1<<flagscount++ )); }
-newflag inline
 newflag functionheader                                               # create header
 newflag sourcelocation                                               # store source location
 newflag atomiccode                                                   # expand
-newflag inlined                                                      # probably useless
 newflag push                                                         # generate code pushing a cell
 newflag execute                                                      # generate code calling xt
 newflag does                                                         # rip code apart into define- and run time portions
 
 declare -A atom=()                                                   # a table with token -> code mappings.
+
 
 # what to execute when no command line args given
 default='from defaults'                                              # load defaults from file
@@ -281,14 +284,23 @@ setheaderflag()  {                                                   # where aga
 
 inline()     { setheaderflag "$inline" ; }
 
+# move headers, along with header flags, between wordlists
+# header is assumed in current vocabulary, where it was
+# recently compiled into
+# arg1: destination wid
 towordlist()  {
-   declare -n towordlist="$1"
-   towordlist["$lastword"]="${current["$lastword"]}"
-   unset -v 'current["$lastword"]'
+   local dest destflags wid
+   wid="$1"                                                          # destination wid
+   declare -n dest="wordlist_$wid"                                   # set up pointers to destination wordlist
+   declare -n destflags="flags_$wid"
+   dest["$lastword"]="${current["$lastword"]}"                       # copy function name and header flags
+   destflags["$lastword"]="${flags["$lastword"]}"
+   unset -v 'current["$lastword"]'                                   # remove from source wordlist
+   unset -v 'flags["$lastword"]'
 }
 
-compiled()     { towordlist "compileonly"; }                         # move last header to compiler context vocabulary
-interpreted()  { towordlist "interpretonly"; }                       # move last header to interpreter context vocabulary
+compiled()     { towordlist "$compileonlywid"; }                     # move last header to compiler context vocabulary
+interpreted()  { towordlist "$interpretonlywid"; }                   # move last header to interpreter context vocabulary
 
 compiler_init()  {
    body=()
@@ -312,6 +324,27 @@ header()  {
    current["$lastword"]="$2"                                         # associate word with name
    flags["$lastword"]="0"                                            # default to no flags
 }
+
+
+declare -a exists                                                    # result array:  exists[0]=0|xt,  exists[1]=flags
+
+# arg1:word  arg2+:wids
+# returns: exists=0|xt,    flags
+exists()  {
+   local context word="$1"                                           # this is what we're looking for
+   shift
+   for wid in "$@"; do                                               # in these word lists
+      declare -n context="wordlist_$wid"                             # make next wordlist visible
+      [[ -n "${context[$word]}" ]] && {                              # word found in it?
+         exists=("${context[$word]##*_}" "${flags[$word]}" )         # yes: return xt and flags as result
+         return 0
+      }
+   done                                                              # not yet found: loop through all wids in arguments
+   exists[0]=0                                                          # word not found: return 0
+   return 1                                                          # and indicate error
+}
+
+
 
 
 # ----- detokeniser / pretend optimiser ------------------ #fold00
@@ -479,7 +512,7 @@ codebody()  {                                                        # inline co
       [[ "${tmp:0:1}" == "{" ]] &&
       while read -r tmp; do
          [[ "${tmp:0:1}" == "}" ]] && break
-         code "$tmp" "$inlined"
+         code "$tmp"
       done
    done < <(type "$1")
 }
@@ -507,6 +540,8 @@ stateless()   {
    fi
 }
 
+#
+
 
 # ----- defining words ----------------------------------- #fold00
 
@@ -515,13 +550,15 @@ push()  {                                                            # leave it 
    code "$1"   "$push"                                               # only insert value or expression, mark it.
 }
 
+
+
 # compile a call to function associated with word arg1
 # arg1:word
 call()  {
    local word
    for word in "$@"; do
       exists "$word" "${order[@]}" || notfound "$word"
-      code "$exists"  "$execute"
+      code "${exists[0]}"  "$execute"
    done
 }
 
@@ -616,7 +653,13 @@ constant 'bits'               "$bits"
 # arg1: deferred word
 # arg2: initially deferred to, word name
 # example:  defer 'foo'  'bar'
+# NOTE: be aware of possibility to defer an inlined word, then
+# trash header of inlined word. trashing function body in that
+# situation will leave the deferred word with a dangling xt.
+# thought of: "protected" header flag which disables trashing,
+# set by is, noname, possibly xt,
 defer()  {                                                           # use in yoda source
+   local context
    delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    push "$((dp))"
    semicolon
@@ -799,22 +842,6 @@ forwardref()  {
    }
 }
 
-# arg1:word  arg2+:wids
-# returns: exists=0|xt
-exists()  {
-   local context word="$1"                                           # this is what we're looking for
-   shift
-   for wid in "$@"; do                                               # in these word lists
-      declare -n context="wordlist_$wid"                             # make next wordlist visible
-      [[ -n "${context[$word]}" ]] && {                              # word found in it?
-         exists="${context[$word]##*_}"                              # yes: return xt as result
-         return 0
-      }
-   done                                                              # not yet found: loop through all wids in arguments
-   exists=0                                                          # word not found: return 0
-   return 1                                                          # and indicate error
-}
-
 
 # satisfy one single reference, passed as arg1.
 # tries by loading source immediately if available.
@@ -871,15 +898,15 @@ evaluate()  {
 # --- search word in order ---
       exists "$word" "${order[@]}" && {
          ((compiling)) && {
-            ((${flags["$word"]}&inline)) && {                        # inline: compile function body
-               name "$exists"                                        # convert xt to function name
+            ((exists[1]&inline)) && {                                # inline: compile function body
+               name "${exists[0]}"                                   # convert xt to function name
                codebody "$name"
                continue
             }
-            code "$exists" "$execute"                                # not inline: compile call to function
+            code "${exists[0]}" "$execute"                           # not inline: compile call to function
             continue
          }
-         name "$exists"                                              # not compiling: convert xt to function name
+         name "${exists[0]}"                                         # not compiling: convert xt to function name
          $name                                                       # execute function
          continue                                                    # done processing this word
       }
@@ -967,17 +994,20 @@ trash()  {
 # (( ${flags[$1]} & inline)) && unset -f ${current["$1"]}
 # Headers will still be removed:
    unset -v "current[$1]"
+   unset -v "flags[$1]"
 # trace "trashed word $1 in ${strings[$currentwid]}"
 }
 
 # trash transient headers
 notransients()  {
+   local current flags
    ((${#transient[@]})) && {                                         # only if any transients exist at all
       local current currentwid="-1"                                  # make sure current will be declared, because local variables
       for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                 #    don't inherit the indirection property
          ((currentwid == "${transient[tmp]%% *}")) || {              # transients may have been compiled to diffent wordlist
             currentwid="${transient[tmp]%% *}"                       # if so, change to wordlist with word in it
-               declare -n current="wordlist_$currentwid"             # and set indirection variable to array serving as word list
+               declare -n current="wordlist_$currentwid"             # set indirection variable to array serving as word list
+               declare -n flags="flags_$currentwid"                  # set indirection variable to flags of that word list
          }
          trash "${transient[tmp]##* }"                               # remove header
       done                                                           # repeat for all headers in list of transients
@@ -1105,6 +1135,7 @@ primitive 'inline'  'inline'                                         # don't com
 # ----- diagnostics -------------------------------------- #fold01
 
 words() {
+   local context wid
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid" "$unresolvedwid"; do
       wordlist="wordlist_$wid"
       declare -n context="$wordlist"
@@ -1118,7 +1149,7 @@ words() {
 
 
 see()  {
-   local context
+   local context wid
    word
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid"; do
       wordlist="wordlist_$wid"
@@ -1516,14 +1547,14 @@ compiled
 colon "'"                                                            # ( -- xt ) ( stream: word )
    code 'word'
    code 'exists "$word" "${order[@]}" "$interpretonlywid" "$compileonlywid" || notfound "$word"'
-   push 'exists'
+   push 'exists[0]'
 semicolon
 
                                                                      # similar to find, but name from string stack rather than input stream
 colon 'have$'                                                        # ( -- 0|xt ) ( $1 -- )
    code 'exists "${ss[-1]}" "${order[@]}" "$interpretonlywid" "$compileonlywid"'
    code 'unset "ss[-1]"'
-   push 'exists'
+   push 'exists[0]'
 semicolon
 
 # ' word  "signalname"  trap
@@ -1771,7 +1802,7 @@ colon 'boot'
    code 'word'
    code 'satisfy1 "$word"'
    code 'exists "$word" "currentwid" "${order[@]}"'                    # search current first because satisfy may have compiled it there
-   code 'name "$exists"'                                               # convert xt to function name
+   code 'name "${exists[0]}"'                                               # convert xt to function name
    code 'coldvector="$name"'
 semicolon
 
@@ -2327,7 +2358,9 @@ semicolon                                                            # ;
 # NOTE: consider use of generated word list names, like wordlist_$wid
 # use anychar names on yoda side, generated names on bash side.
 colon 'initwordlist'                                                 # ( wid -- )
-   code 'declare -gA "wordlist_${s[sp--]}=()"'
+   code '((tmp=s[sp--]))'
+   code 'declare -gA "wordlist_$tmp=()"'                             # word to function name
+   code 'declare -ga "flags_$tmp=()"'                                # word to header flags
 semicolon
 
 colon 'get-context'
@@ -2346,8 +2379,8 @@ inline
 
 
 # --- populate only voc ---
-declare -n current                                                   # appease shellcheck
-declare -n current="only"                                            # compile to only vocabulary
+declare -n current="wordlist_$onlywid"                               # compile to only vocabulary
+declare -n flags="flags_$onlywid"                                    # compile to only vocabulary
 primitive 'also'      'order=("${order[0]}" "${order[@]}")'
 colon 'order'
    code 'printf "context:"'
@@ -2367,7 +2400,8 @@ include << 'end'
 end
 
 trash onlyonly
-declare -n current="forth"                                        # compile to forth vocabulary
+declare -n current="wordlist_$forthwid"                              # compile to forth vocabulary
+declare -n flags="flags_$forthwid"                                   # compile to forth vocabulary
 
 
 # ----- foward referencing support words ----------------- #fold01
@@ -2582,7 +2616,7 @@ sanitise()  {
 }
 
 undoc()  {
-   local wordlist context
+   local wid wordlist context
    for wid in "$forthwid" "$onlywid" "$interpretonlywid" "$compileonlywid"; do
       wordlist="${strings[wid]}"
       [[ "$wordlist" == "forth" ]] && wordlist="stateless"

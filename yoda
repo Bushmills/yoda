@@ -27,7 +27,10 @@
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-v="0.6.8"    # 2022feb18,16:49   moved mid$ to library, renamed needed to neededanyof, added needed and needed$, renamed waive to omit
+v="0.6.9"    # 2022feb20,00:48   decoupled wordlist array names and vacabulary names. Consequently may vocabularies be anychar names,
+#                                rather than being restricted to array name friendly chars.  wordlists array are named according the
+#                                pattern  wordlist_$wid.
+# v="0.6.8"  # 2022feb18,16:49   moved mid$ to library, renamed needed to neededanyof, added needed and needed$, renamed waive to omit
 #                                can put (multi line) sections of high level code into bash source, which will be evaluated
 #                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
 #                                more flexible. env has been redefined to make use of push$.
@@ -170,20 +173,21 @@ declare -A doescode                                                  # items ass
 # convert wid to wordlist:   $@    ( ${strings[wid]} )
 declare -a builtin_wordlists=("only" "forth" "interpretonly" "compileonly" "unresolved")
 for wordlist in "${builtin_wordlists[@]}"; do
-   declare -A "$wordlist"
-   (( ${wordlist}wid = sdp ))
-   strings[sdp++]="$wordlist"
+   declare -A "wordlist_$sdp"                                        # this is the name of the wordlist array, named "wordlist_$wid"
+   declare -n "$wordlist"="wordlist_$sdp"                            # allow referencing builtins by name without indirection ( ${unresolved[...]} )
+   (( ${wordlist}wid = sdp ))                                        # builtins can also be refered by wid, assigned here
+   strings[sdp++]="$wordlist"                                        # finally associate wid with name.
 done
 
 declare -ai order=("$forthwid" "$onlywid")                           # only forth
-declare -n  context="${strings[order[0]]}"
 declare -i  currentwid="${order[0]}"                                 # definitions
-declare -n  current="${strings[currentwid]}"
+declare -n  context="wordlist_${order[0]}"                           # set pointer variables to array name of wordlists
+declare -n  current="wordlist_$currentwid"
 
-declare -a names                                                     # function name -> word name lookup
+declare -a names                                                     # xt -> name
 declare -a transient                                                 # transient headers.
-declare -A where                                                     # file:line of source
-declare -A lib                                                       # cache dependencies
+declare -A where                                                     # source location file:line
+declare -A lib                                                       # dependencies cache
 
 declare -i filehandle=1                                              # 1=yoda. 0=tty.  >1=loaded source
 declare -a files=("tty")                                             # list of included files
@@ -619,7 +623,9 @@ defer()  {                                                           # use in yo
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
    name "\${m[$dp]}"                                                 # convert xt to function name
    use "$name"
-   declare -n context="${strings[order[0]]}"
+# NOTE: may have to look through all wordlists in order
+# postponed because this needs some attention anyway.
+   declare -n context="wordlist_${order[0]}"
    ((m[dp++]="${context[$2]##*_}"))                                  # extract and comma xt from function
    inline
 }
@@ -793,20 +799,20 @@ forwardref()  {
    }
 }
 
-# arg1:word  arg+:wids
+# arg1:word  arg2+:wids
 # returns: exists=0|xt
 exists()  {
-   local word="$1"
+   local context word="$1"                                           # this is what we're looking for
    shift
-   for wid in "$@"; do
-      declare -n context="${strings[wid]}"
-      [[ -n "${context[$word]}" ]] && {
-         exists="${context[$word]##*_}"
+   for wid in "$@"; do                                               # in these word lists
+      declare -n context="wordlist_$wid"                             # make next wordlist visible
+      [[ -n "${context[$word]}" ]] && {                              # word found in it?
+         exists="${context[$word]##*_}"                              # yes: return xt as result
          return 0
       }
-   done
-   exists=0
-   return 1
+   done                                                              # not yet found: loop through all wids in arguments
+   exists=0                                                          # word not found: return 0
+   return 1                                                          # and indicate error
 }
 
 
@@ -814,7 +820,7 @@ exists()  {
 # tries by loading source immediately if available.
 # if source isn't available, a forward ref will be generated.
 satisfy1()  {
-   exists "$1" "${order[@]}" && return 0                            # word already defined, nothing to do
+   exists "$1" "${order[@]}" && return 0                             # word already defined, nothing to do
    local word="$1"
    [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
       forwardref "$word"                                             # yes: create forward ref only
@@ -826,7 +832,7 @@ satisfy1()  {
    return 1
 }
 
-resolving=0
+resolving=0                                                          # early termination helper
 # looping resolve until header count stabilised.
 # doing so because resolving forward references may create
 # new forward references, which also need resolving.
@@ -854,7 +860,7 @@ resolve()  {
 
 # interpret/compile the line passed as argument
 # in here most compiling and interpreting work is done.
-# time to split this thing up.
+# time to split this thing up, as it's getting a tad unwieldy
 evaluate()  {
    local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
    local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), For nesting evaluate
@@ -971,7 +977,7 @@ notransients()  {
       for ((tmp=0; tmp<${#transient[@]}; tmp++)); do                 #    don't inherit the indirection property
          ((currentwid == "${transient[tmp]%% *}")) || {              # transients may have been compiled to diffent wordlist
             currentwid="${transient[tmp]%% *}"                       # if so, change to wordlist with word in it
-            declare -n current="${strings[currentwid]}"              # and set indirection variable to array serving as word list
+               declare -n current="wordlist_$currentwid"             # and set indirection variable to array serving as word list
          }
          trash "${transient[tmp]##* }"                               # remove header
       done                                                           # repeat for all headers in list of transients
@@ -1073,13 +1079,13 @@ atom["here"]='((s[++sp]=dp))'
 # ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
-
 colon ';'
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
    code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'             # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
 compiled
+
 
 colon ':'
    code 'word'                                                       # parse space delimited word from input stream
@@ -1100,10 +1106,10 @@ primitive 'inline'  'inline'                                         # don't com
 
 words() {
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid" "$unresolvedwid"; do
-      wordlist="${strings[wid]}"
+      wordlist="wordlist_$wid"
       declare -n context="$wordlist"
       (( ${#context[@]} )) && {
-         printf '%s\n' "--- $wordlist ---"
+         printf '%s\n' "--- ${strings[$wid]} ---"
          printf  "%s  " "${!context[@]}"
          printf "\n\n"
       }
@@ -1115,10 +1121,10 @@ see()  {
    local context
    word
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid"; do
-      wordlist="${strings[wid]}"
+      wordlist="wordlist_$wid"
       declare -n context="$wordlist"
       [[ -z "${context["$word"]}" ]] || {
-         printf "found in %s:\n" "$wordlist"
+         printf "found in %s:\n" "${strings[wid]}"
          tmp="${context["$word"]}"
          [[ -z "$tmp" ]] && notfound
          type "$tmp"
@@ -2321,7 +2327,7 @@ semicolon                                                            # ;
 # NOTE: consider use of generated word list names, like wordlist_$wid
 # use anychar names on yoda side, generated names on bash side.
 colon 'initwordlist'                                                 # ( wid -- )
-   code 'declare -gA "${strings[s[sp--]]}=()"'
+   code 'declare -gA "wordlist_${s[sp--]}=()"'
 semicolon
 
 colon 'get-context'
@@ -2331,7 +2337,7 @@ inline
 
 colon 'set-current'
    code '((currentwid=s[sp--]))'
-   code 'declare -gn current="${strings[currentwid]}"'
+   code 'declare -gn current="wordlist_$currentwid"'
 semicolon
 inline
 
@@ -2350,9 +2356,11 @@ colon 'order'
    code 'done'
    code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
 semicolon
+
 primitive 'previous'  '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
 primitive 'words'     'words'
 primitive 'onlyonly'  'order=(); s[++sp]="$onlywid"'
+
 include << 'end'
 : forth        [ "forthwid" ] push$ set-context ;
 : only         onlyonly set-context get-context set-current also ;
@@ -2574,8 +2582,10 @@ sanitise()  {
 }
 
 undoc()  {
+   local wordlist context
    for wid in "$forthwid" "$onlywid" "$interpretonlywid" "$compileonlywid"; do
       wordlist="${strings[wid]}"
+      [[ "$wordlist" == "forth" ]] && wordlist="stateless"
       declare -n context="$wordlist"
       for word in "${!context[@]}"; do                               # run through all headers
          sanitise "$word"

@@ -1,5 +1,0 @@
-provides: epoch
-needs: pusher
-once
-
-"$EPOCHSECONDS" pusher epoch

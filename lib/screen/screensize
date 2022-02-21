@@ -1,9 +1,9 @@
 provides: screensize columns lines
-needs: pusher
 once
 
-"$COLUMNS" pusher columns
-"$LINES"   pusher lines
+: lines    [ "LINES" ]  push$  ;
+: columns  [ "COLUMNS" ]  push$  ;
+
 : screensize   ( -- x y )    columns   lines ;
 
 \ initialise LINES and COLUMNS environment variables

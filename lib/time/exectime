@@ -1,8 +1,0 @@
-provides: exectime
-once
-\ measures time to run word with execution token on stack. microseconds
-: exectime ( xt -- u )
-      realtime >r
-      execute
-      realtime r>
-      -  ;

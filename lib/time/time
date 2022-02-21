@@ -1,5 +1,9 @@
-provides: time
-once
+provides: time epoch exectime
+
+needed epoch lest   : epoch  [ "$EPOCHSECONDS" ] push$  ;
+
+
+needed time unless omit
 \ use:   time command(s)
 \ measures and outputs time to execute command(s), unit is microseconds.
 : time  ( -- )
@@ -8,3 +12,14 @@ once
         evaluate$             \ execute input line
         realtime r> -         \ subtract previously save time from now
         u. ;                  \ output
+
+
+
+needed exectime unless omit
+\ measures time to run word with execution token on stack. microseconds
+: exectime ( xt -- u )
+      realtime >r
+      execute
+      realtime r>
+      -  ;
+

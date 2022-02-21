@@ -16,7 +16,7 @@ needed allchanges unless omit
 
 needed new unless omit
 ( -- )
-\ show changes to all versions
+\ edit changes of current version
 : new
    >editor "$mydir/changes/$v"
 ;

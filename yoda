@@ -31,8 +31,12 @@ v="0.6.9"    # 2022feb20,00:48   decoupled wordlist array names and vacabulary n
 #                                rather than being restricted to array name friendly chars. wordlists array are named according the
 #                                pattern  wordlist_$wid. header flags now per wordlist, rather than one single global array.
 #                                renamed detokeniser flag execute to call. codebody expects xt as arg now. added protected header flag,
-#                                protect flag modifier, setting protect in noname, is. trash won't trash code bodies when protected
-#                                header flag was set.
+#                                protect flag modifier. use on words which may be referenced by xt only and candidates for getting
+#                                trashed. A scenario could be a word which was ticked for its xt, which was then bound to a defered
+#                                word. should the ticked word be set as inline AND not protected, trashing it (or setting it as transient)
+#                                will also remove its function - the code, that is -, leaving a dangling call in the deferred word.
+#                                So when using "inline" on a word of which you want to be sure that code stays even when trashed, also
+#                                mark it with "protect". I may eventually rename "protect" to "keep".
 # v="0.6.8"  # 2022feb18,16:49   moved mid$ to library, renamed needed to neededanyof, added needed and needed$, renamed waive to omit
 #                                can put (multi line) sections of high level code into bash source, which will be evaluated
 #                                moved several optionals to libraries. Added push$ which compiles to better code than env, while being
@@ -339,12 +343,9 @@ exists()  {
    local context word="$1"                                           # this is what we're looking for
    shift
    for wid in "$@"; do                                               # in these word lists
-      declare -n context
-      declare -n flags
       declare -n context="wordlist_$wid"                             # make next wordlist visible
       declare -n flags="flags_$wid"
       [[ -n "${context[$word]}" ]] && {                              # word found in it?
-#trace "word:$word fn:${context[$word]} flags:${flags[$word]}"
          exists=("${context[$word]##*_}" "${flags[$word]}")          # yes: return xt and flags as result
          return 0
       }
@@ -372,7 +373,7 @@ exists()  {
 #    can respond in an appropriate way to body array entries.
 
 
-# return a new function name in variable name
+# construct function name from xt
 # arg1:xt
 # result: name:functionname
 name()  {
@@ -385,7 +386,6 @@ name()  {
 # result: name:functionname
 newname()  {
    names[xt]="$1"                                                    # keep word name for .name, name$
-#   name "$((xt++))"
    name "$xt"
    ((xt++))
 }
@@ -1004,7 +1004,7 @@ set-current()  {
 # expects word in current
 # ( -- )
 trash()  {
-   local current
+   local current flags
 # seems that by using local current, option -g with
 # declare will not address the proper set of arrays,
 # but can't use set-current without -g
@@ -1029,19 +1029,10 @@ notransients()  {
    ((${#transients[@]})) && {                                        # only if any transients exist at all
       local current flags currentwid wid transient word
       currentwid="-1"                                                # make sure current will be declared, because local variables
-#trace "${#transients[@]} transients"
       for transient in "${transients[@]}"; do
          wid="${transient%% *}"                                      # wid of transient
          word="${transient##* }"                                     # transient word
-#trace "transient $word in wid $wid"
          ((currentwid == wid)) || set-current "$wid"                 # must change wids
-
-#trace "asking to trash $word"
-#   set-current "$wid"
-#::: empty ??
-#   trace "#names: ${#current[@]}, names: ${current[*]}"
-#   trace "#flags: ${#flags[@]}, flags: ${flags[*]}"
-
          trash "$word"                                               # remove header
       done                                                           # repeat for all headers in list of transients
    }
@@ -1164,13 +1155,10 @@ primitive 'compiled'    'compiled'                                   # move head
 
 colon 'transient'
    code 'transients+=("$currentwid $lastword")'                      # copy header to transients for later trashing.
-#   code 'trace "added ($currentwid $lastword) for count of ${#transients[@]} transients"'
 semicolon
 
-# don't compile call, instead compile body code.
 colon 'inline'
-#   code 'trace "currentwid=$currentwid, lastword=$lastword, #words=${#current[@]}, #flags=${#flags[@]}"'
-   code 'inline'
+   code 'inline'                                                     # don't compile call, instead compile body code.
 semicolon
 
 primitive 'protect'  'protect'                                       # protect code body against trashing.
@@ -1648,7 +1636,8 @@ colon 'trash'
 semicolon
 
 # trashed name from string stack
-# ( -- )
+# word expected in current vocabulary
+# ( -- )  ( $1 -- )
 colon 'trash$'
    code 'trash "${ss[-1]}"'
    code 'unset "ss[-1]"'
@@ -2420,8 +2409,6 @@ semicolon                                                            # ;
 # use anychar names on yoda side, generated names on bash side.
 colon 'initwordlist'                                                 # ( wid -- )
    code '((tmp=s[sp--]))'
-#   code 'trace "declare -gA flags_$tmp=()"'
-#   code 'trace "declare -gA wordlist_$tmp=()"'
    code 'declare -gA "flags_$tmp=()"'                                  # word to function name and header flags
    code 'declare -gA "wordlist_$tmp=()"'                               # word to function name and header flags
 semicolon
@@ -2716,14 +2703,6 @@ colon 'about'
    code 'word'
    code 'about "$word"'
 semicolon
-
-
-# ----- interactive mode --------------------------------- #fold01
-#include << 'end'
-#: quit warm begin query$ evaluate$ resolve prompt again ;
-#' quit alias abort
-#: ?abort lest abort ;                                                \ ( f -- )
-#end
 
 
 # ----- shell ---------------------------------------------

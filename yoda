@@ -62,7 +62,8 @@ do                                                                   # loop thro
 done
 
 nameprefix="yoda"                                                    # prefix to bash function names,  _${xt} will be appended upon header creation
-xt="1000"                                                            # names enumeration, initially. Can be any positive integer
+declare -i firstxt="1000"                                            # names enumeration, initially. Can be any positive integer
+declare -i xt=firstxt                                                # names enumeration, incremented, starting with xt
 
 declare -ai r=() s=() m=()
 declare -a strings=()                                                # string memory
@@ -174,7 +175,7 @@ declare -a comp=("" ":")
 
 trace()  {
    printf "### %-1s %-20s %s\n" "${comp[compiling & 1]}" "[${FUNCNAME[1]}]" "$@"
-#                                                  ^^^  convert any non-zero to 1, used as array index
+#                                                 ^^^  convert any non-zero to 1, used as array index
 }
 
 pretend()         {
@@ -420,6 +421,7 @@ atom()  {
    code "$1" "$atomiccode"; }                                        # insert into code buffer, mark as atom
 
 
+# arg1: xt
 codebody()  {                                                        # inline compiler
    name "$1"                                                         # xt to function name
    while read -r tmp; do
@@ -438,14 +440,14 @@ use()  {
    eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
 }
 
+# create a function from body[@]
 compile()  {
    optimise                                                          # rewrite ${body[@]} to ${target[@]}
    use "${target[@]}"                                                # generate function from $target[@] with name of $lastword
    compiler_init
 }
 
-# execute or compile args. Similar to invoke,
-# maybe one of these can be eliminated.
+# execute or compile args.
 stateless()   {
    if ((compiling)); then
       code "$@"
@@ -454,10 +456,6 @@ stateless()   {
    fi
 }
 
-#
-
-
-# ----- defining words ----------------------------------- #fold00
 
 
 push()  {                                                            # leave it to detokeniser to generate code
@@ -475,6 +473,10 @@ call()  {
       code "${exists[0]}"  "$call"
    done
 }
+
+
+# ----- defining words ----------------------------------- #fold00
+
 
 # variable last doesn't exist yet, but is used in header, and
 # can't be defined earlier, because defining it calls header.
@@ -537,15 +539,16 @@ constant()  {
 # arg1=name  arg2=val
 # initialized with 0 or optional arg2
 variable()  {
+   local linenr="${linenr:-${BASH_LINENO[0]}}"
    (( "$1"="$dp" ))
    m[dp]="${2:-0}"
-   delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
-   push "$((dp++))"
-   semicolon
-   inline
+   constant "$1" "$((dp++))"
 }
 
-
+# dual headed variables. in bash do their names represent
+# indici into m.  in yoda is that index pushed and used
+# as memory address. therefore, this code for variable foo
+# is equivlant:    bash:  m[foo]=123     yoda:   123 foo !
 variable 'shell'              "0"
 variable 'forwardrefs'        "0"
 variable 'instantresolve'     "1"
@@ -570,13 +573,11 @@ constant 'bits'               "$bits"
 # NOTE: be aware of possibility to defer an inlined word, then
 # trash header of inlined word. trashing function body in that
 # situation will leave the deferred word with a dangling xt.
-# thought of: "protected" header flag which disables trashing,
-# set by is, noname, possibly xt,
+# header flag "protect" disables code trashing.
 defer()  {                                                           # use in yoda source
-   local context
-   delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
-   push "$((dp))"
-   semicolon
+   local context linenr="${BASH_LINENO[0]}}"
+   constant "$1" "$((dp))"
+
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
    name "\${m[$dp]}"                                                 # convert xt to function name
    use "$name"
@@ -584,7 +585,6 @@ defer()  {                                                           # use in yo
 # postponed because this needs some attention anyway.
    declare -n context="wordlist_${order[0]}"
    ((m[dp++]="${context[$2]##*_}"))                                  # extract and comma xt from function
-   inline
 }
 
 
@@ -621,8 +621,7 @@ callstack()  {
 read -r redbg  < <(tput setab 1)
 read -r normal < <(tput sgr0)
 
-error()  {
-#           >--<                                             >----<      error word
+error() {
    printf "%s%s %s\n" "${tib%"${word}"*"${line}"}" "${redbg}${word}${normal}" "$line"
    printf 'ERROR: %s\n' "$@"
    row=$((${#tib}-${#line}-${#word}))
@@ -738,13 +737,15 @@ pattern()  {                                                         # pattern i
 # forward refs create new forward refs, in which case resolving
 # will be repeated.
 totalheaders()  {
+   ((totalheaders=xt))
+
 # NOTE: change to take account of all vocabularies
-   (( totalheaders =
-         ${#current[@]}
-       + ${#compileonly[@]}
-       + ${#interpretonly[@]}
-       + ${#unresolved[@]}
-   ))
+#   (( totalheaders =
+#         ${#current[@]}
+#       + ${#compileonly[@]}
+#       + ${#interpretonly[@]}
+#       + ${#unresolved[@]}
+#   ))
 }
 
 

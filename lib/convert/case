@@ -1,11 +1,13 @@
 provides: uppercase lowercase
-once
 
+needed uppercase unless omit
 : uppercase    ( c1 -- c2 )
         dup 'a u<  unless
         dup 'z u>  unless
         [ 'a 'A - ] literal -  ;
 
+
+needed lowercase unless omit
 : lowercase    ( c1 -- c2 )
         dup 'A u<  unless
         dup 'Z u>  unless

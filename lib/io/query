@@ -12,4 +12,4 @@ once
         simplequery$
         normal  ;
 
-' newquery$ is query$
+noname  is query$

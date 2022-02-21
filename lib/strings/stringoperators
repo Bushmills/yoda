@@ -5,6 +5,7 @@ needed mid$ unless omit
 ( u1 u2 -- ) ( $1 -- $2 )
 : mid$  swap negate right$ left$ ;
 
+
 needed convert$ unless omit
 \ convert a string representation of a number
 \ or arithmetic expression to an integer.

@@ -1,12 +1,11 @@
 provides: bold normal rev <so so> <ul ul> blink
 needs: tput0
-once
 
-"bold"     tput0 bold                  \ turn on bold
-"sgr0"     tput0 normal                \ undo attribute changes
-"rev"      tput0 rev                   \ set blink attribute
-"smso"     tput0 <so                   \ start stand out
-"rmso"     tput0 so>                   \ end stand out
-"smul"     tput0 <ul                   \ start underlining
-"rmul"     tput0 ul>                   \ end underlining
-"blink"    tput0 blink                 \ set blink attribute
+needed bold   lest  "bold"  tput0 bold            \ turn on bold
+needed normal lest  "sgr0"  tput0 normal          \ undo attribute changes
+needed rev    lest   "rev"  tput0 rev             \ set blink attribute
+needed <so    lest  "smso"  tput0 <so             \ start stand out
+needed so>    lest  "rmso"  tput0 so>             \ end stand out
+needed <ul    lest  "smul"  tput0 <ul             \ start underlining
+needed ul>    lest  "rmul"  tput0 ul>             \ end underlining
+needed blink  lest "blink"  tput0 blink           \ set blink attribute

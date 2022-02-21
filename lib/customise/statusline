@@ -1,5 +1,5 @@
 provides: statusline +l -l
-needs: uppercase movecursor bold blue fg bg deol .s columns
+needs: uppercase movecursor bold fg deol .s columns
 
 create statusline   true ,
 2 constant spacing               transient
@@ -9,33 +9,45 @@ create statusline   true ,
        0 0 movecursor deol         \ empty top line
        restorecursor ;
 
+
 : show0           ( $1 -- )
         type$
-        spacing spaces ;         transient
+        spacing spaces ;         
+transient
+
 
 : show1           ( x -- ) ( $1 -- )
         base @ >r
         decimal
         type$ ': emit 0 u.r
         spacing spaces
-        r> base ! ;              transient
+        r> base ! ;              
+transient
+
 
 : show$           ( $1 $2 -- )
         swap$ type$
-        ': emit show0 ;          transient
+        ': emit show0 ;          
+transient
+
 
 : status          ( c -- )  ( $1 -- $2 )
         if uppercase
-        then append$ ;           transient
+        then append$ ;           
+transient
+
 
 : flags  ( -- $1 )
         "flags" ""
         'f  forwardrefs @     status
         'i  instantresolve @  status
-        's  shell @           status  ;      transient
+        's  shell @           status  ;      
+transient
+
 
 : plenty  ( columns width prio -- columns flag )
-   spacing * + over < ;                      transient
+   spacing * + over < ;                      
+transient
 
 
 \ depth of call stack, corrected for base level.
@@ -50,7 +62,7 @@ create statusline   true ,
 \ NOTE: define a version of .s which fits output into available space, truncated if necessary
 : .status  ( -- )
    columns
-      bold yellow fg  ( blue bg )  deol
+      bold yellow fg  deol
 \     +------ space required
 \     |  +--- priority ( 1 is highest )
 \     |  |
@@ -73,5 +85,6 @@ create statusline   true ,
         0 0 movecursor
         .status deol cr deol
         restorecursor  ;
+transient
 
 ' redraw "SIGWINCH" trap

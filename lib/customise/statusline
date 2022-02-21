@@ -12,7 +12,7 @@ create statusline   true ,
 
 : show0           ( $1 -- )
         type$
-        spacing spaces ;         
+        spacing spaces ;
 transient
 
 
@@ -21,32 +21,31 @@ transient
         decimal
         type$ ': emit 0 u.r
         spacing spaces
-        r> base ! ;              
+        r> base ! ;
 transient
 
 
 : show$           ( $1 $2 -- )
         swap$ type$
-        ': emit show0 ;          
+        ': emit show0 ;
 transient
 
 
 : status          ( c -- )  ( $1 -- $2 )
         if uppercase
-        then append$ ;           
+        then append$ ;
 transient
-
 
 : flags  ( -- $1 )
         "flags" ""
         'f  forwardrefs @     status
         'i  instantresolve @  status
-        's  shell @           status  ;      
+        's  shell @           status  ;
 transient
 
 
 : plenty  ( columns width prio -- columns flag )
-   spacing * + over < ;                      
+   spacing * + over < ;
 transient
 
 
@@ -54,9 +53,10 @@ transient
 \ every error or break increase depth. This value
 \ is displayed as indicator for when a yoda restart
 \ may be desirable.
-: calls  ( -- u )
-   >s[++sp]="((${#FUNCNAME[@]}-6))"
-;
+: calls  ( -- u )  [ "${#FUNCNAME[@]}-6" ] push$ ;
+: xts    ( -- u )  [ "xt-firstxt" ] push$ ;
+
+
 
 \ 120 columns for full status line
 \ NOTE: define a version of .s which fits output into available space, truncated if necessary
@@ -66,16 +66,17 @@ transient
 \     +------ space required
 \     |  +--- priority ( 1 is highest )
 \     |  |
-     124 10 plenty if "yoda version " type$ "v" env$        show0  then
-     107  9 plenty if                 "bits"    bits        show1  then
+     132 11 plenty if "yoda version " type$ "v" env$        show0  then
+     115 10 plenty if                 "bits"    bits        show1  then
        9  1 plenty if                           flags       show$  then
       30  4 plenty if                 "call"    calls       show1  then
+      64  8 plenty if                 "xts"     xts         show1  then
       39  5 plenty if                 "files"   #files      show1  then
       16  2 plenty if                 "unres"   #unresolved show1  then
       23  3 plenty if                 "base"    base @      show1  then
       47  6 plenty if                 "here"    here        show1  then
       56  7 plenty if                 "rdepth"  rdepth      show1  then
-     100  8 plenty if                 "stack:"  type$   >r .s r>   then
+     108  9 plenty if                 "stack:"  type$   >r .s r>   then
    drop
 ;
 

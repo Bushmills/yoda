@@ -1,0 +1,4 @@
+version 0.7.0, 2022feb21,13:58
+wid of wordlist containing found words is returned as another result of exists.
+removed changelog from yoda source, moved to directory "changes" under yoda
+added changes and allchanges to library, showing changes to current and all versions.

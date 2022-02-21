@@ -1,0 +1,9 @@
+version 0.5.6, 2022jan22,20:15
+added defer, is
+prompt is now a deferred words
+changed dependencies file format. paths are relative to libdirs[0] now
+moved code dealing with shell on to evaluate
+result producing functions return those in array ${returned[@]} rather than in arbitrary variables
+yoda internal prompt is now very minimal. A functional equivalent of the former full featured prompt
+has been created as library file. execute "satisfy newprompt" to compile and activate it.
+

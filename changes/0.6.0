@@ -1,0 +1,5 @@
+version 0.6.0, 2022feb01,21:11
+create$ constant$ variable$ array$ like their non-$ counterparts, but taking names from string stack
+instead of from input stream. Removed crossref. realtime seperator can be . or ,
+config in home dir has priority over config in yoda dir, which may be overwritten by git pull
+

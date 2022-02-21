@@ -1,0 +1,13 @@
+version 0.6.2, 2022feb08,21:03
+source locations are correct again: defining words inject a pseudo op with file handle, line number as
+parameters. postprocessing will use those after header creation to set proper source data.
+last is still updated during header creation, and contents will be wrong when read during compilation
+of a word, as it will still refer to previous word. probably. Wrong, anyway. Would need defining words
+to update last, rather than the postponed header word. Come to think of it, keeping update of last in
+postponed header, and then in additionally just in colon should do. Alternatively, move it from postponed
+header to code injecting the header creating pseudo op.
+Done so now: last is updated in delayheader, the word which inject header creation pseudo op. header,
+which do so before, isn't involved in updating last any longer.
+returned[] removed again, in favour of functions returning results in variables of same name as functions.
+filehandle,line number in where pseudo op arg now seperated by : rather than by space.
+

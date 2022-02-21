@@ -1,0 +1,9 @@
+version 0.6.1, 2022feb06,20:23
+late headers: headers aren't created by defining words like create, variable, constant, : but instead
+by semicolon. defining words merely place word name and analyser flag into code buffer, expecting
+detokeniser to do header creation. Consequence ist that for words failing compilation no headers are
+created at all, which eliminates a potentially needed hide/reveal scheme to exclude words from being
+found as long compilation hasn't finished successfully. On the down side is source location now
+recorded as the line containing the semicolon. There's a workaround possible, but hasn't been coded for
+this version.
+

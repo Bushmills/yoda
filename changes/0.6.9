@@ -1,0 +1,12 @@
+version 0.6.9, 2022feb20,00:48
+decoupled wordlist array names and vacabulary names. Consequently may vocabularies be anychar names,
+rather than being restricted to array name friendly chars. wordlists array are named according the
+pattern wordlist_$wid. header flags now per wordlist, rather than one single global array.
+renamed detokeniser flag execute to call. codebody expects xt as arg now. added protected header flag,
+protect flag modifier. use on words which may be referenced by xt only and candidates for getting
+trashed. A scenario could be a word which was ticked for its xt, which was then bound to a defered
+word. should the ticked word be set as inline AND not protected, trashing it (or setting it as transient)
+will also remove its function - the code, that is -, leaving a dangling call in the deferred word.
+So when using "inline" on a word of which you want to be sure that code stays even when trashed, also
+mark it with "protect". I may eventually rename "protect" to "keep".
+

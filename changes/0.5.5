@@ -1,0 +1,10 @@
+version 0.5.5, 2022jan21,13:36
+made instantresolve independent from forwardrefs.
+instantly resolving utilises satisfy instead of need now, and has been turned on by default.
+consequence is that unknown words, entered while interpreting, will be loaded from library,
+compiled, then executed, behaving as they had been in the dictionary all along.
+unknown words during compilation fall now under jurisdiction of need/resolve while dealing with
+interpret time unknowns is delegated to satisfy (though resolve utilises satisfy too). Consider
+satisfy as an immediate response to requesting unknown words, while need produces a delayed response
+(delayed until execution of resolve, or until word was defined)
+

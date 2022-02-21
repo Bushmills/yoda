@@ -1762,8 +1762,6 @@ semicolon
 primitive 'warm'  'warm'
 primitive 'bye'  'exit 0'
 primitive 'exit'  'code "return"'; compiled
-primitive 'return'  'code "return \${s[sp--]}"'; compiled
-
 
 
 # ----- arithmetics -------------------------------------- #fold01

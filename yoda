@@ -2306,8 +2306,6 @@ semicolon                                                            # ;
 
 # ----- vocabularies and wordlists ----------------------- #fold01
 
-# NOTE: consider use of generated word list names, like wordlist_$wid
-# use anychar names on yoda side, generated names on bash side.
 colon 'initwordlist'                                                 # ( wid -- )
    code '((tmp=s[sp--]))'
    code 'declare -gA "flags_$tmp=()"'                                  # word to function name and header flags

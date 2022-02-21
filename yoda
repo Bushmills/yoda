@@ -243,6 +243,7 @@ exists()  {
    shift
    for wid in "$@"; do                                               # in these word lists
       declare -n context="wordlist_$wid"                             # make next wordlist visible
+      declare -n flags                                               # appease shellcheck
       declare -n flags="flags_$wid"
       [[ -n "${context[$word]}" ]] && {                              # word found in it?
          exists=(                                                    # yes: return xt, flags and wid as result
@@ -850,10 +851,14 @@ evaluate()  {
       }
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
          satisfy1 "$word" && {                                       # attempt to load word
-            ${current["$word"]}                                      # successful: execute
-            continue
-         }
-      }
+            exists "$word" "${order[@]}" && {                        # load was successful. Execution now depends on whether the wordlist it was compiled
+               name "${exists[0]}"                                   # into is in search order. Therefore search order is searched for word.
+               $name                                                 # word found in search order -> execute
+               continue
+            }
+            notfound "$word"                                         # word not found: error (though it was compiled successfully)
+         }                                                           # condition happens when source compiles to wordlist, then closes it,
+      }                                                              # in which case trying to execute that word, even while present, throws error too.
       ((m[shell])) && {                                              # done unless shell flag was set
          stateless "${word} ${line}" ||                              # in which case execution as shell command is attempted (cmd not found returns 127)
          shellerror "$?"                                             # non-zero exit values of shell commands will be passed on to yoda error handler
@@ -898,6 +903,8 @@ loaded()  {
 # arg2: any for alternative set of options
 set-current()  {
    currentwid="$1"
+   declare -n current
+   declare -n flags
    declare -gn current="wordlist_$currentwid"
    declare -gn flags="flags_$currentwid"
 }
@@ -2953,7 +2960,7 @@ primitive rempty 'r=() rp=0'
 # since warm doesn't empty them any longer, a convenient
 # way to do so manually was needed.
 primitive 'random'   '((s[++sp]=SRANDOM&true))'                      # ( -- u )        32 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))'      # a microseconds epoch, used for benchmarking
+primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))'      # a 51 bit microseconds epoch
 primitive 'secs'     'sleep "${s[sp--]}"'
 
 colon 'version'

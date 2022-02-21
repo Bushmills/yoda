@@ -2,4 +2,8 @@ version 0.7.0, 2022feb21,13:58
 wid of wordlist containing found words is returned as another result of exists.
 removed changelog from yoda source, moved to directory "changes" under yoda
 added changes and allchanges to library, showing changes to current and all versions.
-removed obsolete primitive "return"
+removed obsolete primitive "return".
+Fixed an inconsistency with instant resolves: when a word is added by instant compile,
+but to a wordlist which is not in search order, a "word not found" error will be
+produced now, just as it would be if the word had been there all along. This also
+fixes a glitch with instantly resolved shell command from library.

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ----- about -------------------------------------------- #FOLD00
+# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -13,7 +13,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #FOLD00
+# ----- versions ----------------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -33,7 +33,7 @@ v="0.7.0"
 # for changes to current version.
 read -ra version <<< "${v//./ }"
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 shopt -s extglob
 shopt -u nullglob
@@ -168,7 +168,7 @@ for i in {1..255}; do                                                # ascii->ch
    ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
 done
 
-# ----- diagnostics  ------------------------------------- #FOLD00
+# ----- diagnostics  ------------------------------------- #fold00
 
 declare -a comp=("" ":")
 
@@ -181,7 +181,7 @@ pretend()         {
    echo "${FUNCNAME[1]} pretends to $*"; }                           # placeholder for use in unfinished code
 
 
-# ----- headers ------------------------------------------ #FOLD00
+# ----- headers ------------------------------------------ #fold00
 
 #setheaderflag()  { (( flags["$lastword"] |= "$1" )); }              # a bash glitch doesn't allow me to use this form, because it produces errors with
                                                                      # some array keys like "'".
@@ -260,7 +260,7 @@ exists()  {
 
 
 
-# ----- detokeniser / pretend optimiser ------------------ #FOLD00
+# ----- detokeniser / pretend optimiser ------------------ #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -374,7 +374,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -402,7 +402,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# ----- compiler ----------------------------------------- #FOLD00
+# ----- compiler ----------------------------------------- #fold00
 
 
 # atoms may be:
@@ -456,7 +456,7 @@ stateless()   {
 #
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 
 push()  {                                                            # leave it to detokeniser to generate code
@@ -588,7 +588,7 @@ defer()  {                                                           # use in yo
 
 
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    filehandle=0                                                      # 1=yoda. 0=tty.  >1=loaded source
@@ -673,7 +673,7 @@ trap ctrl-c SIGINT
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
-# ----- patterns ----------------------------------------- #FOLD00
+# ----- patterns ----------------------------------------- #fold00
 
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
@@ -731,7 +731,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # total headers count is used to help determining if resolving
 # forward refs create new forward refs, in which case resolving
@@ -794,7 +794,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter, evaluate------------------------ #FOLD00
+# ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -874,7 +874,7 @@ include()  {
 }
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -976,7 +976,7 @@ from()  {
 }
 
 
-# ----- populating detokeniser --------------------------- #FOLD00
+# ----- populating detokeniser --------------------------- #fold00
 # for testing, a handful of inlined single operation primitives
 # and atomic operations are added. no optimising take place now.
 # atoms are only substituted against corresponding code.
@@ -1033,8 +1033,8 @@ atom["here"]='((s[++sp]=dp))'
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
-# ----- colon/semicolon ---------------------------------- #FOLD01
+# ----- primitives --------------------------------------- #fold00
+# ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
    code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
@@ -1074,7 +1074,7 @@ colon 'vocs'
    code 'echo "${!current[@]}"'
 semicolon
 
-# ----- diagnostics -------------------------------------- #FOLD01
+# ----- diagnostics -------------------------------------- #fold01
 
 words() {
    local context
@@ -1119,7 +1119,7 @@ see()  {
 primitive 'see' 'see'
 
 
-# ----- does> -------------------------------------------- #FOLD01
+# ----- does> -------------------------------------------- #fold01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1148,7 +1148,7 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1213,7 +1213,7 @@ colon 'alias'
 semicolon
 
 
-# ----- deferred words ----------------------------------- #FOLD01
+# ----- deferred words ----------------------------------- #fold01
 
 # new deferred words are initialised to noop
 primitive 'noop' '(())'
@@ -1240,7 +1240,7 @@ colon 'is'
 semicolon
 
 
-# ----- commenting --------------------------------------- #FOLD01
+# ----- commenting --------------------------------------- #fold01
 
 primitive "\\"   'line=""';   compiled                               # single quoted single backslash because
 primitive "\\"   'line=""';   interpreted                            # double quoted escaped backslash rather than
@@ -1249,7 +1249,7 @@ primitive '('    "parse ')'"; compiled
 primitive '('    "parse ')'"; interpreted
 
 
-# ----- parameter stack ---------------------------------- #FOLD01
+# ----- parameter stack ---------------------------------- #fold01
 
 
 colon 'dup'
@@ -1337,7 +1337,7 @@ colon '?dup'
 semicolon
 inline
 
-# ----- return stack ------------------------------------- #FOLD01
+# ----- return stack ------------------------------------- #fold01
 
 colon 'r@'
    atom 'r@'
@@ -1376,7 +1376,7 @@ semicolon
 inline
 
 
-# ----- numeric comparison ------------------------------- #FOLD01
+# ----- numeric comparison ------------------------------- #fold01
 
 primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
 primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
@@ -1443,7 +1443,7 @@ semicolon
 inline
 
 
-# ----- line i/o ----------------------------------------- #FOLD01
+# ----- line i/o ----------------------------------------- #fold01
 
 
 # parse input for string delimited by character specified by ASCII value on stack
@@ -1472,7 +1472,7 @@ semicolon
 inline
 
 
-# ----- compiler, dictionary search related -------------- #FOLD01
+# ----- compiler, dictionary search related -------------- #fold01
 
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
@@ -1568,7 +1568,7 @@ primitive 'last$'   'ss+=("$lastword")'
 
 
 
-# ----- bit logic ---------------------------------------- #FOLD01
+# ----- bit logic ---------------------------------------- #fold01
 
 colon    'invert';  atom 'invert'; semicolon; inline
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
@@ -1578,7 +1578,7 @@ primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
 primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
 
 
-# ----- flow control ------------------------------------- #FOLD01
+# ----- flow control ------------------------------------- #fold01
 
 remagic
 
@@ -1766,7 +1766,7 @@ primitive 'return'  'code "return \${s[sp--]}"'; compiled
 
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '1+'
    atom '1+'
@@ -1842,7 +1842,7 @@ inline
 
 
 
-# ----- string stack operators---------------------------- #FOLD01
+# ----- string stack operators---------------------------- #fold01
 
 primitive 'empty$'   'ss=()'
 primitive 'dup$'     'ss+=("${ss[-1]}")'
@@ -2081,7 +2081,7 @@ primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'                     # ( c -- ) 
 primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
 
 
-# ----- environment--------------------------------------- #FOLD01
+# ----- environment--------------------------------------- #fold01
 
 # read number from environment variable with name on string stack
 #evaluate ': env  [ "${!ss[-1]}&true" ] push$ drop$ ;'                # ( -- x )  ( string:  $1 -- )
@@ -2106,7 +2106,7 @@ colon '>env$'
 semicolon
 
 
-# ----- memory ------------------------------------------- #FOLD01
+# ----- memory ------------------------------------------- #fold01
 
 colon '@'
    atom '@'
@@ -2219,7 +2219,7 @@ primitive 'move'   'move'
 
 
 
-# ----- character i/o ------------------------------------ #FOLD01
+# ----- character i/o ------------------------------------ #fold01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
@@ -2268,7 +2268,7 @@ primitive 'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
 defer     'prompt'       'simpleprompt'
 
 
-# ----- file i/o ----------------------------------------- #FOLD01
+# ----- file i/o ----------------------------------------- #fold01
 
 
 # load file whose name is given on string stack
@@ -2290,7 +2290,7 @@ colon 'omit'
 semicolon
 
 
-# ----- pictured number conversion ----------------------- #FOLD01
+# ----- pictured number conversion ----------------------- #fold01
 
 # NOTE: consider to let # expect a double, but process lower
 # half only, so its stack complies with standard # while its
@@ -2306,7 +2306,7 @@ colon '#'                                                            # : #
 semicolon                                                            # ;
 
 
-# ----- vocabularies and wordlists ----------------------- #FOLD01
+# ----- vocabularies and wordlists ----------------------- #fold01
 
 # NOTE: consider use of generated word list names, like wordlist_$wid
 # use anychar names on yoda side, generated names on bash side.
@@ -2357,7 +2357,7 @@ trash onlyonly
 set-current "$forthwid"
 
 
-# ----- foward referencing support words ----------------- #FOLD01
+# ----- foward referencing support words ----------------- #fold01
 
 # forward referencing scheme using dependencies files, which maps
 # word names to file names, allowing to locate source of required
@@ -2521,7 +2521,7 @@ colon 'satisfy$'
 semicolon
 
 
-# ----- documentation ------------------------------------ #FOLD01
+# ----- documentation ------------------------------------ #fold01
 
 # NOTE: whole undoc section is library candidate
 # arg1: word name
@@ -2624,7 +2624,7 @@ semicolon
 
 
 
-# ----- files -------------------------------------------- #FOLD01
+# ----- files -------------------------------------------- #fold01
 
 
 
@@ -2657,13 +2657,13 @@ colon 'done'
 semicolon
 
 
-# ----- high level --------------------------------------- #FOLD01
+# ----- high level --------------------------------------- #fold01
 
 include << 'end'
 
 only forth definitions
 
-\ ----- flow control ------------------------------------- #FOLD02
+\ ----- flow control ------------------------------------- #fold02
 
 ( -- x )
 : i            [ "i" ] push$ ;                                 inline
@@ -2671,7 +2671,7 @@ only forth definitions
 ( -- x )
 ' r@ alias j
 
-\ ----- stack -------------------------------------------- #FOLD02
+\ ----- stack -------------------------------------------- #fold02
 
 ( ?? -- ?? u )
 : depth        [ "sp" ] push$ ;                                inline
@@ -2685,7 +2685,7 @@ only forth definitions
 ( -- u )
 : depth$       [ "${#ss[@]}" ] push$ ;                         inline
 
-\ ----- arithmetics -------------------------------------- #FOLD02
+\ ----- arithmetics -------------------------------------- #fold02
 
 \ truncated, symmetric
 ( n1 n2 n3 -- n4 )
@@ -2740,7 +2740,7 @@ only forth definitions
 ( x1 u -- x2 )
 ' rshift alias >>
 
-\ ----- memory ------------------------------------------- #FOLD02
+\ ----- memory ------------------------------------------- #fold02
 
 ( a -- a+1 c )
 : count        [ "m[s[sp]++]&255" ] push$ ;                    inline
@@ -2766,7 +2766,7 @@ only forth definitions
 ( string:  $1 -- )
 : env          [ "${!ss[-1]}+0&true" ] push$ drop$ ;           inline
 
-\ ----- i/o ---------------------------------------------- #FOLD02
+\ ----- i/o ---------------------------------------------- #fold02
 ( a u -- )
 : type         pack$ type$ ;                                   inline
 
@@ -2786,7 +2786,7 @@ defer query$
 ' simplequery$ is query$
 
 
-\ ----- pictured number conversion ----------------------- #FOLD02
+\ ----- pictured number conversion ----------------------- #fold02
 ( c -- )
 ( $1 -- $2 )
 ' prepend$ alias hold                                          inline
@@ -2834,7 +2834,7 @@ defer query$
 ( u1 u2 -- )
 : u.r          >r uconvert r> rtype$ ;
 
-\ ----- dictionary and compiling ------------------------- #FOLD02
+\ ----- dictionary and compiling ------------------------- #fold02
 
 ( -- wid )
 : get-current  [ "currentwid" ] push$  ;                       inline
@@ -2879,7 +2879,7 @@ defer query$
 ( stream: word )
 : [']          ' literal,   ;                                  compiled
 
-\ ----- unsorted ----------------------------------------- #FOLD02
+\ ----- unsorted ----------------------------------------- #fold02
 
 ( ??? -- )
 : quit         warm
@@ -2896,7 +2896,7 @@ defer query$
 : ?abort       lest abort ;
 
 
-\ ----- files and loading -------------------------------- #FOLD02
+\ ----- files and loading -------------------------------- #fold02
 
 ( -- u )
 : #files       [ "${#files[@]}" ] push$ ;                      inline
@@ -2932,7 +2932,7 @@ defer query$
 
 end
 
-# ----- convenience -------------------------------------- #FOLD01
+# ----- convenience -------------------------------------- #fold01
 
 primitive 'decimal'  "m[$base]=10"
 primitive 'hex'      "m[$base]=16"
@@ -2967,7 +2967,7 @@ colon 'version'
 semicolon
 
 
-# ----- launch ------------------------------------------- #FOLD00
+# ----- launch ------------------------------------------- #fold00
 
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 config()  {

@@ -1,0 +1,15 @@
+provides: changes allchanges
+
+needed changes unless omit
+( -- )
+\ show changes to current version
+: changes
+   >cat "$mydir/changes/$v"
+;
+
+needed allchanges unless omit
+( -- )
+\ show changes to all versions
+: allchanges
+   >cat "$mydir/changes"/*
+;

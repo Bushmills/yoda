@@ -1,4 +1,4 @@
-provides: changes allchanges
+provides: changes allchanges new
 
 needed changes unless omit
 ( -- )
@@ -12,4 +12,11 @@ needed allchanges unless omit
 \ show changes to all versions
 : allchanges
    >cat "$mydir/changes"/*
+;
+
+needed new unless omit
+( -- )
+\ show changes to all versions
+: new
+   >editor "$mydir/changes/$v"
 ;

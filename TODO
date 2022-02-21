@@ -1,10 +1,6 @@
 --- todos solving problems, shortcomings, quirks
-- ticking a word with headers in more than one context vocabulary allows
-  no control nor test over which version was ticked.
 
 --- general todos, improvements, fancyness
-- if function associated with a trashed header is inlined, function body
-  can be trashed as well.
 - let yoda choose editor or xeditor according the environment it runs in.
 - input line history would be nice
 - string operations based on search and match are mostly absent.

@@ -1,0 +1,21 @@
+name:                postpone
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compileonly
+category:            compiling
+input stream:        word
+
+description:         read name of a word from stream, compile code into current
+                     definition to execute that word's code.
+
+example:             : // postpone \ ;
+                     // this is a comment
+
+notes:               word search is done through wordlists in this sequence:
+                     1. compileonly
+                     2. all wordlists in order[*]
+                     3. interpretonly
+                     first match wins.
+standard:            yes
+url:                 https://forth-standard.org/standard/core/POSTPONE

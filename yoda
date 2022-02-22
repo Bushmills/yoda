@@ -923,15 +923,10 @@ trash()  {
 # but can't use set-current without -g
    declare -n current="wordlist_$currentwid"
    declare -n flags="flags_$currentwid"
-#   set-current "$currentwid" "n"
-
    tmp="${flags[$1]}"
-#   trace "$1 flags:$tmp"
    (((tmp&inline) && (!(tmp&protected)))) && {
-#      trace "trashing code of $1"
       unset -f "${current[$1]}"
    }
-#   trace "trashing flag&header of $1 in wid $currentwid"
    unset -v "current[$1]"
    unset -v "flags[$1]"
 }
@@ -1543,6 +1538,14 @@ semicolon
 # name of last word to string stack
 # ( -- $1 )
 primitive 'last$'   'ss+=("$lastword")'
+
+# ( stream: word )
+colon 'postpone'
+   code 'word'
+   code 'exists "$word" "$compileonlywid" "${order[@]}" "$interpretonlywid" || notfound "$word"'
+   code 'code "${exists[0]}" "$call"'
+semicolon
+compiled
 
 
 #find$

@@ -2602,7 +2602,7 @@ semicolon
 
 colon 'concerning'
    code word
-   code 'concerning=($(grep -l "$word" *))'
+   code 'concerning=($(grep -l "$word" "${worddoc%/*}"/*))'
    code 'grep -h "^name: " "${concerning[@]}"'
    code 'unset -v "concerning"'
 semicolon

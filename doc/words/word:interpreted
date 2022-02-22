@@ -15,7 +15,7 @@ notes:               Useful specifically for an interpretative version of words
                      compileonly vocabulary, for achieving different run- and
                      compile time semantics for words with identical names.
 
-examples:            word "unless" has been defined with compile time semantics
+example:             word "unless" has been defined with compile time semantics
                      of conditionally exiting the word (conceptualised as "jumping
                      to its end") while deviating interpret time semantics skip
                      evaluation of rest of the input line, conditionally.

@@ -1,0 +1,13 @@
+name:                concerning
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            doc
+input stream:        space delimited string
+
+description:         list the name of the words of which string as read from input was found in their respective words doc.
+
+example:             concerning store
+standard:            no
+deviation:           standard has no equivalent

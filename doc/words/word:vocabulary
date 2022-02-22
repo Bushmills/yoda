@@ -3,7 +3,7 @@ stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
-input:               ( word )
+input stream:        ( word )
 category:            defining, wordlists, vocabularies
 
 description:         read a space delimited string from input, create a vocabulary with

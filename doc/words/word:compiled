@@ -13,7 +13,7 @@ description:         moves the header of the most recently defined word into
 notes:               This replaces the common scheme of marking words as
                      "immediate", and as such making them state smart.
 
-examples:            word "unless" has been defined with compile time semantics
+example:             word "unless" has been defined with compile time semantics
                      of conditionally exiting the word (conceptualised as "jumping
                      to its end") while deviating interpret time semantics skip
                      evaluation of rest of the input line, conditionally.

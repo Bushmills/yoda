@@ -1,0 +1,28 @@
+name:                protect
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+description:         set a header flag which informs trash that only header, but
+                     not code body may be trashed. This may be needed when a
+                     combination of conditions is given:
+                     - word is set to inline  (non-inlined are protected anyway)
+                     - word is referenced by xt rather than by name (as with deferred words)
+                     other than explicitely trashing, words set as transient during file
+                     load will also be trashed. By setting the flag and therefore protecting
+                     code from removal, it is made sure that the code is still present on
+                     an execution attempt by xt.
+
+example:             this is an example where execition of bar will fail:
+                        : foo "nice foo" type$ cr ;  inline
+                        defer bar    ' foo is bar
+                        trash foo
+                        bar
+                     adding a "protect" behind foo makes sure that code of foo
+                     will be kept while headers is still trashed.
+
+notes:               may be renamed to "keep"
+standard:            no
+deviation:           standard has no equivalent

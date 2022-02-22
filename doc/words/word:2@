@@ -6,7 +6,7 @@ contexts:            stateless
 category:            memory
 
 description:         fetches contents of two memory cells at address a and a+1, and
-                     returns them on stack with item at a on top.
+                     returns them on stack with item from a on top.
 
 standard:            yes
 url:                 https://forth-standard.org/standard/core/TwoFetch

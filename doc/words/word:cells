@@ -2,7 +2,7 @@ name:                cells
 stack:               ( n1 -- n2 )
 return stack:        ( -- )
 string stack:        ( -- )
-context:             interpreting, compiling
+contexts:            interpreting, compiling
 category:            arithmetics, system
 
 

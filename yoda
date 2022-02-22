@@ -1207,10 +1207,14 @@ semicolon
 # ' foo alias bar
 colon 'alias'
    define ''                                                         # value irrelevant, will point to different function anyway
-   code 'name "${s[sp--]}"'                                          # convert xt to function name
-   code 'current["$word"]="$name"'
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
-semicolon
+   code 'name "${s[sp--]}"'                                          # convert xt to function name
+   code 'current["$word"]="$name"'                                   # let new header execute same function
+   code 'flags["$word"]="$protected"'                                # define, through constant, sets inline flag. we don't want that.
+semicolon                                                            # as trash without protect needs some attention too, the aliased
+                                                                     # header has its protect flag set, meaning that trashing the alias
+                                                                     # header won't trash code, which seems the easiest way to deal with it.
+
 
 
 # ----- deferred words ----------------------------------- #fold01
@@ -2032,7 +2036,7 @@ semicolon
 
 # push string array item u to string stack
 # ( u -- ) ( -- $1 )
-primitive '$@'  'ss+=("${strings[s[sp--]]}")';  inline
+primitive '$@'  'ss+=("${strings[s[sp--]]}")'
 
 # store string stack item in string array
 # ( u -- )  ( $1 -- )
@@ -2330,7 +2334,7 @@ colon 'order'
    code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
 semicolon
 
-primitive 'previous' '((${#order[@]}>1))&& order=("${order[@]:1}")'
+primitive 'previous' '((${#order[@]}>1))&&order=("${order[@]:1}")'
 primitive 'words'    'words'
 primitive 'words+'   'wordsplus'
 primitive 'onlyonly' 'order=("$onlywid")'
@@ -2672,7 +2676,7 @@ only forth definitions
 : i            [ "i" ] push$ ;                                 inline
 
 ( -- x )
-' r@ alias j
+' r@ alias j                                                   inline
 
 \ ----- stack -------------------------------------------- #fold02
 
@@ -2742,10 +2746,10 @@ only forth definitions
 : s>d          dup 0<  ;                                       inline
 
 ( x1 u -- x2 )
-' lshift alias <<
+' lshift alias <<                                              inline
 
 ( x1 u -- x2 )
-' rshift alias >>
+' rshift alias >>                                              inline
 
 \ ----- memory ------------------------------------------- #fold02
 
@@ -2868,7 +2872,7 @@ defer query$
 ( stream: word )
 : needed       word$ needed$ ;                                 inline
 
-' satisfy alias needs:
+' satisfy alias needs:                                         inline
 
 ( x -- )
 : literal      literal, ;                                      compiled
@@ -2904,7 +2908,16 @@ defer query$
 ' quit alias abort
 
 ( f -- )
-: ?abort       lest abort ;
+: ?abort       lest abort ;   inline
+
+\  32 bits random number
+( -- u )
+: random     [ "SRANDOM&true" ]  push$  ;  inline
+
+\ a 51 bit microseconds epoch
+( -- u )
+: realtime   [ "${EPOCHREALTIME//[,.]/}&true" ] push$  ;   inline
+
 
 
 \ ----- files and loading -------------------------------- #fold02
@@ -2967,8 +2980,6 @@ primitive rempty 'r=() rp=0'
 # empty stack and string stack
 # since warm doesn't empty them any longer, a convenient
 # way to do so manually was needed.
-primitive 'random'   '((s[++sp]=SRANDOM&true))'                      # ( -- u )        32 bits random number
-primitive 'realtime' '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))'      # a 51 bit microseconds epoch
 primitive 'secs'     'sleep "${s[sp--]}"'
 
 colon 'version'

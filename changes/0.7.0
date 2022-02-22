@@ -10,3 +10,5 @@ fixes a glitch with instantly resolved shell command from library.
 trying last assigned xt rather than headercount for determining whether headers
 have stabilised when resolving forward references.
 variables and defer reuse constant
+added concerning
+minor cleanups

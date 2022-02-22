@@ -1074,14 +1074,6 @@ semicolon
 
 primitive 'protect'  'protect'                                       # protect code body against trashing.
 
-colon 'vocs'
-   code 'echo "currentwid=$currentwid, ${strings[currentwid]}"'
-   code 'echo "${flags[@]}"'
-   code 'echo "${!flags[@]}"'
-   code 'echo "${current[@]}"'
-   code 'echo "${!current[@]}"'
-semicolon
-
 # ----- diagnostics -------------------------------------- #fold01
 
 words() {
@@ -2541,7 +2533,7 @@ contexts:            ${2#"headers"}
 category:
 input stream:
 
-decription:          none
+description:         none
 
 example:             none
 notes:               none
@@ -2553,7 +2545,7 @@ EOF
 
 # changes problematic chars in arg1.
 # sanitised string is returned in variable file
-declare -A sanitise=(
+declare -A sanitised=(
    ['/']="slash"
    ["\\"]="backslash"
    [';']="semi"
@@ -2566,23 +2558,25 @@ declare -A sanitise=(
    ['?']="qmrk"
    ['*']="star")
 sanitise()  {
-   file="$1"
-   for tmp in "${!sanitise[@]}"; do
-      file="${file//"$tmp"/"[${sanitise[$tmp]}]"}"
+   sanitise="$1"
+   for tmp in "${!sanitised[@]}"; do
+      sanitise="${sanitise//"$tmp"/"[${sanitised[$tmp]}]"}"
    done
 }
+
 
 undoc()  {
    local wid wordlist context
    for wid in "$forthwid" "$onlywid" "$interpretonlywid" "$compileonlywid"; do
       wordlist="${strings[wid]}"
-      [[ "$wordlist" == "forth" ]] && wordlist="stateless"
       declare -n context="$wordlist"
       for word in "${!context[@]}"; do                               # run through all headers
          sanitise "$word"
-         [[ -f "$worddoc:$file" ]] || {                              # found one for which no doc file exists
-            undoc_template "$word" "${!context}" >> "$worddoc:$file"
-            editor "$worddoc:$file"
+         file="$worddoc:$sanitise"
+         [[ -f "$file" ]] || {                                       # found one for which no doc file exists
+            (( wid == forthwid )) && wordlist="stateless"
+            undoc_template "$word" "$wordlist" >> "$file"
+            editor "$file"
             return
          }
       done
@@ -2593,12 +2587,12 @@ primitive 'undoc' 'undoc'
 # candidates for $command further down
 doc()  {
    sanitise "$1"
-   editor "$worddoc:$file"
+   editor "$worddoc:$sanitise"
 }
 
 about()  {
    sanitise "$1"
-   cat "$worddoc:$file"
+   cat "$worddoc:$sanitise"
 }
 
 colon 'doc'
@@ -2611,6 +2605,12 @@ colon 'about'
    code 'about "$word"'
 semicolon
 
+colon 'concerning'
+   code word
+   code 'concerning=($(grep -l "$word" *))'
+   code 'grep -h "^name: " "${concerning[@]}"'
+   code 'unset -v "concerning"'
+semicolon
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents
@@ -2659,7 +2659,7 @@ colon 'done'
    code 'line=""'                                                    # nothing more to process on current line
    code 'linenr="-1"'                                                # signal "all done" to from
 semicolon
-
+inline
 
 # ----- high level --------------------------------------- #fold01
 

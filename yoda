@@ -28,7 +28,7 @@
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
 
-v="0.7.0"
+v="0.7.1"
 # changelog now in directory changes. Or, type "changes" in yoda
 # for changes to current version.
 read -ra version <<< "${v//./ }"
@@ -1477,9 +1477,16 @@ inline
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
 
-# ( -- ) ( $1 -- )
+# compile:  ( -- ) ( $1 -- )   run: ( -- x )
 colon 'push$'
    code 'code "((s[++sp]=${ss[-1]}))"'
+   code 'unset "ss[-1]"'
+semicolon
+compiled
+
+# compile: ( -- ) ( $1 -- )   run: ( x -- )
+colon 'pop$'
+   code 'code "((${ss[-1]}=s[sp--]))"'
    code 'unset "ss[-1]"'
 semicolon
 compiled
@@ -2143,11 +2150,6 @@ colon '2!'
 semicolon
 inline
 
-colon '<-'                                                           # ( a x -- )   swap !
-   code '((m[s[sp]]="s[sp--]"))'
-   atom 'drop'
-semicolon
-
 colon '+!'
    code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&true))'
    atom 'drop'
@@ -2185,8 +2187,6 @@ colon 'allot'
    atom 'allot'
 semicolon
 inline
-
-primitive ',' '((m[dp++]=s[sp--]))'
 
 # c -> m[a++],  u times
 # ( a u c -- )
@@ -2312,19 +2312,11 @@ colon 'initwordlist'                                                 # ( wid -- 
    code 'declare -gA "wordlist_$tmp=()"'                               # word to function name and header flags
 semicolon
 
-colon 'get-context'
-   push 'order[0]'
-semicolon
-inline
-
 
 colon 'set-current'
    code 'set-current "${s[sp--]}"'
 semicolon
 inline
-
-primitive 'set-context'  'order[0]="${s[sp--]}"'
-
 
 # --- populate only voc ---
 set-current "$onlywid"
@@ -2338,18 +2330,20 @@ colon 'order'
    code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
 semicolon
 
-primitive 'previous' '((${#order[@]}>1))&&{ order=("${order[@]:1}"); }'
+primitive 'previous' '((${#order[@]}>1))&& order=("${order[@]:1}")'
 primitive 'words'    'words'
 primitive 'words+'   'wordsplus'
 primitive 'onlyonly' 'order=("$onlywid")'
 
 include << 'end'
-: forth        [ "forthwid" ] push$ set-context ;
-: definitions  get-context set-current ;
+: get-context  [ "order[0]" ] push$ ;              inline
+: set-context  [ "order[0]" ] pop$  ;              inline
+: forth        [ "forthwid" ] push$ set-context ;  inline
+: definitions  get-context set-current ;           inline
 : only         onlyonly also definitions ;
+trash onlyonly
 end
 
-trash onlyonly
 set-current "$forthwid"
 
 
@@ -2477,6 +2471,7 @@ generate_dependencies()  {                                           # library i
 }
 
 cache_dependencies()  {
+   lib=()
    while read -r word file _; do
    lib["$word"]="$file"
    done < "$dependencies"
@@ -2663,6 +2658,10 @@ inline
 
 # ----- high level --------------------------------------- #fold01
 
+# primitives and word are generally moved here only if
+# these high level words don't generate worse code than
+# their former bash coded counterparts.
+
 include << 'end'
 
 only forth definitions
@@ -2690,6 +2689,10 @@ only forth definitions
 : depth$       [ "${#ss[@]}" ] push$ ;                         inline
 
 \ ----- arithmetics -------------------------------------- #fold02
+
+\ same as:  swap !
+( a x -- )
+: <-        [ "m[s[sp]]" ]  pop$ drop  ;                       inline
 
 \ truncated, symmetric
 ( n1 n2 n3 -- n4 )
@@ -2745,6 +2748,9 @@ only forth definitions
 ' rshift alias >>
 
 \ ----- memory ------------------------------------------- #fold02
+
+( x -- )
+: ,            [ "m[dp++]" ]  pop$ ;                           inline
 
 ( a -- a+1 c )
 : count        [ "m[s[sp]++]&255" ] push$ ;                    inline
@@ -2839,6 +2845,7 @@ defer query$
 : u.r          >r uconvert r> rtype$ ;
 
 \ ----- dictionary and compiling ------------------------- #fold02
+
 
 ( -- wid )
 : get-current  [ "currentwid" ] push$  ;                       inline

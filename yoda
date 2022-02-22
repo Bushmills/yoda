@@ -874,7 +874,9 @@ evaluate()  {
 
 # evaluate block of hi-level source code
 include()  {
+   local linenr="${BASH_LINENO[0]}"
    while read -r lineofsource; do
+      ((linenr++))
       evaluate "$lineofsource"
    done
 }
@@ -1034,7 +1036,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 atom["r@"]='((s[++sp]=r[rp]))'
 atom['>r']='((r[++rp]=s[sp--]))'
 atom['r>']='((s[++sp]=r[rp--]))'
-atom['rdrop']='((r--))'
+atom['rdrop']='((rp--))'
 
 atom["allot"]='((dp+=s[sp--]))'
 atom["here"]='((s[++sp]=dp))'
@@ -1353,16 +1355,6 @@ colon 'rdrop'
 semicolon
 inline
 
-colon '>r'
-   atom '>r'
-semicolon
-inline
-
-colon 'r>'
-   atom 'r>'
-semicolon
-inline
-
 # ( x1 x2 -- )  ( return: -- x1 x2 )
 colon '2>r'
    code '((r[++rp]=s[sp-1]))'
@@ -1370,15 +1362,6 @@ colon '2>r'
    atom 'drop'
 semicolon
 inline
-
-# ( -- x1 x2 )  ( return: x1 x2 -- )
-colon '2r>'
-   push 'r[rp-1]'
-   push 'r[rp--]'
-   code '((rp--))'
-semicolon
-inline
-
 
 # ----- numeric comparison ------------------------------- #fold01
 
@@ -1796,12 +1779,10 @@ inline
 primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'
 primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'
 
-# floored 2/
-#primitive '2/'   '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'
-
 colon  '2/'
    atom 's1'
 #   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'                        # floored
+#   code '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'                          # alternatively
    code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'             # symmetric
 semicolon
 
@@ -1877,7 +1858,6 @@ colon '2swap$'
    code 'tmp="${ss[-4]}"; ss[-4]="${ss[-2]}"; ss[-2]="$tmp"'
    code 'tmp="${ss[-3]}"; ss[-3]="${ss[-1]}"; ss[-1]="$tmp"'
 semicolon
-inline
 
 colon 'swap$'
    code 'tmp="${ss[-2]}"; ss[-2]="${ss[-1]}"; ss[-1]="$tmp"'
@@ -1898,12 +1878,10 @@ inline
 colon 'rot$'
    code 'tmp="${ss[-1]}"; ss[-1]="${ss[-3]}"; ss[-3]="${ss[-2]}"; ss[-2]="$tmp"'
 semicolon
-inline
 
 colon '-rot$'
    code 'tmp="${ss[-1]}"; ss[-1]="${ss[-2]}"; ss[-2]="${ss[-3]}"; ss[-3]="$tmp"'
 semicolon
-inline
 
 # results may not be what is expected: this removes *all* white space,
 # not just leading and trailing white space. Actually a mistake, which
@@ -2091,9 +2069,6 @@ primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) 
 
 
 # ----- environment--------------------------------------- #fold01
-
-# read number from environment variable with name on string stack
-#evaluate ': env  [ "${!ss[-1]}&true" ] push$ drop$ ;'                # ( -- x )  ( string:  $1 -- )
 
 # store $1 in bash environment variable with name $2
 # ( x -- ) ( string:  $1 -- )
@@ -2685,6 +2660,17 @@ only forth definitions
 
 ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
 : pick         [ "s[sp-s[sp--]-1]" ] push$ ;                   inline
+
+( x -- ) ( r: -- x )
+: >r           [ "r[++rp]" ] pop$ ;                            inline
+
+( -- x ) ( r: x -- )
+: r>           [ "r[rp--]" ] push$ ;                           inline
+
+( -- x1 x2 )  ( r: x1 x2 -- )
+: 2r>          [ "r[rp-1]" ] push$
+               [ "r[rp--]" ] push$
+               rdrop ;                                         inline
 
 ( -- u )
 : rdepth       [ "rp" ] push$ ;                                inline

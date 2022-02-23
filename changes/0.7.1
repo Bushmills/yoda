@@ -11,4 +11,7 @@ fixed source location for words defined in yoda include sections
 added postpone.  word is searched in this order: compileonly order interpretonly
 renamed push$ to push, pop$ to pop,
 added code, and atom,
+added code end-code compile$ for use in high level section
 moved many primitives and colon definitions to high level section.
+changed end-code to ;code, changed compile$ to code,
+compiler now searched context voc (compileonly or interpretonly) prior to order[*]

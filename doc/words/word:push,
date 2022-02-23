@@ -1,4 +1,4 @@
-name:                push$
+name:                push,
 stack:               ( -- )         compile time
                      ( -- x )       run time
 return stack:        ( -- )
@@ -12,7 +12,7 @@ description:         during compilation a string $1 is taken from string stack. 
                      push a number with string as expression, to be evaluated at
                      run time.
 
-example:             : foo [ "RANDOM" ] push$ ;
+example:             : foo [ "RANDOM" ] push, ;
                      compiles to foo the code:
                      ((s[++sp]=RANDOM))
 

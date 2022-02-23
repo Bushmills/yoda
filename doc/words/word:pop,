@@ -1,4 +1,4 @@
-name:                pop$
+name:                pop,
 stack:               ( -- )         compile time
                      ( x -- )       run time
 return stack:        ( -- )
@@ -12,7 +12,7 @@ description:         during compilation a string $1 is taken from string stack. 
                      to. Code is compiled to pop a number from stack and assing it to the
                      result of that expression when executed at run time.
 
-example:             : stopwatch ( xt -- )  0 [ "SECONDS" dup$ ] pop$ execute push$ ;
+example:             : stopwatch ( xt -- )  0 [ "SECONDS" dup$ ] pop, execute push, ;
                            results in code:
                      ((s[++sp]=0));
                      ((SECONDS=s[sp--]));          \ SECONDS=0

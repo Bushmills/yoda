@@ -515,6 +515,7 @@ colon()  {
    delayheader "$1" "$filehandle" "${linenr:-$tmp}"
 }
 
+
 # arg1: add action for semicolon to execute to conclude[@]
 conclude()  { conclude+=("$@"); }
 
@@ -1040,6 +1041,22 @@ colon ':'
    push "$magic"                                                     # allow check of proper nesting
    code '((compiling=true))'
 semicolon
+
+
+colon 'code'
+   code 'word'
+   code 'delayheader "$word" "$filehandle" "$linenr"'
+semicolon
+
+colon 'end-code'
+   code "compile"
+semicolon
+
+colon 'compile$'
+   code 'code "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+
 # ----------------------------------------------
 
 primitive 'interpreted' 'interpreted'                                # move header to interpreter context vocabulary.
@@ -1183,7 +1200,6 @@ colon "array$"
 semicolon
 
 
-
 # NOTE: factor code common with header
 # ' foo alias bar
 colon 'alias'
@@ -1223,15 +1239,6 @@ colon 'is'
    code 'tmp="$(type "${current[$word]}"|grep "${nameprefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
-
-
-# ----- commenting --------------------------------------- #fold01
-
-primitive "\\"   'line=""';   compiled                               # single quoted single backslash because
-primitive "\\"   'line=""';   interpreted                            # double quoted escaped backslash rather than
-                                                                     # efte syntax highlighting gets confused
-primitive '('    "parse ')'"; compiled
-primitive '('    "parse ')'"; interpreted
 
 
 # ----- parameter stack ---------------------------------- #fold01
@@ -2403,7 +2410,7 @@ description:         none
 example:             none
 notes:               none
 standard:            no
-deviation:           ?
+deviation:           standard has no equivalent
 url:                 https://forth-standard.org/standard/core/${1^^}
 EOF
 }
@@ -2532,24 +2539,38 @@ inline
 # these high level words don't generate worse code than
 # their former bash coded counterparts.
 
-include << 'end'
+# ----- comments ----------------------------------------- #fold02
 
+include << 'end'
 only forth definitions
 
+code \         "line=''"      compile$       end-code          compiled
+code \         "line=''"      compile$       end-code          interpreted
+code (         "parse ')'"    compile$       end-code          compiled
+code (         "parse ')'"    compile$       end-code          interpreted
+
+\ ----- radix change  ------------------------------------ #fold02
+
+code decimal   "m[base]=10"   compile$       end-code          inline
+code hex       "m[base]=16"   compile$       end-code          inline
+code binary    "m[base]=2"    compile$       end-code          inline
+
 \ ----- stack -------------------------------------------- #fold02
+decimal
 
 ( ?? -- ?? u )
 : depth        [ "sp" ] push, ;                                inline
 
-: drop         [ "((sp--))" ] code,  ;                         inline
-: 2drop        [ "((sp-=2))" ] code, ;                         inline
+code drop      "((sp--))"     compile$       end-code          inline
+code 2drop     "((sp-=2))"    compile$       end-code          inline
+
 : 2over        [ "s[sp-3]" dup$ ]  push, push, ;               inline
-: nip          [ "s2=s1" ] atom, drop  ;                       inline
+: nip          [ "s2=s1" ]         atom, drop  ;               inline
 
 ( x -- x x )
-: dup          [ "s[sp]" ]    push,  ;                         inline
+: dup          [ "s[sp]" ]         push,       ;               inline
 
-: ?dup         [ "((s[sp])) &&" ] code, dup ;                  inline
+: ?dup         [ "((s[sp])) &&" ]  code,   dup ;               inline
 
 ( x1 x2 -- x1 x2 x1 )
 : over         [ "s[sp-1]" ]  push,  ;                         inline
@@ -2564,30 +2585,36 @@ only forth definitions
 : pick         [ "s[sp-s[sp--]-1]" ] push, ;                   inline
 
 ( -- x )  ( r: x -- x )
-: r@           [ "r[rp]" ] push, ;                             inline
+: r@           [ "r[rp]" ]          push, ;                    inline
 
 ( x -- ) ( r: -- x )
-: >r           [ "r[++rp]" ] pop, ;                            inline
+: >r           [ "r[++rp]" ]        pop, ;                     inline
 
 ( -- x ) ( r: x -- )
-: r>           [ "r[rp--]" ] push, ;                           inline
+: r>           [ "r[rp--]" ]        push, ;                    inline
 
-: rdrop        [ "((rp--))" ] code, ;                          inline
+: rdrop        [ "((rp--))" ]       code, ;                    inline
 
 ( -- x1 x2 )  ( r: x1 x2 -- )
-: 2r>          [ "r[rp-1]" ] push,
-               [ "r[rp--]" ] push,
+: 2r>          [ "r[rp-1]" ]        push,
+               [ "r[rp--]" ]        push,
                rdrop ;                                         inline
 
 ( x1 x2 -- )  ( return: -- x1 x2 )
-: 2>r          [ "((r[++rp]=s[sp-1]))" ] code,
-               [ "r[++rp]" ]     pop,     drop    ;            inline
+: 2>r          [ "((r[++rp]=s[sp-1]))" ]  code,
+               [ "r[++rp]" ]              pop,
+               drop   ;                                        inline
 
 ( -- u )
 : rdepth       [ "rp" ] push, ;                                inline
 
 ( -- u )
 : depth$       [ "${#ss[@]}" ] push, ;                         inline
+
+
+code empty     "s=() sp=0"    compile$       end-code          inline
+code rempty    "r=() rp=0"    compile$       end-code          inline
+
 
 \ ----- flow control ------------------------------------- #fold02
 
@@ -2597,18 +2624,17 @@ only forth definitions
 ( -- x )
 ' r@ alias j                                                   inline
 
-
 \ ----- arithmetics -------------------------------------- #fold02
 
-: 1+           [ "((s[sp]=(s[sp]+1)&true))" ] code,  ;         inline
-: 1-           [ "((s[sp]=(s[sp]-1)&true))" ] code,  ;         inline
-: 2*           [ "((s[sp]=(s[sp]<<1)&true))" ] code, ;         inline
+code 1+        "((s[sp]=(s[sp]+1)&true))"  compile$  end-code  inline
+code 1-        "((s[sp]=(s[sp]-1)&true))"  compile$  end-code  inline
+code 2*        "((s[sp]=(s[sp]<<1)&true))" compile$  end-code  inline
 
-: invert       [ "((s[sp]^=maxuint))" ] code,        ;         inline
-: negate       [ "((s[sp]=(-s[sp]&true)))" ]  code,  ;         inline
-: ?negate      [ "((s[sp--]))&&" ]  code,  negate    ;         inline
-: abs          [ "((s[sp]&msb))&&" ] code, negate    ;         inline
-: @            [ "((s[sp]=m[s[sp]]))" ] code,        ;         inline
+code invert    "((s[sp]^=maxuint))"        compile$  end-code  inline
+code negate    "((s[sp]=(-s[sp]&true)))"   compile$  end-code  inline
+
+: ?negate      [ "((s[sp--]))&&" ]   code,  negate  ;          inline
+: abs          [ "((s[sp]&msb))&&" ] code,  negate  ;          inline
 
 \ truncated, symmetric
 ( n1 n2 n3 -- n4 )
@@ -2631,7 +2657,7 @@ only forth definitions
 
 \ percentage rounded, not truncated
 ( n1 n2 -- n3 )
-: %             50 */ dup 0< 1 or + 2/ ;  inline
+: %             50 */ dup 0< 1 or + 2/ ;
 
 ( n1 n2 -- n1|n2 )
 : min          2dup >  if nip exit then drop ;
@@ -2665,9 +2691,10 @@ only forth definitions
 
 \ ----- memory ------------------------------------------- #fold02
 
-\ same as:  swap !
-( a x -- )
-: <-        [ "m[s[sp]]" ]  pop, drop  ;                       inline
+code @         "((s[sp]=m[s[sp]]))"    compile$    end-code    inline
+
+( a x -- )     \ same as:  swap !
+: <-           [ "m[s[sp]]" ]  pop, drop  ;                    inline
 
 ( x -- )
 : ,            [ "m[dp++]" ]  pop, ;                           inline
@@ -2773,19 +2800,19 @@ defer query$
 ( -- u )
 : #unresolved  [ "${#unresolved[@]}" ] push, ;                 inline
 
-' have$ alias xt
+' have$ alias xt                                               inline
 
-\ produces execution token and removes header of last word
-\ : foo ... ; noname
+\ produces execution token and removes header of last word:  : foo ... ; noname
 ( -- xt )
-: noname       last$ dup$ xt trash$ ;
+: noname       last$ dup$
+               protect xt
+               trash$ ;
 
 ( -- )         \ compile time
 ( -- x )       \ run time
 : me           [ "xt" ] push,  literal, ;                      compiled
 
-( -- f )
-( stream: word )
+( -- f ) ( stream: word )
 : needed       word$ needed$ ;                                 inline
 
 ' satisfy alias needs:                                         inline
@@ -2797,8 +2824,7 @@ defer query$
 : compiling    [ "compiling" ] push, ;                         inline
 
 \ word exists?
-( -- 0|xt )
-( stream: word )
+( -- 0|xt ) ( stream: word )
 : have         word$ have$ ;                                   inline
 
 \  word missing?
@@ -2806,8 +2832,7 @@ defer query$
 ( stream: word )
 : lack         have  0=    ;                                   inline
 
-( -- )
-( stream: word )
+( -- )   ( stream: word )
 : [']          ' literal,   ;                                  compiled
 
 \ ----- unsorted ----------------------------------------- #fold02
@@ -2874,11 +2899,6 @@ end
 
 # ----- convenience -------------------------------------- #fold01
 
-primitive 'decimal'  "m[$base]=10"
-primitive 'hex'      "m[$base]=16"
-primitive 'binary'   "m[$base]=2"
-
-
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
     code 'unset "ss[-1]"'
@@ -2889,9 +2909,6 @@ colon 'where$'
     push '${tmp1##*:}'                                               # push line number
 semicolon
 
-
-primitive empty  's=() sp=0'
-primitive rempty 'r=() rp=0'
 
 # empty stack and string stack
 # since warm doesn't empty them any longer, a convenient

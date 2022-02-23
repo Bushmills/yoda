@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# times in UTC
+# dates in post-gregorian Sol3
+# numbers in decimal. Mostly.
+
+v="0.7.2"
+
+# changelog now in directory changes. Or, type "changes" in yoda
+# for changes to current version.
+
 # ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
@@ -13,7 +22,7 @@
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
-# ----- versions ----------------------------------------- #fold00
+# ----- shellcheck ignores ------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
 # SC2016: "expressions don't expand between single quotes"
@@ -22,16 +31,6 @@
 #         in most cases is "appears" the correct term.
 # SC2154 "(warning): base is referenced but not assigned."
 #        is assigned, but shellcheck can't see how
-
-
-# times in UTC
-# dates in post-gregorian Sol3
-# numbers in decimal. Mostly.
-
-v="0.7.1"
-# changelog now in directory changes. Or, type "changes" in yoda
-# for changes to current version.
-read -ra version <<< "${v//./ }"
 
 # ----- declarations ------------------------------------- #fold00
 
@@ -44,6 +43,7 @@ declare -i clean=1                                                   # empty sta
 declare -i codedump=0
 
 read -r tmp _ < <(realpath "$0")
+read -ra version <<< "${v//./ }"
 mydir="${tmp%/*}"
 doc="$mydir/doc"                                                     # documentation base directory
 worddoc_prefix="word"                                                # used as part of file names, prevents files to go hidden by leading period
@@ -307,6 +307,34 @@ where()  {
    code "$1:$2" "$sourcelocation"
 }
 
+declare -i dodoes_at
+analyser()  {
+   if (( bodyflag & functionheader )); then                          # create header pseudo op
+      word="$bodyline"                                               # word name of new word
+      name="${unresolved[$word]}"                                    # if forward ref, reuse function name of forward ref
+      if [[ -z "$name" ]]; then
+         newname "$word"                                             # not a forward ref: invent new name
+      else
+         unset -v "unresolved['$word']"                              # going to resolve word, remove from forward refs
+      fi
+      header "$word" "$name"                                         # create new header
+      return 0
+   elif (( bodyflag & atomiccode )); then                            # atomic code: expand
+      targetline="${atom[$bodyline]}"
+   elif (( bodyflag & push )); then                                  # generate code pushing the number
+      targetline="((s[++sp]=$bodyline))"
+   elif (( bodyflag & sourcelocation )); then                        # source location: set
+      where["$lastword"]="$bodyline"                                 # remember source location
+      return 0
+   elif (( bodyflag & call )); then
+      name "$bodyline"                                               # convert xt to function name
+      targetline="$name"
+   elif (( bodyflag & does )); then                                  # does>
+      dodoes_at="$((${#target[@]}+1))"                               # remember end of target for splitting code (but only when whole word
+   fi                                                                # was compiled - we want to rip out all the run time code, after all.
+   return 1
+}
+
 # doesn't actually do any optimizing.
 # Function is limited to:
 # - expanding atoms
@@ -319,7 +347,6 @@ optimise()  {                                                        # run code 
    ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
    target=()
    dodoes_at=0
-#   corresponding=()                                                 # index array source line to target line.
    ((codedump))&& {
       echo ": $lastword"
       for ((tmp=0; tmp<${#body[@]}; tmp++)); do
@@ -328,35 +355,10 @@ optimise()  {                                                        # run code 
       echo "------------------------------------------------"
    }
    for ((tmp=0; tmp<${#body[@]}; tmp++)); do
-#      corresponding[tmp]="${#target[@]}"                            # allow optimiser to locate target code for any source line.
       bodyline="${body[tmp]}"
       bodyflag="${analyser[tmp]}"
-      targetline="$bodyline"                                         # Default action: pass through
-      if (( bodyflag )); then                                        # flags: examine
-         if (( bodyflag & functionheader )); then                    # create header pseudo op
-            word="$bodyline"                                         # word name of new word
-            name="${unresolved[$word]}"                              # if forward ref, reuse function name of forward ref
-            if [[ -z "$name" ]]; then
-               newname "$word"                                       # not a forward ref: invent new name
-            else
-               unset -v "unresolved['$word']"                        # going to resolve word, remove from forward refs
-            fi
-            header "$word" "$name"                                   # create new header
-            continue
-         elif (( bodyflag & atomiccode )); then                      # atomic code: expand
-            targetline="${atom[$bodyline]}"
-         elif (( bodyflag & push )); then                            # generate code pushing the number
-            targetline="((s[++sp]=$bodyline))"
-         elif (( bodyflag & sourcelocation )); then                  # source location: set
-            where["$lastword"]="$bodyline"                           # remember source location
-            continue
-         elif (( bodyflag & call )); then
-            name "$bodyline"                                         # convert xt to function name
-            targetline="$name"
-         elif (( bodyflag & does )); then                            # does>
-            dodoes_at="$((${#target[@]}+1))"                         # remember end of target for splitting code (but only when whole word
-         fi                                                          # was compiled - we want to rip out all the run time code, after all.
-      fi
+      targetline="$bodyline"                                         # assume code
+      (( bodyflag )) && analyser && continue                         # flags: examine and act upon
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
    ((dodoes_at)) && {
@@ -365,14 +367,12 @@ optimise()  {                                                        # run code 
 # is seperated to an array item associated with defining word.
 # dodoes, when executed, knows how to retrieve and
 # compile that code to defined word.
-# a workaround is needed here too:  create ... does> ;   does without following code will let bash run into an empty function,
-# which bash doesn't like, and complain about.  Therefore this condition is caught here and acted upon.
      if (( ${#target[@]} > dodoes_at )); then                        # everything ok: there was code between does> and ; - extract and store it.
         doescode[${current[$lastword]}]=$(printf "%s\n" "${target[@]:$dodoes_at}")
         target=("${target[@]:0:$dodoes_at}")
      else                                                            # but does> without code ...
         unset "target[-1]"                                           # will cause to compile without any does run time action. no code behind does>
-     fi                                                              # would result in no action at all, therefore the whole does> can be dropped too.
+     fi                                                              # results in no additional action at all, therefore the whole does> can be dropped.
    }
 }
 
@@ -1417,7 +1417,6 @@ semicolon
 compiled
 
 
-primitive 'compile,' "code \"code \${s[sp--]}\" \"$call\""           # ( xt -- )
 primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
 
 
@@ -1483,6 +1482,7 @@ semicolon
 # ( -- $1 )
 primitive 'last$'   'ss+=("$lastword")'
 
+# this version doesn't allow postponing forward references yet.
 # ( stream: word )
 colon 'postpone'
    code 'word'
@@ -2853,6 +2853,22 @@ defer query$
 
 ( ??? -- )
 ' quit alias abort
+
+\ when compiled into a word, gives that word, presumably a compiledonly word, as result of execution
+\ of compile, this characteristic:  compile code which calls xt into the word under construction.
+( xt -- )
+code compile, "code ${s[sp--]} call"  code,   ;code
+
+( ??? flag -- ??? | empty )         \ the abort runtime, compiled by abort" into the word under construction.
+: (abort")     if type$ cr abort then drop$ ;
+
+( -- ) ( s: string deliited by " )
+: abort"
+   '" parse$
+   postpone literal$
+   ['] (abort") compile,
+   ; compiled
+
 
 ( f -- )
 : ?abort       lest abort ;   inline

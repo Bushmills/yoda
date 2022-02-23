@@ -1,0 +1,15 @@
+name:                ;code
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            compiling
+
+description:         concludes creation of a code word, which was initiated by
+                     defining word "code"
+
+example:             code bye   "exit" code,    ;code
+standard:            no
+deviation:           ";code" pairs with "code", not with "create" or a word using create -
+                     code doesn't use create.
+url:                 https://forth-standard.org/standard/core/SemiCODE

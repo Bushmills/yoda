@@ -1,0 +1,20 @@
+name:                abort"
+stack:               ( -- )                        compile time
+                     ( ??? flag -- ??? | empty )   run time
+return stack:        ( -- )                        compile time
+                     ( ??? -- ??? | empty )        run time
+string stack:        ( -- )                        compile time
+                     ( ??? -- ??? | empty)         run time
+contexts:            compileonly
+category:            system, flow control
+input stream:        doubles quotes delimited string
+
+description:         Parses a double quotes delimited string from input, compiles it
+                     to word under construction along with code which will cause the
+                     word under construction, when later executed, to remove and examine
+                     flag, act on its value:  if false, continue execution. if true,
+                     output the parsed string, then execute an abort.
+
+example:             : foo   true abort" always abort" ;
+standard:            yes
+url:                 https://forth-standard.org/standard/core/ABORTq

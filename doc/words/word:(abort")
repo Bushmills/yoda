@@ -1,0 +1,11 @@
+name:                (abort")
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+description:         the run time portion of abort", compiled into words by abort"
+
+standard:            no
+deviation:           standard has no equivalent

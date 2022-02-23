@@ -811,22 +811,7 @@ evaluate()  {
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
-# --- search word in order ---
-      exists "$word" "${order[@]}" && {                              # stateless word found?
-         tmp="${exists[0]}"
-         ((compiling)) && {
-            ((exists[1]&inline)) && {
-               codebody "$tmp"                                       # inline: compile function body
-               continue
-            }
-            code "$tmp" "$call"                                      # not inline: compile call to function
-            continue
-         }
-         name "$tmp"                                                 # not compiling: convert xt to function name
-         $name                                                       # execute function
-         continue                                                    # done processing this word
-      }
-# --- word not found ---
+# examine compileonly and interpretonly wordlists first
       if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
          [[ -z "${compileonly["$word"]}" ]] || {                     # found in in compileonly while compiling
             ${compileonly["$word"]}                                  # word in there are inherently "immediate", therefore they're executed here
@@ -842,7 +827,23 @@ evaluate()  {
             continue
          }
       fi
-# --- words isn't interpret or compile only
+# --- search word in order ---
+      exists "$word" "${order[@]}" && {                              # stateless word found?
+         tmp="${exists[0]}"
+         ((compiling)) && {
+            ((exists[1]&inline)) && {
+               codebody "$tmp"                                       # inline: compile function body
+               continue
+            }
+            code "$tmp" "$call"                                      # not inline: compile call to function
+            continue
+         }
+         name "$tmp"                                                 # not compiling: convert xt to function name
+         $name                                                       # execute function
+         continue                                                    # done processing this word
+      }
+# --- word not in a searched wordlist
+# --- pattern?
       pattern "$word" && continue                                    # not found yet: try patterns (numbers, strings, chars, hashbang, shell commands)
       (( m[forwardrefs] )) && {                                      #     and forward references enabled ...
          ((compiling)) && {                                          # still not successfully dealt with word. last resolve: in case of compiling ...
@@ -851,6 +852,7 @@ evaluate()  {
             continue                                                 # hope that it will eventually get resolved
          }
       }
+# --- can be included?
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
          satisfy1 "$word" && {                                       # attempt to load word
             exists "$word" "${order[@]}" && {                        # load was successful. Execution now depends on whether the wordlist it was compiled
@@ -861,12 +863,14 @@ evaluate()  {
             notfound "$word"                                         # word not found: error (though it was compiled successfully)
          }                                                           # condition happens when source compiles to wordlist, then closes it,
       }                                                              # in which case trying to execute that word, even while present, throws error too.
+# --- can be shelled to?
       ((m[shell])) && {                                              # done unless shell flag was set
          stateless "${word} ${line}" ||                              # in which case execution as shell command is attempted (cmd not found returns 127)
          shellerror "$?"                                             # non-zero exit values of shell commands will be passed on to yoda error handler
          line=""                                                     # assignment sets return value to 0
          continue
       }
+# --- can be reported?
       notfound "$word"                                               # nothing helped. get grouchy.
       line=""                                                        # stop evaluation: nothing left
    done
@@ -1042,20 +1046,6 @@ colon ':'
    code '((compiling=true))'
 semicolon
 
-
-colon 'code'
-   code 'word'
-   code 'delayheader "$word" "$filehandle" "$linenr"'
-semicolon
-
-colon 'end-code'
-   code "compile"
-semicolon
-
-colon 'compile$'
-   code 'code "${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
 
 # ----------------------------------------------
 
@@ -1397,6 +1387,22 @@ colon 'pop,'
    code 'unset "ss[-1]"'
 semicolon
 compiled
+
+
+colon 'code'
+   code 'word'
+   code 'delayheader "$word" "$filehandle" "$linenr"'
+semicolon
+
+colon ';code'
+   code "compile"
+semicolon
+
+colon 'code,'
+   code 'code "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+interpreted
 
 colon 'code,'
    code 'code "${ss[-1]}"'
@@ -2544,16 +2550,16 @@ inline
 include << 'end'
 only forth definitions
 
-code \         "line=''"      compile$       end-code          compiled
-code \         "line=''"      compile$       end-code          interpreted
-code (         "parse ')'"    compile$       end-code          compiled
-code (         "parse ')'"    compile$       end-code          interpreted
+code \         "line=''"      code,       ;code                compiled
+code \         "line=''"      code,       ;code                interpreted
+code (         "parse ')'"    code,       ;code                compiled
+code (         "parse ')'"    code,       ;code                interpreted
 
 \ ----- radix change  ------------------------------------ #fold02
 
-code decimal   "m[base]=10"   compile$       end-code          inline
-code hex       "m[base]=16"   compile$       end-code          inline
-code binary    "m[base]=2"    compile$       end-code          inline
+code decimal   "m[base]=10"   code,       ;code                inline
+code hex       "m[base]=16"   code,       ;code                inline
+code binary    "m[base]=2"    code,       ;code                inline
 
 \ ----- stack -------------------------------------------- #fold02
 decimal
@@ -2561,8 +2567,8 @@ decimal
 ( ?? -- ?? u )
 : depth        [ "sp" ] push, ;                                inline
 
-code drop      "((sp--))"     compile$       end-code          inline
-code 2drop     "((sp-=2))"    compile$       end-code          inline
+code drop      "((sp--))"     code,       ;code                inline
+code 2drop     "((sp-=2))"    code,       ;code                inline
 
 : 2over        [ "s[sp-3]" dup$ ]  push, push, ;               inline
 : nip          [ "s2=s1" ]         atom, drop  ;               inline
@@ -2612,8 +2618,8 @@ code 2drop     "((sp-=2))"    compile$       end-code          inline
 : depth$       [ "${#ss[@]}" ] push, ;                         inline
 
 
-code empty     "s=() sp=0"    compile$       end-code          inline
-code rempty    "r=() rp=0"    compile$       end-code          inline
+code empty     "s=() sp=0"    code,       ;code                inline
+code rempty    "r=() rp=0"    code,       ;code                inline
 
 
 \ ----- flow control ------------------------------------- #fold02
@@ -2626,12 +2632,12 @@ code rempty    "r=() rp=0"    compile$       end-code          inline
 
 \ ----- arithmetics -------------------------------------- #fold02
 
-code 1+        "((s[sp]=(s[sp]+1)&true))"  compile$  end-code  inline
-code 1-        "((s[sp]=(s[sp]-1)&true))"  compile$  end-code  inline
-code 2*        "((s[sp]=(s[sp]<<1)&true))" compile$  end-code  inline
+code 1+        "((s[sp]=(s[sp]+1)&true))"  code,  ;code        inline
+code 1-        "((s[sp]=(s[sp]-1)&true))"  code,  ;code        inline
+code 2*        "((s[sp]=(s[sp]<<1)&true))" code,  ;code        inline
 
-code invert    "((s[sp]^=maxuint))"        compile$  end-code  inline
-code negate    "((s[sp]=(-s[sp]&true)))"   compile$  end-code  inline
+code invert    "((s[sp]^=maxuint))"        code,  ;code        inline
+code negate    "((s[sp]=(-s[sp]&true)))"   code,  ;code        inline
 
 : ?negate      [ "((s[sp--]))&&" ]   code,  negate  ;          inline
 : abs          [ "((s[sp]&msb))&&" ] code,  negate  ;          inline
@@ -2691,7 +2697,7 @@ code negate    "((s[sp]=(-s[sp]&true)))"   compile$  end-code  inline
 
 \ ----- memory ------------------------------------------- #fold02
 
-code @         "((s[sp]=m[s[sp]]))"    compile$    end-code    inline
+code @         "((s[sp]=m[s[sp]]))"    code,    ;code          inline
 
 ( a x -- )     \ same as:  swap !
 : <-           [ "m[s[sp]]" ]  pop, drop  ;                    inline

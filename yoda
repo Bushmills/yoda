@@ -111,7 +111,11 @@ inline=1                                                             # inlined w
 protected=2                                                          # protect code body against trashing when set.
 # detokeniser flags:
 flagscount="0"
-newflag()  { (( $1 = 1<<flagscount++ )); }
+newflag()  {
+   (( $1 = 1<<flagscount++ ))                                        # name -> value
+   flagname["${!1}"]="$1"                                            # value -> name
+}
+
 newflag functionheader                                               # create header
 newflag sourcelocation                                               # store source location
 newflag atomiccode                                                   # expand
@@ -307,31 +311,48 @@ where()  {
    code "$1:$2" "$sourcelocation"
 }
 
+
 declare -i dodoes_at
-analyser()  {
-   if (( bodyflag & functionheader )); then                          # create header pseudo op
-      word="$bodyline"                                               # word name of new word
-      name="${unresolved[$word]}"                                    # if forward ref, reuse function name of forward ref
-      if [[ -z "$name" ]]; then
-         newname "$word"                                             # not a forward ref: invent new name
-      else
-         unset -v "unresolved['$word']"                              # going to resolve word, remove from forward refs
-      fi
-      header "$word" "$name"                                         # create new header
-      return 0
-   elif (( bodyflag & atomiccode )); then                            # atomic code: expand
-      targetline="${atom[$bodyline]}"
-   elif (( bodyflag & push )); then                                  # generate code pushing the number
-      targetline="((s[++sp]=$bodyline))"
-   elif (( bodyflag & sourcelocation )); then                        # source location: set
-      where["$lastword"]="$bodyline"                                 # remember source location
-      return 0
-   elif (( bodyflag & call )); then
-      name "$bodyline"                                               # convert xt to function name
-      targetline="$name"
-   elif (( bodyflag & does )); then                                  # does>
-      dodoes_at="$((${#target[@]}+1))"                               # remember end of target for splitting code (but only when whole word
-   fi                                                                # was compiled - we want to rip out all the run time code, after all.
+
+
+# return values of all these analyser_${flagname} mean:
+# 0: continue optimiser loop without adding code to target
+# 1: append raw or generated code to target
+analyser_functionheader()  {
+   word="$bodyline"                                               # word name of new word
+   name="${unresolved[$word]}"                                    # if forward ref, reuse function name of forward ref
+   if [[ -z "$name" ]]; then
+      newname "$word"                                             # not a forward ref: invent new name
+   else
+      unset -v "unresolved['$word']"                              # going to resolve word, remove from forward refs
+   fi
+   header "$word" "$name"                                         # create new header
+   return 0
+}
+
+analyser_sourcelocation()  {
+   where["$lastword"]="$bodyline"                                 # remember source location
+   return 0
+}
+
+analyser_atomiccode()  {
+   targetline="${atom[$bodyline]}"
+   return 1
+}
+
+analyser_push()  {
+   targetline="((s[++sp]=$bodyline))"
+   return 1
+}
+
+analyser_call()  {
+   name "$bodyline"                                               # convert xt to function name
+   targetline="$name"
+   return 1
+}
+
+analyser_does()  {
+   dodoes_at="$((${#target[@]}+1))"                               # remember end of target for splitting code (but only when whole word
    return 1
 }
 
@@ -358,7 +379,9 @@ optimise()  {                                                        # run code 
       bodyline="${body[tmp]}"
       bodyflag="${analyser[tmp]}"
       targetline="$bodyline"                                         # assume code
-      (( bodyflag )) && analyser && continue                         # flags: examine and act upon
+      (( bodyflag )) &&
+         analyser_${flagname[bodyflag]} &&                           # flags: examine and act upon
+         continue
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
    ((dodoes_at)) && {

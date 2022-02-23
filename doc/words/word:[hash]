@@ -12,3 +12,7 @@ description:         meant to be used between <# and #>, its operation is part o
                      string representation of the integer digit by digit, while gradually
                      diminishing u1 until 0 is left, and nothing more needs converting.
 
+standard:            no
+deviation:           works on single length instead of on double length numbers.
+                     Change is considered.
+url:                 https://forth-standard.org/standard/core/num

@@ -16,3 +16,7 @@ notes:               mostly added to maintain compatibility with standards and p
                      the closing to a symmetric <# ... #>, the alternatives #>$ and
                      #>type are more efficient, due to not needing to unpack the string to
                      a list of ASCIIs in consecutive memory locations.
+
+standard:            no
+deviation:           operates on single length number
+url:                 https://forth-standard.org/standard/core/num-end

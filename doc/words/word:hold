@@ -18,3 +18,6 @@ notes:               While yoda allows using hold in different contexts than pic
                      Forth- or forthlike compiler.
                      "char$ swap$ join$" will achieve the same (while not making your
                      program any more compatible with other systems :) )
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/HOLD

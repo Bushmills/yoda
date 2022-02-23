@@ -11,3 +11,6 @@ description:         places an empty string on string stack, which will be used
 notes:               meant to be used in a <# ... #> sequence,  "..." being the
                      number converting and conversion buffer affecting words.
                      For those, see # #s sign hold
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/num-start

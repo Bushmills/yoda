@@ -11,3 +11,7 @@ description:         converts all (remaining) digits of x, respecting current
 
 notes:               meant to be used with pictured number conversion, albeit
                      this implemenation doesn't require it. See notes at "hold"
+standard:            no
+deviation:           operates on single length numbers
+                     change is considered.
+url:                 https://forth-standard.org/standard/core/numS

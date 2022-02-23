@@ -992,17 +992,9 @@ from()  {
 # recent use of stack items and registers, for static elimination
 # of redundant operations.
 
-atom["dup"]='((s[++sp]=s[sp]))'
-atom["over"]='((s[++sp]=s[sp-1]))'
-atom["pluck"]='((s[++sp]=s[sp-2]))'
-atom["drop"]='((sp--))'
-atom["@"]='((s[sp]=m[s[sp]]))'
-atom["1+"]='((s[sp]=(s[sp]+1)&true))'
-atom["1-"]='((s[sp]=(s[sp]-1)&true))'
-atom["2*"]='((s[sp]=(s[sp]<<1)&true))'
 
-atom["negate"]='((s[sp]=(-s[sp]&true)))'
-atom["invert"]='((s[sp]^=maxuint))'
+atom["dup"]='((s[++sp]=s[sp]))'
+atom["drop"]='((sp--))'
 
 atom["s1"]='((s1=s[sp]))'
 atom["s2"]='((s2=s[sp-1]))'
@@ -1027,14 +1019,6 @@ atom["s3=s2"]='((s[sp-2]=s[sp-1]))'
 atom["s4=s1"]='((s[sp-3]=s[sp]))'
 atom["s4=s2"]='((s[sp-3]=s[sp-1]))'
 atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
-
-atom["r@"]='((s[++sp]=r[rp]))'
-atom['>r']='((r[++rp]=s[sp--]))'
-atom['r>']='((s[++sp]=r[rp--]))'
-atom['rdrop']='((rp--))'
-
-atom["allot"]='((dp+=s[sp--]))'
-atom["here"]='((s[++sp]=dp))'
 
 
 
@@ -1253,40 +1237,6 @@ primitive '('    "parse ')'"; interpreted
 # ----- parameter stack ---------------------------------- #fold01
 
 
-colon 'dup'
-   atom 'dup'
-semicolon
-inline
-
-colon 'drop'
-   atom 'drop'
-semicolon
-inline
-
-colon 'over'
-   atom 'over'
-semicolon
-inline
-
-colon 'pluck'
-   atom 'pluck'
-semicolon
-inline
-
-colon '2dup'
-   atom 'over'
-   atom 'over'
-semicolon
-inline
-
-primitive '2drop' '((sp-=2))';
-
-colon '2over'
-   push 's[sp-3]'
-   push 's[sp-3]'
-semicolon
-inline
-
 colon 'swap'
    atom 'tmp=s2'
    atom 's2=s1'
@@ -1302,12 +1252,6 @@ colon '2swap'
    atom 's3=s1'
    atom 's1=tmp'
 semicolon
-
-colon 'nip'
-   atom 's2=s1'
-   atom 'drop'
-semicolon
-inline
 
 colon 'tuck'
    atom 'dup'
@@ -1329,32 +1273,6 @@ colon '-rot'
    atom 's1=s2'
    atom 's2=s3'
    atom 's3=tmp'
-semicolon
-inline
-
-colon '?dup'
-   code '((s[sp])) &&'
-   atom 'dup'
-semicolon
-inline
-
-# ----- return stack ------------------------------------- #fold01
-
-colon 'r@'
-   atom 'r@'
-semicolon
-inline
-
-colon 'rdrop'
-   atom 'rdrop'
-semicolon
-inline
-
-# ( x1 x2 -- )  ( return: -- x1 x2 )
-colon '2>r'
-   code '((r[++rp]=s[sp-1]))'
-   code '((r[++rp]=s[sp--]))'
-   atom 'drop'
 semicolon
 inline
 
@@ -1460,18 +1378,31 @@ primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
 
 # compile:  ( -- ) ( $1 -- )   run: ( -- x )
-colon 'push$'
+colon 'push,'
    code 'code "((s[++sp]=${ss[-1]}))"'
    code 'unset "ss[-1]"'
 semicolon
 compiled
 
 # compile: ( -- ) ( $1 -- )   run: ( x -- )
-colon 'pop$'
+colon 'pop,'
    code 'code "((${ss[-1]}=s[sp--]))"'
    code 'unset "ss[-1]"'
 semicolon
 compiled
+
+colon 'code,'
+   code 'code "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+compiled
+
+colon 'atom,'
+   code 'code "${atom[${ss[-1]}]}"'
+   code 'unset "ss[-1]"'
+semicolon
+compiled
+
 
 primitive 'compile,' "code \"code \${s[sp--]}\" \"$call\""           # ( xt -- )
 primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
@@ -1567,7 +1498,6 @@ compiled
 
 # ----- bit logic ---------------------------------------- #fold01
 
-colon    'invert';  atom 'invert'; semicolon; inline
 primitive 'and'     '((s[sp-1]&=s[sp--]))'
 primitive 'or'      '((s[sp-1]|=s[sp--]))'
 primitive 'xor'     '((s[sp-1]^=s[sp--]))'
@@ -1587,17 +1517,17 @@ semicolon
 compiled
 
 colon 'else'
-   code "(( s[sp]++ == \"$magic\" )) || { unstructured 'if'; return; }"
-   code '(( s[sp-1] == ${#body[@]} )) && code "(())"'
+   code "((s[sp]++ == \"$magic\")) || { unstructured 'if'; return; }"
+   code '((s[sp-1] == ${#body[@]})) && code "(())"'
    code 'code "else"'
    code '((s[sp-1]=${#body[@]}))'
 semicolon
 compiled
 
 colon 'then'
-   code "(( s[sp] == $magic ||  s[sp] == $((magic+1)) )) || { unstructured 'if or else'; return; }"
+   code "((s[sp] == $magic ||  s[sp] == $((magic+1)))) || { unstructured 'if or else'; return; }"
    atom 'drop'
-   code '(( s[sp--] == ${#body[@]} )) && code "(())"'
+   code '((s[sp--] == ${#body[@]})) && code "(())"'
    code 'code "fi"'
 semicolon
 compiled
@@ -1763,22 +1693,6 @@ primitive 'exit'  'code "return"'; compiled
 
 # ----- arithmetics -------------------------------------- #fold01
 
-colon '1+'
-   atom '1+'
-semicolon
-inline
-
-colon '1-'
-   atom '1-'
-semicolon
-inline
-
-colon '2*'
-   atom '2*'
-semicolon
-inline
-
-
 primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'
 primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'
 
@@ -1815,25 +1729,6 @@ colon '*/mod'
    code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
    code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
 semicolon
-
-colon 'negate'
-   atom 'negate'
-semicolon
-inline
-
-colon '?negate'
-   code '((s[sp--]))&&'
-   atom 'negate'
-semicolon
-inline
-
-colon 'abs'
-   code '((s[sp]&msb))&&'
-   atom 'negate'
-semicolon
-inline
-
-
 
 # ----- string stack operators---------------------------- #fold01
 
@@ -2095,10 +1990,6 @@ semicolon
 
 # ----- memory ------------------------------------------- #fold01
 
-colon '@'
-   atom '@'
-semicolon
-inline
 
 colon '!'
    code '((m[s[sp--]]=s[sp-1]))'
@@ -2165,10 +2056,7 @@ colon '2exchange'
   code '((m[s1+1]=s3))'
 semicolon
 
-colon 'allot'
-   atom 'allot'
-semicolon
-inline
+primitive 'allot'  '((dp+=s[sp--]))'
 
 # c -> m[a++],  u times
 # ( a u c -- )
@@ -2318,9 +2206,9 @@ primitive 'words+'   'wordsplus'
 primitive 'onlyonly' 'order=("$onlywid")'
 
 include << 'end'
-: get-context  [ "order[0]" ] push$ ;              inline
-: set-context  [ "order[0]" ] pop$  ;              inline
-: forth        [ "forthwid" ] push$ set-context ;  inline
+: get-context  [ "order[0]" ] push, ;              inline
+: set-context  [ "order[0]" ] pop,  ;              inline
+: forth        [ "forthwid" ] push, set-context ;  inline
 : definitions  get-context set-current ;           inline
 : only         onlyonly also definitions ;
 trash onlyonly
@@ -2648,44 +2536,79 @@ include << 'end'
 
 only forth definitions
 
+\ ----- stack -------------------------------------------- #fold02
+
+( ?? -- ?? u )
+: depth        [ "sp" ] push, ;                                inline
+
+: drop         [ "((sp--))" ] code,  ;                         inline
+: 2drop        [ "((sp-=2))" ] code, ;                         inline
+: 2over        [ "s[sp-3]" dup$ ]  push, push, ;               inline
+: nip          [ "s2=s1" ] atom, drop  ;                       inline
+
+( x -- x x )
+: dup          [ "s[sp]" ]    push,  ;                         inline
+
+: ?dup         [ "((s[sp])) &&" ] code, dup ;                  inline
+
+( x1 x2 -- x1 x2 x1 )
+: over         [ "s[sp-1]" ]  push,  ;                         inline
+
+( x1 x2 x3 -- x1 x2 x3 x1 )
+: pluck        [ "s[sp-2]" ]  push,  ;                         inline
+
+( x1 x2 -- x1 x2 x1 x2 )
+: 2dup         over over   ;                                   inline
+
+( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
+: pick         [ "s[sp-s[sp--]-1]" ] push, ;                   inline
+
+( -- x )  ( r: x -- x )
+: r@           [ "r[rp]" ] push, ;                             inline
+
+( x -- ) ( r: -- x )
+: >r           [ "r[++rp]" ] pop, ;                            inline
+
+( -- x ) ( r: x -- )
+: r>           [ "r[rp--]" ] push, ;                           inline
+
+: rdrop        [ "((rp--))" ] code, ;                          inline
+
+( -- x1 x2 )  ( r: x1 x2 -- )
+: 2r>          [ "r[rp-1]" ] push,
+               [ "r[rp--]" ] push,
+               rdrop ;                                         inline
+
+( x1 x2 -- )  ( return: -- x1 x2 )
+: 2>r          [ "((r[++rp]=s[sp-1]))" ] code,
+               [ "r[++rp]" ]     pop,     drop    ;            inline
+
+( -- u )
+: rdepth       [ "rp" ] push, ;                                inline
+
+( -- u )
+: depth$       [ "${#ss[@]}" ] push, ;                         inline
+
 \ ----- flow control ------------------------------------- #fold02
 
 ( -- x )
-: i            [ "i" ] push$ ;                                 inline
+: i            [ "i" ] push, ;                                 inline
 
 ( -- x )
 ' r@ alias j                                                   inline
 
-\ ----- stack -------------------------------------------- #fold02
-
-( ?? -- ?? u )
-: depth        [ "sp" ] push$ ;                                inline
-
-( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
-: pick         [ "s[sp-s[sp--]-1]" ] push$ ;                   inline
-
-( x -- ) ( r: -- x )
-: >r           [ "r[++rp]" ] pop$ ;                            inline
-
-( -- x ) ( r: x -- )
-: r>           [ "r[rp--]" ] push$ ;                           inline
-
-( -- x1 x2 )  ( r: x1 x2 -- )
-: 2r>          [ "r[rp-1]" ] push$
-               [ "r[rp--]" ] push$
-               rdrop ;                                         inline
-
-( -- u )
-: rdepth       [ "rp" ] push$ ;                                inline
-
-( -- u )
-: depth$       [ "${#ss[@]}" ] push$ ;                         inline
 
 \ ----- arithmetics -------------------------------------- #fold02
 
-\ same as:  swap !
-( a x -- )
-: <-        [ "m[s[sp]]" ]  pop$ drop  ;                       inline
+: 1+           [ "((s[sp]=(s[sp]+1)&true))" ] code,  ;         inline
+: 1-           [ "((s[sp]=(s[sp]-1)&true))" ] code,  ;         inline
+: 2*           [ "((s[sp]=(s[sp]<<1)&true))" ] code, ;         inline
+
+: invert       [ "((s[sp]^=maxuint))" ] code,        ;         inline
+: negate       [ "((s[sp]=(-s[sp]&true)))" ]  code,  ;         inline
+: ?negate      [ "((s[sp--]))&&" ]  code,  negate    ;         inline
+: abs          [ "((s[sp]&msb))&&" ] code, negate    ;         inline
+: @            [ "((s[sp]=m[s[sp]]))" ] code,        ;         inline
 
 \ truncated, symmetric
 ( n1 n2 n3 -- n4 )
@@ -2742,32 +2665,36 @@ only forth definitions
 
 \ ----- memory ------------------------------------------- #fold02
 
+\ same as:  swap !
+( a x -- )
+: <-        [ "m[s[sp]]" ]  pop, drop  ;                       inline
+
 ( x -- )
-: ,            [ "m[dp++]" ]  pop$ ;                           inline
+: ,            [ "m[dp++]" ]  pop, ;                           inline
 
 ( a -- a+1 c )
-: count        [ "m[s[sp]++]&255" ] push$ ;                    inline
+: count        [ "m[s[sp]++]&255" ] push, ;                    inline
 
 ( a -- a+cell x )
-: skim         [ "m[s[sp]++]"     ] push$ ;                    inline
+: skim         [ "m[s[sp]++]"     ] push, ;                    inline
 
 \ 0 -> m[a++],  u times
 ( a u -- )
 : erase        0 fill ;                                        inline
 
 ( -- a )
-: here         [ "dp" ] push$ ;                                inline
+: here         [ "dp" ] push, ;                                inline
 
 ( -- u )
 ( $1 -- )
-: count$       [ "${#ss[-1]}" ] push$ drop$ ;                  inline
+: count$       [ "${#ss[-1]}" ] push, drop$ ;                  inline
 
 ( -- u )
-: here$        [ "sdp" ] push$ ;                               inline
+: here$        [ "sdp" ] push, ;                               inline
 
 ( -- x )
 ( string:  $1 -- )
-: env          [ "${!ss[-1]}+0&true" ] push$ drop$ ;           inline
+: env          [ "${!ss[-1]}+0&true" ] push, drop$ ;           inline
 
 \ ----- i/o ---------------------------------------------- #fold02
 ( a u -- )
@@ -2841,10 +2768,10 @@ defer query$
 
 
 ( -- wid )
-: get-current  [ "currentwid" ] push$  ;                       inline
+: get-current  [ "currentwid" ] push,  ;                       inline
 
 ( -- u )
-: #unresolved  [ "${#unresolved[@]}" ] push$ ;                 inline
+: #unresolved  [ "${#unresolved[@]}" ] push, ;                 inline
 
 ' have$ alias xt
 
@@ -2855,7 +2782,7 @@ defer query$
 
 ( -- )         \ compile time
 ( -- x )       \ run time
-: me           [ "xt" ] push$  literal, ;                      compiled
+: me           [ "xt" ] push,  literal, ;                      compiled
 
 ( -- f )
 ( stream: word )
@@ -2867,7 +2794,7 @@ defer query$
 : literal      literal, ;                                      compiled
 
 ( -- flag )
-: compiling    [ "compiling" ] push$ ;                         inline
+: compiling    [ "compiling" ] push, ;                         inline
 
 \ word exists?
 ( -- 0|xt )
@@ -2901,18 +2828,18 @@ defer query$
 
 \  32 bits random number
 ( -- u )
-: random     [ "SRANDOM&true" ]  push$  ;  inline
+: random     [ "SRANDOM&true" ]  push,  ;  inline
 
 \ a 51 bit microseconds epoch
 ( -- u )
-: realtime   [ "${EPOCHREALTIME//[,.]/}&true" ] push$  ;   inline
+: realtime   [ "${EPOCHREALTIME//[,.]/}&true" ] push,  ;   inline
 
 
 
 \ ----- files and loading -------------------------------- #fold02
 
 ( -- u )
-: #files       [ "${#files[@]}" ] push$ ;                      inline
+: #files       [ "${#files[@]}" ] push, ;                      inline
 
 ( -- )
 ( stream: filename )
@@ -2927,12 +2854,12 @@ defer query$
 \ it will be or has been reloaded, such as with "loaded lest done"
 \ returned u is the count the file has been loaded.
 ( -- u )
-: loaded       [ "loaded[filehandle]" ] push$ ;                inline
+: loaded       [ "loaded[filehandle]" ] push, ;                inline
 
 \ true: loading from file?,  false: interactive (console).
 \ pipe or redirection is indicated as loading from file.
 ( -- flag )
-: loading      [ "linenr<0?false:true" ] push$ ;               inline
+: loading      [ "linenr<0?false:true" ] push, ;               inline
 
 \ produce name of currently loaded file
 ( -- )

@@ -1,6 +1,6 @@
 provides: time epoch exectime
 
-needed epoch lest   : epoch  [ "$EPOCHSECONDS" ] push$  ;
+needed epoch lest   : epoch  [ "$EPOCHSECONDS" ] push,  ;
 
 
 needed time unless omit

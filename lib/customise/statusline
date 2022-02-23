@@ -53,8 +53,8 @@ transient
 \ every error or break increase depth. This value
 \ is displayed as indicator for when a yoda restart
 \ may be desirable.
-: calls  ( -- u )  [ "${#FUNCNAME[@]}-6" ] push$ ;
-: xts    ( -- u )  [ "xt-firstxt" ] push$ ;
+: calls  ( -- u )  [ "${#FUNCNAME[@]}-6" ] push, ;
+: xts    ( -- u )  [ "xt-firstxt" ] push, ;
 
 
 

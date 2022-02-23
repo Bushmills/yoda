@@ -11,4 +11,4 @@ needed convert$ unless omit
 \ or arithmetic expression to an integer.
 \ respects base
 ( -- x ) ( string: $1 -- )
-: convert$ [ "${m[base]}#${ss[-1]}" ] push$ drop$ ; inline
+: convert$ [ "${m[base]}#${ss[-1]}" ] push, drop$ ; inline

@@ -1,8 +1,8 @@
 provides: screensize columns lines
 once
 
-: lines    [ "LINES" ]  push$  ;
-: columns  [ "COLUMNS" ]  push$  ;
+: lines    [ "LINES" ]  push,  ;
+: columns  [ "COLUMNS" ]  push,  ;
 
 : screensize   ( -- x y )    columns   lines ;
 

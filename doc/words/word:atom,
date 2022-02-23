@@ -1,0 +1,19 @@
+name:                atom,
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            compileonly
+category:            compiling
+
+description:         fetches top string stack element $1, interprets it as
+                     label for atomic code, and compiles associated atomic
+                     code into the word under construction.
+
+example:             : dup [ "dup" ] atom,  ;
+notes:               "atomic code" is a remnant of the compiler yoda was
+                     spawned off. As yoda doesn't contain the mechanisms
+                     atomic code is meant for, it can be considered a relict,
+                     and may eventually disappear completely.
+
+standard:            no
+deviation:           standard has no equivalent

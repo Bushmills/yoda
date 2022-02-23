@@ -1,0 +1,13 @@
+name:                code,
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            compileonly
+category:            compiling
+
+description:         fetches top string stack element $1 and compiles it as
+                     code into the word under construction.
+
+example:             : bye [ "exit" ] code,  ;
+standard:            no
+deviation:           standard has no equivalent

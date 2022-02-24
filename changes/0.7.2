@@ -13,3 +13,9 @@ added unloop
 high level code section cleaning
 transients removed in yoda high level section too
 fixed a glitch in is
+added dnegate dabs, needed for double length pictured number conversion.
+added support for double length number output. Pictured number conversion expects
+   doubles now. Added   d. ud. d.r ud.r dconvert udconvert.
+single length number output words  . u. .r u.r  convert dconvert continue to use
+   single length pictured output words for speed, but headers of single length
+   pictured number output words have been removed.

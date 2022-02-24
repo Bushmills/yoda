@@ -1771,10 +1771,10 @@ semicolon
 udslashmod()  {
     local u1="${s[sp--]}" d1h="${s[sp--]}" d1l="${s[sp--]}" d2h=0 d2l=0 u2=0 i
     for ((i=bits*2; i--;)); do
-        ((d2h=d2h*2, d2h&=maxuint, d2l&msb))&&((d2h++))
+        ((d2h*=2, d2l&msb))&&((d2h++))
         ((d2l=(d2l*2)&maxuint, u2*=2, d1h&msb))&&((u2++))
         ((u2>=u1))&&((d2l++, u2-=u1))
-        ((d1h=d1h*2, d1l&msb))&&((d1h++))
+        ((d1h*=2, d1l&msb))&&((d1h++))
         ((d1h&=maxuint, d1l=(d1l*2)&maxuint))
     done
     s[++sp]="$u2"

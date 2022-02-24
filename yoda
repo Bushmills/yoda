@@ -133,12 +133,12 @@ default='from defaults'                                              # load defa
 # one address increment is always a cell, this setting
 # won't change that.
 declare -i bits
-bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
+#bits=63                                                              # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=48                                                              # 0...281,474,976,710,655
 #bits=32                                                              # 0...4,294,967,295
 #bits=21                                                              # covers 6 decimal digits signed numeric space
 #bits=20                                                              # 20 bits, unusual but not impractical. 8086 address space
-#bits=16                                                              # 16 bits, a tad retro
+bits=16                                                              # 16 bits, a tad retro
 #bits=11                                                              # covers 3 decimal digits signed numeric space
 #bits=8                                                               # 8 bits are nice for testing
 
@@ -1765,6 +1765,24 @@ colon '*/mod'
    code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
 semicolon
 
+
+# divide d1 by u1, resulting in quotient d2 and remainder u2
+# ( d1 u1 -- u2 d2 )
+udslashmod()  {
+    local u1="${s[sp--]}" d1h="${s[sp--]}" d1l="${s[sp--]}" d2h=0 d2l=0 u2=0 i
+    for ((i=bits*2; i--;)); do
+        ((d1l=(d1l&maxuint)*2, d1h=(d1h&maxuint)*2|(d1l>maxuint), u2=u2*2|(d1h>maxuint)))
+        ((d2l*=2, u2 >= u1))&&((d2l++, u2-=u1))
+        ((d2h=d2h*2|(d2l>maxuint)))
+        ((d2l&=maxuint))
+    done
+    s[++sp]="$u2"
+    s[++sp]="$d2l"
+    s[++sp]="$d2h"
+}
+
+
+
 # ----- string stack operators---------------------------- #fold01
 
 primitive 'empty$'   'ss=()'
@@ -2207,13 +2225,17 @@ semicolon
 
 # ----- pictured number conversion ----------------------- #fold01
 
+
+# ( d1 u1 -- u2 d2 )   d1/u2 -> d2 remainder u2
+primitive 'ud/mod'   'udslashmod'
+
 # NOTE: consider to let # expect a double, but process lower
 # half only, so its stack complies with standard # while its
 # not actually able to work on doubles.
 # change would also apply to #s, #>, uconvert: doubles on
 # stack but singles only processed.
 # ( x1 -- x2 ) ( string: $1 -- $2 )
-colon '#'                                                            # : #
+colon 'x'                                                            # : #
    code '((radix=m[base]))'                                          # base @
    code '((s1=s[sp]&true, s[sp]=s1/radix, tmp=s1%radix+48))'         # /mod swap '0 +
    code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
@@ -2744,6 +2766,17 @@ code negate    "((s[sp]=(-s[sp]&true)))"   code,  ;code        inline
 ( x1 u -- x2 )
 ' rshift alias >>                                              inline
 
+( d u1 -- u2 u3 )   \ d / u1 -> quotient u3 remainder u2
+: um/mod   ud/mod drop  ;                                      inline
+
+code dnegate      "((s[sp-1]=(~(s[sp-1])+1)&maxuint))"   code,
+                  "((s[sp]^=maxuint))"                   code,
+                  "((s[sp-1]))||((s[sp]++))"             code,   ;code
+
+( d1 -- d2 )
+: dabs            dup 0< lest dnegate  ;
+
+
 \ ----- memory ------------------------------------------- #fold02
 
 code @         "((s[sp]=m[s[sp]]))"    code,    ;code          inline
@@ -2801,52 +2834,46 @@ defer query$
 
 
 \ ----- pictured number conversion ----------------------- #fold02
-( c -- )
-( $1 -- $2 )
+
+
 ' prepend$ alias hold                                          inline
+: sign            ( f -- ) ( $1 -- $2 )   0< lest '-' hold ;
 
-( -- )
-(  -- $2 )
-: <#           ""  ;                                           inline
 
-( x1 -- x2 )
-( $1 -- $2 )
-: #s           begin # dup 0= until ;
+: # ( d1 -- d2 ) ( string: $1 -- $2 )
+      base @  ud/mod
+      rot '0 +
+      dup '9 u> #39 and +
+      hold ;
 
-( f -- )
-( $1 -- $2 )
-: sign         0< lest '-' hold ;
+: <#              ( -- $1 )               ""  ;                      inline
+: #s              ( d1 -- d2 )            begin # 2dup or 0= until ;
+' 2drop alias #>$ ( d -- )                                           inline
+: #>              ( d -- )                #>$ here here unpack$ ;
+: #>type          ( d -- ) ( $1 -- )      #>$ type$ ;                inline
 
-( x -- )
-' drop alias #>$                                               inline
+: udconvert       ( ud -- ) ( -- $1 )     <# #s #>$ ;
+: dconvert        ( d -- ) ( -- $1 )      tuck dabs udconvert sign ;
+: d.              ( d -- )                dconvert type$ space ;
+: ud.             ( ud -- )               udconvert type$ space ;
+: d.r             ( d u -- )              >r  dconvert r> rtype$ ;
+: ud.r            ( ud u -- )             >r udconvert r> rtype$ ;
 
-( x -- )
-( $1 -- )
-: #>type       #>$ type$ ;                                     inline
+: xs              ( d -- d )              begin x dup 0= until ;              transient
+' drop alias x>$  ( x -- )                                           inline   transient protect
+: x>type          ( x -- ) ( $1 -- )      x>$ type$ ;                inline   transient
+: x>              ( x -- a n )( $1 -- )   x>$ here here unpack$ ;             transient
+' <# alias <x     ( -- )   ( -- $1 )                                          transient protect
+trash x
 
-( x -- a n )
-( $1 -- )
-: #>           #>$ here here unpack$ ;
+: uconvert        ( u -- ) ( -- $1 )      <x xs x>$ ;
+: convert         ( n -- ) ( -- $1 )      dup abs uconvert sign ;
+: .               ( n -- )                convert type$ space ;
+: u.              ( u -- )                uconvert type$ space ;
+: .r              ( n u -- )              >r  convert r> rtype$ ;
+: u.r             ( u1 u2 -- )            >r uconvert r> rtype$ ;
 
-( u -- )
-( -- $1 )
-: uconvert     <# #s #>$ ;
 
-( u -- )
-( -- $1 )
-: convert      dup abs uconvert sign ;
-
-( n -- )
-: .            convert type$ space ;
-
-( u -- )
-: u.           uconvert type$ space ;
-
-( n u -- )
-: .r           >r  convert r> rtype$ ;
-
-( u1 u2 -- )
-: u.r          >r uconvert r> rtype$ ;
 
 \ ----- dictionary and compiling ------------------------- #fold02
 

@@ -1681,6 +1681,12 @@ colon '+loop'
 semicolon
 compiled
 
+# ( -- ) ( c: loopsys -- )
+colon 'unloop'
+   code '((i=r[rp--]))'
+   code '((ibar=r[rp--]))'
+semicolon
+
 primitive 'leave'  'code "break"'              ; compiled            # break out of loop
 primitive '?leave' 'code "((s[sp--]))&&break"' ; compiled            # break out of loop when false
 primitive 'lest'   'code "((s[sp--]))||return"'; compiled            # interpreting version: skip rest of line when false

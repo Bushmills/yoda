@@ -2589,7 +2589,7 @@ code set-context  "order[0]"                 pop,     ;code    inline
 
 >set-current   "$onlywid"
 code words     "words"                       code,    ;code    inline
-code onlyonly  "order=($onlywid)"            code,    ;code    inline
+code onlyonly  "order=($onlywid)"            code,    ;code    inline transient
 : definitions  get-context set-current    ;                    inline
 : only         onlyonly also definitions  ;
 code forthwid  "forthwid"     push,                   ;code    inline transient

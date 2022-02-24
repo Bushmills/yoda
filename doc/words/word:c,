@@ -1,0 +1,14 @@
+name:                c,
+stack:               ( c -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+description:         write c to the address given by here, then
+                     increment address by one.
+
+notes:               values written will be 8 but quantities, bits above
+                     the lowest 8 bits are masked to zero.
+standard:            yes
+url:                 https://forth-standard.org/standard/core/CComma

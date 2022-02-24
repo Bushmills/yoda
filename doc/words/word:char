@@ -1,0 +1,14 @@
+name:                char
+stack:               ( -- c )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+input stream:        word
+
+description:         parses a spece delimited string from input, determines
+                     the ASCII value of its first character which is returned
+                     as c
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/CHAR

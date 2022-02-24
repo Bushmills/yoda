@@ -1,0 +1,12 @@
+name:                cell
+stack:               ( -- 1 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+description:         returns 1 as the number of address increments needed
+                     to hold one cell
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/CELL

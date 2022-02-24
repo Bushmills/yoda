@@ -1,0 +1,12 @@
+name:                unloop
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            flow control
+
+description:         clean up loop parameters before exiting a word within a loop
+
+example:             : foo   10 0 do   i 5 = if  unloop exit then  loop  ;
+standard:            yes
+url:                 https://forth-standard.org/standard/core/UNLOOP

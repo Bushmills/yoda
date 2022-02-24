@@ -1,0 +1,16 @@
+name:                accept
+stack:               ( a +n1 -- +n2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            terminal i/o
+
+description:         suspends program execution while waiting for up to u1 characters
+                     entered on console. characters are echoed while entered, and
+                     stored at address a and subsequent addresses, one character per
+                     address. Pressing the Enter key will complete input, program
+                     execution will resume and continue, with number of entered characters
+                     placed as u2 on stack.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/ACCEPT

@@ -1,10 +1,10 @@
 #!/bin/bash
 
+v="0.7.2"
+
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-
-v="0.7.2"
 
 # changelog now in directory changes. Or, type "changes" in yoda
 # for changes to current version.
@@ -266,6 +266,7 @@ exists()  {
 
 
 
+
 # ----- detokeniser / pretend optimiser ------------------ #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
@@ -314,46 +315,41 @@ where()  {
 
 declare -i dodoes_at
 
-
 # return values of all these analyser_${flagname} mean:
-# 0: continue optimiser loop without adding code to target
-# 1: append raw or generated code to target
+# 0: append raw or generated code to target
+# 1: continue optimiser loop without adding code to target
 analyser_functionheader()  {
    word="$bodyline"                                               # word name of new word
-   name="${unresolved[$word]}"                                    # if forward ref, reuse function name of forward ref
-   if [[ -z "$name" ]]; then
-      newname "$word"                                             # not a forward ref: invent new name
-   else
+   if [[ -n "${unresolved[$word]}" ]]; then
+      name="${unresolved[$word]}"                                 # if forward ref, reuse function name of forward ref
       unset -v "unresolved['$word']"                              # going to resolve word, remove from forward refs
+   else
+      newname "$word"                                             # not a forward ref: invent new name
    fi
    header "$word" "$name"                                         # create new header
-   return 0
+   return 1
 }
 
 analyser_sourcelocation()  {
    where["$lastword"]="$bodyline"                                 # remember source location
-   return 0
+   return 1
 }
 
 analyser_atomiccode()  {
    targetline="${atom[$bodyline]}"
-   return 1
 }
 
 analyser_push()  {
    targetline="((s[++sp]=$bodyline))"
-   return 1
 }
 
 analyser_call()  {
    name "$bodyline"                                               # convert xt to function name
    targetline="$name"
-   return 1
 }
 
 analyser_does()  {
    dodoes_at="$((${#target[@]}+1))"                               # remember end of target for splitting code (but only when whole word
-   return 1
 }
 
 # doesn't actually do any optimizing.
@@ -368,10 +364,12 @@ optimise()  {                                                        # run code 
    ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
    target=()
    dodoes_at=0
+# NOTE: consider turning this into a flag which can be
+# toggled in yoda
    ((codedump))&& {
       echo ": $lastword"
       for ((tmp=0; tmp<${#body[@]}; tmp++)); do
-         printf "%2d %-5s %s\n" "$tmp" "${analyser[tmp]}" "${body[tmp]}"
+         printf "%2d %-16s %s\n" "$tmp" "${flagname[analyser[tmp]]}" "${body[tmp]}"
       done
       echo "------------------------------------------------"
    }
@@ -379,9 +377,9 @@ optimise()  {                                                        # run code 
       bodyline="${body[tmp]}"
       bodyflag="${analyser[tmp]}"
       targetline="$bodyline"                                         # assume code
-      (( bodyflag )) &&
-         analyser_${flagname[bodyflag]} &&                           # flags: examine and act upon
-         continue
+      (( bodyflag )) && {
+         analyser_${flagname[bodyflag]} || continue                  # flags: examine and act upon
+      }
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
    ((dodoes_at)) && {
@@ -1069,21 +1067,8 @@ colon ':'
    code '((compiling=true))'
 semicolon
 
-
 # ----------------------------------------------
 
-primitive 'interpreted' 'interpreted'                                # move header to interpreter context vocabulary.
-primitive 'compiled'    'compiled'                                   # move header to compiler context vocabulary.
-
-colon 'transient'
-   code 'transients+=("$currentwid $lastword")'                      # copy header to transients for later trashing.
-semicolon
-
-colon 'inline'
-   code 'inline'                                                     # don't compile call, instead compile body code.
-semicolon
-
-primitive 'protect'  'protect'                                       # protect code body against trashing.
 
 # ----- diagnostics -------------------------------------- #fold01
 
@@ -2210,48 +2195,6 @@ colon '#'                                                            # : #
 semicolon                                                            # ;
 
 
-# ----- vocabularies and wordlists ----------------------- #fold01
-
-colon 'initwordlist'                                                 # ( wid -- )
-   code '((tmp=s[sp--]))'
-   code 'declare -gA "flags_$tmp=()"'                                  # word to function name and header flags
-   code 'declare -gA "wordlist_$tmp=()"'                               # word to function name and header flags
-semicolon
-
-
-colon 'set-current'
-   code 'set-current "${s[sp--]}"'
-semicolon
-inline
-
-# --- populate only voc ---
-set-current "$onlywid"
-
-primitive 'also'      'order=("${order[0]}" "${order[@]}")'
-colon 'order'
-   code 'printf "context:"'
-   code 'for wid in "${order[@]}"; do'
-   code 'printf " %s" "${strings[wid]}"'
-   code 'done'
-   code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
-semicolon
-
-primitive 'previous' '((${#order[@]}>1))&&order=("${order[@]:1}")'
-primitive 'words'    'words'
-primitive 'words+'   'wordsplus'
-primitive 'onlyonly' 'order=("$onlywid")'
-
-include << 'end'
-: get-context  [ "order[0]" ] push, ;              inline
-: set-context  [ "order[0]" ] pop,  ;              inline
-: forth        [ "forthwid" ] push, set-context ;  inline
-: definitions  get-context set-current ;           inline
-: only         onlyonly also definitions ;
-trash onlyonly
-end
-
-set-current "$forthwid"
-
 
 # ----- foward referencing support words ----------------- #fold01
 
@@ -2418,6 +2361,19 @@ colon 'satisfy$'
 semicolon
 
 
+
+# ----- vocabularies and wordlists -----------------------
+
+primitive 'transient'   'transients+=("$currentwid $lastword")'
+
+colon 'initwordlist'                                                 # ( wid -- )
+   code '((tmp=s[sp--]))'
+   code 'declare -gA "flags_$tmp=()"'                                  # word to function name and header flags
+   code 'declare -gA "wordlist_$tmp=()"'                               # word to function name and header flags
+semicolon
+
+
+
 # ----- documentation ------------------------------------ #fold01
 
 # NOTE: whole undoc section is library candidate
@@ -2562,6 +2518,22 @@ colon 'done'
 semicolon
 inline
 
+# ----- populate only wordlist, mark 1 ------------------- #fold01
+
+set-current "$onlywid"
+
+colon 'order'
+   code 'printf "context:"'
+   code 'for wid in "${order[@]}"; do'
+   code 'printf " %s" "${strings[wid]}"'
+   code 'done'
+   code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
+semicolon
+
+primitive 'previous' '((${#order[@]}>1))&&order=("${order[@]:1}")'
+primitive 'also'     'order=("${order[0]}" "${order[@]}")'
+
+
 # ----- high level --------------------------------------- #fold01
 
 # primitives and word are generally moved here only if
@@ -2571,12 +2543,36 @@ inline
 # ----- comments ----------------------------------------- #fold02
 
 include << 'end'
+>set-current "$forthwid"
+code interpreted  "interpreted"  code,    ;code
+code compiled     "compiled"     code,    ;code
+code \            "line=''"      code,    ;code       compiled
+code \            "line=''"      code,    ;code       interpreted
+code (            "parse ')'"    code,    ;code       compiled
+code (            "parse ')'"    code,    ;code       interpreted
+
+\ ----- manage wordlists --------------------------------- #fold02
+
+code inline       "inline"                   code, ;code
+code set-current  "set-current ${s[sp--]}"   code, ;code    inline
+code words+       "wordsplus"                code, ;code    inline
+: get-context     [ "order[0]" ] push, ;                    inline
+: set-context     [ "order[0]" ] pop,  ;                    inline
+
+\ ----- populate only wordlist, mark 2 ------------------- #fold02
+
+>set-current "$onlywid"
+code words     "words"                       code, ;code    inline
+code onlyonly  "order=($onlywid)"            code, ;code    inline
+: definitions  get-context set-current    ;                 inline
+: only         onlyonly also definitions  ;
+trash onlyonly
+: forth        [ "forthwid" ] push, set-context ;           inline
 only forth definitions
 
-code \         "line=''"      code,       ;code                compiled
-code \         "line=''"      code,       ;code                interpreted
-code (         "parse ')'"    code,       ;code                compiled
-code (         "parse ')'"    code,       ;code                interpreted
+\ ----- word properties ---------------------------------- #fold02
+
+code protect      "protect"     code,    ;code                            \ protect code body against trashing.
 
 \ ----- radix change  ------------------------------------ #fold02
 

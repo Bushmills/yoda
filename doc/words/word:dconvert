@@ -1,0 +1,12 @@
+name:                dconvert
+stack:               ( d -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            number conversion
+
+description:         convert signed double number d to a string, respecting base,
+                     which is placed on top of string stack
+
+standard:            no
+deviation:           standard has no equivalent

@@ -1,0 +1,11 @@
+name:                d.
+stack:               ( d -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            number I/O
+
+description:         output signed double number d, respecting radix in base
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/Dd

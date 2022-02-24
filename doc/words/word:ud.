@@ -1,0 +1,12 @@
+name:                ud.
+stack:               ( ud -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            number I/O
+
+description:         output unsigned double ud, respecting base. A trailing
+                     space is added to the output.
+
+standard:            no
+deviation:           standard has no equivalent

@@ -1,0 +1,11 @@
+name:                dabs
+stack:               ( d -- ud )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+description:         remove sign of d1
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/DABS

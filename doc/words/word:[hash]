@@ -1,18 +1,17 @@
 name:                #
-stack:               ( u1 -- u2 )
+stack:               ( ud1 -- ud2 )
 return stack:        ( -- )
 string stack:        ( $1 -- $2 )
 contexts:            stateless
 category:            pictured number conversion, I/O
 
 description:         meant to be used between <# and #>, its operation is part of
-                     converting an integer to a string. # will convert a single digit
-                     of u1, respecting base, to a character which then will be prepended to
-                     the string on string stack. Repeatedly executing # will build the
-                     string representation of the integer digit by digit, while gradually
-                     diminishing u1 until 0 is left, and nothing more needs converting.
+                     converting a double integer to a string. # will convert a single
+                     digit of ud1, respecting base, to a character which then will be
+                     prepended to the string on string stack. Repeatedly executing #
+                     will build the string representation of the integer digit by digit,
+                     while gradually diminishing ud1 until 0 is left, and nothing more
+                     needs converting.
 
-standard:            no
-deviation:           works on single length instead of on double length numbers.
-                     Change is considered.
+standard:            yes
 url:                 https://forth-standard.org/standard/core/num

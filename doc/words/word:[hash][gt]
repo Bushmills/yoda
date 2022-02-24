@@ -1,15 +1,14 @@
 name:                #>
-stack:               ( x -- a u )
+stack:               ( d -- a u )
 return stack:        ( -- )
 string stack:        ( $1 -- )
 category:            pictured number conversion, I/O
-input stream:
 
 description:         meant to be used between at the end of a <# ... sequence, its operation
                      is part of converting an integer to a string of characters, stored in
                      memory (contrasting with "a string stored on string stack"). #> will
                      finalise conversion, then unpack string to a list of ASCII values, stored
-                     in consecutive memory locations.
+                     in u consecutive memory locations at a
 
 contexts:            stateless
 notes:               mostly added to maintain compatibility with standards and provide
@@ -17,6 +16,5 @@ notes:               mostly added to maintain compatibility with standards and p
                      #>type are more efficient, due to not needing to unpack the string to
                      a list of ASCIIs in consecutive memory locations.
 
-standard:            no
-deviation:           operates on single length number
+standard:            yes
 url:                 https://forth-standard.org/standard/core/num-end

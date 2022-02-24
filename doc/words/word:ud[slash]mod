@@ -1,0 +1,12 @@
+name:                ud/mod
+stack:               ( ud1 u1 -- u2 ud2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+description:         divide unsigned double ud1 by unsigned u1, yielding the
+                     unsigned double quotient ud2 and unsigned remainder u2
+
+standard:            no
+deviation:           standard has no equivalent

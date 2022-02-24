@@ -1,0 +1,12 @@
+name:                udconvert
+stack:               ( ud -- )
+return stack:        ( -- )
+string stack:        ( -- $1 )
+contexts:            stateless
+category:            number conversion
+
+description:         converts unsigned double number ud to a string, respecting base,
+                     which is placed on top od string stack.
+
+standard:            no
+deviation:           standard has no equivalent

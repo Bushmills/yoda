@@ -1,0 +1,12 @@
+name:                um/mod
+stack:               ( ud1 u1 -- u2 u3 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+description:         divide unsigned double ud1 by u1, yielding unsigned
+                     quotient u3 and unsigned remainder u2
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/UMDivMOD

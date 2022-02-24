@@ -238,33 +238,6 @@ header()  {
    flags["$lastword"]="0"                                            # default to no flags
 }
 
-# results array
-declare -a exists                                                    # result array:  exists[0]=0|xt,  exists[1]=flags
-
-# arg1:word  arg2+:wids
-# returns: exists[0]=0|xt, [1]=flags,  [2]=wid where word was found
-exists()  {
-   local context word="$1"                                           # this is what we're looking for
-   shift
-   for wid in "$@"; do                                               # in these word lists
-      declare -n context="wordlist_$wid"                             # make next wordlist visible
-      declare -n flags                                               # appease shellcheck
-      declare -n flags="flags_$wid"
-      [[ -n "${context[$word]}" ]] && {                              # word found in it?
-         exists=(                                                    # yes: return xt, flags and wid as result
-            "${context[$word]##*_}"
-            "${flags[$word]}"
-            "$wid"
-            )
-         return 0
-      }
-   done                                                              # not yet found: loop through all wids in arguments
-   exists=(0)                                                        # word not found: return 0
-   return 1                                                          # and indicate error
-}
-
-
-
 
 
 # ----- detokeniser / pretend optimiser ------------------ #fold00
@@ -485,16 +458,6 @@ push()  {                                                            # leave it 
 
 
 
-# compile a call to function associated with word arg1
-# arg1:word
-call()  {
-   local word
-   for word in "$@"; do
-      exists "$word" "${order[@]}" || notfound "$word"
-      code "${exists[0]}"  "$call"
-   done
-}
-
 
 # ----- defining words ----------------------------------- #fold00
 
@@ -509,7 +472,7 @@ call()  {
 # arg3: line number
 delayheader()  {
    lastword="$1"
-   [[ -z "$lastword" ]] && emptyname
+   [[ -z "$lastword" ]] && missingname
    compiler_init
    code "$lastword" "$functionheader"
    [[ -z "$2" ]] || where "$2" "$3"
@@ -675,7 +638,7 @@ newerror() {
 }
 
 newerror "noerror"         "no error"
-newerror "emptyname"       "no or empty name"
+newerror "missingname"     "no or empty name"
 newerror "missing"         "missing input"
 newerror "stackunderflow"  "stack underflow"
 newerror "notfound"        "not found:"
@@ -697,6 +660,37 @@ trap ctrl-c SIGINT
 
 #err()  { echo "error trap:  $word ${FUNCNAME[1]}"; }
 # trap err ERR
+
+
+# ----- wordlist searching ------------------------------- #fold01
+
+# results array
+declare -a exists                                                    # result array:  exists[0]=0|xt, [1]=flags, [2]: wid
+
+# arg1:word  arg2+:wids
+# returns: exists[0]=0|xt, [1]=flags,  [2]=wid where word was found
+exists()  {
+   [[ -z "$1" ]] && missingname
+   local context word="$1"                                           # this is what we're looking for
+   shift
+   for wid in "$@"; do                                               # in these word lists
+      declare -n context="wordlist_$wid"                             # make next wordlist visible
+      declare -n flags                                               # appease shellcheck
+      declare -n flags="flags_$wid"
+      [[ -n "${context[$word]}" ]] && {                              # word found in it?
+         exists=(                                                    # yes: return xt, flags and wid as result
+            "${context[$word]##*_}"
+            "${flags[$word]}"
+            "$wid"
+            )
+         return 0
+      }
+   done                                                              # not yet found: loop through all wids in arguments
+   exists=(0)                                                        # word not found: return 0
+   return 1                                                          # and indicate error
+}
+
+
 # ----- patterns ----------------------------------------- #fold00
 
 # wondering whether a case statement would make this look any better
@@ -900,15 +894,6 @@ evaluate()  {
    ((sp<0))&&stackunderflow
 }
 
-# evaluate block of hi-level source code
-include()  {
-   local linenr="${BASH_LINENO[0]}"
-   while read -r lineofsource; do
-      ((linenr++))
-      evaluate "$lineofsource"
-   done
-}
-
 
 # ----- load source files -------------------------------- #fold00
 
@@ -1008,8 +993,19 @@ from()  {
    return 0
 }
 
+# evaluate block of hi-level source code
+include()  {
+   local pad linenr="${BASH_LINENO[0]}"
+   while read -r pad; do
+      ((linenr++))
+      evaluate "$pad"
+   done
+   notransients
+}
 
-# ----- populating detokeniser --------------------------- #FOLD00
+
+
+# ----- populating detokeniser --------------------------- #fold00
 
 # atoms are substituted against corresponding code.
 # most of them have been eliminated now.
@@ -1042,7 +1038,7 @@ atom["s4=s2"]='((s[sp-3]=s[sp-1]))'
 atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1138,7 +1134,7 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 
 
-# ----- defining words ----------------------------------- #FOLD01
+# ----- defining words ----------------------------------- #fold01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1228,7 +1224,11 @@ semicolon
 # grep is used here.
 colon 'is'
    code 'word'
-   code 'tmp="$(type "${current[$word]}"|grep "${nameprefix}_.*m\[")"'
+   code '[[ -z "$word" ]] && missingname'
+   code 'exists "$word" "${order}" "$interpretonlywid" || notfound "$word"'
+   code 'local context'
+   code 'declare -n context="wordlist_${exists[2]}"'
+   code 'tmp="$(type "${context[$word]}"|grep "${nameprefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
 
@@ -1383,7 +1383,7 @@ semicolon
 inline
 
 
-# ----- compiler, dictionary search related -------------- #FOLD01
+# ----- compiler, dictionary search related -------------- #fold01
 
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
@@ -1457,7 +1457,7 @@ compiled
 
 colon "'"                                                            # ( -- xt ) ( stream: word )
    code 'word'
-   code '[[ -z "$word" ]] && emptyname'
+   code '[[ -z "$word" ]] && missingname'
    code 'exists "$word" "${order[@]}" "$interpretonlywid" "$compileonlywid" || notfound "$word"'
    push 'exists[0]'
 semicolon
@@ -1546,7 +1546,7 @@ primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
 primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
 
 
-# ----- flow control ------------------------------------- #FOLD01
+# ----- flow control ------------------------------------- #fold01
 
 remagic
 
@@ -2179,8 +2179,8 @@ semicolon
 primitive  'cr'      'printf "\n"'
 primitive  'space'   'printf " "'
 primitive  'page'    'clear'
-primitive 'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
-defer     'prompt'       'simpleprompt'
+primitive  'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
+defer      'prompt'       'simpleprompt'
 
 
 # ----- file i/o ----------------------------------------- #fold01
@@ -2560,13 +2560,13 @@ primitive 'previous' '((${#order[@]}>1))&&order=("${order[@]:1}")'
 primitive 'also'     'order=("${order[0]}" "${order[@]}")'
 
 
-# ----- high level --------------------------------------- #FOLD01
+# ----- high level --------------------------------------- #fold01
 
 # primitives and word are generally moved here only if
 # these high level words don't generate worse code than
 # their former bash coded counterparts.
 
-# ----- comments ----------------------------------------- #FOLD02
+# ----- comments ----------------------------------------- #fold02
 
 set-current "$forthwid"
 include << 'end'
@@ -2577,7 +2577,7 @@ code \            "line=''"      code,                ;code    interpreted
 code (            "parse ')'"    code,                ;code    compiled
 code (            "parse ')'"    code,                ;code    interpreted
 
-\ ----- manage wordlists --------------------------------- #FOLD02
+\ ----- manage wordlists --------------------------------- #fold02
 
 code inline       "inline"                   code,    ;code
 code set-current  "set-current ${s[sp--]}"   code,    ;code    inline
@@ -2585,29 +2585,29 @@ code words+       "wordsplus"                code,    ;code    inline
 code get-context  "order[0]"                 push,    ;code    inline
 code set-context  "order[0]"                 pop,     ;code    inline
 
-\ ----- populate only wordlist, mark 2 ------------------- #FOLD02
+\ ----- populate only wordlist, mark 2 ------------------- #fold02
 
->set-current "$onlywid"
+>set-current   "$onlywid"
 code words     "words"                       code,    ;code    inline
 code onlyonly  "order=($onlywid)"            code,    ;code    inline
 : definitions  get-context set-current    ;                    inline
 : only         onlyonly also definitions  ;
-trash onlyonly
-: forth        [ "forthwid" ] push, set-context ;              inline
+code forthwid  "forthwid"     push,                   ;code    inline transient
+: forth        forthwid set-context ;                          inline
 only forth definitions
 
-\ ----- word properties ---------------------------------- #FOLD02
+\ ----- word properties ---------------------------------- #fold02
 
 \ protect code body against trashing.
 code protect   "protect"               code,          ;code
 
-\ ----- radix change  ------------------------------------ #FOLD02
+\ ----- radix change  ------------------------------------ #fold02
 
 code decimal   "m[base]=10"            code,          ;code    inline
 code hex       "m[base]=16"            code,          ;code    inline
 code binary    "m[base]=2"             code,          ;code    inline
 
-\ ----- stack -------------------------------------------- #FOLD02
+\ ----- stack -------------------------------------------- #fold02
 decimal
 
 ( ?? -- ?? u )
@@ -2665,7 +2665,7 @@ code empty     "s=() sp=0"             code,          ;code    inline
 code rempty    "r=() rp=0"             code,          ;code    inline
 
 
-\ ----- flow control ------------------------------------- #FOLD02
+\ ----- flow control ------------------------------------- #fold02
 
 ( -- x )
 code i         "i"                     push,          ;code    inline
@@ -2784,7 +2784,6 @@ code c,        "((m[dp++]=s[sp--]&255))"  code,  ;code         inline
 \ ----- i/o ---------------------------------------------- #fold02
 ( a u -- )
 : type         pack$ type$ ;                                   inline
-
 ( u -- )
 ( $1 -- )
 : ltype$       dup$ type$ count$ - spaces ;
@@ -2976,7 +2975,7 @@ end
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
     code 'unset "ss[-1]"'
-    code '[[ -z "$tmp" ]]&&emptyname'                                # no name given
+    code '[[ -z "$tmp" ]]&&missingname'                                # no name given
     code 'tmp1="${where[$tmp]}"'                                     # "file:line"
     code '((${tmp1%%:*}))||nosource "$tmp"'                          # file handle empty or 0: no source available
     push '${tmp1%%:*}'                                               # push file handle
@@ -2997,7 +2996,6 @@ semicolon
 
 
 # ----- launch ------------------------------------------- #fold00
-
 # shellcheck source=./yoda.conf                                      # try to load custom configuration
 config()  {
    [[ -f "$HOME/$config" ]]  && { source "$HOME/$config"; return; }  # config in $HOME has priority over config in yoda dir

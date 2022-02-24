@@ -12,7 +12,6 @@ once
             min for
                 i pick .
             next
-        else
-            "empty" type$
-        then ;
-
+            exit
+        then
+        "empty" type$ ;

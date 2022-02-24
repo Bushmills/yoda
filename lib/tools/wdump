@@ -1,7 +1,7 @@
 provides: wdump
 
 : .cell     ( u -- )                \ output width adapts to bits/cell
-         <#  bits 3 + 2 >>          \ no need for multiple of 8
+         s>d <#  bits 3 + 2 >>      \ no need for multiple of 8
          for # next
          #>type space ;
 transient

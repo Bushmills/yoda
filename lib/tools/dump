@@ -1,7 +1,7 @@
 provides: dump
 once
 : .byte ( c -- )                    \ 2 digits
-      <# # # #>type space ;   transient
+      s>d <# # # #>type space ;   transient
 
 : .bytes ( a u -- )                 \ output u hex bytes at a
       for count

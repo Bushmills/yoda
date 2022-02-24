@@ -133,12 +133,7 @@ default='from defaults'                                              # load defa
 # one address increment is always a cell, this setting
 # won't change that.
 declare -i bits
-#bits=63                                                               # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
-bits=62                 # had to bring this down to 62 for now:
-                        # pictured number conversion doesn't go
-                        # well with 63 bits - i've been testing
-                        # those words with 16 bit so I didn't
-                        # immediately notice
+bits=63                                                               # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
 #bits=48                                                              # 0...281,474,976,710,655
 #bits=32                                                              # 0...4,294,967,295
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -1776,16 +1771,16 @@ semicolon
 udslashmod()  {
     local u1="${s[sp--]}" d1h="${s[sp--]}" d1l="${s[sp--]}" d2h=0 d2l=0 u2=0 i
     for ((i=bits*2; i--;)); do
-        ((d1l=(d1l&maxuint)*2, d1h=(d1h&maxuint)*2|(d1l>maxuint), u2=u2*2|(d1h>maxuint)))
-        ((d2l*=2, u2 >= u1))&&((d2l++, u2-=u1))
-        ((d2h=d2h*2|(d2l>maxuint)))
-        ((d2l&=maxuint))
+        ((d2h=d2h*2, d2h&=maxuint, d2l&msb))&&((d2h++))
+        ((d2l=(d2l*2)&maxuint, u2*=2, d1h&msb))&&((u2++))
+        ((u2>=u1))&&((d2l++, u2-=u1))
+        ((d1h=d1h*2, d1l&msb))&&((d1h++))
+        ((d1h&=maxuint, d1l=(d1l*2)&maxuint))
     done
     s[++sp]="$u2"
     s[++sp]="$d2l"
     s[++sp]="$d2h"
 }
-
 
 
 # ----- string stack operators---------------------------- #fold01

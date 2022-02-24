@@ -81,11 +81,12 @@ transient
 ;
 
 \ increasing window size vertical creates screen relicts if not done gently
+needs: savescreen restorescreen
 : redraw  ( -- )
-        statusline @ lest
-        0 0 movecursor
-        .status deol cr deol
-        restorecursor  ;
+      statusline @ lest
+         0 0 movecursor .status
+         3 for cr deol next
+         restorecursor ;
 transient
 
 ' redraw "SIGWINCH" trap

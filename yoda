@@ -1009,17 +1009,10 @@ from()  {
 }
 
 
-# ----- populating detokeniser --------------------------- #fold00
-# for testing, a handful of inlined single operation primitives
-# and atomic operations are added. no optimising take place now.
-# atoms are only substituted against corresponding code.
-# atoms are tagged as such in the source, some correspond to
-# names of primitives. This is meant for having the optimiser
-# hooked into code generation, for doing some more substantial
-# work later on. chosing these operations allows tracking of
-# recent use of stack items and registers, for static elimination
-# of redundant operations.
+# ----- populating detokeniser --------------------------- #FOLD00
 
+# atoms are substituted against corresponding code.
+# most of them have been eliminated now.
 
 atom["dup"]='((s[++sp]=s[sp]))'
 atom["drop"]='((sp--))'
@@ -1049,8 +1042,7 @@ atom["s4=s2"]='((s[sp-3]=s[sp-1]))'
 atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
-
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1146,7 +1138,7 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 
 
-# ----- defining words ----------------------------------- #fold01
+# ----- defining words ----------------------------------- #FOLD01
 
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
@@ -1391,7 +1383,7 @@ semicolon
 inline
 
 
-# ----- compiler, dictionary search related -------------- #fold01
+# ----- compiler, dictionary search related -------------- #FOLD01
 
 primitive '[' '((compiling=false))'; compiled
 primitive ']' '((compiling=true))'
@@ -1403,6 +1395,13 @@ colon 'push,'
 semicolon
 compiled
 
+colon 'push,'
+   code 'code "((s[++sp]=${ss[-1]}))"'
+   code 'unset "ss[-1]"'
+semicolon
+interpreted
+
+
 # compile: ( -- ) ( $1 -- )   run: ( x -- )
 colon 'pop,'
    code 'code "((${ss[-1]}=s[sp--]))"'
@@ -1410,6 +1409,12 @@ colon 'pop,'
 semicolon
 compiled
 
+# compile: ( -- ) ( $1 -- )   run: ( x -- )
+colon 'pop,'
+   code 'code "((${ss[-1]}=s[sp--]))"'
+   code 'unset "ss[-1]"'
+semicolon
+interpreted
 
 colon 'code'
    code 'word'
@@ -1541,7 +1546,7 @@ primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
 primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
 
 
-# ----- flow control ------------------------------------- #fold01
+# ----- flow control ------------------------------------- #FOLD01
 
 remagic
 
@@ -1681,14 +1686,6 @@ colon '+loop'
 semicolon
 compiled
 
-# ( -- ) ( c: loopsys -- )
-colon 'unloop'
-   code '((i=r[rp--]))'
-   code '((ibar=r[rp--]))'
-semicolon
-
-primitive 'leave'  'code "break"'              ; compiled            # break out of loop
-primitive '?leave' 'code "((s[sp--]))&&break"' ; compiled            # break out of loop when false
 primitive 'lest'   'code "((s[sp--]))||return"'; compiled            # interpreting version: skip rest of line when false
 primitive 'lest'   '((s[sp--]))||line=""'      ; interpreted         # compiling version: skip until end of word (i.e. return) when true
 primitive 'unless' 'code "((s[sp--]))&&return"'; compiled            # interpreting version: skip rest of line when true
@@ -1727,10 +1724,6 @@ colon 'boot'
    code 'name "${exists[0]}"'                                          # convert xt to function name
    code 'coldvector="$name"'
 semicolon
-
-primitive 'warm'  'warm'
-primitive 'bye'  'exit 0'
-primitive 'exit'  'code "return"'; compiled
 
 
 # ----- arithmetics -------------------------------------- #fold01
@@ -2567,120 +2560,124 @@ primitive 'previous' '((${#order[@]}>1))&&order=("${order[@]:1}")'
 primitive 'also'     'order=("${order[0]}" "${order[@]}")'
 
 
-# ----- high level --------------------------------------- #fold01
+# ----- high level --------------------------------------- #FOLD01
 
 # primitives and word are generally moved here only if
 # these high level words don't generate worse code than
 # their former bash coded counterparts.
 
-# ----- comments ----------------------------------------- #fold02
+# ----- comments ----------------------------------------- #FOLD02
 
+set-current "$forthwid"
 include << 'end'
->set-current "$forthwid"
-code interpreted  "interpreted"  code,    ;code
-code compiled     "compiled"     code,    ;code
-code \            "line=''"      code,    ;code       compiled
-code \            "line=''"      code,    ;code       interpreted
-code (            "parse ')'"    code,    ;code       compiled
-code (            "parse ')'"    code,    ;code       interpreted
+code interpreted  "interpreted"  code,                ;code
+code compiled     "compiled"     code,                ;code
+code \            "line=''"      code,                ;code    compiled
+code \            "line=''"      code,                ;code    interpreted
+code (            "parse ')'"    code,                ;code    compiled
+code (            "parse ')'"    code,                ;code    interpreted
 
-\ ----- manage wordlists --------------------------------- #fold02
+\ ----- manage wordlists --------------------------------- #FOLD02
 
-code inline       "inline"                   code, ;code
-code set-current  "set-current ${s[sp--]}"   code, ;code    inline
-code words+       "wordsplus"                code, ;code    inline
-: get-context     [ "order[0]" ] push, ;                    inline
-: set-context     [ "order[0]" ] pop,  ;                    inline
+code inline       "inline"                   code,    ;code
+code set-current  "set-current ${s[sp--]}"   code,    ;code    inline
+code words+       "wordsplus"                code,    ;code    inline
+code get-context  "order[0]"                 push,    ;code    inline
+code set-context  "order[0]"                 pop,     ;code    inline
 
-\ ----- populate only wordlist, mark 2 ------------------- #fold02
+\ ----- populate only wordlist, mark 2 ------------------- #FOLD02
 
 >set-current "$onlywid"
-code words     "words"                       code, ;code    inline
-code onlyonly  "order=($onlywid)"            code, ;code    inline
-: definitions  get-context set-current    ;                 inline
+code words     "words"                       code,    ;code    inline
+code onlyonly  "order=($onlywid)"            code,    ;code    inline
+: definitions  get-context set-current    ;                    inline
 : only         onlyonly also definitions  ;
 trash onlyonly
-: forth        [ "forthwid" ] push, set-context ;           inline
+: forth        [ "forthwid" ] push, set-context ;              inline
 only forth definitions
 
-\ ----- word properties ---------------------------------- #fold02
+\ ----- word properties ---------------------------------- #FOLD02
 
-code protect      "protect"     code,    ;code                            \ protect code body against trashing.
+\ protect code body against trashing.
+code protect   "protect"               code,          ;code
 
-\ ----- radix change  ------------------------------------ #fold02
+\ ----- radix change  ------------------------------------ #FOLD02
 
-code decimal   "m[base]=10"   code,       ;code                inline
-code hex       "m[base]=16"   code,       ;code                inline
-code binary    "m[base]=2"    code,       ;code                inline
+code decimal   "m[base]=10"            code,          ;code    inline
+code hex       "m[base]=16"            code,          ;code    inline
+code binary    "m[base]=2"             code,          ;code    inline
 
-\ ----- stack -------------------------------------------- #fold02
+\ ----- stack -------------------------------------------- #FOLD02
 decimal
 
 ( ?? -- ?? u )
-: depth        [ "sp" ] push, ;                                inline
+code depth     "sp"                    push,          ;code    inline
+code drop      "((sp--))"              code,          ;code    inline
+code 2drop     "((sp-=2))"             code,          ;code    inline
 
-code drop      "((sp--))"     code,       ;code                inline
-code 2drop     "((sp-=2))"    code,       ;code                inline
-
-: 2over        [ "s[sp-3]" dup$ ]  push, push, ;               inline
-: nip          [ "s2=s1" ]         atom, drop  ;               inline
+code 2over     "s[sp-3]" dup$          push, push,    ;code    inline
+: nip          [ "s2=s1" ]    atom, drop  ;                    inline
 
 ( x -- x x )
-: dup          [ "s[sp]" ]         push,       ;               inline
+code dup       "s[sp]"                 push,          ;code    inline
 
-: ?dup         [ "((s[sp])) &&" ]  code,   dup ;               inline
+: ?dup         [ "((s[sp])) &&" ]      code,   dup ;  inline
 
 ( x1 x2 -- x1 x2 x1 )
-: over         [ "s[sp-1]" ]  push,  ;                         inline
+code over      "s[sp-1]"               push,          ;code    inline
 
 ( x1 x2 x3 -- x1 x2 x3 x1 )
-: pluck        [ "s[sp-2]" ]  push,  ;                         inline
+code pluck     "s[sp-2]"               push,          ;code    inline
 
 ( x1 x2 -- x1 x2 x1 x2 )
-: 2dup         over over   ;                                   inline
+: 2dup         over over                              ;        inline
 
 ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
-: pick         [ "s[sp-s[sp--]-1]" ] push, ;                   inline
+code pick      "s[sp-s[sp--]-1]"       push,          ;code    inline
 
 ( -- x )  ( r: x -- x )
-: r@           [ "r[rp]" ]          push, ;                    inline
+code r@        "r[rp]"                 push,          ;code    inline
 
 ( x -- ) ( r: -- x )
-: >r           [ "r[++rp]" ]        pop, ;                     inline
+code >r        "r[++rp]"               pop,           ;code    inline
 
 ( -- x ) ( r: x -- )
-: r>           [ "r[rp--]" ]        push, ;                    inline
+code r>        "r[rp--]"               push,          ;code    inline
 
-: rdrop        [ "((rp--))" ]       code, ;                    inline
+code rdrop     "((rp--))"              code,          ;code    inline
 
 ( -- x1 x2 )  ( r: x1 x2 -- )
-: 2r>          [ "r[rp-1]" ]        push,
-               [ "r[rp--]" ]        push,
-               rdrop ;                                         inline
+code 2r>       "r[rp-1]"               push,
+               "r[rp--]"               push,
+               "((rp--))"              code,          ;code    inline
 
 ( x1 x2 -- )  ( return: -- x1 x2 )
-: 2>r          [ "((r[++rp]=s[sp-1]))" ]  code,
-               [ "r[++rp]" ]              pop,
-               drop   ;                                        inline
+code 2>r       "((r[++rp]=s[sp-1]))"   code,
+               "r[++rp]"               pop,
+               "((sp--))"              code,          ;code    inline
 
 ( -- u )
-: rdepth       [ "rp" ] push, ;                                inline
+code rdepth    "rp"                    push,          ;code    inline
 
 ( -- u )
-: depth$       [ "${#ss[@]}" ] push, ;                         inline
+code depth$    "${#ss[@]}"             push,          ;code    inline
+code empty     "s=() sp=0"             code,          ;code    inline
+code rempty    "r=() rp=0"             code,          ;code    inline
 
 
-code empty     "s=() sp=0"    code,       ;code                inline
-code rempty    "r=() rp=0"    code,       ;code                inline
-
-
-\ ----- flow control ------------------------------------- #fold02
+\ ----- flow control ------------------------------------- #FOLD02
 
 ( -- x )
-: i            [ "i" ] push, ;                                 inline
-
-( -- x )
-' r@ alias j                                                   inline
+code i         "i"                     push,          ;code    inline
+( -- x )       ' r@ alias j                                    inline
+code unloop    "((i=r[rp--]))"         code,
+               "((ibar=r[rp--]))"      code,          ;code    inline
+code leave     "code 'break'"          code,          ;code    compiled
+code ?leave    "code '((s[sp--]))&&'"  code,
+               "code 'break'"          code,          ;code    compiled
+code warm      "warm"                  code,          ;code    inline
+code bye       "exit 0"                code,          ;code    inline
+code exit      "code 'return'"         code,          ;code    compiled
 
 \ ----- arithmetics -------------------------------------- #fold02
 

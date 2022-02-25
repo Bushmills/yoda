@@ -1,0 +1,12 @@
+name:                within
+stack:               ( u1 u2 u3 -- flag) | ( n1 n2 n3 -- flag )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+description:         return flag reflecting whether u1/n1 is member of the
+                     interval u2..u3  or n2..n3
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/WITHIN

@@ -1,0 +1,15 @@
+name:                pad
+
+stack:               ( -- c-addr )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+description:         c-addr is the address of a transient region that can be used
+                     to hold data for intermediate processing. The user program
+                     is the exlusive user of pad, but there's no guarantee that
+                     the same c-addr will be produced with next execution of pad.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/PAD

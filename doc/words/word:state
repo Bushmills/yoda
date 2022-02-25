@@ -1,0 +1,17 @@
+name:                state
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            compiling
+
+description:         state produces an address containing a flag, reflecting
+                     current compilation state. false indicates "interpreting",
+                     true means "compiling".
+
+notes:               you may want to use non-standard "compiling" which
+                     pushes the same flag directly to stack, no need to fetch.
+                     state is read-only. writing to it has no effect, and at
+                     next execution of state will the contents be updated again.
+standard:            yes
+url:                 https://forth-standard.org/standard/core/STATE

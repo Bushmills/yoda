@@ -200,35 +200,44 @@ setheaderflag()  {                                                   # where aga
 inline()     { setheaderflag "$inline" ; }
 protect()    { setheaderflag "$protected"; }
 
-# move headers, along with header flags, between wordlists
-# header is assumed in current vocabulary, where it was
-# recently compiled into
-# arg1: destination wid
-towordlist()  {
-   local dest destflags wid
-   wid="$1"                                                          # destination wid
-   declare -n dest="wordlist_$wid"                                   # set up pointers to destination wordlist
-   declare -n destflags="flags_$wid"
-   dest["$lastword"]="${current["$lastword"]}"                       # copy function name and header flags
-   destflags["$lastword"]="${flags["$lastword"]}"
-   unset -v 'current["$lastword"]'                                   # remove from source wordlist
-   unset -v 'flags["$lastword"]'
+
+# remove header and flags of word passed as arg1
+# from current wordlist
+# arg1: word
+removeheaderfromcurrent()  {
+   unset -v 'current["$1"]'                                          # remove from source wordlist
+   unset -v 'flags["$1"]'
 }
 
-compiled()     { towordlist "$compileonlywid"; }                     # move last header to compiler context vocabulary
-interpreted()  { towordlist "$interpretonlywid"; }                   # move last header to interpreter context vocabulary
+# copy header of last word, along with header flags,
+# to wordlist passed as arg1
+# header is assumed in current vocabulary, where it
+# has just been created.
+# arg1: destination wid
+copytowordlist()  {
+   local dest destflags
+   declare -n dest="wordlist_$1"                                     # set up pointers to destination wordlist
+   declare -n destflags="flags_$1"
+   dest["$lastword"]="${current[$lastword]}"                         # copy function name and header flags
+   destflags["$lastword"]="${flags[$lastword]}"
+}
 
-# NOTE: factor with towordlist
+# move header of last word, along with header flags,
+# to wordlist passed as arg1
+# header is assumed in current vocabulary, where it
+# has just been created.
+# arg1: destination wid
+movetowordlist()  {
+   copytowordlist "$1"                                               # destination wid
+   removeheaderfromcurrent "$lastword"
+}
+
+compiled()     { movetowordlist "$compileonlywid"; }                 # move last header to compiler context vocabulary
+interpreted()  { movetowordlist "$interpretonlywid"; }               # move last header to interpreter context vocabulary
+
 immediate()  {
-   local dest destflags wid
-   for wid in "$compileonlywid" "$interpretonlywid"; do
-      declare -n dest="wordlist_$wid"
-      declare -n destflags="flags_$wid"
-      dest["$lastword"]="${current["$lastword"]}"
-      destflags["$lastword"]="${flags["$lastword"]}"
-   done
-   unset -v 'current["$lastword"]'                                   # remove from source wordlist
-   unset -v 'flags["$lastword"]'                                     # remove from source wordlist
+   copytowordlist "$interpretonlywid"
+   compiled
 }
 
 
@@ -309,19 +318,19 @@ declare -i dodoes_at
 # 0: append raw or generated code to target
 # 1: continue optimiser loop without adding code to target
 analyser_functionheader()  {
-   word="$bodyline"                                               # word name of new word
+   word="$bodyline"                                                  # word name of new word
    if [[ -n "${unresolved[$word]}" ]]; then
-      name="${unresolved[$word]}"                                 # if forward ref, reuse function name of forward ref
-      unset -v "unresolved['$word']"                              # going to resolve word, remove from forward refs
+      name="${unresolved[$word]}"                                    # if forward ref, reuse function name of forward ref
+      unset -v "unresolved['$word']"                                 # going to resolve word, remove from forward refs
    else
-      newname "$word"                                             # not a forward ref: invent new name
+      newname "$word"                                                # not a forward ref: invent new name
    fi
-   header "$word" "$name"                                         # create new header
+   header "$word" "$name"                                            # create new header
    return 1
 }
 
 analyser_sourcelocation()  {
-   where["$lastword"]="$bodyline"                                 # remember source location
+   where["$lastword"]="$bodyline"                                    # remember source location
    return 1
 }
 
@@ -334,12 +343,12 @@ analyser_push()  {
 }
 
 analyser_call()  {
-   name "$bodyline"                                               # convert xt to function name
+   name "$bodyline"                                                  # convert xt to function name
    targetline="$name"
 }
 
 analyser_does()  {
-   dodoes_at="$((${#target[@]}+1))"                               # remember end of target for splitting code (but only when whole word
+   dodoes_at="$((${#target[@]}+1))"                                  # remember end of target for splitting code (but only when whole word
 }
 
 # doesn't actually do any optimizing.
@@ -368,7 +377,7 @@ optimise()  {                                                        # run code 
       bodyflag="${analyser[tmp]}"
       targetline="$bodyline"                                         # assume code
       (( bodyflag )) && {
-         analyser_"${flagname[bodyflag]}" || continue                  # flags: examine and act upon
+         analyser_"${flagname[bodyflag]}" || continue                # flags: examine and act upon
       }
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
@@ -688,7 +697,8 @@ declare -a exists                                                    # result ar
 # arg1:word  arg2+:wids
 # returns: exists[0]=0|xt, [1]=flags,  [2]=wid where word was found
 exists()  {
-   [[ -z "$1" ]] && missingname
+# NOTE: testing for missing $1 is pointless, because of passed wids.
+#   [[ -z "$1" ]] && missingname
    local context word="$1"                                           # this is what we're looking for
    shift
    for wid in "$@"; do                                               # in these word lists
@@ -955,11 +965,8 @@ trash()  {
    declare -n current="wordlist_$currentwid"
    declare -n flags="flags_$currentwid"
    tmp="${flags[$1]}"
-   (((tmp&inline) && (!(tmp&protected)))) && {
-      unset -f "${current[$1]}"
-   }
-   unset -v "current[$1]"
-   unset -v "flags[$1]"
+   (((tmp&inline) && (!(tmp&protected)))) && unset -f "${current[$1]}"
+   removeheaderfromcurrent "$1"
 }
 
 
@@ -1450,8 +1457,10 @@ semicolon
 
                                                                      # similar to find, but name from string stack rather than input stream
 colon 'have$'                                                        # ( -- 0|xt ) ( $1 -- )
-   code 'exists "${ss[-1]}" "${order[@]}" "$interpretonlywid" "$compileonlywid"'
+   code 'tmp="${ss[-1]}"'
    code 'unset "ss[-1]"'
+   code '[[ -z "$tmp" ]]&&missingname'
+   code 'exists "$tmp" "${order[@]}" "$interpretonlywid" "$compileonlywid"'
    push 'exists[0]'
 semicolon
 
@@ -1499,9 +1508,11 @@ primitive 'last$'   'ss+=("$lastword")'
 # this version doesn't allow postponing forward references yet.
 # ( stream: word )
 colon 'postpone'
-   code 'word'
+   code 'word; [[ -z "$word" ]]&&missingname'
    code 'exists "$word" "$compileonlywid" "${order[@]}" "$interpretonlywid" || notfound "$word"'
-   code 'code "${exists[0]}" "$call"'
+   code 'if ((exists[2] == compileonlywid)); then code "${exists[0]}" "$call"'
+   code 'else code "code \"${exists[0]}\" \"\$call\""'
+   code 'fi'
 semicolon
 compiled
 
@@ -1705,9 +1716,10 @@ semicolon
 
 colon 'boot'
    code 'word'
+   code '[[ -z "$word" ]]&&missingname'
    code 'satisfy1 "$word"'
-   code 'exists "$word" "currentwid" "${order[@]}"'                    # search current first because satisfy may have compiled it there
-   code 'name "${exists[0]}"'                                          # convert xt to function name
+   code 'exists "$word" "currentwid" "${order[@]}"'                  # search current first because satisfy may have compiled it there
+   code 'name "${exists[0]}"'                                        # convert xt to function name
    code 'coldvector="$name"'
 semicolon
 
@@ -2293,6 +2305,7 @@ semicolon
 
 
 need()  {
+   [[ -z "$1" ]]&&missingname
    exists "$1" "${order[@]}" "$interpretonlywid" "$compileonlywid" ||
    forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
 }
@@ -2384,8 +2397,8 @@ primitive 'transient'   'transients+=("$currentwid $lastword")'
 
 colon 'initwordlist'                                                 # ( wid -- )
    code '((tmp=s[sp--]))'
-   code 'declare -gA "flags_$tmp=()"'                                  # word to function name and header flags
-   code 'declare -gA "wordlist_$tmp=()"'                               # word to function name and header flags
+   code 'declare -gA "flags_$tmp=()"'                                # word to function name and header flags
+   code 'declare -gA "wordlist_$tmp=()"'                             # word to function name and header flags
 semicolon
 
 

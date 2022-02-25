@@ -1,0 +1,17 @@
+name:                holds$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 $2 -- $3 )
+contexts:            stateless
+category:            number conversion, strings
+
+description:         prepend string $2 to string $1 which is the construction space
+                     of a pictured number conversion currently in process.
+
+    99bottles99
+
+example:             9999 s>d <# # #  "bottles" holds$  # # #> type
+                           outputs:   99bottles99
+standard:            no
+deviation:           standard has no equivalent.
+                     holds is similar

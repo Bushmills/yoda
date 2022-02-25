@@ -1,0 +1,13 @@
+name:                holds
+stack:               ( c-addr u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            pnumber conversion
+
+description:         prepends the string represented by c-addr and u to
+                     string on string stack which has been placed there by
+                     a pictured number conversion sequence.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/HOLDS

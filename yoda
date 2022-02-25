@@ -1412,10 +1412,12 @@ colon 'code'
    code 'word'
    code 'delayheader "$word" "$filehandle" "$linenr"'
 semicolon
+inline
 
 colon ';code'
    code "compile"
 semicolon
+inline
 
 colon 'code,'
    code 'code "${ss[-1]}"'
@@ -1429,8 +1431,6 @@ colon 'atom,'
 semicolon
 compiled
 
-
-primitive 'literal,' "push \"\${s[sp--]}\""                          # ( x -- )
 
 
 # ( compile: $1 -- ) ( run: -- $1 )

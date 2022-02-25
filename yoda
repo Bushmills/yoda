@@ -539,6 +539,7 @@ variable 'forwardrefs'        "0"
 variable 'instantresolve'     "1"
 variable 'callstack'          "0"
 variable 'base'               "10"
+variable 'statevar'           "0"
 
 constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"
@@ -995,10 +996,10 @@ from()  {
 
 # evaluate block of hi-level source code
 include()  {
-   local pad linenr="${BASH_LINENO[0]}"
-   while read -r pad; do
+   local tib linenr="${BASH_LINENO[0]}"
+   while read -r tib; do
       ((linenr++))
-      evaluate "$pad"
+      evaluate "$tib"
    done
    notransients
 }
@@ -2762,8 +2763,11 @@ code negate    "((s[sp]=(-s[sp]&true)))"   code,  ;code        inline
 ( x1 u -- x2 )
 ' rshift alias >>                                              inline
 
+( x low high -- flag )
+: within          over - >r - r> u< ;
+
 ( d u1 -- u2 u3 )   \ d / u1 -> quotient u3 remainder u2
-: um/mod   ud/mod drop  ;                                      inline
+: um/mod       ud/mod drop  ;                                  inline
 
 code dnegate      "((s[sp-1]=(~(s[sp-1])+1)&maxuint))"   code,
                   "((s[sp]^=maxuint))"                   code,
@@ -2809,6 +2813,11 @@ code c,        "((m[dp++]=s[sp--]&255))"  code,  ;code         inline
 ( -- x )
 ( string:  $1 -- )
 : env          [ "${!ss[-1]}+0&true" ] push, drop$ ;           inline
+
+\ ----- strings ------------------------------------------ #fold02
+
+( -- a )
+: pad       here #256 + ;
 
 \ ----- i/o ---------------------------------------------- #fold02
 ( a u -- )
@@ -2872,8 +2881,6 @@ trash x
 
 
 \ ----- dictionary and compiling ------------------------- #fold02
-
-
 ( -- wid )
 : get-current  [ "currentwid" ] push,  ;                       inline
 
@@ -2902,6 +2909,12 @@ trash x
 
 ( -- flag )
 : compiling    [ "compiling" ] push, ;                         inline
+
+( -- a )
+\ : state       statevar compiling over !  ;
+code state     "m[statevar]=$compiling"    code,
+               "statevar"                  push,      ;code    inline
+trash statevar
 
 \ word exists?
 ( -- 0|xt ) ( stream: word )

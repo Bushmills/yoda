@@ -1,4 +1,4 @@
-># ----- primitives --------------------------------------
+># ---- primitives ---------------------------------------
 
 ># ( -- )  ( $1 -- )
 : primitive
@@ -53,7 +53,7 @@
 \ this characteristic:  compile code
 \ which calls xt into the word under
 \ construction.
-"code ${s[sp--]} call"                    primitive compile,         ( -- )  ( compile time: xt -- )
+"code ${s[sp--]} $call"                    primitive compile,         ( -- )  ( compile time: xt -- )
 
 \ when compiled into a word, gives that
 \ word, presumably a compiledonly word,
@@ -189,8 +189,8 @@ defer query$                                          ' simplequery$ is query$
 : d.r          ( d u -- )                             >r  dconvert r> rtype$              ;
 : ud.r         ( ud u -- )                            >r udconvert r> rtype$              ;
 
-' drop alias x>$                                                                                   inline transient protect
-' <# alias <x                                                                                      inline transient protect
+' drop alias x>$                                                                                   inline transient
+' <# alias <x                                                                                      inline transient
 : xs           ( d -- d )                             begin x dup 0= until                ;        transient
 : x>type       ( x -- ) ( $1 -- )                     x>$ type$                           ;        inline transient
 : x>           ( x -- a n )( $1 -- )                  x>$ here here unpack$               ;        transient

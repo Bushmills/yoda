@@ -1782,6 +1782,9 @@ udslashmod()  {
     s[++sp]="$d2h"
 }
 
+# ( d1 u1 -- u2 d2 )   d1/u2 -> d2 remainder u2
+primitive 'ud/mod'   'udslashmod'
+
 
 # ----- string stack operators---------------------------- #fold01
 
@@ -2223,27 +2226,6 @@ colon 'omit'
 semicolon
 
 
-# ----- pictured number conversion ----------------------- #fold01
-
-
-# ( d1 u1 -- u2 d2 )   d1/u2 -> d2 remainder u2
-primitive 'ud/mod'   'udslashmod'
-
-# NOTE: consider to let # expect a double, but process lower
-# half only, so its stack complies with standard # while its
-# not actually able to work on doubles.
-# change would also apply to #s, #>, uconvert: doubles on
-# stack but singles only processed.
-# ( x1 -- x2 ) ( string: $1 -- $2 )
-colon 'x'                                                            # : #
-   code '((radix=m[base]))'                                          # base @
-   code '((s1=s[sp]&true, s[sp]=s1/radix, tmp=s1%radix+48))'         # /mod swap '0 +
-   code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
-   code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
-semicolon                                                            # ;
-
-
-
 # ----- foward referencing support words ----------------- #fold01
 
 # forward referencing scheme using dependencies files, which maps
@@ -2581,6 +2563,20 @@ semicolon
 primitive 'previous' '((${#order[@]}>1))&&order=("${order[@]:1}")'
 primitive 'also'     'order=("${order[0]}" "${order[@]}")'
 
+set-current "$forthwid"
+
+# ----- misc --------------------------------------------- #fold01
+
+# header will be trashed after it served its purpose, which
+# is for single length pictured number conversion only, used
+# like  <x x x x x>
+# ( x1 -- x2 ) ( string: $1 -- $2 )
+colon 'x'                                                            # : #
+   code '((radix=m[base]))'                                          # base @
+   code '((s1=s[sp]&true, s[sp]=s1/radix, tmp=s1%radix+48))'         # /mod swap '0 +
+   code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
+   code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
+semicolon                                                            # ;
 
 # ----- high level --------------------------------------- #fold01
 
@@ -2835,10 +2831,10 @@ defer query$
 
 \ ----- pictured number conversion ----------------------- #fold02
 
-
 ' prepend$ alias hold                                          inline
+: holds$          ( -- ) ( $1 $2 -- $3 )  swap$ join$ ;        inline
+: holds           ( c-addr u -- )         pack$ holds$ ;       inline
 : sign            ( f -- ) ( $1 -- $2 )   0< lest '-' hold ;
-
 
 : # ( d1 -- d2 ) ( string: $1 -- $2 )
       base @  ud/mod

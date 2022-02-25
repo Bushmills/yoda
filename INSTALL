@@ -1,8 +1,8 @@
-For starting, you need at least the file  yoda and
-the directory lib with their subdirectories.
+For starting, you need at least the files yoda, yoda.core
+and the directory lib with its subdirectories.
 
 While yoda will be able to run all alone, current
-preconfiguration depends on a small number of files
+preconfiguration depends on a number of files
 in the lib directory.
 
 Further instructions therefore assume presence of
@@ -14,12 +14,12 @@ least the file "fix" in it, and run there:
 
    `bash yoda`
 
-Should you be greeted with a "Yoda shell" message, your
+Should you be greeted with a "yoda shell" message, your
 setup appears to be fine. Verify by tapping the "Enter"
 key: an " ok" message should be produced.
 
 in case of an error at this point:
-   * yoda tries to build library dependecies at first run, and
+   * yoda tries to build library dependencies at first run, and
    requires external command grep for this. does grep exist?
 
    * if yoda quits with a message complaining about unresolved
@@ -33,6 +33,13 @@ in case of an error at this point:
    * the bash shell required. does executing "bash" alone still
    throw an error
 
+   * execute instead:   bash yoda boot quit prompt
+   this prevents loading from libraries, thereby booting into
+   a slightly simpler environment. Should this work, the problem
+   seems to be with library, configured path to library, or yoda
+   failing to build dependencies. Should this fail too, the file
+   yoda.core may be missing, or due to another very elementary
+   precondition (incompatible bash version, file privileges)
 
 Now proceed with finalising the installation:
 1. create a symlink to yoda in a directory which
@@ -45,25 +52,26 @@ yoda from anywhere.
 
 2. edit and customise, if appropriate, the file yoda.conf,
 which can be found in the same directory where yoda resides.
-All settings should have been set to reasonable defaults,
-but your preferences may differ.
+All settings should have reasonable defaults, but your preferences
+may differ.
 Especially the editor setting may be worth of taking note here.
 
 3. Test editor by launching yoda, then try to open the source
 of a word by entering review followed by the name of the word.
 For example:
 
-   `review .`
+   `review quit`
 
-should open the definition of .  in the editor. Similarily, the
+should open the definition of quit in the editor. Similarily, the
 definition of "review" itself can be opened too:
 
    `review review`
 
 4. If you copied the doc directory, test whether its contents
-are found, by entering:
+are found, by entering, for example:
 
    `about about`    ( or any other word of your liking, as long it has already been documented )
 
-If this succeeds too, you're all set.
+   `concerning memory`
 
+If these succeed too, you're all set.

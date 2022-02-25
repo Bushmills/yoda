@@ -1,0 +1,14 @@
+name:                primitive
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            compiling
+input stream:        word
+
+description:         a defining word for simple code words. Code is taken from
+                     top string stack item, word name taken from input.
+
+example:             "exit 0" primitive bye
+standard:            no
+deviation:           standard has no equivalent

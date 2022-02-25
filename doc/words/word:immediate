@@ -1,0 +1,30 @@
+name:                immediate
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            compiling
+
+description:         emulates setting the most recently defined word "immediate".
+                     yoda doesn't know "immediate" words, and as such mimicks such
+                     words by creating two headers, both pointing to the same code
+                     code, very much like an alias does. These two headers are moved
+                     to interpretonly resp. compileonly wordlists. Therefore will the
+                     interpretonly header be found at interpret time, and compileonly
+                     header at compile time. The result is what one would expect from
+                     immediate words.
+                     Note that "immediate" doesn't allow state smartness in the sense of
+                     different semantics, depending on whether an "immediate"  word was
+                     executed during interpretation or during compilation, as semantics
+                     for both sitations are identical. For simulating state smart
+                     "immediate" words, define the different semantics in two words,
+                     one set as "interpreted", the other as "compiled".
+
+example:             : //   0 parse$ drop$  ;  immediate
+notes:               setting flags like protect, inline ought to be done before
+                     marking the word as immediate: after "immediate" will the last
+                     header be moved - any following mode flags don't refer to the
+                     header of the "immediate" word any longer.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/IMMEDIATE

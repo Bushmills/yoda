@@ -1,15 +1,14 @@
 #!/bin/bash
-
-v="0.7.2"
+# shellcheck disable=SC2016 disable=SC2034 disable=SC2154
+v="0.7.3"
+# ----- about -------------------------------------------- #fold00
 
 # times in UTC
 # dates in post-gregorian Sol3
 # numbers in decimal. Mostly.
-
 # changelog now in directory changes. Or, type "changes" in yoda
 # for changes to current version.
 
-# ----- about -------------------------------------------- #fold00
 # yoda is an acronym of Yet Onather Delirious Application, and does
 # naturally not refer to any greenish midget with pointy ears, albeit
 # it had been said that reading yoda source aloud sounds like the very
@@ -22,15 +21,19 @@ v="0.7.2"
 
 # editor used is efte, folds in source files are therefore efte compatible.
 
+
 # ----- shellcheck ignores ------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
+
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
+
 # SC2016: "expressions don't expand between single quotes"
 #         right, that's the reason for using single quotes there.
 # SC2034  "... appears unused. Verify use (or export if used externally)"
 #         in most cases is "appears" the correct term.
 # SC2154 "(warning): base is referenced but not assigned."
 #        is assigned, but shellcheck can't see how
+
 
 # ----- declarations ------------------------------------- #fold00
 
@@ -99,7 +102,7 @@ declare -A where                                                     # source lo
 declare -A lib                                                       # dependencies cache
 
 declare -i filehandle=1                                              # 1=yoda. 0=tty.  >1=loaded source
-declare -a files=("tty")                                             # list of included files
+declare -a files=("tty" "$(realpath "$0")")                            # list of included files
 declare -a loaded                                                    # list of inclusion counters for included files
 declare -a conclude=()                                               # compiler words can add actions to array conclude, which
                                                                      # will be executed when semicolon executes
@@ -365,7 +368,7 @@ optimise()  {                                                        # run code 
       bodyflag="${analyser[tmp]}"
       targetline="$bodyline"                                         # assume code
       (( bodyflag )) && {
-         analyser_${flagname[bodyflag]} || continue                  # flags: examine and act upon
+         analyser_"${flagname[bodyflag]}" || continue                  # flags: examine and act upon
       }
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
@@ -2561,429 +2564,6 @@ colon 'x'                                                            # : #
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;
 
-# ----- high level --------------------------------------- #fold01
-
-# primitives and word are generally moved here only if
-# these high level words don't generate worse code than
-# their former bash coded counterparts.
-
-# ----- comments ----------------------------------------- #fold02
-
-set-current "$forthwid"
-include << 'end'
-code interpreted  "interpreted"  code,                ;code
-code compiled     "compiled"     code,                ;code
-code immediate    "immediate"    code,                ;code
-
-code \            "line=''"      code,                ;code    immediate
-code (            "parse ')'"    code,                ;code    immediate
-
-\ ----- manage wordlists --------------------------------- #fold02
-
-code inline       "inline"                   code,    ;code
-code set-current  "set-current ${s[sp--]}"   code,    ;code    inline
-code words+       "wordsplus"                code,    ;code    inline
-code get-context  "order[0]"                 push,    ;code    inline
-code set-context  "order[0]"                 pop,     ;code    inline
-
-\ ----- populate only wordlist, mark 2 ------------------- #fold02
-
->set-current   "$onlywid"
-code words     "words"                       code,    ;code    inline
-code onlyonly  "order=($onlywid)"            code,    ;code    inline transient
-: definitions  get-context set-current    ;                    inline
-: only         onlyonly also definitions  ;
-code forthwid  "forthwid"     push,                   ;code    inline transient
-: forth        forthwid set-context ;                          inline
-only forth definitions
-
-\ ----- word properties ---------------------------------- #fold02
-
-\ protect code body against trashing.
-code protect   "protect"               code,          ;code
-
-\ ----- radix change  ------------------------------------ #fold02
-
-code decimal   "m[base]=10"            code,          ;code    inline
-code hex       "m[base]=16"            code,          ;code    inline
-code binary    "m[base]=2"             code,          ;code    inline
-
-\ ----- stack -------------------------------------------- #fold02
-decimal
-
-( ?? -- ?? u )
-code depth     "sp"                    push,          ;code    inline
-code drop      "((sp--))"              code,          ;code    inline
-code 2drop     "((sp-=2))"             code,          ;code    inline
-
-code 2over     "s[sp-3]" dup$          push, push,    ;code    inline
-: nip          [ "s2=s1" ]    atom, drop  ;                    inline
-
-( x -- x x )
-code dup       "s[sp]"                 push,          ;code    inline
-
-: ?dup         [ "((s[sp])) &&" ]      code,   dup ;  inline
-
-( x1 x2 -- x1 x2 x1 )
-code over      "s[sp-1]"               push,          ;code    inline
-
-( x1 x2 x3 -- x1 x2 x3 x1 )
-code pluck     "s[sp-2]"               push,          ;code    inline
-
-( x1 x2 -- x1 x2 x1 x2 )
-: 2dup         over over                              ;        inline
-
-( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
-code pick      "s[sp-s[sp--]-1]"       push,          ;code    inline
-
-( -- x )  ( r: x -- x )
-code r@        "r[rp]"                 push,          ;code    inline
-
-( x -- ) ( r: -- x )
-code >r        "r[++rp]"               pop,           ;code    inline
-
-( -- x ) ( r: x -- )
-code r>        "r[rp--]"               push,          ;code    inline
-
-code rdrop     "((rp--))"              code,          ;code    inline
-
-( -- x1 x2 )  ( r: x1 x2 -- )
-code 2r>       "r[rp-1]"               push,
-               "r[rp--]"               push,
-               "((rp--))"              code,          ;code    inline
-
-( x1 x2 -- )  ( return: -- x1 x2 )
-code 2>r       "((r[++rp]=s[sp-1]))"   code,
-               "r[++rp]"               pop,
-               "((sp--))"              code,          ;code    inline
-
-( -- u )
-code rdepth    "rp"                    push,          ;code    inline
-
-( -- u )
-code depth$    "${#ss[@]}"             push,          ;code    inline
-code empty     "s=() sp=0"             code,          ;code    inline
-code rempty    "r=() rp=0"             code,          ;code    inline
-
-
-\ ----- flow control ------------------------------------- #fold02
-
-( -- x )
-code i         "i"                     push,          ;code    inline
-( -- x )       ' r@ alias j                                    inline
-code unloop    "((i=r[rp--]))"         code,
-               "((ibar=r[rp--]))"      code,          ;code    inline
-code leave     "code 'break'"          code,          ;code    compiled
-code ?leave    "code '((s[sp--]))&&'"  code,
-               "code 'break'"          code,          ;code    compiled
-code warm      "warm"                  code,          ;code    inline
-code bye       "exit 0"                code,          ;code    inline
-code exit      "code 'return'"         code,          ;code    compiled
-
-\ ----- arithmetics -------------------------------------- #fold02
-
-code 1+        "((s[sp]=(s[sp]+1)&true))"  code,  ;code        inline
-code 1-        "((s[sp]=(s[sp]-1)&true))"  code,  ;code        inline
-code 2*        "((s[sp]=(s[sp]<<1)&true))" code,  ;code        inline
-
-code invert    "((s[sp]^=maxuint))"        code,  ;code        inline
-code negate    "((s[sp]=(-s[sp]&true)))"   code,  ;code        inline
-
-: ?negate      [ "((s[sp--]))&&" ]   code,  negate  ;          inline
-: abs          [ "((s[sp]&msb))&&" ] code,  negate  ;          inline
-
-\ truncated, symmetric
-( n1 n2 n3 -- n4 )
-: */           */mod nip ;                                     inline
-
-\ truncated, symmetric
-( n1 n2 -- n3 n4 )
-: /mod         1 -rot  */mod ;
-
-( n1 n2 -- n3 )
-: *            1 */   ;                                        inline
-
-\ truncated, symmetric
-( n1 n2 -- n3 )
-: /            /mod nip  ;                                     inline
-
-\ sign according  n1 == n2*(n1/n2)+remainder
-( n1 n2 -- n3 )
-: mod          /mod drop  ;                                    inline
-
-\ percentage rounded, not truncated
-( n1 n2 -- n3 )
-: %             50 */ dup 0< 1 or + 2/ ;
-
-( n1 n2 -- n1|n2 )
-: min          2dup >  if nip exit then drop ;
-
-( n1 n2 -- n1|n2 )
-: max          2dup <  if nip exit then drop ;
-
-( u1 u2 -- u1|u2 )
-: umin         2dup u> if nip exit then drop ;
-
-( u1 u2 -- u1|u2 )
-: umax         2dup u< if nip exit then drop ;
-
-( x1 -- x2 )
-: cells        ;                                               immediate
-
-( x1 -- x2 )
-: cell+        1+ ;                                            inline
-
-( n -- d )
-: s>d          dup 0<  ;                                       inline
-
-( x1 u -- x2 )
-' lshift alias <<                                              inline
-
-( x1 u -- x2 )
-' rshift alias >>                                              inline
-
-( x low high -- flag )
-: within          over - >r - r> u< ;
-
-( d u1 -- u2 u3 )   \ d / u1 -> quotient u3 remainder u2
-: um/mod       ud/mod drop  ;                                  inline
-
-code dnegate      "((s[sp-1]=(~(s[sp-1])+1)&maxuint))"   code,
-                  "((s[sp]^=maxuint))"                   code,
-                  "((s[sp-1]))||((s[sp]++))"             code, ;code
-
-( d1 -- d2 )
-: dabs            dup 0< lest dnegate  ;
-
-
-\ ----- memory ------------------------------------------- #fold02
-
-code @         "((s[sp]=m[s[sp]]))"    code,    ;code          inline
-
-( a x -- )     \ same as:  swap !
-: <-           [ "m[s[sp]]" ]  pop, drop  ;                    inline
-
-( x -- )
-: ,            [ "m[dp++]" ]  pop, ;                           inline
-
-( c -- )
-code c,        "((m[dp++]=s[sp--]&255))"  code,  ;code         inline
-
-( a -- a+1 c )
-: count        [ "m[s[sp]++]&255" ] push, ;                    inline
-
-( a -- a+cell x )
-: skim         [ "m[s[sp]++]"     ] push, ;                    inline
-
-\ 0 -> m[a++],  u times
-( a u -- )
-: erase        0 fill ;                                        inline
-
-( -- a )
-: here         [ "dp" ] push, ;                                inline
-
-( -- u )
-( $1 -- )
-: count$       [ "${#ss[-1]}" ] push, drop$ ;                  inline
-
-( -- u )
-: here$        [ "sdp" ] push, ;                               inline
-
-( -- x )
-( string:  $1 -- )
-: env          [ "${!ss[-1]}+0&true" ] push, drop$ ;           inline
-
-\ ----- strings ------------------------------------------ #fold02
-
-( -- a )
-: pad       here #256 + ;
-
-\ ----- i/o ---------------------------------------------- #fold02
-( a u -- )
-: type         pack$ type$ ;                                   inline
-( u -- )
-( $1 -- )
-: ltype$       dup$ type$ count$ - spaces ;
-
-( u -- )
-( $1 -- )
-: rtype$       dup$ count$ - spaces type$ ;
-
-( -- )
-( -- $1 )
-: word$        bl parse$ ;                                     inline
-
-defer query$
-' simplequery$ is query$
-
-
-\ ----- pictured number conversion ----------------------- #fold02
-
-' prepend$ alias hold                                          inline
-: holds$          ( -- ) ( $1 $2 -- $3 )  swap$ join$ ;        inline
-: holds           ( c-addr u -- )         pack$ holds$ ;       inline
-: sign            ( f -- ) ( $1 -- $2 )   0< lest '-' hold ;
-
-: # ( d1 -- d2 ) ( string: $1 -- $2 )
-      base @  ud/mod
-      rot '0 +
-      dup '9 u> #39 and +
-      hold ;
-
-: <#              ( -- $1 )               ""  ;                      inline
-: #s              ( d1 -- d2 )            begin # 2dup or 0= until ;
-' 2drop alias #>$ ( d -- )                                           inline
-: #>              ( d -- )                #>$ here here unpack$ ;
-: #>type          ( d -- ) ( $1 -- )      #>$ type$ ;                inline
-
-: udconvert       ( ud -- ) ( -- $1 )     <# #s #>$ ;
-: dconvert        ( d -- ) ( -- $1 )      tuck dabs udconvert sign ;
-: d.              ( d -- )                dconvert type$ space ;
-: ud.             ( ud -- )               udconvert type$ space ;
-: d.r             ( d u -- )              >r  dconvert r> rtype$ ;
-: ud.r            ( ud u -- )             >r udconvert r> rtype$ ;
-
-: xs              ( d -- d )              begin x dup 0= until ;              transient
-' drop alias x>$  ( x -- )                                           inline   transient protect
-: x>type          ( x -- ) ( $1 -- )      x>$ type$ ;                inline   transient
-: x>              ( x -- a n )( $1 -- )   x>$ here here unpack$ ;             transient
-' <# alias <x     ( -- )   ( -- $1 )                                          transient protect
-trash x
-
-: uconvert        ( u -- ) ( -- $1 )      <x xs x>$ ;
-: convert         ( n -- ) ( -- $1 )      dup abs uconvert sign ;
-: .               ( n -- )                convert type$ space ;
-: u.              ( u -- )                uconvert type$ space ;
-: .r              ( n u -- )              >r  convert r> rtype$ ;
-: u.r             ( u1 u2 -- )            >r uconvert r> rtype$ ;
-
-
-
-\ ----- dictionary and compiling ------------------------- #fold02
-( -- wid )
-: get-current  [ "currentwid" ] push,  ;                       inline
-
-( -- u )
-: #unresolved  [ "${#unresolved[@]}" ] push, ;                 inline
-
-' have$ alias xt                                               inline
-
-\ produces execution token and removes header of last word:  : foo ... ; noname
-( -- xt )
-: noname       last$ dup$
-               protect xt
-               trash$ ;
-
-( -- )         \ compile time
-( -- x )       \ run time
-: me           [ "xt" ] push,  literal, ;                      compiled
-
-( -- f ) ( stream: word )
-: needed       word$ needed$ ;                                 inline
-
-' satisfy alias needs:                                         inline
-
-( x -- )
-: literal      literal, ;                                      compiled
-
-( -- flag )
-: compiling    [ "compiling" ] push, ;                         inline
-
-( -- a )
-\ : state       statevar compiling over !  ;
-code state     "m[statevar]=$compiling"    code,
-               "statevar"                  push,      ;code    inline
-trash statevar
-
-\ word exists?
-( -- 0|xt ) ( stream: word )
-: have         word$ have$ ;                                   inline
-
-\  word missing?
-( -- flag )
-( stream: word )
-: lack         have  0=    ;                                   inline
-
-( -- )   ( stream: word )
-: [']          ' literal,   ;                                  compiled
-
-\ ----- unsorted ----------------------------------------- #fold02
-
-( ??? -- )
-: quit         warm
-               begin
-                  query$ evaluate$
-                  resolve
-                  prompt
-               again ;
-
-( ??? -- )
-' quit alias abort
-
-\ when compiled into a word, gives that word, presumably a compiledonly word, as result of execution
-\ of compile, this characteristic:  compile code which calls xt into the word under construction.
-( xt -- )
-code compile, "code ${s[sp--]} call"  code,   ;code
-
-( ??? flag -- ??? | empty )         \ the abort runtime, compiled by abort" into the word under construction.
-: (abort")     if type$ cr abort then drop$ ;
-
-( -- ) ( s: string deliited by " )
-: abort"
-   '" parse$
-   postpone literal$
-   ['] (abort") compile,
-   ; compiled
-
-
-( f -- )
-: ?abort       lest abort ;   inline
-
-\  32 bits random number
-( -- u )
-: random     [ "SRANDOM&true" ]  push,  ;  inline
-
-\ a 51 bit microseconds epoch
-( -- u )
-: realtime   [ "${EPOCHREALTIME//[,.]/}&true" ] push,  ;   inline
-
-
-
-\ ----- files and loading -------------------------------- #fold02
-
-( -- u )
-: #files       [ "${#files[@]}" ] push, ;                      inline
-
-( -- )
-( stream: filename )
-: from         word$ from$ ;
-
-\ better symmetry with thisfile$
-( -- u )
-' origin alias thisfile
-
-\ check whether current source had already been compiled from before.
-\ most useful when used interpretatively in a file, for testing whether
-\ it will be or has been reloaded, such as with "loaded lest done"
-\ returned u is the count the file has been loaded.
-( -- u )
-: loaded       [ "loaded[filehandle]" ] push, ;                inline
-
-\ true: loading from file?,  false: interactive (console).
-\ pipe or redirection is indicated as loading from file.
-( -- flag )
-: loading      [ "linenr<0?false:true" ] push, ;               inline
-
-\ produce name of currently loaded file
-( -- )
-( -- $1 )
-: thisfile$    thisfile filename$ ;                            inline
-
-\ prevent reloading file
-( -- )
-: once         loaded lest done ;
-
-end
 
 # ----- convenience -------------------------------------- #fold01
 
@@ -3016,16 +2596,23 @@ config()  {
    [[ -f "$HOME/$config" ]]  && { source "$HOME/$config"; return; }  # config in $HOME has priority over config in yoda dir
    [[ -f "$mydir/$config" ]] && source "$mydir/$config"
 }
+# -------------------------------------------------------
 config
 [[ -f "$dependencies" ]] || generate_dependencies                    # no dependencies -> generate
 read -r _ tmp < <(grep '^version ' "$dependencies")                  # check version
 [[ "$tmp" == "$v" ]] || generate_dependencies                        # new yoda -> generate
 cache_dependencies                                                   # read dependencies into memory
+# -------------------------------------------------------
+# moved to external file now
+set-current "$forthwid"
+file="$mydir/yoda.core"
+from "$file" || filenotfound "$file"
+# -------------------------------------------------------
 args=("$@")                                                          # read command line
 (( ${#args[@]} )) || read -rst 0.01 "args"                           # no command line specified: check whether commands are piped
 [[ -z ${args[0]} ]] && args[0]="$default"                            # neither pipe nor command line: load default launch commands
-files[1]="$(realpath "$0")"                                          # handles: 0=tty, 1=yoda, others added as they're loaded
 evaluate "${args[*]}"                                                # evaluate piped command, command line or default initial commands
+# -------------------------------------------------------
 if [[ -n "$coldvector" ]]; then                                      # if cold launch point was specified, try to run.
    resolve                                                           # still unresolved words? try to resolve those.
    if (( ${#unresolved[@]} )); then                                  # still unresolved words

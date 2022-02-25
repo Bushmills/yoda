@@ -13,12 +13,11 @@ description:         emulates setting the most recently defined word "immediate"
                      interpretonly header be found at interpret time, and compileonly
                      header at compile time. The result is what one would expect from
                      immediate words.
-                     Note that "immediate" doesn't allow state smartness in the sense of
-                     different semantics, depending on whether an "immediate"  word was
-                     executed during interpretation or during compilation, as semantics
-                     for both sitations are identical. For simulating state smart
-                     "immediate" words, define the different semantics in two words,
-                     one set as "interpreted", the other as "compiled".
+                     Note that while state smartness of "immediate" words, in the sense
+                     of semantics differing according execution state, is possible, the
+                     prefered mechanism is to define the different semantics in two
+                     discrete but identically named words, one set as "interpreted",
+                     the other as "compiled".
 
 example:             : //   0 parse$ drop$  ;  immediate
 notes:               setting flags like protect, inline ought to be done before

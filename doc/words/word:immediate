@@ -15,7 +15,7 @@ description:         emulates setting the most recently defined word "immediate"
                      immediate words.
                      Note that while state smartness of "immediate" words, in the sense
                      of semantics differing according execution state, is possible, the
-                     prefered mechanism is to define the different semantics in two
+                     preferred mechanism is to define the different semantics in two
                      discrete but identically named words, one set as "interpreted",
                      the other as "compiled".
 

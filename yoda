@@ -215,6 +215,20 @@ towordlist()  {
 compiled()     { towordlist "$compileonlywid"; }                     # move last header to compiler context vocabulary
 interpreted()  { towordlist "$interpretonlywid"; }                   # move last header to interpreter context vocabulary
 
+# NOTE: factor with towordlist
+immediate()  {
+   local dest destflags wid
+   for wid in "$compileonlywid" "$interpretonlywid"; do
+      declare -n dest="wordlist_$wid"
+      declare -n destflags="flags_$wid"
+      dest["$lastword"]="${current["$lastword"]}"
+      destflags["$lastword"]="${flags["$lastword"]}"
+   done
+   unset -v 'current["$lastword"]'                                   # remove from source wordlist
+   unset -v 'flags["$lastword"]'                                     # remove from source wordlist
+}
+
+
 compiler_init()  {
    body=()
    analyser=()                                                       # reinitialise code tags for analyser
@@ -1278,43 +1292,33 @@ inline
 
 # ----- numeric comparison ------------------------------- #fold01
 
-primitive '0='   '((s[sp]=s[sp]?false:true))'                        # 0->true  x->false
-primitive '0<>'  '((s[sp]=s[sp]?true:false))'                        # 0->0   x->true
-primitive '0<'   '((s[sp]=s[sp]&msb?true:false))'                    # &msb: 0->0   msb->true
-
-colon '='
-   code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp])==(s1)?true:false))'
-semicolon
-inline
-
-colon '<>'
-   code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp])==(s1)?false:true))'
-semicolon
-inline
+primitive '0='    '((s[sp]=s[sp]?false:true))'                       # 0->true  x->false
+primitive '0<>'   '((s[sp]=s[sp]?true:false))'                       # 0->0   x->true
+primitive '0<'    '((s[sp]=s[sp]&msb?true:false))'                   # &msb: 0->0   msb->true
+primitive '='     '((tmp=s[sp--], s[sp]=-(tmp==s[sp])))'
+primitive '<>'    '((tmp=s[sp--], s[sp]=(tmp==s[sp])-1))'
 
 colon 'u<'
-   code '((s1=s[sp--]&true))'
+   code '((s1=s[sp--]))'
    code '((s[sp]=(s[sp]&true)<(s1)?true:false))'
 semicolon
 inline
 
 colon 'u>'
-   code '((s1=s[sp--]&true))'
+   code '((s1=s[sp--]))'
    code '((s[sp]=(s[sp]&true)>(s1)?true:false))'
 semicolon
 inline
 
 colon '<'
-   code '((s1=s[sp--]&true))'
+   code '((s1=s[sp--]))'
    code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
    code '((s[sp]=((s1>s[sp]&true)^sign)?true:false))'
 semicolon
 inline
 
 colon '>'
-   code '((s1=s[sp--]&true))'
+   code '((s1=s[sp--]))'
    code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
    code '((s[sp]=((s1<s[sp]&true)^sign)?true:false))'
 semicolon
@@ -1335,10 +1339,8 @@ inline
 
 # ( x1 x2 x3 x4 -- 0 | -1 )
 colon 'd='
-   code '((s1=s[sp--]))'
-   code '((s2=s[sp--]))'
-   code '((s3=s[sp--]))'
-   code '((s[sp]=(s1==s3&s2==s[sp])?true:false))'
+   code '((s[sp-3]=((s[sp]-s[sp-2])||(s[sp-1]-s[sp-3]))-1))'
+   code '((sp-=3))'
 semicolon
 inline
 
@@ -1394,28 +1396,14 @@ colon 'push,'
    code 'code "((s[++sp]=${ss[-1]}))"'
    code 'unset "ss[-1]"'
 semicolon
-compiled
-
-colon 'push,'
-   code 'code "((s[++sp]=${ss[-1]}))"'
-   code 'unset "ss[-1]"'
-semicolon
-interpreted
-
+immediate
 
 # compile: ( -- ) ( $1 -- )   run: ( x -- )
 colon 'pop,'
    code 'code "((${ss[-1]}=s[sp--]))"'
    code 'unset "ss[-1]"'
 semicolon
-compiled
-
-# compile: ( -- ) ( $1 -- )   run: ( x -- )
-colon 'pop,'
-   code 'code "((${ss[-1]}=s[sp--]))"'
-   code 'unset "ss[-1]"'
-semicolon
-interpreted
+immediate
 
 colon 'code'
    code 'word'
@@ -1430,13 +1418,7 @@ colon 'code,'
    code 'code "${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
-interpreted
-
-colon 'code,'
-   code 'code "${ss[-1]}"'
-   code 'unset "ss[-1]"'
-semicolon
-compiled
+immediate
 
 colon 'atom,'
    code 'code "${atom[${ss[-1]}]}"'
@@ -2591,10 +2573,10 @@ set-current "$forthwid"
 include << 'end'
 code interpreted  "interpreted"  code,                ;code
 code compiled     "compiled"     code,                ;code
-code \            "line=''"      code,                ;code    compiled
-code \            "line=''"      code,                ;code    interpreted
-code (            "parse ')'"    code,                ;code    compiled
-code (            "parse ')'"    code,                ;code    interpreted
+code immediate    "immediate"    code,                ;code
+
+code \            "line=''"      code,                ;code    immediate
+code (            "parse ')'"    code,                ;code    immediate
 
 \ ----- manage wordlists --------------------------------- #fold02
 
@@ -2746,10 +2728,7 @@ code negate    "((s[sp]=(-s[sp]&true)))"   code,  ;code        inline
 : umax         2dup u< if nip exit then drop ;
 
 ( x1 -- x2 )
-: cells        ;                                               compiled
-
-( x1 -- x2 )
-: cells        ;                                               interpreted
+: cells        ;                                               immediate
 
 ( x1 -- x2 )
 : cell+        1+ ;                                            inline
@@ -2771,7 +2750,7 @@ code negate    "((s[sp]=(-s[sp]&true)))"   code,  ;code        inline
 
 code dnegate      "((s[sp-1]=(~(s[sp-1])+1)&maxuint))"   code,
                   "((s[sp]^=maxuint))"                   code,
-                  "((s[sp-1]))||((s[sp]++))"             code,   ;code
+                  "((s[sp-1]))||((s[sp]++))"             code, ;code
 
 ( d1 -- d2 )
 : dabs            dup 0< lest dnegate  ;

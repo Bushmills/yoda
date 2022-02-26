@@ -2103,9 +2103,7 @@ semicolon
 
 # ( a1 a2 u -- )
 move()  {                                                            # deals with destination overlapping source
-   pop 's0'
-   pop 's1'
-   pop 's2'
+   ((s0=s[sp--],s1=s[sp--],s2=s[sp--]))
    if ((s2 < s1)); then                                              # copy highest to lowest:
       ((s1+=s0, s2+=s0))                                             # m[--a1+u} -> m[--a2+u],  u times
       for ((;s0--;)); do

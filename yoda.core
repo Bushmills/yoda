@@ -48,21 +48,10 @@
 \ inline flag set by default.
 "return"                                  primitive exit             ( -- )
 
-\ when compiled into a word, gives that
-\ word, presumably a compiledonly word,
-\ as result of execution of compile,
-\ this characteristic:  compile code
-\ which calls xt into the word under
-\ construction.
-"code ${s[sp--]} $call"                    primitive compile,         ( -- )  ( compile time: xt -- )
 
-\ when compiled into a word, gives that
-\ word, presumably a compiledonly word,
-\ as result of execution of compile,
-\ this characteristic:  compile code
-\ which push x to stack into the word
-\ under construction.
-"code ${s[sp--]} push"                    primitive literal,         ( -- ) ( compile time: x -- ) ( run time: -- x )
+"push ${s[sp--]}"                         primitive literal,         ( -- ) ( compile time: x -- ) ( run time: -- x )
+"call ${s[sp--]}"                         primitive compile,         ( -- ) ( compile time: x -- ) ( run time: -- x )
+
 
 \ ----- manage wordlists ---------------------------------
 

@@ -43,7 +43,6 @@ shopt -u nullglob
 config="yoda.conf"                                                   # name of configuration file which may override any of the below settings
 declare -i break=2                                                   # break will return (0), exit (1) or execute coldvector (2)
 declare -i clean=1                                                   # empty stack on error/ctrl-c
-declare -i codedump=0
 
 read -r tmp _ < <(realpath "$0")
 read -ra version <<< "${v//./ }"
@@ -102,7 +101,7 @@ declare -A where                                                     # source lo
 declare -A lib                                                       # dependencies cache
 
 declare -i filehandle=1                                              # 1=yoda. 0=tty.  >1=loaded source
-declare -a files=("tty" "$(realpath "$0")")                            # list of included files
+declare -a files=("tty" "$(realpath "$0")")                          # list of included files
 declare -a loaded                                                    # list of inclusion counters for included files
 declare -a conclude=()                                               # compiler words can add actions to array conclude, which
                                                                      # will be executed when semicolon executes
@@ -235,7 +234,7 @@ movetowordlist()  {
 compiled()     { movetowordlist "$compileonlywid"; }                 # move last header to compiler context vocabulary
 interpreted()  { movetowordlist "$interpretonlywid"; }               # move last header to interpreter context vocabulary
 
-immediate()  {
+immediate()    {
    copytowordlist "$interpretonlywid"
    compiled
 }
@@ -248,13 +247,8 @@ compiler_init()  {
 }
 
 # create header, but don't compile, and don't generate function yet.
-# compiling (that is, creating a bash function) is left to
-# semicolon, calling compile won't detect redefinition if word was
-# moved to context vocabulary
 # arg1: word name
 # arg2: function name
-# not allowed to generate function names because some names want
-# to be determined by caller
 # NOTE: leave it to header to prepend $nameprefix.
 header()  {
    lastword="$1"
@@ -363,15 +357,6 @@ optimise()  {                                                        # run code 
    ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
    target=()
    dodoes_at=0
-# NOTE: consider turning this into a flag which can be
-# toggled in yoda
-   ((codedump))&& {
-      echo ": $lastword"
-      for ((tmp=0; tmp<${#body[@]}; tmp++)); do
-         printf "%2d %-16s %s\n" "$tmp" "${flagname[analyser[tmp]]}" "${body[tmp]}"
-      done
-      echo "------------------------------------------------"
-   }
    for ((tmp=0; tmp<${#body[@]}; tmp++)); do
       bodyline="${body[tmp]}"
       bodyflag="${analyser[tmp]}"
@@ -1017,17 +1002,6 @@ from()  {
    ((loaded[filehandle]++))                                          # increment load counter, mark as loaded
    return 0
 }
-
-# evaluate block of hi-level source code
-include()  {
-   local tib linenr="${BASH_LINENO[0]}"
-   while read -r tib; do
-      ((linenr++))
-      evaluate "$tib"
-   done
-   notransients
-}
-
 
 
 # ----- populating detokeniser --------------------------- #fold00
@@ -2617,7 +2591,6 @@ read -r _ tmp < <(grep '^version ' "$dependencies")                  # check ver
 cache_dependencies                                                   # read dependencies into memory
 # -------------------------------------------------------
 # moved to external file now
-set-current "$forthwid"
 file="$mydir/yoda.core"
 from "$file" || filenotfound "$file"
 # -------------------------------------------------------

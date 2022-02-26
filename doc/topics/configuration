@@ -10,7 +10,6 @@ enable them, unless text is expected as paramter.
 default='boot quit'                    # command line used  when yoda was executed without command line
 trace=0                                # 1: become more chatty during execution
 log=0                                  # 1: writes execution of some actions to a log file
-codedump=0
 break=2                                # what do to after Ctrl-C: 0:return 1:exit 2:execute cold
 clean=1                                # 1: clean stacks on error
 callstack=0                            # 0: disable call stack print on error. n: show n items

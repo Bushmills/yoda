@@ -1,5 +1,7 @@
 ># ---- primitives ---------------------------------------
 
+>set-current "$forthwid"
+
 ># ( -- )  ( $1 -- )
 : primitive
       code
@@ -11,7 +13,6 @@
 "immediate"                               primitive immediate
 "parse ')'"                               primitive (                ( -- ) ( s: delim )           immediate
 "line=''"                                 primitive \                ( -- ) ( s: line )            immediate
-
 
 "interpreted"                             primitive interpreted      ( -- )
 "compiled"                                primitive compiled         ( -- )

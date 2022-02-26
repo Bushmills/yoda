@@ -71,7 +71,7 @@ declare -ai r=() s=() m=()
 declare -a strings=()                                                # string memory
 declare -i sp=0 rp=0 dp=0 sdp=0
 declare -a ss=()
-declare -i s1 s2 s3 s4                                               # temp variables to hold stack items s[-1] ... s[-4]
+declare -i s0 s1 s2 s3 s4                                            # temp variables to hold stack items
                                                                      # easier to read than "tmp, tmp2"
 declare -A doescode                                                  # items associated with defining word. Detokeniser extracted code
 
@@ -121,7 +121,6 @@ newflag()  {
 newflag functionheader                                               # create header
 newflag sourcelocation                                               # store source location
 newflag atomiccode                                                   # expand
-newflag push                                                         # generate code pushing a cell
 newflag call                                                         # generate code calling xt
 newflag does                                                         # rip code apart into define- and run time portions
 
@@ -332,10 +331,6 @@ analyser_atomiccode()  {
    targetline="${atom[$bodyline]}"
 }
 
-analyser_push()  {
-   targetline="((s[++sp]=$bodyline))"
-}
-
 analyser_call()  {
    name "$bodyline"                                                  # convert xt to function name
    targetline="$name"
@@ -345,10 +340,19 @@ analyser_does()  {
    dodoes_at="$((${#target[@]}+1))"                                  # remember end of target for splitting code (but only when whole word
 }
 
+analyser_()  {
+   trace "illegal analyser flag: $bodyflag (${flagname[bodyflag]})"
+   printf "[%s] " "${body[@]}"
+   echo
+   printf "%s " "${FUNCNAME[@]}"
+   echo
+   exit
+}
+
 # doesn't actually do any optimizing.
 # Function is limited to:
 # - expanding atoms
-# - generating code for pushing literals
+# - generating code for pushing
 # - generating code for function calls from xts
 # - dealing with does>
 # - delayed headers creation
@@ -421,10 +425,6 @@ parse()  {
 # in addition are meta directives allowed:
 #  - compile time instructions for word creation, such as header building
 
-atom()  {
-   [[ -z "${atom[$1]}" ]] && error "no atomic $1"
-   code "$1" "$atomiccode"; }                                        # insert into code buffer, mark as atom
-
 
 # arg1: xt
 codebody()  {                                                        # inline compiler
@@ -462,15 +462,15 @@ stateless()   {
 }
 
 
-
-push()  {                                                            # leave it to detokeniser to generate code
-   code "$1"   "$push"                                               # only insert value or expression, mark it.
-}
-
-
-
-
 # ----- defining words ----------------------------------- #fold00
+
+atom()  {
+   [[ -z "${atom[$1]}" ]] && error "no atomic $1"
+   code "$1" "$atomiccode"; }                                        # insert into code buffer, mark as atom
+push()  { code "((s[++sp]=$1))"; }
+pop()   { code "(($1=s[sp--]))"; }
+call()  { code "${nameprefix}_$1"; }
+
 
 
 # variable last doesn't exist yet, but is used in header, and
@@ -677,13 +677,11 @@ trap ctrl-c SIGINT
 # ----- wordlist searching ------------------------------- #fold01
 
 # results array
-declare -a exists                                                    # result array:  exists[0]=0|xt, [1]=flags, [2]: wid
+declare -ai exists                                                   # result array:  exists[0]=0|xt, [1]=flags, [2]: wid
 
 # arg1:word  arg2+:wids
 # returns: exists[0]=0|xt, [1]=flags,  [2]=wid where word was found
 exists()  {
-# NOTE: testing for missing $1 is pointless, because of passed wids.
-#   [[ -z "$1" ]] && missingname
    local context word="$1"                                           # this is what we're looking for
    shift
    for wid in "$@"; do                                               # in these word lists
@@ -865,7 +863,7 @@ evaluate()  {
                codebody "$tmp"                                       # inline: compile function body
                continue
             }
-            code "$tmp" "$call"                                      # not inline: compile call to function
+            call "$tmp"
             continue
          }
          name "$tmp"                                                 # not compiling: convert xt to function name
@@ -1009,7 +1007,6 @@ from()  {
 # atoms are substituted against corresponding code.
 # most of them have been eliminated now.
 
-atom["dup"]='((s[++sp]=s[sp]))'
 atom["drop"]='((sp--))'
 
 atom["s1"]='((s1=s[sp]))'
@@ -1035,6 +1032,7 @@ atom["s3=s2"]='((s[sp-2]=s[sp-1]))'
 atom["s4=s1"]='((s[sp-3]=s[sp]))'
 atom["s4=s2"]='((s[sp-3]=s[sp-1]))'
 atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
+
 
 
 # ----- primitives --------------------------------------- #fold00
@@ -1199,8 +1197,6 @@ semicolon                                                            # as trash 
                                                                      # header has its protect flag set, meaning that trashing the alias
                                                                      # header won't trash code, which seems the easiest way to deal with it.
 
-
-
 # ----- deferred words ----------------------------------- #fold01
 
 # new deferred words are initialised to noop
@@ -1252,7 +1248,7 @@ colon '2swap'
 semicolon
 
 colon 'tuck'
-   atom 'dup'
+   push 's[sp]'
    atom 's2=s3'
    atom 's3=s1'
 semicolon
@@ -1283,28 +1279,28 @@ primitive '='     '((tmp=s[sp--], s[sp]=-(tmp==s[sp])))'
 primitive '<>'    '((tmp=s[sp--], s[sp]=(tmp==s[sp])-1))'
 
 colon 'u<'
-   code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp]&true)<(s1)?true:false))'
+   pop  's0'
+   code '((s[sp]=(s[sp]&true)<(s0)?true:false))'
 semicolon
 inline
 
 colon 'u>'
-   code '((s1=s[sp--]))'
-   code '((s[sp]=(s[sp]&true)>(s1)?true:false))'
+   pop  's0'
+   code '((s[sp]=(s[sp]&true)>(s0)?true:false))'
 semicolon
 inline
 
 colon '<'
-   code '((s1=s[sp--]))'
-   code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
-   code '((s[sp]=((s1>s[sp]&true)^sign)?true:false))'
+   pop  's0'
+   code '((sign=((s0^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
+   code '((s[sp]=((s0>s[sp]&true)^sign)?true:false))'
 semicolon
 inline
 
 colon '>'
-   code '((s1=s[sp--]))'
-   code '((sign=((s1^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
-   code '((s[sp]=((s1<s[sp]&true)^sign)?true:false))'
+   pop  's0'
+   code '((sign=((s0^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
+   code '((s[sp]=((s0<s[sp]&true)^sign)?true:false))'
 semicolon
 inline
 
@@ -1377,7 +1373,7 @@ primitive ']' '((compiling=true))'
 
 # compile:  ( -- ) ( $1 -- )   run: ( -- x )
 colon 'push,'
-   code 'code "((s[++sp]=${ss[-1]}))"'
+   code 'push "${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
 immediate
@@ -1665,7 +1661,7 @@ primitive 'unless' '((s[sp--]))&&line=""'      ; interpreted         # compiling
 # interpreting version: u times repeat evaluation of input line remainder
 colon 'times'
    code '((r[++rp]=i))'                                              # by using i, and pushing previous i to rstack,
-   code '((i=s[sp--]))'                                              # we make times, and nested times, compatible with i and j
+   pop  'i'                                                          # we make times, and nested times, compatible with i and j
    code 'while ((i--)); do evaluate "$line"; done'                   # evaluate line i times
    code '((i=r[rp--]))'                                              # restore old i
    code 'line=""'                                                    # prevent re-evaluation of line when times has completed
@@ -1880,20 +1876,20 @@ primitive 'quote$' 'ss[-1]="\"${ss[-1]}\""'
 
 
 colon 'left$'
-   code '((tmp=s[sp--]))'
+   pop  'tmp'
    code '((tmp&msb))&&((tmp|=~maxuint))'
    code 'ss[-1]=${ss[-1]:0:tmp}'
 semicolon
 
 colon 'right$'
-   code '((tmp=s[sp--]))'
+   pop  'tmp'
    code '((tmp&msb))&&((tmp|=~maxuint))'
    code 'ss[-1]=${ss[-1]:0-tmp}'
 semicolon
 
 # ( u -- ) ( $1 -- $2 $3 )
 colon 'split$'
-   code '((tmp=s[sp--]))'
+   pop  'tmp'
    code '((tmp&msb))&&((tmp|=~maxuint))'
    code 'ss+=("${ss[-1]:tmp}")'
    code 'ss[-2]="${ss[-2]:0:tmp}"'
@@ -1930,7 +1926,10 @@ semicolon
 # "nope"    "this is a very *** foo"   "?" replace$      ->   "this is a very *** foo"
 # "123"     "abcd" 1 insert$  -> "a123bcd"
 
-primitive 'allot$' '((sdp+=s[sp--]))'
+#primitive 'allot$' '((sdp+=s[sp--]))'
+colon 'allot$'
+   pop 'sdp+'
+semicolon
 
 colon '$,'
    code 'strings[sdp++]="${ss[s-1]}"'
@@ -1987,11 +1986,10 @@ primitive 'unpack$' 'unpackstring'
 
 # ( a n -- ) ( string: -- $ )
 colon 'pack$'
-   atom 's1'
-   atom 's2'
-   code '((sp-=2))'
+   pop  's0'
+   pop  's1'
    code 'tmp=""'
-   code 'for ((; s1--; )); do tmp+="${char[m[s2++]]}"; done'
+   code 'for ((; s0--; )); do tmp+="${char[m[s1++]]}"; done'
    code 'ss+=("$tmp")'
 semicolon
 
@@ -2041,18 +2039,18 @@ inline
 
 # ( a -- [a+cell] [a] )
 colon '2@'
-   atom 's1'
-   code '((s[sp++]=m[s1+1]))'
-   code '((s[sp]=m[s1]))'
+   pop 's0'
+   push 'm[s0+1]'
+   push 'm[s0]'
 semicolon
 inline
 
 
 # ( [a+cell] [a] a -- )
 colon '2!'
-   code 's1=s[sp--]'
-   code '((m[s1++]=s[sp--]))'
-   code '((m[s1]=s[sp--]))'
+   pop  's0'
+   pop  'm[s0]'
+   pop  'm[s0+1]'
 semicolon
 inline
 
@@ -2080,36 +2078,42 @@ semicolon
 # while returning former contents as x3 x4
 # ( x1 x2 a -- x3 x4 )
 colon '2exchange'
-  code '((s1=s[sp--]))'
-  code '((s2=s[sp]))'
-  code '((s3=s[sp-1]))'
-  code '((s[sp]=m[s1]))'
-  code '((s[sp-1]=m[s1+1]))'
-  code '((m[s1]=s2))'
-  code '((m[s1+1]=s3))'
+  pop  's0'
+  code '((s1=s[sp]))'
+  code '((s2=s[sp-1]))'
+  code '((s[sp]=m[s0]))'
+  code '((s[sp-1]=m[s0+1]))'
+  code '((m[s0]=s1))'
+  code '((m[s0+1]=s2))'
 semicolon
 
-primitive 'allot'  '((dp+=s[sp--]))'
+colon 'allot'
+   pop 'dp+'
+semicolon
 
 # c -> m[a++],  u times
 # ( a u c -- )
 colon 'fill'
-   code '((s1=s[sp--], s2=s[sp--], s3=s[sp--]))'
-   code 'for ((;s2--;)); do ((m[s3++]=s1)); done'                    # c -> m[a++],  u times
+   pop 's0'
+   pop 's1'
+   pop 's2'
+   code 'for ((;s1--;)); do ((m[s2++]=s0)); done'                    # c -> m[a++],  u times
 semicolon
 
 
 # ( a1 a2 u -- )
 move()  {                                                            # deals with destination overlapping source
-   ((s1=s[sp--], s2=s[sp--], s3=s[sp--]))
-   if ((s3 < s2)); then                                              # copy highest to lowest:
-      ((s2+=s1, s3+=s1))                                             # m[--a1+u} -> m[--a2+u],  u times
-      for ((;s1--;)); do
-         ((m[--s2] = m[--s3]))
+   pop 's0'
+   pop 's1'
+   pop 's2'
+   if ((s2 < s1)); then                                              # copy highest to lowest:
+      ((s1+=s0, s2+=s0))                                             # m[--a1+u} -> m[--a2+u],  u times
+      for ((;s0--;)); do
+         ((m[--s1]=m[--s2]))
       done
    else                                                              # copy lowest tio highest
-      for ((;s1--;)); do                                             # m[a1++} -> m[a2++],  u times
-         ((m[s2++] = m[s3++]))
+      for ((;s0--;)); do                                             # m[a1++} -> m[a2++],  u times
+         ((m[s1++]=m[s2++]))
       done
    fi
 }
@@ -2164,8 +2168,8 @@ semicolon
 
 
 colon 'spaces'
-   code '((s1=s[sp--]))'
-   code '((s1&msb))||printf "%${s1}s" ""'
+   pop  's0'
+   code '((s0&msb))||printf "%${s0}s" ""'
 semicolon
 
 
@@ -2298,7 +2302,7 @@ semicolon
 
 
 colon 'neededanyof'                                                  # ( -- f ) ( stream: bl delimited strings, whole input line )
-   push "$false"
+   push "false"
    code 'while [[ -n "$line" ]]; do'
    code 'word'
    code '[[ -z "${unresolved["$word"]}" ]] || {'                     # check unresolved status of word
@@ -2370,7 +2374,7 @@ semicolon
 primitive 'transient'   'transients+=("$currentwid $lastword")'
 
 colon 'initwordlist'                                                 # ( wid -- )
-   code '((tmp=s[sp--]))'
+   pop  'tmp'
    code 'declare -gA "flags_$tmp=()"'                                # word to function name and header flags
    code 'declare -gA "wordlist_$tmp=()"'                             # word to function name and header flags
 semicolon
@@ -2546,7 +2550,7 @@ set-current "$forthwid"
 # ( x1 -- x2 ) ( string: $1 -- $2 )
 colon 'x'                                                            # : #
    code '((radix=m[base]))'                                          # base @
-   code '((s1=s[sp]&true, s[sp]=s1/radix, tmp=s1%radix+48))'         # /mod swap '0 +
+   code '((s0=s[sp]&true, s[sp]=s0/radix, tmp=s0%radix+48))'         # /mod swap '0 +
    code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;
@@ -2557,7 +2561,7 @@ semicolon                                                            # ;
 colon 'where$'
     code 'tmp="${ss[-1]}"'                                           # name of word to look up
     code 'unset "ss[-1]"'
-    code '[[ -z "$tmp" ]]&&missingname'                                # no name given
+    code '[[ -z "$tmp" ]]&&missingname'                              # no name given
     code 'tmp1="${where[$tmp]}"'                                     # "file:line"
     code '((${tmp1%%:*}))||nosource "$tmp"'                          # file handle empty or 0: no source available
     push '${tmp1%%:*}'                                               # push file handle

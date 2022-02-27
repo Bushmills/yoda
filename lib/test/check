@@ -1,5 +1,5 @@
 ( tools for automated test suite )
-provides: expected
+provides: expected t{  ->  }t
 once
 
 random constant canary
@@ -7,3 +7,36 @@ random constant canary
 : expected ( x1 x2 -- )
       = unless  >echo "- failed line $linenr:  $tib"
 ;
+
+
+variable initialstack
+variable results
+variable teststack
+variable testresults
+variable expectedresults
+
+: check
+            results @   initialstack @ -   testresults !
+            teststack @ results @ -    expectedresults !
+            testresults @   expectedresults @ <> if
+                "test results:     " type$  testresults @ .  cr
+                "expected results: " type$  expectedresults @ .  cr
+                >echo "offending test:   $tib"
+                abort                
+            then
+            expectedresults @ 0 ?do  
+                i expectedresults @ + pick  cr
+                i 1+ pick
+                <> if
+                    "expected: " type$   i pick .   cr
+                    "found:    " type$   i expectedresults @ + pick . cr
+                    >echo "offending test: $tib"
+                    abort
+                then
+            loop 
+            initialstack @ >((sp=s[sp]))
+;
+: t{    depth initialstack !  ;
+: ->    depth results ! ;
+: }t    depth teststack !  
+        check ;

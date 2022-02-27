@@ -223,7 +223,9 @@ code realtime  ( -- u )                               "${EPOCHREALTIME//[,.]/}&t
                                                          resolve
                                                          prompt
                                                       again                               ;
-' quit alias abort
+
+"cold" primitive cold
+' cold alias abort
 : (abort")     ( ??? flag -- ??? | empty )            if type$ cr abort then drop$        ;
 : abort"       ( -- ) ( s: string deliited by " )     '" parse$
                                                       postpone literal$

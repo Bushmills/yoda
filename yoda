@@ -1497,8 +1497,7 @@ colon 'postpone'
    code 'word; [[ -z "$word" ]]&&missingname'
    code 'exists "$word" "$compileonlywid" "${order[@]}" "$interpretonlywid" || notfound "$word"'
    code 'if ((exists[2] == compileonlywid)); then call "${exists[0]}"'
-   code 'else code "call \"${exists[0]}\""'
-   code 'fi'
+   code 'else code "call \"${exists[0]}\""; fi'
 semicolon
 compiled
 

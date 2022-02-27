@@ -37,6 +37,8 @@ v="0.7.3"
 
 # ----- declarations ------------------------------------- #fold00
 
+casesensitive=1
+
 shopt -s extglob
 shopt -u nullglob
 
@@ -97,6 +99,7 @@ declare -n  flags="flags_$currentwid"                                # pointer v
 
 declare -a names                                                     # xt -> name
 declare -a transients                                                # transient headers.
+
 declare -A where                                                     # source location file:line
 declare -A lib                                                       # dependencies cache
 
@@ -202,7 +205,9 @@ protect()    { setheaderflag "$protected"; }
 # from current wordlist
 # arg1: word
 removeheaderfromcurrent()  {
+# NOTE: case sensitivity
    unset -v 'current["$1"]'                                          # remove from source wordlist
+# NOTE: case sensitivity
    unset -v 'flags["$1"]'
 }
 
@@ -249,6 +254,7 @@ compiler_init()  {
 # arg2: function name
 # NOTE: leave it to header to prepend $nameprefix.
 header()  {
+# NOTE: case sensitivity
    lastword="$1"
    [[ -z "${current["$lastword"]}" ]] ||
       echo "redefining $lastword"
@@ -422,6 +428,7 @@ parse()  {
 
 # arg1: xt
 codebody()  {                                                        # inline compiler
+# NOTE: case sensitivity
    name "$1"                                                         # xt to function name
    while read -r tmp; do
       [[ "${tmp:0:1}" == "{" ]] &&
@@ -478,8 +485,9 @@ atom()  {
 # arg2: filehandle
 # arg3: line number
 delayheader()  {
+# NOTE: case sensitivity
+   [[ -z "$1" ]] && missingname
    lastword="$1"
-   [[ -z "$lastword" ]] && missingname
    compiler_init
    code "$lastword" "$functionheader"
    [[ -z "$2" ]] || where "$2" "$3"
@@ -501,8 +509,10 @@ primitive()  {
 colon()  {
    tmp="${BASH_LINENO[0]}"                                           # assume not evaluate
    (( filehandle == 1 )) &&                                          # if defined in yoda
+# NOTE: case sensitivity
    [[ "${FUNCNAME[2]}" == "evaluate" ]] &&                           # by evaluate
    tmp="${BASH_LINENO[2]}"                                           # then take line number from different entry
+# NOTE: case sensitivity
    delayheader "$1" "$filehandle" "${linenr:-$tmp}"
 }
 
@@ -570,6 +580,7 @@ constant 'cell'               "1"
 # header flag "protect" disables code trashing.
 defer()  {                                                           # use in yoda source
    local context linenr="${BASH_LINENO[0]}}"
+# NOTE: case sensitivity
    constant "$1" "$((dp))"
 
 # NOTE: instead of use, code could be compiled through "code", then leaving it to above semicolon to create whole word
@@ -678,6 +689,7 @@ declare -ai exists                                                   # result ar
 # arg1:word  arg2+:wids
 # returns: exists[0]=0|xt, [1]=flags,  [2]=wid where word was found
 exists()  {
+# NOTE: case sensitivity
    local context word="$1"                                           # this is what we're looking for
    shift
    for wid in "$@"; do                                               # in these word lists
@@ -758,24 +770,14 @@ pattern()  {                                                         # pattern i
 
 # ----- resolve forward refs ----------------------------- #fold00
 
-# total headers count is used to help determining if resolving
-# forward refs create new forward refs, in which case resolving
-# will be repeated.
-totalheaders()  {
-   ((totalheaders=xt))
+# used to help determining if resolving forward refs create
+# new forward refs, in which case resolving will be repeated.
+totalheaders()  { ((totalheaders=xt)); }
 
-# NOTE: change to take account of all vocabularies
-#   (( totalheaders =
-#         ${#current[@]}
-#       + ${#compileonly[@]}
-#       + ${#interpretonly[@]}
-#       + ${#unresolved[@]}
-#   ))
-}
-
-
-# create a forward ref by the name of arg1
+# create a forward ref for word
+# arg1: word
 forwardref()  {
+# NOTE: case sensitivity
    [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
       newname "$1"                                                   # generate new function name
       unresolved["$1"]="$name"                                       # keep in unresolved vocabulary
@@ -944,7 +946,9 @@ trash()  {
    declare -n current="wordlist_$currentwid"
    declare -n flags="flags_$currentwid"
    tmp="${flags[$1]}"
+# NOTE: case sensitivity
    (((tmp&inline) && (!(tmp&protected)))) && unset -f "${current[$1]}"
+# NOTE: case sensitivity
    removeheaderfromcurrent "$1"
 }
 
@@ -1074,8 +1078,10 @@ see()  {
    [[ -z "$word" ]] && missingname
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid"; do
       declare -n context="wordlist_$wid"
+# NOTE: case sensitivity
       [[ -z "${context["$word"]}" ]] || {
          printf "found in %s:\n" "${strings[wid]}"
+# NOTE: case sensitivity
          name="${context["$word"]}"
          [[ -z "$name" ]] && notfound
          ((found++))
@@ -1123,12 +1129,14 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 # essentially a constant with yet to be specified source for its
 # value and overwritable run time semantics (push value by default)
 definess()  {
+# NOTE: case sensitivity
    code "constant \"\${ss[-1]}\" \"$1\""                             # not using single quotes because want $1 to expand
    code 'unset "ss[-1]"'
 }
 
 define()  {
    code 'word'
+# NOTE: case sensitivity
    code "constant \"\$word\" \"$1\""                                 # not using single quotes because want $1 to expand
 }
 
@@ -1216,6 +1224,7 @@ colon 'is'
    code 'exists "$word" "${order}" "$interpretonlywid" || notfound "$word"'
    code 'local context'
    code 'declare -n context="wordlist_${exists[2]}"'
+# NOTE: case sensitivity
    code 'tmp="$(type "${context[$word]}"|grep "${nameprefix}_.*m\[")"'
    code 'm["${tmp//[!0-9]/}"]="${s[sp--]}"'
 semicolon
@@ -1282,13 +1291,13 @@ inline
 
 colon '='
    pop  's0'
-   put  '-(s0==s[sp])'
+   put  's0==s[sp]?true:false'
 semicolon
 inline
 
 colon '<>'
    pop  's0'
-   put  '(s0==s[sp])-1'
+   put  's0==s[sp]?false:true'
 semicolon
 inline
 
@@ -1718,7 +1727,9 @@ semicolon
 colon 'boot'
    code 'word'
    code '[[ -z "$word" ]]&&missingname'
+# NOTE: case sensitivity
    code 'satisfy1 "$word"'
+# NOTE: case sensitivity
    code 'exists "$word" "currentwid" "${order[@]}"'                  # search current first because satisfy may have compiled it there
    code 'name "${exists[0]}"'                                        # convert xt to function name
    code 'coldvector="$name"'

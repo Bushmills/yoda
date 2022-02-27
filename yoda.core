@@ -24,10 +24,11 @@
 "m[base]=16"                              primitive hex              ( -- )
 "m[base]=2"                               primitive binary           ( -- )
 
+"((sp-=s[sp]+1))"                         primitive ndrop            ( [x items] u -- [x-u items] )
 "((sp--))"                                primitive drop             ( x -- )
+"((rp--))"                                primitive rdrop            ( -- ) ( r: x -- )
 "((sp-=2))"                               primitive 2drop            ( x1 x2 -- )
 
-"((rp--))"                                primitive rdrop            ( -- ) ( r: x -- )
 "code 'break'"                            primitive leave            ( -- )                        compiled
 "warm"                                    primitive warm             ( ??? - ) ( r: ??? -- )
 "exit 0"                                  primitive bye              ( -- )
@@ -48,10 +49,10 @@
 \ inline flag set by default.
 "return"                                  primitive exit             ( -- )
 
-
 "push ${s[sp--]}"                         primitive literal,         ( -- ) ( compile time: x -- ) ( run time: -- x )
 "call ${s[sp--]}"                         primitive compile,         ( -- ) ( compile time: x -- ) ( run time: -- x )
 
+' 1+ alias char+  inline
 
 \ ----- manage wordlists ---------------------------------
 
@@ -69,6 +70,7 @@ only forth definitions
 
 \ ----- stack --------------------------------------------
 
+\ code sp!       ( ??? u -- [u items] )               "sp"                          pop,  ;code    inline
 code depth     ( ?? -- ?? u )                         "sp"                          push, ;code    inline
 code 2over     ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )   "s[sp-3]"         dup$ push,  push, ;code    inline
 code dup       ( x -- x x )                           "s[sp]"                       push, ;code    inline

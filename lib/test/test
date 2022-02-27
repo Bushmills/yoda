@@ -1,0 +1,58 @@
+( tools for automated test suite )
+provides: expected test
+
+needed expected unless omit
+random constant canary
+: expected ( x1 x2 -- )
+      = unless  >echo "- failed line $linenr:  $tib"
+;
+
+needed test unless done
+
+\ using lots of variable for saving stack states to avoid
+\ that possible errors in test subjects interfere with
+\ test status data.
+
+variable initialstack
+variable resultstack
+variable teststack
+variable testresults
+variable expectedresults
+$variable lasttest$
+
+"((sp=s[sp]))"  primitive  sp!                                                                     transient
+: test      ( -- ) ( s: word )         word$ lasttest$ $!  ;
+: .tib      ( -- )                     "tib" env$ type$ cr ;                                       transient
+: .issue    ( $1 -- )                  ":" join$  20 ltype$ ;                                      transient
+: .failedtest ( -- )                   "failed test" .issue   lasttest$ $@ type$  cr  ;            transient
+: .offending ( -- )                    "offending test" .issue  .tib  ;                            transient
+: .report1     ( n -- ) ( $1 -- )      .issue  .  cr  ;                                            transient
+: .report ( n1 n2 -- )  ( $1 $2 -- )   .failedtest swap swap$ .report1 .report1 .offending abort ; transient
+: restorestacks ( any -- ???  )        initialstack @ sp!  ; transient
+: savestacks ( ??? -- )
+        resultstack @  teststack @ over -  expectedresults !
+        initialstack @ -  testresults ! ;  transient
+
+: assess  ( ??? -- ??? )
+        savestacks
+        testresults @   expectedresults @ <> if
+            "got results"  testresults @
+            "expected results"  expectedresults @
+            .report
+        then
+        expectedresults @ 0 ?do
+            expectedresults @ pick
+            2dup <> if
+                "expected"  dup
+                "got"       pluck
+                .report
+            then
+            2drop
+        loop
+        restorestacks
+;  transient
+
+: t{    depth initialstack !  ;
+: ->    depth resultstack ! ;
+: }t    depth teststack !
+        assess ;

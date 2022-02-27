@@ -121,7 +121,6 @@ newflag()  {
 newflag functionheader                                               # create header
 newflag sourcelocation                                               # store source location
 newflag atomiccode                                                   # expand
-newflag call                                                         # generate code calling xt
 newflag does                                                         # rip code apart into define- and run time portions
 
 declare -A atom=()                                                   # a table with token -> code mappings.
@@ -331,11 +330,6 @@ analyser_atomiccode()  {
    targetline="${atom[$bodyline]}"
 }
 
-analyser_call()  {
-   name "$bodyline"                                                  # convert xt to function name
-   targetline="$name"
-}
-
 analyser_does()  {
    dodoes_at="$((${#target[@]}+1))"                                  # remember end of target for splitting code (but only when whole word
 }
@@ -464,12 +458,14 @@ stateless()   {
 
 # ----- defining words ----------------------------------- #fold00
 
+put()   { code "((s[sp]=$1))"; }                                     # push without pointer inc
+push()  { code "((s[++sp]=$1))"; }
+get()   { code "(($1=s[sp]))"; }                                     # pop without point dec
+pop()   { code "(($1=s[sp--]))"; }
+call()  { code "${nameprefix}_$1"; }
 atom()  {
    [[ -z "${atom[$1]}" ]] && error "no atomic $1"
    code "$1" "$atomiccode"; }                                        # insert into code buffer, mark as atom
-push()  { code "((s[++sp]=$1))"; }
-pop()   { code "(($1=s[sp--]))"; }
-call()  { code "${nameprefix}_$1"; }
 
 
 
@@ -1008,28 +1004,19 @@ from()  {
 # most of them have been eliminated now.
 
 atom["drop"]='((sp--))'
-
-atom["s1"]='((s1=s[sp]))'
 atom["s2"]='((s2=s[sp-1]))'
 atom["s3"]='((s3=s[sp-2]))'
 atom["s4"]='((s4=s[sp-3]))'
-
-atom["s1=tmp"]='((s[sp]=tmp))'
 atom["s2=tmp"]='((s[sp-1]=tmp))'
 atom["s3=tmp"]='((s[sp-2]=tmp))'
 atom["s4=tmp"]='((s[sp-3]=tmp))'
-atom["tmp=s1"]='((tmp=s[sp-0]))'
 atom["tmp=s2"]='((tmp=s[sp-1]))'
 atom["tmp=s3"]='((tmp=s[sp-2]))'
 atom["tmp=s4"]='((tmp=s[sp-3]))'
-
 atom["s1=s2"]='((s[sp]=s[sp-1]))'
 atom["s1=s3"]='((s[sp]=s[sp-2]))'
-atom["s2=s1"]='((s[sp-1]=s[sp]))'
 atom["s2=s3"]='((s[sp-1]=s[sp-2]))'
-atom["s3=s1"]='((s[sp-2]=s[sp]))'
 atom["s3=s2"]='((s[sp-2]=s[sp-1]))'
-atom["s4=s1"]='((s[sp-3]=s[sp]))'
 atom["s4=s2"]='((s[sp-3]=s[sp-1]))'
 atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
@@ -1039,8 +1026,8 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
-   code "(( s[sp--] == $magic )) || { unstructured ':'; return; }"   # check the magic left by :
-   code '(( ${s[sp--]} == ${#body[@]} )) && code "(())"'             # insert a noop into empty function bodies
+   code "((s[sp--] == $magic))||{ unstructured ':'; return; }"   # check the magic left by :
+   code '((${s[sp--]} == ${#body[@]}))&& code "(())"'             # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
 semicolon
 compiled
@@ -1053,8 +1040,6 @@ colon ':'
    push "$magic"                                                     # allow check of proper nesting
    code '((compiling=true))'
 semicolon
-
-# ----------------------------------------------
 
 
 # ----- diagnostics -------------------------------------- #fold01
@@ -1084,18 +1069,20 @@ wordsplus() {
 
 
 see()  {
-   local context wid
+   local context wid name found=0
    word
+   [[ -z "$word" ]] && missingname
    for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid"; do
-      wordlist="wordlist_$wid"
-      declare -n context="$wordlist"
+      declare -n context="wordlist_$wid"
       [[ -z "${context["$word"]}" ]] || {
          printf "found in %s:\n" "${strings[wid]}"
-         tmp="${context["$word"]}"
-         [[ -z "$tmp" ]] && notfound
-         type "$tmp"
+         name="${context["$word"]}"
+         [[ -z "$name" ]] && notfound
+         ((found++))
+         type "$name"
       }
    done
+   ((found))||notfound "$word"
 }
 
 # see word  "decompiles" and shows word.
@@ -1149,39 +1136,45 @@ define()  {
 colon 'create$'
     definess '$dp'
 semicolon
+inline
 
 colon 'create'
     define '$dp'
 semicolon
+inline
 
 colon 'constant'
    define '${s[sp--]}'
 semicolon
+inline
 
 colon 'constant$'
    definess '${s[sp--]}'
 semicolon
+inline
 
 colon 'variable'
    define '$((dp))'
    code '((m[dp++]=0))'                                              # allocate and initialise
 semicolon
+inline
 
 colon 'variable$'
    definess '$((dp))'
    code '((m[dp++]=0))'                                              # allocate and initialise
 semicolon
+inline
 
 colon "array"
    define ''                                                         # value irrelevant, use will replace code anyway
    code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
-   code "((dp+=s[sp--]))"                                            # allocate
+   pop  'dp+'                                                        # allocate
 semicolon
 
 colon "array$"
    definess ''                                                       # value irrelevant
    code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
-   code "((dp+=s[sp--]))"                                            # allocate
+   pop  'dp+'                                                        # allocate
 semicolon
 
 
@@ -1207,7 +1200,7 @@ colon "defer"                                                        # use in yo
    code 'word'
    code 'defer "$word" "noop"'
 semicolon
-
+inline
 
 # here's another Rube Goldberg. This works around the fact that
 # there's no easy way for yoda to determine the memory address
@@ -1233,8 +1226,8 @@ semicolon
 
 colon 'swap'
    atom 'tmp=s2'
-   atom 's2=s1'
-   atom 's1=tmp'
+   get 's[sp-1]'
+   put  'tmp'
 semicolon
 inline
 
@@ -1243,19 +1236,19 @@ colon '2swap'
    atom 's4=s2'
    atom 's2=tmp'
    atom 'tmp=s3'
-   atom 's3=s1'
-   atom 's1=tmp'
+   get 's[sp-2]'
+   put  'tmp'
 semicolon
 
 colon 'tuck'
    push 's[sp]'
    atom 's2=s3'
-   atom 's3=s1'
+   get 's[sp-2]'
 semicolon
 inline
 
 colon 'rot'
-   atom 'tmp=s1'
+   get  'tmp'
    atom 's1=s3'
    atom 's3=s2'
    atom 's2=tmp'
@@ -1263,7 +1256,7 @@ semicolon
 inline
 
 colon '-rot'
-   atom 'tmp=s1'
+   get  'tmp'
    atom 's1=s2'
    atom 's2=s3'
    atom 's3=tmp'
@@ -1272,35 +1265,56 @@ inline
 
 # ----- numeric comparison ------------------------------- #fold01
 
-primitive '0='    '((s[sp]=s[sp]?false:true))'                       # 0->true  x->false
-primitive '0<>'   '((s[sp]=s[sp]?true:false))'                       # 0->0   x->true
-primitive '0<'    '((s[sp]=s[sp]&msb?true:false))'                   # &msb: 0->0   msb->true
-primitive '='     '((tmp=s[sp--], s[sp]=-(tmp==s[sp])))'
-primitive '<>'    '((tmp=s[sp--], s[sp]=(tmp==s[sp])-1))'
+colon '0='
+   put  's[sp]?false:true'                                            # 0->true  x->false
+semicolon
+inline
+
+colon '0<>'
+   put  's[sp]?true:false'                                            # 0->0   x->true
+semicolon
+inline
+
+colon '0<'
+   put  's[sp]&msb?true:false'                                        # &msb: 0->0   msb->true
+semicolon
+inline
+
+colon '='
+   pop  's0'
+   put  '-(s0==s[sp])'
+semicolon
+inline
+
+colon '<>'
+   pop  's0'
+   put  '(s0==s[sp])-1'
+semicolon
+inline
 
 colon 'u<'
    pop  's0'
-   code '((s[sp]=(s[sp]&true)<(s0)?true:false))'
+   put  '(s[sp]&true)<s0?true:false'
 semicolon
 inline
 
 colon 'u>'
    pop  's0'
-   code '((s[sp]=(s[sp]&true)>(s0)?true:false))'
+   put  '(s[sp]&true)>s0?true:false'
 semicolon
 inline
 
 colon '<'
    pop  's0'
    code '((sign=((s0^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
-   code '((s[sp]=((s0>s[sp]&true)^sign)?true:false))'
+   put  '((s0>s[sp]&true)^sign)?true:false'
 semicolon
 inline
 
 colon '>'
    pop  's0'
    code '((sign=((s0^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
-   code '((s[sp]=((s0<s[sp]&true)^sign)?true:false))'
+   put  '((s0<s[sp]&true)^sign)?true:false'
 semicolon
 inline
 
@@ -1333,7 +1347,7 @@ colon 'parse$'
    code 'parse "${char[s[sp--]]}"'
    code 'ss+=("$word")'
 semicolon
-
+inline
 
 # read line, push to string stack
 # TODO: configurable attributes
@@ -1350,6 +1364,7 @@ colon 'accept'
    code 'accept "${s[sp--]}"'
    code 'unpack "$accept"'
 semicolon
+inline
 
 
 colon 'simplequery$'
@@ -1363,7 +1378,6 @@ colon 'evaluate$'
    code 'unset "ss[-1]"'
    code 'evaluate "$tib"'
 semicolon
-inline
 
 
 # ----- compiler, dictionary search related -------------- #fold01
@@ -1447,14 +1461,14 @@ primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
 primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
-primitive 'recurse' 'code "$xt" "$call"'; compiled                   # ( -- )
-
+primitive 'recurse' 'call "$xt"'; compiled                           # ( -- )
 
 # apply run time semantic from string stack
 colon 'use$'
    code 'use "${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
+inline
 
 # trashed name from input stream
 # ( -- )
@@ -1462,6 +1476,7 @@ colon 'trash'
    code 'word'
    code 'trash "$word"'
 semicolon
+inline
 
 # trashed name from string stack
 # word expected in current vocabulary
@@ -1470,6 +1485,7 @@ colon 'trash$'
    code 'trash "${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
+inline
 
 # name of last word to string stack
 # ( -- $1 )
@@ -1480,8 +1496,8 @@ primitive 'last$'   'ss+=("$lastword")'
 colon 'postpone'
    code 'word; [[ -z "$word" ]]&&missingname'
    code 'exists "$word" "$compileonlywid" "${order[@]}" "$interpretonlywid" || notfound "$word"'
-   code 'if ((exists[2] == compileonlywid)); then code "${exists[0]}" "$call"'
-   code 'else code "code \"${exists[0]}\" \"\$call\""'
+   code 'if ((exists[2] == compileonlywid)); then call "${exists[0]}"'
+   code 'else code "call \"${exists[0]}\""'
    code 'fi'
 semicolon
 compiled
@@ -1506,11 +1522,30 @@ compiled
 
 # ----- bit logic ---------------------------------------- #fold01
 
-primitive 'and'     '((s[sp-1]&=s[sp--]))'
-primitive 'or'      '((s[sp-1]|=s[sp--]))'
-primitive 'xor'     '((s[sp-1]^=s[sp--]))'
-primitive 'lshift'  '((s[sp]=(s[sp-1]<<s[sp--])&true))'
-primitive 'rshift'  '((s[sp]=(s[sp-1]&true)>>s[sp--]))'
+colon 'and'
+   pop 's[sp-1]&'
+semicolon
+inline
+
+colon 'or'
+   pop 's[sp-1]|'
+semicolon
+inline
+
+colon 'xor'
+   pop 's[sp-1]^'
+semicolon
+inline
+
+colon 'lshift'
+   put '(s[sp-1]<<s[sp--])&true'
+semicolon
+inline
+
+colon 'rshift'
+   put '(s[sp-1]&true)>>s[sp--]'
+semicolon
+inline
 
 
 # ----- flow control ------------------------------------- #fold01
@@ -1602,19 +1637,16 @@ compiled
 # x1 x2 -- x1+x2 x1
 # : bounds   over + swap ;
 colon 'bounds'
-   atom 's1'
+   get  's1'
    atom 's2'
+   put 's2'
    code '((s[sp-1]=(s1+s2)&true))'
-   code '((s[sp]=s2))'
 semicolon
 inline
 
 remagic
 dodo()  {
-   ((r[++rp]=ibar))
-   ((r[++rp]=i))
-   ((i=s[sp--]))
-   ((ibar=s[sp--]))
+   ((r[++rp]=ibar, r[++rp]=i, i=s[sp--], ibar=s[sp--]))
 }
 
 colon 'do'
@@ -1696,15 +1728,23 @@ semicolon
 
 # ----- arithmetics -------------------------------------- #fold01
 
-primitive '+'   '((s[sp]=(s[sp-1]+s[sp--])&true))'
-primitive '-'   '((s[sp]=(s[sp-1]-s[sp--])&true))'
+colon '+'
+   put '(s[sp-1]+s[sp--])&true'
+semicolon
+inline
+
+colon '-'
+   put '(s[sp-1]-s[sp--])&true'
+semicolon
+inline
 
 colon  '2/'
-   atom 's1'
+   get 's1'
+   put 's1&msb?-((-s1&maxint)>>1)&true:s1>>1'                        # symmetric
 #   code '((s[sp]=s1&msb?(s1>>1)|msb:s1>>1))'                        # floored
 #   code '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'                          # alternatively
-   code '((s[sp]=s1&msb?-((-s1&maxint)>>1)&true:s1>>1))'             # symmetric
 semicolon
+inline
 
 
 #                     msb&    msb&
@@ -1720,7 +1760,7 @@ semicolon
 #  -  -  -     + -     1        0
 # ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
 colon '*/mod'
-   atom 's1'
+   get  's1'
    atom 's2'
    atom 's3'
    atom 'drop'
@@ -1730,7 +1770,7 @@ colon '*/mod'
    code '((s2*=s3))'
    code '((s2&msb&&(s2=-s2&true)))'
    code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
-   code '((s[sp]=(signq&msb?-(s2/s1)&true:s2/s1)))'
+   put  '(signq&msb?-(s2/s1)&true:s2/s1)'
 semicolon
 
 
@@ -2028,7 +2068,11 @@ colon '!'
 semicolon
 inline
 
-primitive 'c@'  '((s[sp]=m[s[sp]]&255))'
+colon 'c@'
+   put 'm[s[sp]]&255'
+semicolon
+inline
+
 
 colon 'c!'
    code '((m[s[sp--]]=s[sp-1]&255))'
@@ -2079,9 +2123,9 @@ semicolon
 # ( x1 x2 a -- x3 x4 )
 colon '2exchange'
   pop  's0'
-  code '((s1=s[sp]))'
+  get  's1'
   code '((s2=s[sp-1]))'
-  code '((s[sp]=m[s0]))'
+  put  'm[s0]'
   code '((s[sp-1]=m[s0+1]))'
   code '((m[s0]=s1))'
   code '((m[s0+1]=s2))'
@@ -2304,7 +2348,7 @@ colon 'neededanyof'                                                  # ( -- f ) 
    code 'while [[ -n "$line" ]]; do'
    code 'word'
    code '[[ -z "${unresolved["$word"]}" ]] || {'                     # check unresolved status of word
-   code '((s[sp]=true))'                                             # unresolved -> needed
+   put  'true'                                                       # unresolved -> needed
    code 'line=""'                                                    # "wired or" - one needed is enough, skip rest
    code '}'
    code 'done'

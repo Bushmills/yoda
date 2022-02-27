@@ -1,5 +1,5 @@
 ( tools for automated test suite )
-provides: expected test
+provides: expected testsection
 
 needed expected unless omit
 random constant canary
@@ -7,7 +7,7 @@ random constant canary
       = unless  >echo "- failed line $linenr:  $tib"
 ;
 
-needed test unless done
+needed testsection unless done
 
 \ using lots of variable for saving stack states to avoid
 \ that possible errors in test subjects interfere with
@@ -20,18 +20,21 @@ variable testresults
 variable expectedresults
 $variable lasttest$
 
+"notransients"  primitive purge                                                                    transient
+: testsection ( -- ) ( s: line )       0 parse$ lasttest$ $!  purge ;
 "((sp=s[sp]))"  primitive  sp!                                                                     transient
-: test      ( -- ) ( s: word )         word$ lasttest$ $!  ;
-: .tib      ( -- )                     "tib" env$ type$ cr ;                                       transient
-: .issue    ( $1 -- )                  ":" join$  20 ltype$ ;                                      transient
-: .failedtest ( -- )                   "failed test" .issue   lasttest$ $@ type$  cr  ;            transient
+
+: .issue    ( $1 -- )                  ":" join$  20 ltype$ ;                                      transient inline
+: .tib      ( -- )                     "tib" env$ type$ cr ;                                       transient inline
 : .offending ( -- )                    "offending test" .issue  .tib  ;                            transient
-: .report1     ( n -- ) ( $1 -- )      .issue  .  cr  ;                                            transient
+
+: .failedtest ( -- )                   "failed test" .issue   lasttest$ $@ type$  cr  ;            transient inline
+: .report1     ( n -- ) ( $1 -- )      .issue  .  cr  ;                                            transient inline
 : .report ( n1 n2 -- )  ( $1 $2 -- )   .failedtest swap swap$ .report1 .report1 .offending abort ; transient
-: restorestacks ( any -- ???  )        initialstack @ sp!  ; transient
-: savestacks ( ??? -- )
-        resultstack @  teststack @ over -  expectedresults !
-        initialstack @ -  testresults ! ;  transient
+
+: restorestacks ( any -- ???  )        initialstack @ sp!  ;                                       transient inline
+: savestacks ( ??? -- )                resultstack @  teststack @ over -  expectedresults !
+                                       initialstack @ -  testresults ! ;                           transient inline
 
 : assess  ( ??? -- ??? )
         savestacks
@@ -50,7 +53,7 @@ $variable lasttest$
             2drop
         loop
         restorestacks
-;  transient
+; \  transient
 
 : t{    depth initialstack !  ;
 : ->    depth resultstack ! ;

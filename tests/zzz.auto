@@ -25,5 +25,5 @@ maxuint    1+         0 expected
 
 \ finally a test which ought to produce an error
 \ no error here means that all prior tests may be unreliable too
-test always_fail_which_means_that_failing_is_correct
+testsection  always fail: failing is correct here.
 t{  maxuint -> maxint }t

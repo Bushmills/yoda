@@ -86,8 +86,7 @@ code 2r>       ( -- x1 x2 )  ( r: x1 x2 -- )          "r[rp-1]"                 
 code 2>r       ( x1 x2 -- )  ( return: -- x1 x2 )     "((r[++rp]=s[sp-1]))"         code,
                                                       "r[++rp]"                     pop,
                                                       "((sp--))"                    code, ;code    inline
-
-: nip          ( x1 x2 -- x2 )                        [ "s2=s1" ]          atom,    drop  ;        inline
+: nip          ( x1 x2 -- x2 )                        [ "s[sp-1]=s[sp]" ]  code,    drop  ;        inline
 : ?dup         ( x -- 0 | x x )                       [ "((s[sp])) &&" ]   code,    dup   ;        inline
 : 2dup         ( x1 x2 -- x1 x2 x1 x2 )               over over                           ;        inline
 

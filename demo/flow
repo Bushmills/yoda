@@ -7,4 +7,4 @@
 : foo5 begin while repeat ;   "begin while repeat" cr type$ cr see foo5
 : foo6 for next ;             "for next"           cr type$ cr see foo6
 : foo7 do loop  ;             "do loop"            cr type$ cr see foo7
-: foo8 do +loop  ;            "do +loop"           cr type$ cr see foo8
+\ : foo8 do +loop  ;            "do +loop"           cr type$ cr see foo8

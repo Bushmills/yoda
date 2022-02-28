@@ -1,19 +1,21 @@
 
-: foo 0 
-    $10 for 
-       $10 for
-          i j and + 
-          i j or + 
-          i j xor + 
-       next
-    next  ;
-foo   $1680 expected
-trash foo
+: foo 0 0
+    $10 0 do
+       $10 0 do
+          i j and +   swap    i negate j negate and -   swap
+          i j or  +   swap    i negate j negate or  -   swap
+          i j xor +   swap    i negate j negate xor -   swap 
+       loop
+    loop ;     transient
 
-           $fedcba9876543210 maxuint and
-           $0579bdf12468ace3 maxuint and
-2dup and   $0458b89024402000 maxuint and expected
-2dup  or   $fffdbff9767cbef3 maxuint and expected
-2dup xor   $fba50769523c9ef3 maxuint and expected
-invert     $fa86420edb97531c maxuint and expected
-drop
+t{ foo -> $960 $1680 }t
+
+$fedcba9876543210 maxuint and
+$0579bdf12468ace3 maxuint and
+
+t{ 2dup and   -> $0458b89024402000 maxuint and }t
+t{ 2dup  or   -> $fffdbff9767cbef3 maxuint and }t
+t{ 2dup xor   -> $fba50769523c9ef3 maxuint and }t
+t{ dup invert -> $fa86420edb97531c maxuint and }t
+
+2drop

@@ -137,6 +137,7 @@ default='from defaults'                                              # load defa
 # won't change that.
 declare -i bits
 bits=63                                                               # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
+#bits=62
 #bits=48                                                              # 0...281,474,976,710,655
 #bits=32                                                              # 0...4,294,967,295
 #bits=21                                                              # covers 6 decimal digits signed numeric space
@@ -1011,7 +1012,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1666,42 +1667,17 @@ colon 'loop'
 semicolon
 compiled
 
-#colon '+loop'
-#   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
-#   code 'code "((s0=s[sp--]))"'
-#   code 'code "trace \"i:\$i ibar:\$ibar\""'
-#
-#   code 'code "((i<ibar-s0))||break"'
-#   code 'code "((i=(i+s0)&true))"'
-#
-#   code 'code "sleep 1"'
-#   code 'code "done"'
-#   code "code '((i=r[rp--]))'"
-#   code "code '((ibar=r[rp--]))'"
-#semicolon
-#compiled
-
-#colon '-loop'
-#   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
-#   code 'code "((s0=s[sp--]))"'
-#   code 'code "((i=(i+s0)&true))"'
-#   code 'code "((((ibar-i-1)^s0)&msb))&&break"'
-#   code 'code "done"'
-#   code "code '((i=r[rp--]))'"
-#   code "code '((ibar=r[rp--]))'"
-#semicolon
-#compiled
-
-#colon '+loop'
-#   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
-#   code 'code "((s1=s[sp--]))"'
-#   code 'code "((i+=s1))"'
-#   code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
-#   code 'code "done"'
-#   code "code '((i=r[rp--]))'"
-#   code "code '((ibar=r[rp--]))'"
-#semicolon
-#compiled
+colon '+loop'
+   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
+   code 'code "((s0=s[sp--]))"'
+   code 'code "((s1=i-ibar))"'
+   code 'code "((i=(i+s0)&true))"'
+   code 'code "(((s1^(i-ibar))&msb))&&break"'
+   code 'code "done"'
+   code "code '((i=r[rp--]))'"
+   code "code '((ibar=r[rp--]))'"
+semicolon
+compiled
 
 primitive 'lest'   'code "((s[sp--]))||return"'; compiled            # interpreting version: skip rest of line when false
 primitive 'lest'   '((s[sp--]))||line=""'      ; interpreted         # compiling version: skip until end of word (i.e. return) when true
@@ -1746,7 +1722,7 @@ colon 'boot'
 semicolon
 
 
-# ----- arithmetics -------------------------------------- #fold01
+# ----- arithmetics -------------------------------------- #FOLD01
 
 colon '+'
    put '(s[sp-1]+s[sp--])&true'
@@ -1790,7 +1766,7 @@ colon '*/mod'
    code '((s2*=s3))'
    code '((s2&msb&&(s2=-s2&true)))'
    code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
-   put  '(signq&msb?-(s2/s1)&true:s2/s1)'
+   put  '(signq&msb?-(s2/s1)&true:(s2/s1)&true)'
 semicolon
 
 

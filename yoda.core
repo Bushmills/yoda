@@ -1,13 +1,14 @@
 ># ---- primitives ---------------------------------------
 
 >set-current "$forthwid"
-
+>order=("$compilerwid" "${order[@]}")     # also compiler
 ># ( -- )  ( $1 -- )
 : primitive
       code
       postpone code,
       ;code  >inline
  ;
+>order=("${order[@]:1}")                  # previous
 
 "inline"                                  primitive inline
 "immediate"                               primitive immediate
@@ -54,19 +55,28 @@
 
 ' 1+ alias char+  inline
 
+
 \ ----- manage wordlists ---------------------------------
 
 code get-context  ( -- wid )              "order[0]"                 push,    ;code                inline
 code set-context  ( wid -- )              "order[0]"                 pop,     ;code                inline
+: literal         ( x -- )                literal,                            ;                    compiled
+: env             ( -- x ) ( $1 -- )      [ "${!ss[-1]}+0&true" ]    push,    drop$ ;              inline
 
 >set-current      "$onlywid"
 "words"                                   primitive words            ( -- )                        inline
 "order=($onlywid)"                        primitive onlyonly         ( -- )                        inline transient
 : definitions     ( -- )                  get-context set-current             ;                    inline
 : only            ( -- )                  onlyonly also definitions           ;                    inline
-code forthwid     ( -- wid )              "forthwid"     push,                ;code                inline transient
-: forth           ( -- )                  forthwid set-context                ;                    inline
+: forth           ( -- )                  [ "forthwid" env ] literal set-context  ;                inline
 only forth definitions
+
+\ by making these visible, they can be added to order or set current,
+\ providing the means to control searching them.
+\ context voc searched during compilation only
+: compiler        ( -- )                  [ "compilerwid" env ] literal set-context  ;             inline
+\ context voc searched while interpreting only
+: interpreter     ( -- )                  [ "interpreterwid" env ] literal set-context  ;          inline
 
 \ ----- stack --------------------------------------------
 
@@ -142,7 +152,6 @@ code here      ( -- a )                               "dp"                    pu
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
 : <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
 : count$       ( -- u ) ( $1 -- )                     [ "${#ss[-1]}" ]        push, drop$ ;        inline
-: env          ( -- x ) ( string:  $1 -- )            [ "${!ss[-1]}+0&true" ] push, drop$ ;        inline
 
 \ ----- strings ------------------------------------------
 
@@ -208,7 +217,6 @@ trash statevar
 : noname       ( -- xt )                              last$ dup$ xt   protect trash$      ;
 : me           ( compile: -- )   ( run: -- x )        [ "xt" ] push,          literal,    ;        compiled
 : needed       ( -- f ) ( stream: word )              word$ needed$                       ;        inline
-: literal      ( x -- )                               literal,                            ;        compiled
 : have         ( -- 0|xt ) ( stream: word )           word$ have$                         ;        inline      \ word exists?
 : lack         ( -- flag ) ( stream: word )           have  0=                            ;        inline      \ word missing?
 : [']          ( -- )   ( stream: word )              ' literal,                          ;        compiled
@@ -228,9 +236,13 @@ code realtime  ( -- u )                               "${EPOCHREALTIME//[,.]/}&t
 "cold" primitive cold
 ' cold alias abort
 : (abort")     ( ??? flag -- ??? | empty )            if type$ cr abort then drop$        ;
+
+also compiler
 : abort"       ( -- ) ( s: string deliited by " )     '" parse$
                                                       postpone literal$
                                                       ['] (abort") compile,               ;        compiled
+previous
+
 : ?abort       ( f -- )                               lest abort                          ;
 
 \ ----- files and loading --------------------------------

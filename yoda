@@ -81,7 +81,7 @@ declare -A doescode                                                  # items ass
 #  wordlist:     name of a wordlist
 #  wordlistwid:  wid of a wordlist
 # convert wid to wordlist:   $@    ( ${strings[wid]} )
-declare -a builtin_wordlists=("only" "forth" "interpretonly" "compileonly" "unresolved")
+declare -a builtin_wordlists=("only" "forth" "interpreter" "compiler" "unresolved")
 for wordlist in "${builtin_wordlists[@]}"; do
    declare -Ai "flags_$sdp"                                          # header flags per vocabulary
    declare -A  "wordlist_$sdp"                                       # this is the name of the wordlist array, named "wordlist_$wid"
@@ -235,11 +235,11 @@ movetowordlist()  {
    removeheaderfromcurrent "$lastword"
 }
 
-compiled()     { movetowordlist "$compileonlywid"; }                 # move last header to compiler context vocabulary
-interpreted()  { movetowordlist "$interpretonlywid"; }               # move last header to interpreter context vocabulary
+compiled()     { movetowordlist "$compilerwid"; }                    # move last header to compiler context vocabulary
+interpreted()  { movetowordlist "$interpreterwid"; }                 # move last header to interpreter context vocabulary
 
 immediate()    {
-   copytowordlist "$interpretonlywid"
+   copytowordlist "$interpreterwid"
    compiled
 }
 
@@ -294,8 +294,7 @@ name()  {
 # result: name:functionname
 newname()  {
    names[xt]="$1"                                                    # keep word name for .name, name$
-   name "$xt"
-   ((xt++))
+   name="${nameprefix}_$((xt++))"                                    # create function name from xt as argument
 }
 
 
@@ -435,9 +434,16 @@ codebody()  {                                                        # inline co
 # rewrite run time semantics of most recently defined word
 # arg1+: new run time code.
 use()  {
-   name="${current["$lastword"]}"                                    # rewrites function "$name",
-   eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
+   eval "${current["$lastword"]}() { $(printf '%s\n' "$@"); }"       # rewrites function "$name", using instructions received as arguments
 }
+
+# arg1: xt
+# arg2: new run time code
+apply()  {
+   name "$1"; shift                                                  # rewrites function "yoda_$1",
+   eval "$name() { "$@"; }"                                          # using instructions received as arguments
+}
+
 
 # create a function from body[@]
 compile()  {
@@ -573,7 +579,7 @@ constant 'cell'               "1"
 # the word to "inline"
 # arg1: name of deferred word
 defer()  {
-   local context
+#   local context
    ((filehandle>corefiles)) || linenr="${BASH_LINENO[0]}"
    nowheader "$1" "$filehandle" "$linenr"
    use "(())"
@@ -823,10 +829,10 @@ evaluate()  {
       ((error | (sp<0)))&&break
       word                                                           # parse white space delimited word
       [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
-# examine compileonly and interpretonly wordlists first
+# examine compiler and interpreter wordlists first
       if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
-         [[ -z "${compileonly["$word"]}" ]] || {                     # found in in compileonly while compiling
-            ${compileonly["$word"]}                                  # word in there are inherently "immediate", therefore they're executed here
+         [[ -z "${compiler["$word"]}" ]] || {                        # found in in compiler while compiling
+            ${compiler["$word"]}                                     # word in there are inherently "immediate", therefore they're executed here
             continue                                                 #     because that also deals with inline compilation.
          }
          [[ -z "${unresolved["$word"]}" ]] || {                      # found in unresolved while compiling
@@ -834,8 +840,8 @@ evaluate()  {
             continue
          }
       else                                                           # interpreting
-         [[ -z "${interpretonly["$word"]}" ]] || {                   # word found in interpretonly
-            ${interpretonly["$word"]}
+         [[ -z "${interpreter["$word"]}" ]] || {                     # word found in interpreter
+            ${interpreter["$word"]}
             continue
          }
       fi
@@ -1012,7 +1018,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1045,7 +1051,7 @@ words() {
 
 wordsplus() {
    local context wid
-   for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid" "$unresolvedwid"; do
+   for wid in "${order[@]}" "$interpreterwid" "$compilerwid" "$unresolvedwid"; do
       wordlist="wordlist_$wid"
       declare -n context="$wordlist"
       (( ${#context[@]} )) && {
@@ -1062,7 +1068,7 @@ see()  {
    local context wid name found=0
    word
    [[ -z "$word" ]] && missingname
-   for wid in "${order[@]}" "$interpretonlywid" "$compileonlywid"; do
+   for wid in "${order[@]}" "$interpreterwid" "$compilerwid"; do
       declare -n context="wordlist_$wid"
 # NOTE: case sensitivity
       [[ -z "${context["$word"]}" ]] || {
@@ -1195,15 +1201,6 @@ colon "defer"                                                        # use in yo
    code 'defer "$word"'
 semicolon
 inline
-
-
-# arg1: xt
-# arg2: new run time code
-apply()  {
-   name "$1"                                                         # rewrites function "yoda_$1",
-   shift
-   eval "$name() { "$@"; }"                                          # using instructions received as arguments
-}
 
 colon 'is'
    code 'word'
@@ -1429,7 +1426,7 @@ compiled
 colon "'"                                                            # ( -- xt ) ( stream: word )
    code 'word'
    code '[[ -z "$word" ]] && missingname'
-   code 'exists "$word" "${order[@]}" "$interpretonlywid" "$compileonlywid" || notfound "$word"'
+   code 'exists "$word" "${order[@]}" "$interpreterwid" "$compilerwid" || notfound "$word"'
    push 'exists[0]'
 semicolon
 
@@ -1438,7 +1435,7 @@ colon 'have$'                                                        # ( -- 0|xt
    code 'tmp="${ss[-1]}"'
    code 'unset "ss[-1]"'
    code '[[ -z "$tmp" ]]&&missingname'
-   code 'exists "$tmp" "${order[@]}" "$interpretonlywid" "$compileonlywid"'
+   code 'exists "$tmp" "${order[@]}" "$interpreterwid" "$compilerwid"'
    push 'exists[0]'
 semicolon
 
@@ -1486,11 +1483,13 @@ inline
 primitive 'last$'   'ss+=("$lastword")'
 
 # this version doesn't allow postponing forward references yet.
+# postpone doesn't search compiler and interpreter context wordlists.
+# for including those, add them to order.
 # ( stream: word )
 colon 'postpone'
    code 'word; [[ -z "$word" ]]&&missingname'
-   code 'exists "$word" "$compileonlywid" "${order[@]}" "$interpretonlywid" || notfound "$word"'
-   code 'if ((exists[2] == compileonlywid)); then call "${exists[0]}"'
+   code 'exists "$word" "${order[@]}" || notfound "$word"'
+   code 'if ((exists[2] == compilerwid)); then call "${exists[0]}"'
    code 'else code "call \"${exists[0]}\""; fi'
 semicolon
 compiled
@@ -1722,7 +1721,7 @@ colon 'boot'
 semicolon
 
 
-# ----- arithmetics -------------------------------------- #FOLD01
+# ----- arithmetics -------------------------------------- #fold01
 
 colon '+'
    put '(s[sp-1]+s[sp--])&true'
@@ -2322,7 +2321,7 @@ semicolon
 
 need()  {
    [[ -z "$1" ]]&&missingname
-   exists "$1" "${order[@]}" "$interpretonlywid" "$compileonlywid" ||
+   exists "$1" "${order[@]}" "$interpreterwid" "$compilerwid" ||
    forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
 }
 
@@ -2469,7 +2468,7 @@ sanitise()  {
 
 undoc()  {
    local wid wordlist context
-   for wid in "$forthwid" "$onlywid" "$interpretonlywid" "$compileonlywid"; do
+   for wid in "$forthwid" "$onlywid" "$interpreterwid" "$compilerwid"; do
       wordlist="${strings[wid]}"
       declare -n context="$wordlist"
       for word in "${!context[@]}"; do                               # run through all headers

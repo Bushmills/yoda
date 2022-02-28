@@ -1201,7 +1201,7 @@ inline
 apply()  {
    name "$1"                                                         # rewrites function "yoda_$1",
    shift
-   eval "$name() { $(printf '%s' "$@"); }"                         # using instructions received as arguments
+   eval "$name() { "$@"; }"                                          # using instructions received as arguments
 }
 
 colon 'is'

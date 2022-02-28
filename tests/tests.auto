@@ -104,3 +104,11 @@ done
    r> base ! ;  transient
 t{ gp7 -> <true> }t
 
+
+testsection is and defer
+t{ defer defer5 -> }t               transient
+t{ : is-defer5 is defer5 ; -> }t    transient
+t{ ' * is defer5 -> }t
+t{ 2 3 defer5 -> 6 }t
+t{ ' + is-defer5 -> }t
+t{ 1 2 defer5 -> 3 }t

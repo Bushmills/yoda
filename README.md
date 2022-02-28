@@ -27,7 +27,7 @@ My musings, ideas, plans and thoughts of possible changes can be found at
 page](https://github.com/Bushmills/yoda/wiki/Considerations), and the rest possibly
 among the [remaining wiki pages](https://github.com/Bushmills/yoda/wiki/Home).
 
-yoda has been coded as bash script with only a small count of [external dependencies](https://github.com/Bushmills/yoda/blob/main/DEPENDENCIES)  
+yoda has been coded as bash script with only a small count of [external dependencies](https://github.com/Bushmills/yoda/wiki/Dependencies)  
 
 Here's a screenshot showing yoda's status line, the current list of words, and a "word not found" error.
 Some of those words were compiled from library when a word needing them was executed, and are, therefore, not part

@@ -1,16 +1,13 @@
-created:             auto     (remove line after having checked and revised description)
 name:                char+
-stack:               ( -- )
+stack:               ( a1 -- a2 )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless
-category:
-input stream:
+category:            arithmetics, system
 
-description:         none
+description:         adds an address increment of the size to hold (at least) one
+                     character to a1.
 
-example:             none
-notes:               none
-standard:            no
+standard:            yes
 deviation:           standard has no equivalent
-url:                 https://forth-standard.org/standard/core/CHAR+
+url:                 https://forth-standard.org/standard/core/CHARPlus

@@ -1,0 +1,13 @@
+name:                cold
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+input stream:        cleared
+
+description:         initialises yoda, then passes control to code vectored by boot.
+                     if vector is unset, yoda exits.
+
+standard:            no
+deviation:           standard has no equivalent

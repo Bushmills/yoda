@@ -1,3 +1,4 @@
+temporarily removed
 name:                +loop
 stack:               ( n -- )
 return stack:        ( -- )

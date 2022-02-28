@@ -1,0 +1,11 @@
+name:                ndrop
+stack:               ( [x items] u -- [x-u items] )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            stack
+
+description:         drops u stack items
+
+standard:            no
+deviation:           standard has no equivalent

@@ -123,7 +123,6 @@ code dnegate   ( d1 -- d2 )                           "((s[sp-1]=(~(s[sp-1])+1)&
 : max          ( n1 n2 -- n1|n2 )                     2dup <  if nip exit then drop       ;
 : umin         ( u1 u2 -- u1|u2 )                     2dup u> if nip exit then drop       ;
 : umax         ( u1 u2 -- u1|u2 )                     2dup u< if nip exit then drop       ;
-\ : umax       ( u1 u2 -- u1|u2 )                     2dup u< if [ "s2=s1" ] atom, then drop ;              \ alternative. shorter, but not faster
 : cell+        ( x1 -- x2 )                           1+                                  ;        inline
 : s>d          ( n -- d )                             dup 0<                              ;        inline
 : within       ( x low high -- flag )                 over - >r - r> u<                   ;

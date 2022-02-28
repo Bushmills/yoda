@@ -432,7 +432,7 @@ codebody()  {                                                        # inline co
 }
 
 # rewrite run time semantics of most recently defined word
-# arg1: new run time code.
+# arg1+: new run time code.
 use()  {
    name="${current["$lastword"]}"                                    # rewrites function "$name",
    eval "$name() { $(printf '%s\n' "$@"); }"                         # using instructions received as arguments
@@ -1416,14 +1416,6 @@ colon 'code,'
    code 'unset "ss[-1]"'
 semicolon
 immediate
-
-colon 'atom,'
-   code 'code "${atom[${ss[-1]}]}"'
-   code 'unset "ss[-1]"'
-semicolon
-compiled
-
-
 
 # ( compile: $1 -- ) ( run: -- $1 )
 colon 'literal$'

@@ -1,0 +1,8 @@
+testsection allot
+here 1 allot
+here
+constant 2nda  transient
+constant 1sta  transient
+t{ 1sta 2nda u< -> <true> }t    \ here must grow with allot
+t{      1sta 1+ ->   2nda }t    \ ... by one address unit
+( missing test: negative allot )

@@ -1,0 +1,54 @@
+testsection +loop
+
+decimal
+t{ : gd2 do i -1 +loop ; -> }t                  transient
+t{        1          4 gd2 -> 4 3 2  1 }t
+t{       -1          2 gd2 -> 2 1 0 -1 }t
+t{ mid-uint mid-uint+1 gd2 -> mid-uint+1 mid-uint }t
+
+variable gditerations                           transient
+variable gdincrement                            transient
+
+: gd7 ( limit start increment -- )              transient
+   gdincrement !
+   0 gditerations !
+   do
+     1 gditerations +!
+     i
+     gditerations @ 6 = if leave then
+     gdincrement @
+   +loop gditerations @
+;
+
+t{    4  4  -1 gd7 ->  4                  1  }t
+t{    1  4  -1 gd7 ->  4  3  2  1         4  }t
+t{    4  1  -1 gd7 ->  1  0 -1 -2  -3  -4 6  }t
+t{    4  1   0 gd7 ->  1  1  1  1   1   1 6  }t
+t{    0  0   0 gd7 ->  0  0  0  0   0   0 6  }t
+t{    1  4   0 gd7 ->  4  4  4  4   4   4 6  }t
+t{    1  4   1 gd7 ->  4  5  6  7   8   9 6  }t
+t{    4  1   1 gd7 ->  1  2  3            3  }t
+t{    4  4   1 gd7 ->  4  5  6  7   8   9 6  }t
+t{    2 -1  -1 gd7 -> -1 -2 -3 -4  -5  -6 6  }t
+t{   -1  2  -1 gd7 ->  2  1  0 -1         4  }t
+t{    2 -1   0 gd7 -> -1 -1 -1 -1  -1  -1 6  }t
+t{   -1  2   0 gd7 ->  2  2  2  2   2   2 6  }t
+t{   -1  2   1 gd7 ->  2  3  4  5   6   7 6  }t
+t{    2 -1   1 gd7 -> -1 0 1              3  }t
+t{  -20 30 -10 gd7 -> 30 20 10  0 -10 -20 6  }t
+t{  -20 31 -10 gd7 -> 31 21 11  1  -9 -19 6  }t
+t{  -20 29 -10 gd7 -> 29 19  9 -1 -11     5  }t
+
+done
+\ with large and small increments
+max-uint 8 rshift 1+ constant ustep
+ustep negate constant -ustep
+max-int 7 rshift 1+ constant step
+step negate constant -step
+
+variable bump                                      transient
+t{  : gd8 bump ! do 1+ bump @ +loop ; -> }t        transient
+t{  0 max-uint 0 ustep gd8 -> 256 }t
+t{  0 0 max-uint -ustep gd8 -> 256 }t
+t{  0 max-int min-int step gd8 -> 256 }t
+t{  0 min-int max-int -step gd8 -> 256 }t

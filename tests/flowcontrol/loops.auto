@@ -1,9 +1,0 @@
-
-: foo    for  i +  next  ;
-             89 0 over foo swap dup 2/ * expected   trash foo
-
-: foo    0 do  i +  loop  ;
-             67 0 over foo swap dup 2/ * expected   trash foo
-
-: foo  0  7 -5    do i + loop ; foo    6 expected   trash foo
-: foo  0 -11 -35  do i + loop ; foo -564 expected   trash foo

@@ -1,0 +1,41 @@
+testsection pictured number conversion
+: gp3 <# 1 0 # # #>  pack$ "01" $= ;   transient
+t{ gp3 -> <true> }t
+
+: gp4 <# 1 0 #s #>   pack$ "1"  $= ;   transient
+t{ gp4 -> <true> }t
+
+: gp5
+   base @ <true>
+   max-base 1+ 2 do        \ for each possible base
+     i base !              \ tbd: assumes base works
+       i 0 <# #s #>  pack$ "10" $= and
+   loop
+   swap base ! ;                       transient
+
+t{ gp5 -> <true> }t
+
+: gp6
+   base @ >r 2 base !
+   max-uint max-uint <# #s #>       \ maximum ud to binary
+   r> base !                        \ s: c-addr u
+   dup #bits-ud = swap
+   0 do                             \ s: c-addr flag
+     over c@ [char] 1 = and         \ all ones
+     >r char+ r>
+   loop swap drop ;                    transient
+\ t{ gp6 -> <true> }t
+done
+: gp7
+   base @ >r max-base base !
+   <true>
+   $a 0 do
+     i 0 <# #s #>
+     1 = swap c@ i '0' + = and and
+   loop
+   max-base a do
+     i 0 <# #s #>
+     1 = swap c@ 41 i a - + = and and
+   loop
+   r> base ! ;  transient
+t{ gp7 -> <true> }t

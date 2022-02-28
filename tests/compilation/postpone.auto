@@ -1,0 +1,8 @@
+testsection postpone
+t{ : gt1 123 ; -> }t
+t{ : gt4 postpone gt1 ; immediate -> }t
+t{ : gt5 gt4 ; -> }t
+t{ gt5 -> 123 }t
+t{ : gt6 345 ; immediate -> }t
+t{ : gt7 postpone gt6 ; -> }t
+t{ gt7 -> 345 }t

@@ -1,0 +1,3 @@
+#/bin/bash
+
+yoda "from ./aaa.auto from ./$1"

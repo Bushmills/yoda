@@ -1,0 +1,44 @@
+\ common to some tests. needs to be loaded first.
+
+\ 512 bits good enough?  not using - or invert or bool stuff, as those haven't been tested yet. Well, neither has constant
+\ (yoda silently removes allöextra bits above its preset cell width)
+$00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 constant 0s
+$ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff constant 1s
+
+1s constant <true>
+0s constant <false>
+bits 2* constant #bits-ud
+here 1 ,
+here 2 ,
+constant 2nd
+constant 1st
+
+#36 constant max-base
+0 invert constant max-uint
+0 invert 1 rshift constant max-int
+0 invert 1 rshift invert constant min-int
+0 invert 1 rshift constant mid-uint
+0 invert 1 rshift invert constant mid-uint+1
+
+\ needs: ifflorred ifsym m* sm/rem
+\ iffloored    : t*/mod >r m* r> fm/mod ;
+\ ifsym        : t*/mod >r m* r> sm/rem ;
+\ iffloored    : t*/ t*/mod swap drop ;
+\ ifsym        : t*/ t*/mod swap drop ;
+
+: skipped  ( -- )  "skipped" type$ space 0 parse$ type$ cr done ;
+
+testsection test values
+t{ max-uint   -> maxuint }t
+t{ max-int    -> maxint  }t
+t{ min-int    -> msb     }t
+t{ mid-uint   -> maxint  }t
+t{ mid-uint+1 -> msb     }t
+
+
+decimal
+testsection number input
+t{ #1289       -> 1289        }t
+t{ $12ef       -> 4847        }t
+t{ %10010110   -> 150         }t
+t{ 'z'         -> 122         }t

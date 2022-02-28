@@ -1,0 +1,10 @@
+testsection abs
+t{       0 abs ->          0 }t
+t{       1 abs ->          1 }t
+t{      -1 abs ->          1 }t
+t{ min-int abs -> mid-uint+1 }t
+: foo  abs ;  transient
+t{       0 foo ->          0 }t
+t{       1 foo ->          1 }t
+t{      -1 foo ->          1 }t
+t{ min-int foo -> mid-uint+1 }t

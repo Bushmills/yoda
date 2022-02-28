@@ -1666,16 +1666,42 @@ colon 'loop'
 semicolon
 compiled
 
-colon '+loop'
-   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
-   code 'code "((s1=s[sp--]))"'
-   code 'code "((i+=s1))"'
-   code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
-   code 'code "done"'
-   code "code '((i=r[rp--]))'"
-   code "code '((ibar=r[rp--]))'"
-semicolon
-compiled
+#colon '+loop'
+#   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
+#   code 'code "((s0=s[sp--]))"'
+#   code 'code "trace \"i:\$i ibar:\$ibar\""'
+#
+#   code 'code "((i<ibar-s0))||break"'
+#   code 'code "((i=(i+s0)&true))"'
+#
+#   code 'code "sleep 1"'
+#   code 'code "done"'
+#   code "code '((i=r[rp--]))'"
+#   code "code '((ibar=r[rp--]))'"
+#semicolon
+#compiled
+
+#colon '-loop'
+#   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
+#   code 'code "((s0=s[sp--]))"'
+#   code 'code "((i=(i+s0)&true))"'
+#   code 'code "((((ibar-i-1)^s0)&msb))&&break"'
+#   code 'code "done"'
+#   code "code '((i=r[rp--]))'"
+#   code "code '((ibar=r[rp--]))'"
+#semicolon
+#compiled
+
+#colon '+loop'
+#   code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
+#   code 'code "((s1=s[sp--]))"'
+#   code 'code "((i+=s1))"'
+#   code 'code "((((ibar-(s1<msb)-i)^s1)&msb))&&break"'
+#   code 'code "done"'
+#   code "code '((i=r[rp--]))'"
+#   code "code '((ibar=r[rp--]))'"
+#semicolon
+#compiled
 
 primitive 'lest'   'code "((s[sp--]))||return"'; compiled            # interpreting version: skip rest of line when false
 primitive 'lest'   '((s[sp--]))||line=""'      ; interpreted         # compiling version: skip until end of word (i.e. return) when true

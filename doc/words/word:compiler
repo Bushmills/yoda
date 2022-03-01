@@ -1,0 +1,17 @@
+name:                compiler
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            dictionary
+
+description:         a wordlist which is searched first during compilation. Any
+                     word found in there will be executed, akin to what would be
+                     expected from immediate words.
+                     postpone will search through compiler before consulting the
+                     wordlist in search order.
+
+notes:               made visible to allow controlling searching by adding compiler
+                     to order.
+standard:            no
+deviation:           standard has no equivalent

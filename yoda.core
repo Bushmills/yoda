@@ -1,21 +1,18 @@
 ># ---- primitives ---------------------------------------
 
 >set-current "$forthwid"
->order=("$compilerwid" "${order[@]}")     # also compiler
 ># ( -- )  ( $1 -- )
 : primitive
       code
       postpone code,
       ;code  >inline
  ;
->order=("${order[@]:1}")                  # previous
 
 "inline"                                  primitive inline
 "immediate"                               primitive immediate
 "parse ')'"                               primitive (                ( -- ) ( s: delim )           immediate
 "line=''"                                 primitive \                ( -- ) ( s: line )            immediate
 
-"interpreted"                             primitive interpreted      ( -- )
 "compiled"                                primitive compiled         ( -- )
 "protect"                                 primitive protect          ( -- )
 "wordsplus"                               primitive words+           ( -- )
@@ -75,8 +72,6 @@ only forth definitions
 \ providing the means to control searching them.
 \ context voc searched during compilation only
 : compiler        ( -- )                  [ "compilerwid" env ] literal set-context  ;             inline
-\ context voc searched while interpreting only
-: interpreter     ( -- )                  [ "interpreterwid" env ] literal set-context  ;          inline
 
 \ ----- stack --------------------------------------------
 
@@ -236,13 +231,9 @@ code realtime  ( -- u )                               "${EPOCHREALTIME//[,.]/}&t
 "cold" primitive cold
 ' cold alias abort
 : (abort")     ( ??? flag -- ??? | empty )            if type$ cr abort then drop$        ;
-
-also compiler
 : abort"       ( -- ) ( s: string deliited by " )     '" parse$
                                                       postpone literal$
                                                       ['] (abort") compile,               ;        compiled
-previous
-
 : ?abort       ( f -- )                               lest abort                          ;
 
 \ ----- files and loading --------------------------------

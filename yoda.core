@@ -1,6 +1,5 @@
-># ---- primitives ---------------------------------------
-
 >set-current "$forthwid"
+
 ># ( -- )  ( $1 -- )
 : primitive
       code
@@ -8,55 +7,18 @@
       ;code  >inline
  ;
 
-"inline"                                  primitive inline
-"immediate"                               primitive immediate
-"parse ')'"                               primitive (                ( -- ) ( s: delim )           immediate
-"line=''"                                 primitive \                ( -- ) ( s: line )            immediate
+\ ----- system constants ---------------------------------
 
-"compiled"                                primitive compiled         ( -- )
-"protect"                                 primitive protect          ( -- )
-"wordsplus"                               primitive words+           ( -- )
-"set-current ${s[sp--]}"                  primitive set-current      ( wid -- )
-
-"m[base]=10"                              primitive decimal          ( -- )
-"m[base]=16"                              primitive hex              ( -- )
-"m[base]=2"                               primitive binary           ( -- )
-
-"((sp-=s[sp]+1))"                         primitive ndrop            ( [x items] u -- [x-u items] )
-"((sp--))"                                primitive drop             ( x -- )
-"((rp--))"                                primitive rdrop            ( -- ) ( r: x -- )
-"((sp-=2))"                               primitive 2drop            ( x1 x2 -- )
-
-"code 'break'"                            primitive leave            ( -- )                        compiled
-"warm"                                    primitive warm             ( ??? - ) ( r: ??? -- )
-"exit 0"                                  primitive bye              ( -- )
-"s=() sp=0"                               primitive empty            ( ??? -- )
-"r=() rp=0"                               primitive rempty           ( -- ) ( r: ??? -- )
-"((s[sp]=(s[sp]+1)&true))"                primitive 1+               ( x1 -- x2 )
-"((s[sp]=(s[sp]-1)&true))"                primitive 1-               ( x1 -- x2 )
-"((s[sp]=(s[sp]<<1)&true))"               primitive 2*               ( x1 -- x2 )
-"((s[sp]^=maxuint))"                      primitive invert           ( x1 -- x2 )
-"((s[sp]=(-s[sp]&true)))"                 primitive negate           ( n1 -- n2 )
-
-"((m[dp++]=s[sp--]&255))"                 primitive c,               ( c -- )
-"((s[sp]=m[s[sp]]))"                      primitive @                ( a -- x )
-
-\ compiles exit into word under
-\ construction due to inline, which is
-\ therefore essential. primitives have
-\ inline flag set by default.
-"return"                                  primitive exit             ( -- )
-
-"push ${s[sp--]}"                         primitive literal,         ( -- ) ( compile time: x -- ) ( run time: -- x )
-"call ${s[sp--]}"                         primitive compile,         ( -- ) ( compile time: x -- ) ( run time: -- x )
+' noop alias chars                                                                                 immediate
+' noop alias cells                                                                                 immediate
+' noop alias aligned                                                                               immediate
+' noop alias align                                                                                 immediate
 
 ' 1+ alias char+  inline
-
+' 1+ alias cell+  inline
 
 \ ----- manage wordlists ---------------------------------
 
-code get-context  ( -- wid )              "order[0]"                 push,    ;code                inline
-code set-context  ( wid -- )              "order[0]"                 pop,     ;code                inline
 : literal         ( x -- )                literal,                            ;                    compiled
 : env             ( -- x ) ( $1 -- )      [ "${!ss[-1]}+0&true" ]    push,    drop$ ;              inline
 
@@ -68,31 +30,14 @@ code set-context  ( wid -- )              "order[0]"                 pop,     ;c
 : forth           ( -- )                  [ "forthwid" env ] literal set-context  ;                inline
 only forth definitions
 
-\ by making these visible, they can be added to order or set current,
-\ providing the means to control searching them.
-\ context voc searched during compilation only
+\ by making compiler wordlist visible, it can be added to order,
+\ providing the means to control searching it, as compiler voc is
+\ otherwise searched during compilation only.
 : compiler        ( -- )                  [ "compilerwid" env ] literal set-context  ;             inline
 
 \ ----- stack --------------------------------------------
 
 \ code sp!       ( ??? u -- [u items] )               "sp"                          pop,  ;code    inline
-code depth     ( ?? -- ?? u )                         "sp"                          push, ;code    inline
-code 2over     ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )   "s[sp-3]"         dup$ push,  push, ;code    inline
-code dup       ( x -- x x )                           "s[sp]"                       push, ;code    inline
-code over      ( x1 x2 -- x1 x2 x1 )                  "s[sp-1]"                     push, ;code    inline
-code pluck     ( x1 x2 x3 -- x1 x2 x3 x1 )            "s[sp-2]"                     push, ;code    inline
-code pick      ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )  "s[sp-s[sp--]-1]"             push, ;code    inline
-code r@        ( -- x )  ( r: x -- x )                "r[rp]"                       push, ;code    inline
-code >r        ( x -- ) ( r: -- x )                   "r[++rp]"                     pop,  ;code    inline
-code r>        ( -- x ) ( r: x -- )                   "r[rp--]"                     push, ;code    inline
-code rdepth    ( -- u )                               "rp"                          push, ;code    inline
-code depth$    ( -- u )                               "${#ss[@]}"                   push, ;code    inline
-code 2r>       ( -- x1 x2 )  ( r: x1 x2 -- )          "r[rp-1]"                     push,
-                                                      "r[rp--]"                     push,
-                                                      "((rp--))"                    code, ;code    inline
-code 2>r       ( x1 x2 -- )  ( return: -- x1 x2 )     "((r[++rp]=s[sp-1]))"         code,
-                                                      "r[++rp]"                     pop,
-                                                      "((sp--))"                    code, ;code    inline
 : nip          ( x1 x2 -- x2 )                        [ "s[sp-1]=s[sp]" ]  code,    drop  ;        inline
 : ?dup         ( x -- 0 | x x )                       [ "((s[sp])) &&" ]   code,    dup   ;        inline
 : 2dup         ( x1 x2 -- x1 x2 x1 x2 )               over over                           ;        inline
@@ -108,11 +53,6 @@ code ?leave    ( flag -- )                            "code '((s[sp--]))&&'"    
 
 \ ----- arithmetics --------------------------------------
 
-code dnegate   ( d1 -- d2 )                           "((s[sp-1]=(~(s[sp-1])+1)&maxuint))" code,
-                                                      "((s[sp]^=maxuint))"         code,
-                                                      "((s[sp-1]))||((s[sp]++))"   code,  ;code
-
-' noop alias cells                                                                                 immediate
 ' lshift alias <<                                                                                  inline
 ' rshift alias >>                                                                                  inline
 
@@ -128,7 +68,6 @@ code dnegate   ( d1 -- d2 )                           "((s[sp-1]=(~(s[sp-1])+1)&
 : max          ( n1 n2 -- n1|n2 )                     2dup <  if nip exit then drop       ;
 : umin         ( u1 u2 -- u1|u2 )                     2dup u> if nip exit then drop       ;
 : umax         ( u1 u2 -- u1|u2 )                     2dup u< if nip exit then drop       ;
-: cell+        ( x1 -- x2 )                           1+                                  ;        inline
 : s>d          ( n -- d )                             dup 0<                              ;        inline
 : within       ( x low high -- flag )                 over - >r - r> u<                   ;
 : um/mod       ( d u1 -- u2 u3 )                      ud/mod drop                         ;        inline   \ d / u1 -> quotient u3 remainder u2
@@ -137,12 +76,6 @@ code dnegate   ( d1 -- d2 )                           "((s[sp-1]=(~(s[sp-1])+1)&
 
 \ ----- memory -------------------------------------------
 
-
-code ,         ( x -- )                               "m[dp++]"               pop,        ;code    inline
-code count     ( a -- a+1 c )                         "m[s[sp]++]&255"        push,       ;code    inline
-code skim      ( a -- a+cell x )                      "m[s[sp]++]"            push,       ;code    inline
-code here$     ( -- u )                               "sdp"                   push,       ;code    inline
-code here      ( -- a )                               "dp"                    push,       ;code    inline
 
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
 : <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
@@ -197,14 +130,6 @@ trash x
 : .r           ( n u -- )                             >r  convert r> rtype$               ;
 : u.r          ( u1 u2 -- )                           >r uconvert r> rtype$               ;
 
-\ ----- dictionary and compiling -------------------------
-code get-current  ( -- wid )                          "currentwid"               push,    ;code    inline
-code #unresolved  ( -- u )                            "${#unresolved[@]}"        push,    ;code    inline
-code compiling ( -- flag )                            "compiling"                push,    ;code    inline
-code state     ( -- a )                               "m[statevar]=$compiling"   code,
-                                                      "statevar"                 push,    ;code    inline
-trash statevar
-
 ' have$ alias xt                                                                                   inline
 ' satisfy alias needs:                                                                             inline
 
@@ -216,11 +141,14 @@ trash statevar
 : lack         ( -- flag ) ( stream: word )           have  0=                            ;        inline      \ word missing?
 : [']          ( -- )   ( stream: word )              ' literal,                          ;        compiled
 
+
+
 \ ----- unsorted -----------------------------------------
 
 code random    ( -- u )                               "SRANDOM&true"             push,    ;code    inline      \  32 bits random number
 code realtime  ( -- u )                               "${EPOCHREALTIME//[,.]/}&true" push, ;code   inline      \ a 51 bit microseconds epoch
 
+: evaluate     ( c-addr u -- )                        pack$ evaluate$                     ;        inline
 : quit         ( ??? -- )                             warm
                                                       begin
                                                          query$ evaluate$

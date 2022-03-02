@@ -136,7 +136,9 @@ default='from defaults'                                              # load defa
 # one address increment is always a cell, this setting
 # won't change that.
 declare -i bits
-bits=63                                                               # Can't use 64 bit - bash doesn't know unsigned. 63 bit is best I can do for now.
+# Can't use 64 bit - bash doesn't know unsigned, and in the
+# rare cases that carry needs detection, bit msb<<1 is used.
+bits=63                                                              # 63 bit is best I can do for now.
 #bits=62
 #bits=48                                                              # 0...281,474,976,710,655
 #bits=32                                                              # 0...4,294,967,295
@@ -145,8 +147,13 @@ bits=63                                                               # Can't us
 #bits=16                                                              # 16 bits, a tad retro
 #bits=11                                                              # covers 3 decimal digits signed numeric space
 #bits=8                                                               # 8 bits are nice for testing
+((bits<8 && bits>63))&&{
+   echo "illegal cell width: $bits bits"
+   exit 1
+}
 
-declare -i msb="1<<(bits-1)"
+declare -i msb="$((1<<(bits-1)))"
+declare -i carry="$((msb*2))"
 declare -i maxint="msb-1"
 declare -i maxuint="maxint|msb"
 declare -i true="maxuint"
@@ -1752,12 +1759,10 @@ inline
 umstar()  {
    local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 dh=0 i=bits
    for ((; i--;)); do
-      ((dh*=2, dl&msb))&&((dh++))
-      ((dl=(dl*2)&true, s1&msb))&&
-         ((dl+=s0, dl&(msb<<1)))&&
-         ((dh++))
-      ((s1*=2))
+      ((dh*=2, dl*=2, dl&carry))&&((dh++))
+      ((s1&true))&&((s1*=2, s1&carry))&&((dl+=s0, dl&(carry)))&&((dh++))
    done
+   ((dl&=true))
    s[sp-1]="$dl"
    s[sp]="$dh"
 }

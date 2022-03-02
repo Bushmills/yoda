@@ -1750,15 +1750,13 @@ inline
 # incorrect result with large number
 # ( u1 u2 -- ud )
 umstar()  {
-   local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 dh=0
-   local i
-   for ((i=bits; i--;)); do
+   local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 dh=0 i=bits
+   for ((; i--;)); do
       ((dh*=2, dl&msb))&&((dh++))
-      ((dl*=2, s1&msb))&&{
-         ((dl+=s0, dl&msb))&&((dh++))
-      }
+      ((dl=(dl*2)&true, s1&msb))&&
+         ((dl+=s0, dl&(msb<<1)))&&
+         ((dh++))
       ((s1*=2))
-      ((dl&=true))
    done
    s[sp-1]="$dl"
    s[sp]="$dh"

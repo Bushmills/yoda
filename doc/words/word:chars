@@ -1,0 +1,12 @@
+name:                chars
+stack:               ( x1 -- x2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+description:         calculated the number of address increments needed for holding
+                     x1 characters
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/CHARS

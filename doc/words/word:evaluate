@@ -1,0 +1,11 @@
+name:                evaluate
+stack:               ( c-addr u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            interpreting, system
+
+description:         interpret the string c-addr, u as if it was entered on console
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/EVALUATE

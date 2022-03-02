@@ -1,0 +1,11 @@
+name:                align
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+description:         reserve the amount of space to align the address returned by here
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/ALIGN

@@ -1,0 +1,11 @@
+name:                aligned
+stack:               ( u1 -- u2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+description:         align u1
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/ALIGNED

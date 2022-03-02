@@ -1,7 +1,6 @@
 >set-current "$forthwid"
 
-># ( -- )  ( $1 -- )
-: primitive
+: primitive   ( -- )  ( $1 -- )
       code
       postpone code,
       ;code  >inline
@@ -24,9 +23,8 @@
 
 >set-current      "$onlywid"
 "words"                                   primitive words            ( -- )                        inline
-"order=($onlywid)"                        primitive onlyonly         ( -- )                        inline transient
 : definitions     ( -- )                  get-context set-current             ;                    inline
-: only            ( -- )                  onlyonly also definitions           ;                    inline
+: only            ( -- )                  >order=("$onlywid"); also definitions ;                  inline
 : forth           ( -- )                  [ "forthwid" env ] literal set-context  ;                inline
 only forth definitions
 
@@ -73,17 +71,12 @@ code ?leave    ( flag -- )                            "code '((s[sp--]))&&'"    
 : um/mod       ( d u1 -- u2 u3 )                      ud/mod drop                         ;        inline   \ d / u1 -> quotient u3 remainder u2
 : dabs         ( d1 -- d2 )                           dup 0< lest dnegate                 ;
 
-
 \ ----- memory -------------------------------------------
-
 
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
 : <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
-: count$       ( -- u ) ( $1 -- )                     [ "${#ss[-1]}" ]        push, drop$ ;        inline
-
-\ ----- strings ------------------------------------------
-
 : pad          ( -- a )                               here #256 +                         ;        inline
+: count$       ( -- u ) ( $1 -- )                     [ "${#ss[-1]}" ]        push, drop$ ;        inline
 
 \ ----- i/o ----------------------------------------------
 

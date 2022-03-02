@@ -8,5 +8,6 @@ category:            arithmetics
 description:         divide unsigned double ud1 by unsigned u1, yielding the
                      unsigned double quotient ud2 and unsigned remainder u2
 
+notes:               very slow
 standard:            no
 deviation:           standard has no equivalent

@@ -86,6 +86,12 @@ defer query$                                          ' simplequery$ is query$
 : ltype$       ( u -- ) ( $1 -- )                     dup$ type$ count$ - spaces          ;
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
 : word$        ( -- ) ( -- $1 )                       bl parse$                           ;        inline
+: .(           ( -- ) ( s: delim )                    ')' parse$ type$  ;
+
+: compile$     '"' parse$  postpone literal$ ;        transient
+: (s")         here dup unpack$  ;
+: s"           compile$ postpone (s")   ;   compiled
+: ."           compile$ postpone type$  ;   compiled
 
 \ ----- pictured number conversion -----------------------
 

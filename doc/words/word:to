@@ -1,0 +1,20 @@
+name:                to
+stack:               ( x -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+input stream:        word
+
+description:         introduces x to the word whose name is read from stream such that
+                     execution of that word will hence produce x.
+                     Standard requires following word to be a value (that is, a word
+                     created by defining word "value")
+
+notes:               Contrary to standard is it possible to use to with any word, although
+                     doing so is not encouraged. In that respect is "to" a rather dangerous
+                     word in yoda, as it can change, for example, that nature and value of
+                     system constants, or just any other word.
+                     "to" shares this characteristic with "is"
+standard:            yes
+url:                 https://forth-standard.org/standard/core/TO

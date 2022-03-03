@@ -1,0 +1,17 @@
+name:                s"
+stack:               ( -- )            compile
+                     ( -- c-addr u )   execute
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compiler
+category:            strings
+input stream:        double quotes terminated string
+
+description:         when execute, the parse double quotes terminated string is compiled
+                     to the word under construction, along with the runtime code to copy
+                     it to memory and return address and length of string.
+                     When that word executes, it will therefore produce address and length
+                     of that string.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/Sq

@@ -1,0 +1,13 @@
+name:                .(
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+input stream:        right parenthesis delimited string
+
+description:         parse input delimited by ")", then outputs parsed input, excluding
+                     te delimiting ")".
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/Dotp

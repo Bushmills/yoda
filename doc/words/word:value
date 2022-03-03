@@ -1,0 +1,16 @@
+name:                value
+stack:               ( x -- ) define
+                     ( -- x ) run
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            definining
+input stream:        word
+
+description:         create a word with name parses from stream, and associate it
+                     with the value of x, taken from stack when created.
+                     When executed, that initial value x will be produces.
+                     The value of x can be changed, by use of "to"
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/VALUE

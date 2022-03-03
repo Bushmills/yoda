@@ -1,0 +1,12 @@
+name:                (s")
+stack:               ( -- c-addr u )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            run time word
+
+description:         unpacks $1 to here. Compiled by s"
+
+notes:               may be removed from visibility
+standard:            no
+deviation:           standard has no equivalent

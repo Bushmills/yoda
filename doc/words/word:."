@@ -1,0 +1,16 @@
+name:                ."
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compiler
+category:            I/O
+stream:              compile: double quite terminated string
+
+description:         during compilation, parse a double quotes terminated string
+                     from input and compile it into word under construction, along
+                     with the run time code to output that string.
+                     When that wird is executed, parsed string will therefore be printed.
+
+standard:            yes
+deviation:           standard has no equivalent
+url:                 https://forth-standard.org/standard/core/Dotq

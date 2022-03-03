@@ -1,4 +1,5 @@
-skipped testsection */
+done
+testsection */
 
 t{       0 2       1 */ ->       0 2       1 t*/ }t
 t{       1 2       1 */ ->       1 2       1 t*/ }t

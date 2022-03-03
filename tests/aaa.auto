@@ -20,13 +20,26 @@ constant 1st
 0 invert 1 rshift constant mid-uint
 0 invert 1 rshift invert constant mid-uint+1
 
+here 1 ,
+here 2 ,
+constant 2nd
+constant 1st
+
+here 1 c,
+here 2 c,
+constant 2ndc
+constant 1stc
+
+align 1 allot here align here 3 cells allot
+constant a-addr  constant ua-addr
+
+: >pad ( -- c-addr u ) ( $1 -- )  pad dup unpack$  ;
+
 \ needs: ifflorred ifsym m* sm/rem
 \ iffloored    : t*/mod >r m* r> fm/mod ;
 \ ifsym        : t*/mod >r m* r> sm/rem ;
 \ iffloored    : t*/ t*/mod swap drop ;
 \ ifsym        : t*/ t*/mod swap drop ;
-
-: skipped  ( -- )  "skipped" type$ space 0 parse$ type$ cr done ;
 
 testsection test values
 t{ max-uint   -> maxuint }t
@@ -34,7 +47,6 @@ t{ max-int    -> maxint  }t
 t{ min-int    -> msb     }t
 t{ mid-uint   -> maxint  }t
 t{ mid-uint+1 -> msb     }t
-
 
 decimal
 testsection number input

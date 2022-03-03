@@ -309,12 +309,11 @@ t{ 1 2 um* -> 2 0 }t
 t{ 2 1 um* -> 2 0 }t
 t{ 3 3 um* -> 9 0 }t
 
-omit
 t{ mid-uint+1 1 rshift 2 um* -> mid-uint+1 0 }t
 t{ mid-uint+1 2 um* -> 0 1 }t
 t{ mid-uint+1 4 um* -> 0 2 }t
-t{ 1s 2 um* -> 1s 1 lshift 1 }t
-t{ max-uint max-uint um* -> 1 1 invert }t
+\ t{ 1s 2 um* -> 1s 1 lshift 1 }t
+\ t{ max-uint max-uint um* -> 1 1 invert }t
 
 \ ------------------------------------------------------------------------
 testing divide: fm/mod sm/rem um/mod */ */mod / /mod mod
@@ -390,10 +389,10 @@ t{ 0 0 1 um/mod -> 0 0 }t
 t{ 1 0 1 um/mod -> 0 1 }t
 t{ 1 0 2 um/mod -> 1 0 }t
 t{ 3 0 2 um/mod -> 1 1 }t
-omit
-t{ max-uint 2 um* 2 um/mod -> 0 max-uint }t
-t{ max-uint 2 um* max-uint um/mod -> 0 2 }t
-t{ max-uint max-uint um* max-uint um/mod -> 0 max-uint }t
+
+\ t{ max-uint 2 um* 2 um/mod -> 0 max-uint }t
+\ t{ max-uint 2 um* max-uint um/mod -> 0 2 }t
+\ t{ max-uint max-uint um* max-uint um/mod -> 0 max-uint }t
 
 : iffloored
    [ -3 2 / -2 = invert ] literal if postpone \ then ;
@@ -544,10 +543,6 @@ align
 t{ here 1 allot align here swap - almnt = -> <true> }t
 \ end of extra test
 
-here 1 ,
-here 2 ,
-constant 2nd
-constant 1st
 t{ 1st 2nd u< -> <true> }t         \ here must grow with allot
 t{ 1st cell+ -> 2nd }t         \ ... by one cell
 t{ 1st 1 cells + -> 2nd }t
@@ -561,10 +556,6 @@ t{ 2 1 1st 2! -> }t
 t{ 1st 2@ -> 2 1 }t
 t{ 1s 1st !  1st @ -> 1s }t      \ can store cell-wide value
 
-here 1 c,
-here 2 c,
-constant 2ndc
-constant 1stc
 t{ 1stc 2ndc u< -> <true> }t      \ here must grow with allot
 t{ 1stc char+ -> 2ndc }t         \ ... by one char
 t{ 1stc 1 chars + -> 2ndc }t
@@ -574,8 +565,6 @@ t{ 1stc c@ 2ndc c@ -> 3 2 }t
 t{ 4 2ndc c! -> }t
 t{ 1stc c@ 2ndc c@ -> 3 4 }t
 
-align 1 allot here align here 3 cells allot
-constant a-addr  constant ua-addr
 t{ ua-addr aligned -> a-addr }t
 t{    1 a-addr c!  a-addr c@ ->    1 }t
 t{ 1234 a-addr  !  a-addr  @ -> 1234 }t
@@ -585,8 +574,8 @@ t{ 3 a-addr cell+ c!  a-addr cell+ c@ -> 3 }t
 t{ 1234 a-addr cell+ !  a-addr cell+ @ -> 1234 }t
 t{ 123 456 a-addr cell+ 2!  a-addr cell+ 2@ -> 123 456 }t
 
-: bits ( x -- u )
-   0 swap begin dup while dup msb and if >r 1+ r> then 2* repeat drop ;
+\ : bits ( x -- u )
+\    0 swap begin dup while dup msb and if >r 1+ r> then 2* repeat drop ;
 ( characters >= 1 au, <= size of cell, >= 8 bits )
 t{ 1 chars 1 < -> <false> }t
 t{ 1 chars 1 cells > -> <false> }t
@@ -595,7 +584,11 @@ t{ 1 chars 1 cells > -> <false> }t
 ( cells >= 1 au, integral multiple of char size, >= 16 bits )
 t{ 1 cells 1 < -> <false> }t
 t{ 1 cells 1 chars mod -> 0 }t
-t{ 1s bits 10 < -> <false> }t
+
+
+\ t{ 1s bits 10 < -> <false> }t
+t{ bits 8 < -> <false> }t
+
 
 t{ 0 1st ! -> }t
 t{ 1 1st +! -> }t
@@ -771,9 +764,9 @@ omit
 : ge3 s" : ge4 345 ;" ;
 : ge5 evaluate ; immediate
 
-: ge1 "123"         pad dup unpack$ ; immediate
-: ge2 "123 1+"      pad dup unpack$ ; immediate
-: ge3 ": ge4 345 ;" pad dup unpack$ ;
+: ge1 "123"         >pad ; immediate
+: ge2 "123 1+"      >pad ; immediate
+: ge3 ": ge4 345 ;" >pad ;
 : ge5 evaluate ; immediate
 
 t{ ge1 evaluate -> 123 }t         ( test evaluate in interp. state )
@@ -788,30 +781,31 @@ t{ ge7 -> 124 }t
 
 \ ------------------------------------------------------------------------
 
-done
-
+omit
 testing source >in word
-
-: gs1 s" source" 2dup evaluate
+: gs1 "source" >pad 2dup evaluate
        >r swap >r = r> r> = ;
 t{ gs1 -> <true> <true> }t
 
+omit
 variable scans
 : rescan?  -1 scans +! scans @ if 0 >in ! then ;
-
 t{ 2 scans !
 345 rescan?
 -> 345 345 }t
 
+omit
 : gs2  5 scans ! s" 123 rescan?" evaluate ;
 t{ gs2 -> 123 123 123 123 123 }t
 
+omit
 : gs3 word count swap c@ ;
 t{ bl gs3 hello -> 5 char h }t
 t{ char " gs3 goodbye" -> 7 char g }t
 t{ bl gs3
 drop -> 0 }t            \ blank line return zero-length string
 
+omit
 : gs4 source >in ! drop ;
 t{ gs4 123 456
 -> }t
@@ -832,28 +826,28 @@ testing <# # #s #> hold sign base >number hex decimal
       r> drop 2drop <false>      \ lengths mismatch
    then ;
 
-: gp1  <# 41 hold 42 hold 0 0 #> s" ba" s= ;
+: gp1  <# 41 hold 42 hold 0 0 #> "BA" >pad s= ;
 t{ gp1 -> <true> }t
 
-: gp2  <# -1 sign 0 sign -1 sign 0 0 #> s" --" s= ;
+: gp2  <# -1 sign 0 sign -1 sign 0 0 #> "--" >pad s= ;
 t{ gp2 -> <true> }t
 
-: gp3  <# 1 0 # # #> s" 01" s= ;
+: gp3  <# 1 0 # # #> "01" >pad s= ;
 t{ gp3 -> <true> }t
 
-: gp4  <# 1 0 #s #> s" 1" s= ;
+: gp4  <# 1 0 #s #> "1" >pad s= ;
 t{ gp4 -> <true> }t
 
 24 constant max-base         \ base 2 .. 36
-: count-bits
-   0 0 invert begin dup while >r 1+ r> 2* repeat drop ;
-count-bits 2* constant #bits-ud      \ number of bits in ud
+\ : count-bits
+\   0 0 invert begin dup while >r 1+ r> 2* repeat drop ;
+\ count-bits 2* constant #bits-ud      \ number of bits in ud
 
 : gp5
    base @ <true>
    max-base 1+ 2 do         \ for each possible base
       i base !            \ tbd: assumes base works
-      i 0 <# #s #> s" 10" s= and
+      i 0 <# #s #> "10" >pad s= and
    loop
    swap base ! ;
 t{ gp5 -> <true> }t
@@ -869,6 +863,7 @@ t{ gp5 -> <true> }t
    loop swap drop ;
 t{ gp6 -> <true> }t
 
+omit
 : gp7
    base @ >r    max-base base !
    <true>
@@ -881,15 +876,15 @@ t{ gp6 -> <true> }t
       1 = swap c@ 41 i a - + = and and
    loop
    r> base ! ;
-
 t{ gp7 -> <true> }t
 
 \ >number tests
 create gn-buf 0 c,
 : gn-string   gn-buf 1 ;
 : gn-consumed   gn-buf char+ 0 ;
-: gn'      [char] ' word char+ c@ gn-buf c!  gn-string ;
+: gn'      [char] ' word$ >pad char+ c@ gn-buf c!  gn-string ;
 
+omit
 t{ 0 0 gn' 0' >number -> 0 0 gn-consumed }t
 t{ 0 0 gn' 1' >number -> 1 0 gn-consumed }t
 t{ 1 0 gn' 1' >number -> base @ 1+ 0 gn-consumed }t
@@ -897,9 +892,11 @@ t{ 0 0 gn' -' >number -> 0 0 gn-string }t   \ should fail to convert these
 t{ 0 0 gn' +' >number -> 0 0 gn-string }t
 t{ 0 0 gn' .' >number -> 0 0 gn-string }t
 
+omit
 : >number-based
    base @ >r base ! >number r> base ! ;
 
+omit
 t{ 0 0 gn' 2' 10 >number-based -> 2 0 gn-consumed }t
 t{ 0 0 gn' 2'  2 >number-based -> 0 0 gn-string }t
 t{ 0 0 gn' f' 10 >number-based -> f 0 gn-consumed }t
@@ -907,6 +904,7 @@ t{ 0 0 gn' g' 10 >number-based -> 0 0 gn-string }t
 t{ 0 0 gn' g' max-base >number-based -> 10 0 gn-consumed }t
 t{ 0 0 gn' z' max-base >number-based -> 23 0 gn-consumed }t
 
+omit
 : gn1   \ ( ud base -- ud' len ) ud should equal ud' and len should be zero.
    base @ >r base !
    <# #s #>
@@ -961,23 +959,23 @@ t{ seebuf -> 12 34 34 }t
 testing output: . ." cr emit space spaces type u.
 
 : output-test
-   ." you should see the standard graphic characters:" cr
+   "you should see the standard graphic characters:" type$ cr
    41 bl do i emit loop cr
    61 41 do i emit loop cr
    7f 61 do i emit loop cr
-   ." you should see 0-9 separated by a space:" cr
+   "you should see 0-9 separated by a space:" type$ cr
    9 1+ 0 do i . loop cr
-   ." you should see 0-9 (with no spaces):" cr
+   "you should see 0-9 (with no spaces):" type$ cr
    [char] 9 1+ [char] 0 do i 0 spaces emit loop cr
-   ." you should see a-g separated by a space:" cr
+   "you should see a-g separated by a space:" type$ cr
    [char] g 1+ [char] a do i emit space loop cr
-   ." you should see 0-5 separated by two spaces:" cr
+   "you should see 0-5 separated by two spaces:" type$ cr
    5 1+ 0 do i [char] 0 + emit 2 spaces loop cr
-   ." you should see two separate lines:" cr
-   s" line 1" type cr s" line 2" type cr
-   ." you should see the number ranges of signed and unsigned numbers:" cr
-   ."   signed: " min-int . max-int . cr
-   ." unsigned: " 0 u. max-uint u. cr
+   "you should see two separate lines:" type$ cr
+   "line 1" >pad type cr "line 2" >pad type cr
+   "you should see the number ranges of signed and unsigned numbers:" type$ cr
+   "signed: " type$  min-int . max-int . cr
+   "unsigned: " type$  0 u. max-uint u. cr
 ;
 
 t{ output-test -> }t
@@ -989,9 +987,9 @@ testing input: accept
 create abuf 50 chars allot
 
 : accept-test
-   cr ." please type up to 80 characters:" cr
+   cr "please type up to 80 characters:" type$ cr
    abuf 50 accept
-   cr ." received: " [char] " emit
+   cr "received: " type$ [char] " emit
    abuf swap type [char] " emit cr
 ;
 
@@ -1004,6 +1002,6 @@ t{ : gdx   123 ; : gdx   gdx 234 ; -> }t
 
 t{ gdx -> 123 234 }t
 
-cr .( end of core word set tests) cr
+cr "end of core word set tests" type$ cr
 
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
-v="0.7.4"
+v="0.7.5"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -35,7 +35,7 @@ v="0.7.4"
 #        is assigned, but shellcheck can't see how
 
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 casesensitive=1
 
@@ -267,7 +267,7 @@ header()  {
 
 
 
-# ----- detokeniser / pretend optimiser ------------------ #FOLD00
+# ----- detokeniser / pretend optimiser ------------------ #fold00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -464,7 +464,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #FOLD00
+# ----- defining words ----------------------------------- #fold00
 
 put()   { code "((s[sp]=$1))"; }                                     # push without pointer inc
 push()  { code "((s[++sp]=$1))"; }
@@ -581,14 +581,19 @@ constant 'cell'               "1"
 # the word to "inline"
 # arg1: name of deferred word
 defer()  {
-#   local context
    ((filehandle>corefiles)) || linenr="${BASH_LINENO[0]}"
    nowheader "$1" "$filehandle" "$linenr"
    use "(())"
 }
 
+value()  {
+   ((filehandle>corefiles)) || linenr="${BASH_LINENO[0]}"
+   nowheader "$1" "$filehandle" "$linenr"
+   use "((s[++sp]=$2))"
+}
 
-# ----- errors, traps, entry points----------------------- #FOLD00
+
+# ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
    filehandle=0                                                      # 1=yoda. 0=tty.  >1=loaded source
@@ -762,7 +767,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #FOLD00
+# ----- resolve forward refs ----------------------------- #fold00
 
 # used to help determining if resolving forward refs create
 # new forward refs, in which case resolving will be repeated.
@@ -817,7 +822,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter, evaluate------------------------ #FOLD00
+# ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -893,7 +898,7 @@ evaluate()  {
 }
 
 
-# ----- load source files -------------------------------- #FOLD00
+# ----- load source files -------------------------------- #fold00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -1016,7 +1021,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1216,6 +1221,32 @@ colon 'is'
    code 'name "${s[sp--]}"'
    code 'apply "${exists[0]}" "$name"'
 semicolon
+
+# ----- value, to ---------------------------------------- #fold01
+
+colon "value"
+   code 'word'
+   code 'value "$word" "${s[sp--]}"'
+semicolon
+inline
+
+colon 'to'
+   code 'word'
+   code '[[ -z "$word" ]] && missingname'
+   code 'exists "$word" "${order}" || notfound "$word"'
+   code 'code "apply \"${exists[0]}\" \"s[++sp]=\${s[sp--]}\""'
+semicolon
+compiled
+
+colon 'to'
+   code 'word'
+   code '[[ -z "$word" ]] && missingname'
+   code 'exists "$word" "${order}" || notfound "$word"'
+   code 'apply  "${exists[0]}" "s[++sp]=${s[sp--]}"'
+semicolon
+
+
+
 
 # ----- parameter stack ---------------------------------- #fold01
 
@@ -1752,7 +1783,7 @@ colon '-'
 semicolon
 inline
 
-# ----- arithmetics, mixed ------------------------------- #FOLD01
+# ----- arithmetics, mixed ------------------------------- #fold01
 
 # incorrect result with large number
 # ( u1 u2 -- ud )
@@ -1847,7 +1878,7 @@ udslashmod()  {
 # ( d1 u1 -- u2 d2 )   d1/u2 -> d2 remainder u2
 primitive 'ud/mod'   'udslashmod'
 
-# ----- arithmetics, double ------------------------------ #FOLD01
+# ----- arithmetics, double ------------------------------ #fold01
 
 colon 'dnegate'  # ( d1 -- d2 )
    code '((s[sp-1]=-s[sp-1]&true, s[sp]^=true))'
@@ -2669,7 +2700,7 @@ colon 'version'
 semicolon
 
 
-# ---- former yoda.core primitives --------------------------------------- #FOLD01
+# ---- former yoda.core primitives ----------------------- #fold01
 # moved back for faster loading
 
 primitive "\\"             'line=""'                   ; immediate   # ( -- ) ( s: line )

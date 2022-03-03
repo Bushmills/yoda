@@ -1,0 +1,11 @@
+name:                m*
+stack:               ( n1 n2 -- d )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetic
+
+description:         multiplies unsigned singles n1, n2 for signed double product d
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/MTimes

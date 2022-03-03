@@ -35,7 +35,7 @@ v="0.7.4"
 #        is assigned, but shellcheck can't see how
 
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 casesensitive=1
 
@@ -267,7 +267,7 @@ header()  {
 
 
 
-# ----- detokeniser / pretend optimiser ------------------ #fold00
+# ----- detokeniser / pretend optimiser ------------------ #FOLD00
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
@@ -464,7 +464,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 put()   { code "((s[sp]=$1))"; }                                     # push without pointer inc
 push()  { code "((s[++sp]=$1))"; }
@@ -588,7 +588,7 @@ defer()  {
 }
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    filehandle=0                                                      # 1=yoda. 0=tty.  >1=loaded source
@@ -762,7 +762,7 @@ pattern()  {                                                         # pattern i
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- resolve forward refs ----------------------------- #FOLD00
 
 # used to help determining if resolving forward refs create
 # new forward refs, in which case resolving will be repeated.
@@ -817,7 +817,7 @@ resolve()  {
 }
 
 
-# ----- line interpreter, evaluate------------------------ #fold00
+# ----- line interpreter, evaluate------------------------ #FOLD00
 
 # text compiler and interpreter, the so-called outer interpreter
 
@@ -893,7 +893,7 @@ evaluate()  {
 }
 
 
-# ----- load source files -------------------------------- #fold00
+# ----- load source files -------------------------------- #FOLD00
 
 # return filehandle pointing to matching file in array files,
 # or to end of array where new file will be added if no
@@ -1016,7 +1016,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1752,7 +1752,7 @@ colon '-'
 semicolon
 inline
 
-# ----- arithmetics, mixed ------------------------------- #fold01
+# ----- arithmetics, mixed ------------------------------- #FOLD01
 
 # incorrect result with large number
 # ( u1 u2 -- ud )
@@ -1771,6 +1771,34 @@ umstar()  {
 colon 'um*'
    code 'umstar'
 semicolon
+inline
+
+mstar()  {
+   local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 dh=0 sign i=bits
+   sign=$(((s0^s1)&msb))
+   ((s0&msb))&&((s0=(-s0&true)))
+   ((s1&msb))&&((s1=(-s1&true)))
+#trace "abs s0:$s0, s1:$s1, sign:$sign"
+   for ((; i--;)); do
+      ((dh*=2, dl*=2, dl&carry))&&((dh++))
+#trace "i:$i, left shifted d:$dh:$dl"
+      ((s1&true))&&((s1<<=1, s1&carry))&&((dl+=s0, dl&(carry)))&&((dh++))
+#trace "i:$i, accumulated d:$dh:$dl, s1=$s1"
+   done
+   ((sign))&&{
+      ((dl=-dl&true, dh^=true, dl))||((dh++))
+   }
+#trace "applied sign to d:$dh:$dl, sign=$sign"
+   ((dl&=true))
+#trace "masked d:$dh:$dl"
+   s[sp-1]="$dl"
+   s[sp]="$dh"
+}
+
+colon 'm*'
+   code 'mstar'
+semicolon
+inline
 
 
 #                     msb&    msb&
@@ -1819,11 +1847,10 @@ udslashmod()  {
 # ( d1 u1 -- u2 d2 )   d1/u2 -> d2 remainder u2
 primitive 'ud/mod'   'udslashmod'
 
-# ----- arithmetics, double ------------------------------ #fold01
+# ----- arithmetics, double ------------------------------ #FOLD01
 
 colon 'dnegate'  # ( d1 -- d2 )
-   code '((s[sp-1]=(~(s[sp-1])+1)&maxuint))'
-   code '((s[sp]^=maxuint))'
+   code '((s[sp-1]=-s[sp-1]&true, s[sp]^=true))'
    code '((s[sp-1]))||((s[sp]++))'
 semicolon
 
@@ -2642,7 +2669,7 @@ colon 'version'
 semicolon
 
 
-# ---- former yoda.core primitives --------------------------------------- #fold01
+# ---- former yoda.core primitives --------------------------------------- #FOLD01
 # moved back for faster loading
 
 primitive "\\"             'line=""'                   ; immediate   # ( -- ) ( s: line )

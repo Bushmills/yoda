@@ -1,10 +1,16 @@
 >set-current "$forthwid"
 
+\ ----- defining words -----------------------------------
+
 : primitive   ( -- )  ( $1 -- )
       code
       postpone code,
       ;code  >inline
  ;
+
+            ( a -- ) ( s: word )   \ creation
+: buffer:   ( -- a )             \ execution
+      create allot  ;
 
 \ ----- system constants ---------------------------------
 
@@ -81,17 +87,19 @@ code ?leave    ( flag -- )                            "code '((s[sp--]))&&'"    
 \ ----- i/o ----------------------------------------------
 
 defer query$                                          ' simplequery$ is query$
-
 : type         ( c-addr u -- )                        pack$ type$                         ;        inline
 : ltype$       ( u -- ) ( $1 -- )                     dup$ type$ count$ - spaces          ;
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
-: word$        ( -- ) ( -- $1 )                       bl parse$                           ;        inline
-: .(           ( -- ) ( s: delim )                    ')' parse$ type$  ;
-
-: compile$     '"' parse$  postpone literal$ ;        transient
-: (s")         here dup unpack$  ;
-: s"           compile$ postpone (s")   ;   compiled
-: ."           compile$ postpone type$  ;   compiled
+: parse        ( c -- c-addr+1 u )                    parse$ here dup unpack$             ;
+: parse-name   ( -- c-addr+1 u )                      word$  here dup unpack$             ;
+: compile$     ( -- )                                 '"' parse$  postpone literal$       ; transient
+: (s")         ( -- c-addr+1 u )  ( $1 -- )           here dup unpack$                    ;
+: s"           ( -- c-addr+1 u )                      compile$ postpone (s")              ; compiled
+: ."           ( -- )                                 compile$ postpone type$             ; compiled
+: .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ;
+: word         ( c -- c-addr )                        -whitespace parse$
+                                                      here dup 1+ unpack$
+                                                      over c!                             ;
 
 \ ----- pictured number conversion -----------------------
 

@@ -383,6 +383,10 @@ optimise()  {                                                        # run code 
 
 # these need extglobs, set with "shopt -s extglob"
 
+minwhitespace()  {
+   line="${line##+([[:space:]])}"                                    # remove all leading spaces (needs extglobs)
+}
+
 # read space delimited word from line without removing it.
 peek_word()  {
    word="${line##+([[:space:]])}"                                    # remove all leading spaces (needs extglobs)
@@ -1375,6 +1379,14 @@ colon 'parse$'
    code 'ss+=("$word")'
 semicolon
 inline
+
+# ( -- ) ( -- $1 )
+colon 'word$'
+   code 'word'
+    code 'ss+=("$word")'
+ semicolon
+ inline
+
 
 # read line, push to string stack
 # TODO: configurable attributes
@@ -2721,6 +2733,7 @@ primitive 'compiled'       'compiled'                                # ( -- )
 primitive 'protect'        'protect'                                 # ( -- )
 primitive 'literal,'       'push ${s[sp--]}'                         # ( -- ) ( compile time: x -- ) ( run time: -- x )
 primitive 'compile,'       'call ${s[sp--]}'                         # ( -- ) ( compile time: x -- ) ( run time: -- x )
+
 # ----- numbers ------------------------------------------
 
 primitive 'decimal'        'm[base]=10'                              # ( -- )
@@ -2803,6 +2816,10 @@ primitive 'skim'           '((s[++sp]=m[s[sp]++]))'                  # ( a -- a+
 primitive 'here$'          '((s[++sp]=sdp))'                         # ( -- u )
 primitive 'here'           '((s[++sp]=dp))'                          # ( -- a )
 primitive ','              '((m[dp++]=s[sp--]))'                     # ( x -- )
+
+# ----- I/O ----------------------------------------------
+primitive '-whitespace'    'minwhitespace'
+
 
 # ----- launch ------------------------------------------- #fold00
 # shellcheck source=./yoda.conf                                      # try to load custom configuration

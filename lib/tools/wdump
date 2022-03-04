@@ -1,13 +1,8 @@
 provides: wdump
 
-: .cell     ( u -- )                \ output width adapts to bits/cell
-         s>d <#  bits 3 + 2 >>      \ no need for multiple of 8
-         for # next
-         #>type space ;
-transient
-
 : .cells    ( a u -- )              \ output u cells fromon address a
-         for skim .cell
+         for skim
+            >printf "%0$(((bits+3)/4))x " "$((${s[sp--]}))"
          next drop ;
 transient
 

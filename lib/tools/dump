@@ -1,11 +1,9 @@
 provides: dump
 once
-: .byte ( c -- )                    \ 2 digits
-      s>d <# # # #>type space ;   transient
 
 : .bytes ( a u -- )                 \ output u hex bytes at a
       for count
-         .byte
+         >printf "%02x " "$((${s[sp--]}))"
       next drop ;       transient
 
 : safe ( c1 -- c2 )                 \ replace nonprintable chars against .

@@ -1,5 +1,33 @@
-provides: dump
-once
+provides: dump wdump
+
+
+needed wdump unless omit
+: .cells    ( a u -- )              \ output u cells fromon address a
+         for skim
+            >printf "%0$(((bits+3)/4))x " "$((${s[sp--]}))"
+         next drop ;    transient
+: wdumpline ( a1 u -- a2 )          \ single line dump of u cells at a.
+         over u. 2 spaces           \ address
+         2dup .cells +  ;   transient
+: integers/line  ( linelen -- u )
+         bits 1+ 2 >>               \ number of chars per integer
+         1+                         \ plus one space separating them
+         / ;      transient inline
+: #outputlines ( totalintegerstodump integersperline -- numberoflinestodump )
+         >r r@ + 1+
+         r> / ;  transient inline
+: wdump  ( a n -- )                 \ "wide" dump.  cell dump, "cdump", looks like "char dump"
+         base @ >r hex              \ save current number base, change to hex
+\ NOTE: should use actual char count in address instead of 5 ( plus 2 spaces ) here.
+         columns 7 -                \ minus address and spaces, leaves that many chars for dump
+         integers/line
+         -rot pluck
+         #outputlines for           \ loop through number of lines to output
+            over wdumpline cr
+         next 2drop
+         r> base !  ;               \ restore former number base
+
+needed dump unless done
 
 : .bytes ( a u -- )                 \ output u hex bytes at a
       for count

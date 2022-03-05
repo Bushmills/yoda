@@ -64,7 +64,7 @@ for dir in                          \
 do                                                                   # loop through directory candidates
    [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
 done
-declare -i corefiles=1                                               # reading source location is different for later files. will be set be launch
+#declare -i corefiles=1                                               # reading source location is different for later files. will be set be launch
 nameprefix="yoda"                                                    # prefix to bash function names,  _${xt} will be appended upon header creation
 declare -i firstxt="1000"                                            # names enumeration, initially. Can be any positive integer
 declare -i xt=firstxt                                                # names enumeration, incremented, starting with xt
@@ -97,6 +97,7 @@ declare -n  context="wordlist_${order[0]}"                           # set point
 declare -n  current="wordlist_$currentwid"
 declare -n  flags="flags_$currentwid"                                # pointer var to vocabulary specific header flags
 
+declare -a body                                                      # xt -> body for create
 declare -a names                                                     # xt -> name
 declare -a transients                                                # transient headers.
 
@@ -247,7 +248,7 @@ immediate()    { copytowordlist "$compilerwid"; }
 
 
 compiler_init()  {
-   body=()
+   raw=()
    analyser=()                                                       # reinitialise code tags for analyser
    target=()
 }
@@ -271,16 +272,16 @@ header()  {
 # currently only a detokeniser. Plugged preparing further use.
 # The way it works:
 #    when a word gets compiled to a function, it will first be
-#    cached in an array "body". semicolon then calls compile,
-#    which generates a bash function from body.
+#    cached in an array "raw". semicolon then calls compile,
+#    which generates a bash function from raw.
 #    first thing compile does is calling optimise, which visits
-#    all items in body, potentially modifies or substitutes them
+#    all items in raw, potentially modifies or substitutes them
 #    while transferring to an array named target.
 #    compile then creates the bash function from target, which
 #    at that point is expected to contain literal code only.
-#    Compiling words which add to body array can tag entries,
+#    Compiling words which add to raw array can tag entries,
 #    informing optimiser/detokeniser about their nature, so it
-#    can respond in an appropriate way to body array entries.
+#    can respond in an appropriate way to raw array entries.
 
 
 # construct function name from xt
@@ -302,7 +303,7 @@ newname()  {
 
 # arg1: code token, arg2: code token type (opt)
 code()  {                                                            # instruction stream injector
-   body+=("$1")
+   raw+=("$1")
    analyser+=("${2:-0}")                                             # default to literal code
 }
 
@@ -318,7 +319,7 @@ declare -i dodoes_at
 # 0: append raw or generated code to target
 # 1: continue optimiser loop without adding code to target
 analyser_functionheader()  {
-   word="$bodyline"                                                  # word name of new word
+   word="$rawline"                                                  # word name of new word
    if [[ -n "${unresolved[$word]}" ]]; then
       name="${unresolved[$word]}"                                    # if forward ref, reuse function name of forward ref
       unset -v "unresolved['$word']"                                 # going to resolve word, remove from forward refs
@@ -330,12 +331,12 @@ analyser_functionheader()  {
 }
 
 analyser_sourcelocation()  {
-   where["$lastword"]="$bodyline"                                    # remember source location
+   where["$lastword"]="$rawline"                                    # remember source location
    return 1
 }
 
 analyser_atomiccode()  {
-   targetline="${atom[$bodyline]}"
+   targetline="${atom[$rawline]}"
 }
 
 analyser_does()  {
@@ -352,15 +353,15 @@ analyser_does()  {
 # - delayed headers creation
 # - storing source location
 optimise()  {                                                        # run code generator on ${analyser[@]} data
-   ((${#body[@]}==${#analyser[@]}))||echo "body/analyser<>1"
+   ((${#raw[@]}==${#analyser[@]}))||echo "raw/analyser<>1"
    target=()
    dodoes_at=0
-   for ((tmp=0; tmp<${#body[@]}; tmp++)); do
-      bodyline="${body[tmp]}"
-      bodyflag="${analyser[tmp]}"
-      targetline="$bodyline"                                         # assume code
-      (( bodyflag )) && {
-         analyser_"${flagname[bodyflag]}" || continue                # flags: examine and act upon
+   for ((tmp=0; tmp<${#raw[@]}; tmp++)); do
+      rawline="${raw[tmp]}"
+      rawflag="${analyser[tmp]}"
+      targetline="$rawline"                                         # assume code
+      (( rawflag )) && {
+         analyser_"${flagname[rawflag]}" || continue                # flags: examine and act upon
       }
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
@@ -451,9 +452,9 @@ apply()  {
 }
 
 
-# create a function from body[@]
+# create a function from raw[@]
 compile()  {
-   optimise                                                          # rewrite ${body[@]} to ${target[@]}
+   optimise                                                          # rewrite ${raw[@]} to ${target[@]}
    use "${target[@]}"                                                # generate function from $target[@] with name of $lastword
    compiler_init
 }
@@ -533,7 +534,7 @@ semicolon()  {
       eval "${conclude[nextconclude]}"
    done
    conclude=()
-   compile                                                           # compilation is gathered in an array body. Only
+   compile                                                           # compilation is gathered in an array raw. Only
    compiling="$false"                                                # when semicolon completes compilation, is
 }                                                                    # a function created from contents of array.
 
@@ -541,6 +542,7 @@ semicolon()  {
 constant()  {
    delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    push "$2"
+   body[xt]="$dp"
    semicolon
    inline
 }
@@ -578,20 +580,9 @@ constant 'bits'               "$bits"
 constant 'cell'               "1"
 
 
-# NOTE: be aware of possibility to defer an inlined word by xt,
-# then trash header of inlined word. trashing function body in
-# that situation will leave the deferred word with a dangling xt.
-# header flag "protect" disables code trashing, so does not setting
-# the word to "inline"
-# arg1: name of deferred word
-defer()  {
-   ((filehandle>corefiles)) || linenr="${BASH_LINENO[0]}"
-   nowheader "$1" "$filehandle" "$linenr"
-   use "(())"
-}
 
 value()  {
-   ((filehandle>corefiles)) || linenr="${BASH_LINENO[0]}"
+   local linenr="${linenr:-${BASH_LINENO[0]}}"
    nowheader "$1" "$filehandle" "$linenr"
    use "((s[++sp]=$2))"
 }
@@ -796,7 +787,7 @@ satisfy1()  {
    local word="$1"
    [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
       forwardref "$word"                                             # yes: create forward ref only
-      ((${#body[@]})) && return 1                                    #   refuse to satisfy while building new word is in progress
+      ((${#raw[@]})) && return 1                                    #   refuse to satisfy while building new word is in progress
       tmp="${libdirs[0]}/${lib["$word"]}"                            #   path and name of lib file
       [[ -f "$tmp" ]] && from "$tmp"                                 #   load if file exists
       return 0
@@ -1030,8 +1021,8 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 colon ';'
    code "((s[sp--] == $magic))||{ unstructured ':'; return; }"   # check the magic left by :
-   code '((${s[sp--]} == ${#body[@]}))&& code "(())"'             # insert a noop into empty function bodies
-   code 'semicolon'                                                  # compile $lastword from $body[@], resume interpreting
+   code '((${s[sp--]} == ${#raw[@]}))&& code "(())"'             # insert a noop into empty function bodies
+   code 'semicolon'                                                  # compile $lastword from $raw[@], resume interpreting
 semicolon
 compiled
 
@@ -1039,7 +1030,7 @@ compiled
 colon ':'
    code 'word'                                                       # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
-   push '${#body[@]}'                                                # allow check of empty function
+   push '${#raw[@]}'                                                # allow check of empty function
    push "$magic"                                                     # allow check of proper nesting
    code '((compiling=true))'
 semicolon
@@ -1125,70 +1116,34 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 # ----- defining words ----------------------------------- #fold01
 
-# essentially a constant with yet to be specified source for its
-# value and overwritable run time semantics (push value by default)
-definess()  {
-# NOTE: case sensitivity
-   code "constant \"\${ss[-1]}\" \"$1\""                             # not using single quotes because want $1 to expand
-   code 'unset "ss[-1]"'
-}
-
-define()  {
+create()  {
    code 'word'
-# NOTE: case sensitivity
    code "constant \"\$word\" \"$1\""                                 # not using single quotes because want $1 to expand
 }
 
 
-colon 'create$'
-    definess '$dp'
-semicolon
-inline
-
-colon 'create'
-    define '$dp'
-semicolon
-inline
-
 colon 'constant'
-   define '${s[sp--]}'
+   create '${s[sp--]}'
 semicolon
 inline
+
+
+createstring()  {
+   code "constant \"\${ss[-1]}\" \"$1\""
+   code 'unset "ss[-1]"'
+}
+
 
 colon 'constant$'
-   definess '${s[sp--]}'
+   createstring '${s[sp--]}'
 semicolon
 inline
-
-colon 'variable'
-   define '$((dp))'
-   code '((m[dp++]=0))'                                              # allocate and initialise
-semicolon
-inline
-
-colon 'variable$'
-   definess '$((dp))'
-   code '((m[dp++]=0))'                                              # allocate and initialise
-semicolon
-inline
-
-colon "array"
-   define ''                                                         # value irrelevant, use will replace code anyway
-   code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
-   pop  'dp+'                                                        # allocate
-semicolon
-
-colon "array$"
-   definess ''                                                       # value irrelevant
-   code 'use "((s[sp]+=$dp))"'                                       # set run time semantics
-   pop  'dp+'                                                        # allocate
-semicolon
 
 
 # NOTE: factor code common with header
 # ' foo alias bar
 colon 'alias'
-   define ''                                                         # value irrelevant, will point to different function anyway
+   create ''                                                         # value irrelevant, will point to different function anyway
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
    code 'name "${s[sp--]}"'                                          # convert xt to function name
    code 'current["$word"]="$name"'                                   # let new header execute same function
@@ -1202,6 +1157,25 @@ semicolon                                                            # as trash 
 # new deferred words are initialised to noop
 primitive 'noop' '(())'
 
+
+# NOTE: be aware of possibility to defer an inlined word by xt,
+# then trash header of inlined word. trashing function body in
+# that situation will leave the deferred word with a dangling xt.
+# header flag "protect" disables code trashing, so does not setting
+# the word to "inline"
+# arg1: name of deferred word
+
+# because a deferred word is neither defined by create nor does it
+# correpond with a memory address which hold the xt of bound word,
+# but defer! and defer@ are facilitated by those, defer simulates
+# memory boundedness. So (will) do is, defer@, defer!
+defer()  {
+   ((body[xt]=dp, m[dp++]=${current[noop]#${nameprefix}_}))
+   local linenr="${linenr:-${BASH_LINENO[0]}}"
+   nowheader "$1" "$filehandle" "$linenr"
+   use "(())"
+}
+
 # example:  defer foo      ' bar is foo
 colon "defer"                                                        # use in yoda program
    code 'word'
@@ -1209,10 +1183,12 @@ colon "defer"                                                        # use in yo
 semicolon
 inline
 
+# ( xt -- ) ( s: word )
 colon 'is'
    code 'word'
    code '[[ -z "$word" ]] && missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
+   code 'code "((m[${body[exists[0]]}]=s[sp]))"'
    code 'name "\${s[sp--]}"'
    code 'code "apply \"${exists[0]}\" \"$name\""'
 semicolon
@@ -1222,6 +1198,7 @@ colon 'is'
    code 'word'
    code '[[ -z "$word" ]] && missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
+   code '((m[body[exists[0]]]=${s[sp]}))'
    code 'name "${s[sp--]}"'
    code 'apply "${exists[0]}" "$name"'
 semicolon
@@ -1609,23 +1586,23 @@ remagic
 
 colon 'if'
    code 'code "if ((s[sp--])); then"'
-   push '${#body[@]}'                                                # allow check of empty function
+   push '${#raw[@]}'                                                # allow check of empty function
    push "$magic"                                                     # allow check of structure
 semicolon
 compiled
 
 colon 'else'
    code "((s[sp]++ == \"$magic\")) || { unstructured 'if'; return; }"
-   code '((s[sp-1] == ${#body[@]})) && code "(())"'
+   code '((s[sp-1] == ${#raw[@]})) && code "(())"'
    code 'code "else"'
-   code '((s[sp-1]=${#body[@]}))'
+   code '((s[sp-1]=${#raw[@]}))'
 semicolon
 compiled
 
 colon 'then'
    code "((s[sp] == $magic ||  s[sp] == $((magic+1)))) || { unstructured 'if or else'; return; }"
    atom 'drop'
-   code '((s[sp--] == ${#body[@]})) && code "(())"'
+   code '((s[sp--] == ${#raw[@]})) && code "(())"'
    code 'code "fi"'
 semicolon
 compiled
@@ -1635,7 +1612,7 @@ remagic
 
 colon 'begin'
    code 'code "while :; do"'
-   push '${#body[@]}'                                                # allow check of empty function
+   push '${#raw[@]}'                                                # allow check of empty function
    push "$magic"                                                     # allow check of structure
 semicolon
 compiled
@@ -1643,7 +1620,7 @@ compiled
 
 colon 'again'
    code "(( s[sp--] == \"$magic\" )) || { unstructured 'begin'; return; }"
-   code '(( s[sp--] == ${#body[@]} )) && code "(())"'
+   code '(( s[sp--] == ${#raw[@]} )) && code "(())"'
    code 'code "done"'
 semicolon
 compiled
@@ -1675,14 +1652,14 @@ colon 'for'
    code 'code "((r[++rp]=i))"'
    code 'code "((i=s[sp--]))"'
    code 'code "for ((; i--; )); do"'
-   push '${#body[@]}'                                                # allow check of empty function
+   push '${#raw[@]}'                                                # allow check of empty function
    push "$magic"                                                     # allow check of structure and empty function
 semicolon
 compiled
 
 colon 'next'
    code "((s[sp--] == $magic))|| { unstructured 'for'; return; }"
-   code '((s[sp--]-${#body[@]}))||code "(())"'
+   code '((s[sp--]-${#raw[@]}))||code "(())"'
    code 'code "done"'
    code "code '((i=r[rp--]))'"
 semicolon
@@ -1820,22 +1797,13 @@ mstar()  {
    local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 dh=0 sign i=bits
    sign=$(((s0^s1)&msb))
    ((s0&msb))&&((s0=(-s0&true)))
-   ((s1&msb))&&((s1=(-s1&true)))
-#trace "abs s0:$s0, s1:$s1, sign:$sign"
+   ((s1&msb))&&((s1=-s1))
    for ((; i--;)); do
       ((dh*=2, dl*=2, dl&carry))&&((dh++))
-#trace "i:$i, left shifted d:$dh:$dl"
       ((s1&true))&&((s1<<=1, s1&carry))&&((dl+=s0, dl&(carry)))&&((dh++))
-#trace "i:$i, accumulated d:$dh:$dl, s1=$s1"
    done
-   ((sign))&&{
-      ((dl=-dl&true, dh^=true, dl))||((dh++))
-   }
-#trace "applied sign to d:$dh:$dl, sign=$sign"
-   ((dl&=true))
-#trace "masked d:$dh:$dl"
-   s[sp-1]="$dl"
-   s[sp]="$dh"
+   ((sign))&&{((dl^=true, dh^=true, dl=(dl+1)&true, dl))||((dh++)); }
+   ((s[sp-1]=dl&true, s[sp]=dh&true))
 }
 
 colon 'm*'
@@ -1893,8 +1861,9 @@ primitive 'ud/mod'   'udslashmod'
 # ----- arithmetics, double ------------------------------ #fold01
 
 colon 'dnegate'  # ( d1 -- d2 )
-   code '((s[sp-1]=-s[sp-1]&true, s[sp]^=true))'
-   code '((s[sp-1]))||((s[sp]++))'
+   code 'local dh="${s[sp]}" dl="${s[sp-1]}"'
+   code '((dl^=true, dh^=true, dl=(dl+1)&true, dl))||((dh++))'
+   code '((s[sp-1]=dl, s[sp]=dh&true))'
 semicolon
 
 # ----- string stack operators---------------------------- #fold01
@@ -2733,6 +2702,7 @@ primitive 'compiled'       'compiled'                                # ( -- )
 primitive 'protect'        'protect'                                 # ( -- )
 primitive 'literal,'       'push ${s[sp--]}'                         # ( -- ) ( compile time: x -- ) ( run time: -- x )
 primitive 'compile,'       'call ${s[sp--]}'                         # ( -- ) ( compile time: x -- ) ( run time: -- x )
+primitive '>body'          's[sp]=${body[s[sp]]}'                    # ( xt -- pfa )
 
 # ----- numbers ------------------------------------------
 
@@ -2822,9 +2792,9 @@ primitive '-whitespace'    'minwhitespace'
 
 
 # ----- launch ------------------------------------------- #fold00
-# shellcheck source=./yoda.conf                                      # try to load custom configuration
 config()  {
    [[ -f "$HOME/$config" ]]  && { source "$HOME/$config"; return; }  # config in $HOME has priority over config in yoda dir
+# shellcheck source=./yoda.conf                                      # try to load custom configuration
    [[ -f "$mydir/$config" ]] && source "$mydir/$config"
 }
 # -------------------------------------------------------
@@ -2834,7 +2804,7 @@ read -r _ tmp < <(grep '^version ' "$dependencies")                  # check ver
 [[ "$tmp" == "$v" ]] || generate_dependencies                        # new yoda -> generate
 cache_dependencies                                                   # read dependencies into memory
 # -------------------------------------------------------
-corefiles="$filehandle"                                              # reading source location is different for later files
+#corefiles="$filehandle"                                              # reading source location is different for later files
 file="$mydir/yoda.core"
 from "$file" || filenotfound "$file"
 # -------------------------------------------------------

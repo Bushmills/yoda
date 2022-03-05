@@ -2,6 +2,15 @@
 
 \ ----- defining words -----------------------------------
 
+: create
+   here constant  ;
+
+: create$
+   here constant$  ;
+
+: variable
+   create cell allot  ;
+
 : primitive   ( -- )  ( $1 -- )
       code
       postpone code,
@@ -90,14 +99,15 @@ defer query$                                          ' simplequery$ is query$
 : type         ( c-addr u -- )                        pack$ type$                         ;        inline
 : ltype$       ( u -- ) ( $1 -- )                     dup$ type$ count$ - spaces          ;
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
-: parse        ( c -- c-addr+1 u )                    parse$ here dup unpack$             ;
-: parse-name   ( -- c-addr+1 u )                      word$  here dup unpack$             ;
+: parse        ( c -- c-addr u )                      parse$ here dup unpack$             ;
+: parse-name   ( -- c-addr u )                        word$  here dup unpack$             ;
+: source       ( -- c-addr u )                        "tib" env$ here dup unpack$         ;
 : compile$     ( -- )                                 '"' parse$  postpone literal$       ; transient
-: (s")         ( -- c-addr+1 u )  ( $1 -- )           here dup unpack$                    ;
-: s"           ( -- c-addr+1 u )                      compile$ postpone (s")              ; compiled
+: (s")         ( -- c-addr u )  ( $1 -- )             here dup unpack$                    ;
+: s"           ( -- c-addr u )                        compile$ postpone (s")              ; compiled
 : ."           ( -- )                                 compile$ postpone type$             ; compiled
 : .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ;
-: word         ( c -- c-addr )                        -whitespace parse$
+: word         ( c -- c-addr u )                      -whitespace parse$
                                                       here dup 1+ unpack$
                                                       over c!                             ;
 

@@ -24,6 +24,8 @@ $variable lasttest$
 : testsection ( -- ) ( s: line )       0 parse$ lasttest$ $!  purge ;
 "((sp=s[sp]))"  primitive  sp!                                                                     transient
 
+' testsection alias testing
+
 : .issue    ( $1 -- )                  ":" join$  20 ltype$ ;                                      transient inline
 : .tib      ( -- )                     "tib" env$ type$ cr ;                                       transient inline
 : .offending ( -- )                    "offending test" .issue  .tib  ;                            transient

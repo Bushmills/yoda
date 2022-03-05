@@ -1,0 +1,16 @@
+provides: array
+needs: bracket$
+once
+
+\ optimised array
+: array
+     create
+     "s[sp]+="                      \ s[sp]+=
+     here convert join$             \ s[sp]+=$dp
+     "(())" bracket$ use$           \ ((s[sp]+=$dp))
+     allot ;
+
+\ non-optimised array
+\ : array
+\     create allot
+\     does> cells + ;

@@ -1,0 +1,9 @@
+testing um/mod
+t{ 0 0 1 um/mod -> 0 0 }t
+t{ 1 0 1 um/mod -> 0 1 }t
+t{ 1 0 2 um/mod -> 1 0 }t
+t{ 3 0 2 um/mod -> 1 1 }t
+
+t{ max-uint 2 um* 2 um/mod -> 0 max-uint }t
+t{ max-uint 2 um* max-uint um/mod -> 0 2 }t
+t{ max-uint max-uint um* max-uint um/mod -> 0 max-uint }t

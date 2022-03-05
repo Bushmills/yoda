@@ -1,0 +1,104 @@
+testing comparisons: 0= = 0< < > u< min max
+
+t{ 0 0= -> <true> }t
+t{ 1 0= -> <false> }t
+t{ 2 0= -> <false> }t
+t{ -1 0= -> <false> }t
+t{ max-uint 0= -> <false> }t
+t{ min-int 0= -> <false> }t
+t{ max-int 0= -> <false> }t
+
+t{ 0 0 = -> <true> }t
+t{ 1 1 = -> <true> }t
+t{ -1 -1 = -> <true> }t
+t{ 1 0 = -> <false> }t
+t{ -1 0 = -> <false> }t
+t{ 0 1 = -> <false> }t
+t{ 0 -1 = -> <false> }t
+
+t{ 0 0< -> <false> }t
+t{ -1 0< -> <true> }t
+t{ min-int 0< -> <true> }t
+t{ 1 0< -> <false> }t
+t{ max-int 0< -> <false> }t
+
+t{ 0 1 < -> <true> }t
+t{ 1 2 < -> <true> }t
+t{ -1 0 < -> <true> }t
+t{ -1 1 < -> <true> }t
+t{ min-int 0 < -> <true> }t
+t{ min-int max-int < -> <true> }t
+t{ 0 max-int < -> <true> }t
+t{ 0 0 < -> <false> }t
+t{ 1 1 < -> <false> }t
+t{ 1 0 < -> <false> }t
+t{ 2 1 < -> <false> }t
+t{ 0 -1 < -> <false> }t
+t{ 1 -1 < -> <false> }t
+t{ 0 min-int < -> <false> }t
+t{ max-int min-int < -> <false> }t
+t{ max-int 0 < -> <false> }t
+
+t{ 0 1 > -> <false> }t
+t{ 1 2 > -> <false> }t
+t{ -1 0 > -> <false> }t
+t{ -1 1 > -> <false> }t
+t{ min-int 0 > -> <false> }t
+t{ min-int max-int > -> <false> }t
+t{ 0 max-int > -> <false> }t
+t{ 0 0 > -> <false> }t
+t{ 1 1 > -> <false> }t
+t{ 1 0 > -> <true> }t
+t{ 2 1 > -> <true> }t
+t{ 0 -1 > -> <true> }t
+t{ 1 -1 > -> <true> }t
+t{ 0 min-int > -> <true> }t
+t{ max-int min-int > -> <true> }t
+t{ max-int 0 > -> <true> }t
+
+t{ 0 1 u< -> <true> }t
+t{ 1 2 u< -> <true> }t
+t{ 0 mid-uint u< -> <true> }t
+t{ 0 max-uint u< -> <true> }t
+t{ mid-uint max-uint u< -> <true> }t
+t{ 0 0 u< -> <false> }t
+t{ 1 1 u< -> <false> }t
+t{ 1 0 u< -> <false> }t
+t{ 2 1 u< -> <false> }t
+t{ mid-uint 0 u< -> <false> }t
+t{ max-uint 0 u< -> <false> }t
+t{ max-uint mid-uint u< -> <false> }t
+
+t{ 0 1 min -> 0 }t
+t{ 1 2 min -> 1 }t
+t{ -1 0 min -> -1 }t
+t{ -1 1 min -> -1 }t
+t{ min-int 0 min -> min-int }t
+t{ min-int max-int min -> min-int }t
+t{ 0 max-int min -> 0 }t
+t{ 0 0 min -> 0 }t
+t{ 1 1 min -> 1 }t
+t{ 1 0 min -> 0 }t
+t{ 2 1 min -> 1 }t
+t{ 0 -1 min -> -1 }t
+t{ 1 -1 min -> -1 }t
+t{ 0 min-int min -> min-int }t
+t{ max-int min-int min -> min-int }t
+t{ max-int 0 min -> 0 }t
+
+t{ 0 1 max -> 1 }t
+t{ 1 2 max -> 2 }t
+t{ -1 0 max -> 0 }t
+t{ -1 1 max -> 1 }t
+t{ min-int 0 max -> 0 }t
+t{ min-int max-int max -> max-int }t
+t{ 0 max-int max -> max-int }t
+t{ 0 0 max -> 0 }t
+t{ 1 1 max -> 1 }t
+t{ 1 0 max -> 1 }t
+t{ 2 1 max -> 2 }t
+t{ 0 -1 max -> 0 }t
+t{ 1 -1 max -> 1 }t
+t{ 0 min-int max -> 0 }t
+t{ max-int min-int max -> max-int }t
+t{ max-int 0 max -> max-int }t

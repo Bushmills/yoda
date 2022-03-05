@@ -1,0 +1,31 @@
+testing sm/rem
+t{ 0 s>d 1 sm/rem -> 0 0 }t
+t{ 1 s>d 1 sm/rem -> 0 1 }t
+t{ 2 s>d 1 sm/rem -> 0 2 }t
+t{ -1 s>d 1 sm/rem -> 0 -1 }t
+t{ -2 s>d 1 sm/rem -> 0 -2 }t
+t{ 0 s>d -1 sm/rem -> 0 0 }t
+t{ 1 s>d -1 sm/rem -> 0 -1 }t
+t{ 2 s>d -1 sm/rem -> 0 -2 }t
+t{ -1 s>d -1 sm/rem -> 0 1 }t
+t{ -2 s>d -1 sm/rem -> 0 2 }t
+t{ 2 s>d 2 sm/rem -> 0 1 }t
+t{ -1 s>d -1 sm/rem -> 0 1 }t
+t{ -2 s>d -2 sm/rem -> 0 1 }t
+t{  7 s>d  3 sm/rem -> 1 2 }t
+t{  7 s>d -3 sm/rem -> 1 -2 }t
+t{ -7 s>d  3 sm/rem -> -1 -2 }t
+t{ -7 s>d -3 sm/rem -> -1 2 }t
+t{ max-int s>d 1 sm/rem -> 0 max-int }t
+t{ min-int s>d 1 sm/rem -> 0 min-int }t
+t{ max-int s>d max-int sm/rem -> 0 1 }t
+t{ min-int s>d min-int sm/rem -> 0 1 }t
+t{ 1s 1 4 sm/rem -> 3 max-int }t
+t{ 2 min-int m* 2 sm/rem -> 0 min-int }t
+t{ 2 min-int m* min-int sm/rem -> 0 2 }t
+t{ 2 max-int m* 2 sm/rem -> 0 max-int }t
+t{ 2 max-int m* max-int sm/rem -> 0 2 }t
+t{ min-int min-int m* min-int sm/rem -> 0 min-int }t
+t{ min-int max-int m* min-int sm/rem -> 0 max-int }t
+t{ min-int max-int m* max-int sm/rem -> 0 min-int }t
+t{ max-int max-int m* max-int sm/rem -> 0 max-int }t

@@ -1,0 +1,132 @@
+testing t* t/ t/mod
+: iffloored
+   [ -3 2 / -2 = invert ] literal if postpone \ then ;
+
+: ifsym
+   [ -3 2 / -1 = invert ] literal if postpone \ then ;
+
+\ the system might do either floored or symmetric division.
+\ since we have already tested m*, fm/mod, and sm/rem we can use them in test.
+
+omit
+iffloored : t/mod  >r s>d r> fm/mod ;
+iffloored : t/     t/mod swap drop ;
+iffloored : tmod   t/mod drop ;
+iffloored : t*/mod >r m* r> fm/mod ;
+iffloored : t*/    t*/mod swap drop ;
+ifsym     : t/mod  >r s>d r> sm/rem ;
+ifsym     : t/     t/mod swap drop ;
+ifsym     : tmod   t/mod drop ;
+ifsym     : t*/mod >r m* r> sm/rem ;
+ifsym     : t*/    t*/mod swap drop ;
+
+omit
+t{ 0 1 /mod -> 0 1 t/mod }t
+t{ 1 1 /mod -> 1 1 t/mod }t
+t{ 2 1 /mod -> 2 1 t/mod }t
+t{ -1 1 /mod -> -1 1 t/mod }t
+t{ -2 1 /mod -> -2 1 t/mod }t
+t{ 0 -1 /mod -> 0 -1 t/mod }t
+t{ 1 -1 /mod -> 1 -1 t/mod }t
+t{ 2 -1 /mod -> 2 -1 t/mod }t
+t{ -1 -1 /mod -> -1 -1 t/mod }t
+t{ -2 -1 /mod -> -2 -1 t/mod }t
+t{ 2 2 /mod -> 2 2 t/mod }t
+t{ -1 -1 /mod -> -1 -1 t/mod }t
+t{ -2 -2 /mod -> -2 -2 t/mod }t
+t{ 7 3 /mod -> 7 3 t/mod }t
+t{ 7 -3 /mod -> 7 -3 t/mod }t
+t{ -7 3 /mod -> -7 3 t/mod }t
+t{ -7 -3 /mod -> -7 -3 t/mod }t
+t{ max-int 1 /mod -> max-int 1 t/mod }t
+t{ min-int 1 /mod -> min-int 1 t/mod }t
+t{ max-int max-int /mod -> max-int max-int t/mod }t
+t{ min-int min-int /mod -> min-int min-int t/mod }t
+
+omit
+t{ 0 1 / -> 0 1 t/ }t
+t{ 1 1 / -> 1 1 t/ }t
+t{ 2 1 / -> 2 1 t/ }t
+t{ -1 1 / -> -1 1 t/ }t
+t{ -2 1 / -> -2 1 t/ }t
+t{ 0 -1 / -> 0 -1 t/ }t
+t{ 1 -1 / -> 1 -1 t/ }t
+t{ 2 -1 / -> 2 -1 t/ }t
+t{ -1 -1 / -> -1 -1 t/ }t
+t{ -2 -1 / -> -2 -1 t/ }t
+t{ 2 2 / -> 2 2 t/ }t
+t{ -1 -1 / -> -1 -1 t/ }t
+t{ -2 -2 / -> -2 -2 t/ }t
+t{ 7 3 / -> 7 3 t/ }t
+t{ 7 -3 / -> 7 -3 t/ }t
+t{ -7 3 / -> -7 3 t/ }t
+t{ -7 -3 / -> -7 -3 t/ }t
+t{ max-int 1 / -> max-int 1 t/ }t
+t{ min-int 1 / -> min-int 1 t/ }t
+t{ max-int max-int / -> max-int max-int t/ }t
+t{ min-int min-int / -> min-int min-int t/ }t
+
+omit
+t{ 0 1 mod -> 0 1 tmod }t
+t{ 1 1 mod -> 1 1 tmod }t
+t{ 2 1 mod -> 2 1 tmod }t
+t{ -1 1 mod -> -1 1 tmod }t
+t{ -2 1 mod -> -2 1 tmod }t
+t{ 0 -1 mod -> 0 -1 tmod }t
+t{ 1 -1 mod -> 1 -1 tmod }t
+t{ 2 -1 mod -> 2 -1 tmod }t
+t{ -1 -1 mod -> -1 -1 tmod }t
+t{ -2 -1 mod -> -2 -1 tmod }t
+t{ 2 2 mod -> 2 2 tmod }t
+t{ -1 -1 mod -> -1 -1 tmod }t
+t{ -2 -2 mod -> -2 -2 tmod }t
+t{ 7 3 mod -> 7 3 tmod }t
+t{ 7 -3 mod -> 7 -3 tmod }t
+t{ -7 3 mod -> -7 3 tmod }t
+t{ -7 -3 mod -> -7 -3 tmod }t
+t{ max-int 1 mod -> max-int 1 tmod }t
+t{ min-int 1 mod -> min-int 1 tmod }t
+t{ max-int max-int mod -> max-int max-int tmod }t
+t{ min-int min-int mod -> min-int min-int tmod }t
+
+omit
+t{ 0 2 1 */ -> 0 2 1 t*/ }t
+t{ 1 2 1 */ -> 1 2 1 t*/ }t
+t{ 2 2 1 */ -> 2 2 1 t*/ }t
+t{ -1 2 1 */ -> -1 2 1 t*/ }t
+t{ -2 2 1 */ -> -2 2 1 t*/ }t
+t{ 0 2 -1 */ -> 0 2 -1 t*/ }t
+t{ 1 2 -1 */ -> 1 2 -1 t*/ }t
+t{ 2 2 -1 */ -> 2 2 -1 t*/ }t
+t{ -1 2 -1 */ -> -1 2 -1 t*/ }t
+t{ -2 2 -1 */ -> -2 2 -1 t*/ }t
+t{ 2 2 2 */ -> 2 2 2 t*/ }t
+t{ -1 2 -1 */ -> -1 2 -1 t*/ }t
+t{ -2 2 -2 */ -> -2 2 -2 t*/ }t
+t{ 7 2 3 */ -> 7 2 3 t*/ }t
+t{ 7 2 -3 */ -> 7 2 -3 t*/ }t
+t{ -7 2 3 */ -> -7 2 3 t*/ }t
+t{ -7 2 -3 */ -> -7 2 -3 t*/ }t
+t{ max-int 2 max-int */ -> max-int 2 max-int t*/ }t
+t{ min-int 2 min-int */ -> min-int 2 min-int t*/ }t
+
+omit
+t{ 0 2 1 */mod -> 0 2 1 t*/mod }t
+t{ 1 2 1 */mod -> 1 2 1 t*/mod }t
+t{ 2 2 1 */mod -> 2 2 1 t*/mod }t
+t{ -1 2 1 */mod -> -1 2 1 t*/mod }t
+t{ -2 2 1 */mod -> -2 2 1 t*/mod }t
+t{ 0 2 -1 */mod -> 0 2 -1 t*/mod }t
+t{ 1 2 -1 */mod -> 1 2 -1 t*/mod }t
+t{ 2 2 -1 */mod -> 2 2 -1 t*/mod }t
+t{ -1 2 -1 */mod -> -1 2 -1 t*/mod }t
+t{ -2 2 -1 */mod -> -2 2 -1 t*/mod }t
+t{ 2 2 2 */mod -> 2 2 2 t*/mod }t
+t{ -1 2 -1 */mod -> -1 2 -1 t*/mod }t
+t{ -2 2 -2 */mod -> -2 2 -2 t*/mod }t
+t{ 7 2 3 */mod -> 7 2 3 t*/mod }t
+t{ 7 2 -3 */mod -> 7 2 -3 t*/mod }t
+t{ -7 2 3 */mod -> -7 2 3 t*/mod }t
+t{ -7 2 -3 */mod -> -7 2 -3 t*/mod }t
+t{ max-int 2 max-int */mod -> max-int 2 max-int t*/mod }t
+t{ min-int 2 min-int */mod -> min-int 2 min-int t*/mod }t

@@ -1,0 +1,18 @@
+testing subtraction: - 1-
+
+t{ 0 5 - -> -5 }t
+t{ 5 0 - -> 5 }t
+t{ 0 -5 - -> 5 }t
+t{ -5 0 - -> -5 }t
+t{ 1 2 - -> -1 }t
+t{ 1 -2 - -> 3 }t
+t{ -1 2 - -> -3 }t
+t{ -1 -2 - -> 1 }t
+t{ 0 1 - -> -1 }t
+t{ mid-uint+1 1 - -> mid-uint }t
+
+
+t{ 2 1- -> 1 }t
+t{ 1 1- -> 0 }t
+t{ 0 1- -> -1 }t
+t{ mid-uint+1 1- -> mid-uint }t

@@ -1,0 +1,19 @@
+testing m*
+t{ 0 0 m* -> 0 s>d }t
+t{ 0 1 m* -> 0 s>d }t
+t{ 1 0 m* -> 0 s>d }t
+t{ 1 2 m* -> 2 s>d }t
+t{ 2 1 m* -> 2 s>d }t
+t{ 3 3 m* -> 9 s>d }t
+t{ -3 3 m* -> -9 s>d }t
+t{ 3 -3 m* -> -9 s>d }t
+t{ -3 -3 m* -> 9 s>d }t
+t{ 0 min-int m* -> 0 s>d }t
+t{ 1 min-int m* -> min-int s>d }t
+t{ 2 min-int m* -> 0 1s }t
+t{ 0 max-int m* -> 0 s>d }t
+t{ 1 max-int m* -> max-int s>d }t
+t{ 2 max-int m* -> max-int 1 lshift 0 }t
+t{ min-int min-int m* -> 0 msb 1 rshift }t
+\ t{ max-int min-int m* -> msb msb 2/ }t
+t{ max-int max-int m* -> 1 msb 2/ invert }t

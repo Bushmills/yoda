@@ -1,0 +1,8 @@
+testing basic assumptions
+t{ -> }t               \ start with clean slate
+( test if any bits are set; answer in base 1 )
+t{ : bitsset? if 0 0 else 0 then ; -> }t
+t{  0 bitsset? -> 0 }t      ( zero is all bits clear )
+t{  1 bitsset? -> 0 0 }t      ( other number have at least one bit )
+t{ -1 bitsset? -> 0 0 }t
+

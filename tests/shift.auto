@@ -1,0 +1,33 @@
+testing 2* 2/ lshift rshift
+
+hex
+( we trust 1s, invert, and bitsset?; we will confirm rshift later )
+t{ msb bitsset? -> 0 0 }t
+
+t{ 0s 2* -> 0s }t
+t{ 1 2* -> 2 }t
+t{ 4000 2* -> 8000 }t
+t{ 1s 2* 1 xor -> 1s }t
+t{ msb 2* -> 0s }t
+
+t{ 0s 2/ -> 0s }t
+t{ 1 2/ -> 0 }t
+t{ 4000 2/ -> 2000 }t
+t{ 1s 2/ -> 1s }t            \ msb propogated
+t{ 1s 1 xor 2/ -> 1s }t
+t{ msb 2/ msb and -> msb }t
+
+t{ 1 0 lshift -> 1 }t
+t{ 1 1 lshift -> 2 }t
+t{ 1 2 lshift -> 4 }t
+t{ 1 f lshift -> 8000 }t         \ biggest guaranteed shift
+t{ 1s 1 lshift 1 xor -> 1s }t
+t{ msb 1 lshift -> 0 }t
+
+t{ 1 0 rshift -> 1 }t
+t{ 1 1 rshift -> 0 }t
+t{ 2 1 rshift -> 1 }t
+t{ 4 2 rshift -> 1 }t
+t{ 8000 f rshift -> 1 }t         \ biggest
+t{ msb 1 rshift msb and -> 0 }t      \ rshift zero fills msbs
+t{ msb 1 rshift 2* -> msb }t

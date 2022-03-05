@@ -1,0 +1,8 @@
+testing s>d
+t{ 0 s>d -> 0 0 }t
+t{ 1 s>d -> 1 0 }t
+t{ 2 s>d -> 2 0 }t
+t{ -1 s>d -> -1 -1 }t
+t{ -2 s>d -> -2 -1 }t
+t{ min-int s>d -> min-int -1 }t
+t{ max-int s>d -> max-int 0 }t

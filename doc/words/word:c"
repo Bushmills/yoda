@@ -1,0 +1,18 @@
+created:             auto     (remove line after having checked and revised description)
+name:                c"
+stack:               ( -- )         compile
+                     ( -- c-addr )  execute
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            compiler
+category:            memory, strings
+input stream:        double quote delimited string
+
+description:         during compilation, parse a double quote terminated string from
+                     input and compile it into word under construction. When that
+                     word executes, that string is placed in memory, with c-addr
+                     pointing to the leading count byte, followed by [count byte]
+                     characters of the string.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/Cq

@@ -1,0 +1,10 @@
+name:                defer!
+stack:               ( xt1 xt2 -- )
+return stack:        ( -- )
+string stack:        ( -- )
+category:            system
+
+description:         associate deferred word identified by execution token xt2, with
+                     execution token xt1
+standard:            yes
+url:                 https://forth-standard.org/standard/core/DEFERStore

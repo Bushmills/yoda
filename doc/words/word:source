@@ -1,0 +1,12 @@
+name:                source
+stack:               ( -- c-addr u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+input stream:        line
+
+description:         copy input line to memory and return as as c-addr u
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/SOURCE

@@ -1,0 +1,14 @@
+name:                >body
+stack:               ( xt -- pfa )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system
+
+description:         derive and return body address from execution token.
+                     xt must be a word defined through create. Of the existing
+                     defining words, those are create, variable, constant, defer,
+                     buffer:, array  but not value
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/toBODY

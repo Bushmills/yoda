@@ -1,0 +1,13 @@
+name:                defer@
+stack:               ( xt1 -- xt2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+description:         from execution token xt1 of a deferred word read the execution
+                     token of the word which is currently associated with the deferred
+                     word. Return that execution token as xt2
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/DEFERFetch

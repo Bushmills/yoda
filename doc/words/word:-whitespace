@@ -1,0 +1,14 @@
+name:                -whitespace
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:
+input stream:        line
+
+description:         remove leading white space from input stream.
+
+notes:               this wasn't exposed until one libary word needed such
+                     functionality. It may disappear again.
+standard:            no
+deviation:           standard has no equivalent

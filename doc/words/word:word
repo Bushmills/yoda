@@ -1,0 +1,14 @@
+name:                word
+stack:               ( -- c-addr )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+input stream:        word
+
+description:         read spece delimited string and return as string with
+                     leading count byte stored at c-addr
+
+notes:               may be obsolescent
+standard:            yes
+url:                 https://forth-standard.org/standard/core/WORD

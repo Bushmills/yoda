@@ -1,0 +1,12 @@
+name:                parse-name
+stack:               ( -- a u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+input stream:        word
+
+description:         read space delimited string from input stream
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/PARSE-NAME

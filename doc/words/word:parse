@@ -1,0 +1,13 @@
+created:             auto     (remove line after having checked and revised description)
+name:                parse
+stack:               ( c -- a u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            I/O
+input stream:        string delimited by c
+
+description:         parse string delimited by c, return as a u
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/PARSE

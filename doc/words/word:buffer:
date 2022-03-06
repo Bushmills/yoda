@@ -1,0 +1,14 @@
+name:                buffer:
+stack:               ( u -- )    compilation
+                     ( -- a )    execution
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            definining word
+input stream:        word
+
+description:         create a word which returns the first address of u
+                     reserved memory locations. Reserve those u memory locations
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/BUFFERColon

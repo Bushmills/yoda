@@ -1,7 +1,5 @@
 :noname
 c'
-defer@
-defer!
 environment?
 fm/mod
 marker

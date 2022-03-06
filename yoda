@@ -1016,7 +1016,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1152,7 +1152,7 @@ semicolon                                                            # as trash 
                                                                      # header has its protect flag set, meaning that trashing the alias
                                                                      # header won't trash code, which seems the easiest way to deal with it.
 
-# ----- deferred words ----------------------------------- #fold01
+# ----- deferred words ----------------------------------- #FOLD01
 
 # new deferred words are initialised to noop
 primitive 'noop' '(())'
@@ -1183,6 +1183,19 @@ colon "defer"                                                        # use in yo
 semicolon
 inline
 
+primitive 'defer@'   '((s[sp]=m[body[s[sp]]]))'                      # ( xt1 -- xt2 )
+
+
+colon 'defer!'                                                       # ( xt1 xt2 -- )
+   pop 's0'
+   pop 's1'
+   code '((m[body[s0]]=s1))'
+   code 'name "$s1"'
+#   code 'trace "apply s0:$s0 to name:$name"'
+   code 'apply "$s0" "$name"'
+semicolon
+
+
 # ( xt -- ) ( s: word )
 colon 'is'
    code 'word'
@@ -1198,8 +1211,9 @@ colon 'is'
    code 'word'
    code '[[ -z "$word" ]] && missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
-   code '((m[body[exists[0]]]=${s[sp]}))'
-   code 'name "${s[sp--]}"'
+   pop  's0'
+   code '((m[body[exists[0]]]=s0))'
+   code 'name "$s0"'
    code 'apply "${exists[0]}" "$name"'
 semicolon
 

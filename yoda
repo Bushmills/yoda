@@ -1016,7 +1016,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1152,7 +1152,7 @@ semicolon                                                            # as trash 
                                                                      # header has its protect flag set, meaning that trashing the alias
                                                                      # header won't trash code, which seems the easiest way to deal with it.
 
-# ----- deferred words ----------------------------------- #FOLD01
+# ----- deferred words ----------------------------------- #fold01
 
 # new deferred words are initialised to noop
 primitive 'noop' '(())'
@@ -1874,10 +1874,16 @@ primitive 'ud/mod'   'udslashmod'
 
 # ----- arithmetics, double ------------------------------ #fold01
 
-colon 'dnegate'  # ( d1 -- d2 )
+colon 'dnegate'                                                      # ( d1 -- d2 )
    code 'local dh="${s[sp]}" dl="${s[sp-1]}"'
    code '((dl^=true, dh^=true, dl=(dl+1)&true, dl))||((dh++))'
    code '((s[sp-1]=dl, s[sp]=dh&true))'
+semicolon
+
+colon 'd+'                                                           # ( d1 d2 -- d3 )
+   code 'local d2h="${s[sp--]}" d2l="${s[sp--]}" d1h="${s[sp]}" d1l="${s[sp-1]}"'
+   code '((d1l+=d2l, d1h+=d2h, d1l&carry))&&((d1h++))'
+   code '((s[sp-1]=d1l&true, s[sp]=d1h&true))'
 semicolon
 
 # ----- string stack operators---------------------------- #fold01
@@ -2695,7 +2701,7 @@ colon 'version'
 semicolon
 
 
-# ---- former yoda.core primitives ----------------------- #fold01
+# ----- former yoda.core primitives ---------------------- #fold01
 # moved back for faster loading
 
 primitive "\\"             'line=""'                   ; immediate   # ( -- ) ( s: line )

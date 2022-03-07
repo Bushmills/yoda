@@ -99,25 +99,20 @@ defer query$                                          ' simplequery$ is query$
 : type         ( c-addr u -- )                        pack$ type$                         ;        inline
 : ltype$       ( u -- ) ( $1 -- )                     dup$ type$ count$ - spaces          ;
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
-: parse        ( c -- c-addr u )                      parse$ here dup unpack$             ;
-: parse-name   ( -- c-addr u )                        word$  here dup unpack$             ;
-: source       ( -- c-addr u )                        "tib" env$ here dup unpack$         ;
-: s"           ( -- )                                 '"' parse$
-                                                      here    dup postpone literal
-                                                      unpack$ dup postpone literal
-                                                      allot                               ; compiled
-: c"           ( -- )                                 '"' parse$
-                                                      here  dup postpone literal
-                                                      dup 1+ unpack$
-                                                      dup 1+ allot
-                                                      swap c!                             ; compiled
-: ."           ( -- )                                 '"' parse$
-                                                      postpone literal$
-                                                      postpone type$                      ; compiled
-: .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ;
-: word         ( c -- c-addr u )                      -whitespace parse$
-                                                      here dup 1+ unpack$
-                                                      over c!                             ;
+
+: cstring      ( -- a u ) ( $1 -- )                   here dup unpack$                    ; transient inline
+: parse        ( c -- c-addr u )                      parse$ cstring                      ;
+: parse-name   ( -- c-addr u )                        word$  cstring                      ;
+: source       ( -- c-addr u )                        "tib" env$ cstring                  ;
+: c"           ( -- ) ( $1 -- )                       '"' parse$
+                                                      here 1 allot
+                                                      here unpack$
+                                                      dup allot over c!
+                                                      postpone literal                    ; compiled
+: s"           ( -- )                                 postpone c"  postpone count         ; compiled
+: ."           ( -- )                   '"' parse$ postpone literal$ postpone type$       ; compiled
+: .(           ( -- ) ( s: delim )      ')' parse$                            type$       ;
+: word         ( c -- c-addr )          -whitespace parse$ here dup 1+ unpack$  over c!   ;
 
 \ ----- pictured number conversion -----------------------
 

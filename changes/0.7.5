@@ -1,10 +1,12 @@
 version 0.7.5, 2022mar03,20:00
 added value, to
 added s" ." .(
-fixed word$
+fixed word$   (leading white space not properly removed)
 added buffer: parse parse-name word
 prepared defer and is for defer@ and defer!
 added >body. words defined by create can be >bodied, so can deferred words
 added defer@ defer!
 added d+
 added c"
+fixed unpack$ (single backslash not sufficiently escaped)
+prepared for s\"

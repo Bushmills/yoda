@@ -1,0 +1,11 @@
+name:                unused
+stack:               ( -- n )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system, memory
+
+description:         return amount of available memory
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/UNUSED

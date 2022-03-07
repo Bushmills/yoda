@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
-v="0.7.5"
+v="0.7.6"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -35,7 +35,7 @@ v="0.7.5"
 #        is assigned, but shellcheck can't see how
 
 
-# ----- declarations ------------------------------------- #FOLD00
+# ----- declarations ------------------------------------- #fold00
 
 casesensitive=1
 
@@ -380,7 +380,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #FOLD00
+# ----- line parser -------------------------------------- #fold00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -1049,7 +1049,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #FOLD00
+# ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1394,7 +1394,7 @@ semicolon
 inline
 
 
-# ----- line i/o ----------------------------------------- #FOLD01
+# ----- line i/o ----------------------------------------- #fold01
 
 
 # parse input for string delimited by character specified by ASCII value on stack
@@ -1927,7 +1927,7 @@ colon 'd+'                                                           # ( d1 d2 -
    code '((s[sp-1]=d1l&true, s[sp]=d1h&true))'
 semicolon
 
-# ----- string stack operators---------------------------- #FOLD01
+# ----- string stack operators---------------------------- #fold01
 
 primitive 'empty$'   'ss=()'
 primitive 'dup$'     'ss+=("${ss[-1]}")'

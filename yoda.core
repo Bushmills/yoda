@@ -31,6 +31,7 @@
 ' 1+ alias char+  inline
 ' 1+ alias cell+  inline
 
+
 \ ----- manage wordlists ---------------------------------
 
 : literal         ( x -- )                literal,                            ;                    compiled
@@ -57,12 +58,10 @@ only forth definitions
 
 \ ----- flow control -------------------------------------
 
-code i         ( -- x )                               "i"                           push, ;code    inline
-code unloop    ( -- x )                               "((i=r[rp--]))"               code,
-                                                      "((ibar=r[rp--]))"            code, ;code    inline
 ' r@ alias j                                                                                       inline
-code ?leave    ( flag -- )                            "code '((s[sp--]))&&'"        code,
-                                                      "code 'break'"                code, ;code    compiled
+code i         ( -- x )                               "i"                           push, ;code    inline
+code ?leave    ( flag -- )                            "code '((s[sp--]))&&break'"   code, ;code    compiled
+code unloop    ( -- x )                               "((i=r[rp--], ibar=r[rp--]))" code, ;code    inline
 
 \ ----- arithmetics --------------------------------------
 
@@ -88,6 +87,7 @@ code ?leave    ( flag -- )                            "code '((s[sp--]))&&'"    
 
 \ ----- memory -------------------------------------------
 
+: unused       ( -- u )                               $fffff here -                       ; \ 1 MB trunc'ed
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
 : <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
 : pad          ( -- a )                               here #256 +                         ;        inline
@@ -102,14 +102,18 @@ defer query$                                          ' simplequery$ is query$
 : parse        ( c -- c-addr u )                      parse$ here dup unpack$             ;
 : parse-name   ( -- c-addr u )                        word$  here dup unpack$             ;
 : source       ( -- c-addr u )                        "tib" env$ here dup unpack$         ;
-: compile$     ( -- )                                 '"' parse$  postpone literal$       ; transient
-: compile\$    ( -- )                                 '"' parse\$  postpone literal$      ; transient
-: (c")         ( -- c-addr )  ( $1 -- )               here dup 1+ unpack$ over c!         ; transient protect
-: c"           ( -- c-addr )                          compile$ postpone (c")              ; compiled
-: (s")         ( -- addr u )  ( $1 -- )               here dup unpack$                    ; transient protect
-: s"           ( -- c-addr u )                        compile$ postpone (s")              ; compiled
-: s\"          ( -- c-addr u )                        compile\$ postpone (s")             ; compiled
-: ."           ( -- )                                 compile$ postpone type$             ; compiled
+: s"           ( -- )                                 '"' parse$
+                                                      here    dup postpone literal
+                                                      unpack$ dup postpone literal
+                                                      allot                               ; compiled
+: c"           ( -- )                                 '"' parse$
+                                                      here  dup postpone literal
+                                                      dup 1+ unpack$
+                                                      dup 1+ allot
+                                                      swap c!                             ; compiled
+: ."           ( -- )                                 '"' parse$
+                                                      postpone literal$
+                                                      postpone type$                      ; compiled
 : .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ;
 : word         ( c -- c-addr u )                      -whitespace parse$
                                                       here dup 1+ unpack$

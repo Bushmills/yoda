@@ -35,7 +35,7 @@ v="0.7.5"
 #        is assigned, but shellcheck can't see how
 
 
-# ----- declarations ------------------------------------- #fold00
+# ----- declarations ------------------------------------- #FOLD00
 
 casesensitive=1
 
@@ -380,7 +380,7 @@ optimise()  {                                                        # run code 
    }
 }
 
-# ----- line parser -------------------------------------- #fold00
+# ----- line parser -------------------------------------- #FOLD00
 
 # these need extglobs, set with "shopt -s extglob"
 
@@ -410,6 +410,39 @@ parse()  {
    [[ -z "$1" ]] && word="$line"
    line="${line#"${word}"}"
    line="${line#"$1"}"
+}
+
+# prepared for s\" - this version of parse will be required
+# to translate specific backslash escaped sequences:
+# \a  (alert, ASCII 7)
+# \b  (backspace, ASCII 8)
+# \e  (escape, ASCII 27)
+# \f  (form feed, ASCII 12)
+# \l  (line feed, ASCII 10)
+# \m  (cr,lf, ASCII 13, 10)
+# \n  (implementation dependent , e.g., CR/LF, CR, LF, LF/CR)
+# \q  (double-quote, ASCII 34)
+# \r  (carriage return, ASCII 13)
+# \t  (horizontal tab, ASCII 9)
+# \v  (vertical tab, ASCII 11)
+# \z  (no character, ASCII 0)
+# \"  (double-quote ASCII 34)
+# \x<hexdigit><hexdigit>
+# \\  (backslash ASCII 92)
+parsebacksl()  {
+   word="${line%%"${1}"*}"
+# #word > 1?   possibly an escaped terminator: check whether last two chars are \$1 && $1 is escapable. if so, continue parsing.
+   [[ -z "$1" ]] && word="$line"                                     # -z $1 includes NUL character
+   line="${line#"${word}"}"
+   line="${line#"$1"}"
+# translate $word:
+# rawword=$word"; word=""
+# while ((${#rawword})); do
+#    word+="${rawword%%'\'*}"
+#    rawword="${rawword#*'\'}"
+#    word+="${subst[${rawword:0:1}]}"
+#    rawword="${rawword:1}"
+# done
 }
 
 # ----- compiler ----------------------------------------- #fold00
@@ -1016,7 +1049,7 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 
 
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -1361,7 +1394,15 @@ semicolon
 inline
 
 
-# ----- line i/o ----------------------------------------- #fold01
+# ----- line i/o ----------------------------------------- #FOLD01
+
+
+# parse input for string delimited by character specified by ASCII value on stack
+colon 'parse\$'
+   code 'parsebacksl "${char[s[sp--]]}"'
+   code 'ss+=("$word")'
+semicolon
+inline
 
 
 # parse input for string delimited by character specified by ASCII value on stack
@@ -1886,7 +1927,7 @@ colon 'd+'                                                           # ( d1 d2 -
    code '((s[sp-1]=d1l&true, s[sp]=d1h&true))'
 semicolon
 
-# ----- string stack operators---------------------------- #fold01
+# ----- string stack operators---------------------------- #FOLD01
 
 primitive 'empty$'   'ss=()'
 primitive 'dup$'     'ss+=("${ss[-1]}")'
@@ -2103,18 +2144,17 @@ unpack()  {
    string="$1"
    ((tmp="${#string}", s1=s[sp]))
    for ((len=0; tmp--;)); do
-      ((m[s1++]="asc[${string:len++:1}]"))
+      ((m[s1++]="asc['${string:len++:1}']"))
    done
    ((s[sp]="$len"))
 }
 
-# $ -> a -- n
-unpackstring()  {
-   unpack "${ss[-1]}"
-   unset "ss[-1]"
-}
+colon 'unpack$'
+   code 'unpack "${ss[-1]}"'
+   code 'unset "ss[-1]"'
+semicolon
+inline
 
-primitive 'unpack$' 'unpackstring'
 
 # ( a n -- ) ( string: -- $ )
 colon 'pack$'

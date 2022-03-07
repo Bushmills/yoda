@@ -103,10 +103,12 @@ defer query$                                          ' simplequery$ is query$
 : parse-name   ( -- c-addr u )                        word$  here dup unpack$             ;
 : source       ( -- c-addr u )                        "tib" env$ here dup unpack$         ;
 : compile$     ( -- )                                 '"' parse$  postpone literal$       ; transient
+: compile\$    ( -- )                                 '"' parse\$  postpone literal$      ; transient
 : (c")         ( -- c-addr )  ( $1 -- )               here dup 1+ unpack$ over c!         ; transient protect
 : c"           ( -- c-addr )                          compile$ postpone (c")              ; compiled
 : (s")         ( -- addr u )  ( $1 -- )               here dup unpack$                    ; transient protect
 : s"           ( -- c-addr u )                        compile$ postpone (s")              ; compiled
+: s\"          ( -- c-addr u )                        compile\$ postpone (s")             ; compiled
 : ."           ( -- )                                 compile$ postpone type$             ; compiled
 : .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ;
 : word         ( c -- c-addr u )                      -whitespace parse$

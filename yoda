@@ -1096,7 +1096,7 @@ wordsplus() {
 
 
 see()  {
-   local context wid name found=0
+   local context wid name found=0 xt i see
    word
    [[ -z "$word" ]] && missingname
    for wid in "${order[@]}" "$compilerwid"; do
@@ -1108,7 +1108,15 @@ see()  {
          name="${context["$word"]}"
          [[ -z "$name" ]] && notfound
          ((found++))
-         type "$name"
+         readarray -t see < <(type $name)
+         for ((i=0; i<${#see[@]}; i++)); do
+            tmp="${see[i]}"
+            [[ "${tmp}" == *"${nameprefix}_"*';' ]] && {
+               xt="${tmp#*${nameprefix}_}"
+               tmp="${tmp%%${nameprefix}_*}${names[${xt%;}]}"
+            }
+            printf "%s\n" "$tmp"
+         done
       }
    done
    ((found))||notfound "$word"
@@ -1323,14 +1331,18 @@ colon 'nip'
 semicolon
 inline
 
-# s4 s3 s2 s1 s0    3 roll      s4  s2 s1 s0  s3
 
-#colon 'roll'
-#   pop   's0'
+roll() {
+   echo "${s[@]} - $sp"
+   s=("${s[@]:0:(sp-$1-1)}" "${s[@]:sp-$1+1:$1}" "${s[@]:sp-$1:1}")
+   echo "${s[@]} - $sp"
+}
 
-
-
-
+colon 'roll'
+   pop 's0'
+   code 'roll "$s0"'
+semicolon
+inline
 
 # ----- numeric comparison ------------------------------- #fold01
 

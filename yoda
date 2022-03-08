@@ -1318,6 +1318,20 @@ colon '-rot'
 semicolon
 inline
 
+colon 'nip'
+   pop 's[sp]'
+semicolon
+inline
+
+# s4 s3 s2 s1 s0    3 roll      s4  s2 s1 s0  s3
+
+#colon 'roll'
+#   pop   's0'
+
+
+
+
+
 # ----- numeric comparison ------------------------------- #fold01
 
 colon '0='
@@ -1689,7 +1703,7 @@ semicolon
 compiled
 
 colon 'while'
-   code "(( s[sp]++ == $magic )) || { unstructured 'begin'; return; }"
+   code "(( s[sp] == $magic+1 )) || (( s[sp]++ == $magic )) || { unstructured 'begin'; return; }"
    code 'code "((s[sp--]))||break"'
 semicolon
 compiled
@@ -2347,13 +2361,6 @@ colon 'spaces'
 semicolon
 
 
-primitive  'cr'      'printf "\n"'
-primitive  'space'   'printf " "'
-primitive  'page'    'clear'
-primitive  'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
-defer      'prompt'       'simpleprompt'
-
-
 # ----- file i/o ----------------------------------------- #fold01
 
 
@@ -2729,12 +2736,9 @@ colon 'x'                                                            # : #
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;
 
-# empty stack and string stack
-# since warm doesn't empty them any longer, a convenient
-# way to do so manually was needed.
-primitive 'secs'     'sleep "${s[sp--]}"'
+primitive 'secs'     'sleep "${s[sp--]}"'                            # ( u -- )
 
-colon 'version'
+colon 'version'                                                      # ( -- u1 u2 u3 )
    push '${version[0]}'
    push '${version[1]}'
    push '${version[2]}'
@@ -2772,15 +2776,15 @@ primitive 'binary'         'm[base]=2'                               # ( -- )
 
 # ----- stacks -------------------------------------------
 
-primitive 'depth'         '((s[++sp]=sp))'                               # ( ?? -- ?? u )
-primitive 'dup'           '((s[++sp]=s[sp]))'                            # ( x -- x x )
-primitive 'over'          '((s[++sp]=s[sp-1]))'                          # ( x1 x2 -- x1 x2 x1 )
-primitive 'pluck'         '((s[++sp]=s[sp-2]))'                          # ( x1 x2 x3 -- x1 x2 x3 x1 )
-primitive 'pick'          '((s[++sp]=s[sp-s[sp--]-1]))'                  # ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
-primitive 'r@'            '((s[++sp]=r[rp]))'                            # ( -- x )  ( r: x -- x )
-primitive 'r>'            '((s[++sp]=r[rp--]))'                          # ( -- x ) ( r: x -- )
-primitive 'rdepth'        '((s[++sp]=rp))'                               # ( -- u )
-primitive 'depth$'        '((s[++sp]=${#ss[@]}))'                        # ( -- u )
+primitive 'depth'         '((s[++sp]=sp))'                           # ( ?? -- ?? u )
+primitive 'dup'           '((s[++sp]=s[sp]))'                        # ( x -- x x )
+primitive 'over'          '((s[++sp]=s[sp-1]))'                      # ( x1 x2 -- x1 x2 x1 )
+primitive 'pluck'         '((s[++sp]=s[sp-2]))'                      # ( x1 x2 x3 -- x1 x2 x3 x1 )
+primitive 'pick'          '((s[++sp]=s[sp-s[sp--]-1]))'              # ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
+primitive 'r@'            '((s[++sp]=r[rp]))'                        # ( -- x )  ( r: x -- x )
+primitive 'r>'            '((s[++sp]=r[rp--]))'                      # ( -- x ) ( r: x -- )
+primitive 'rdepth'        '((s[++sp]=rp))'                           # ( -- u )
+primitive 'depth$'        '((s[++sp]=${#ss[@]}))'                    # ( -- u )
 
 # ( x1 x2 x3 x4 -- x1 x2 x3 x4 x1 x2 )
 colon '2over'
@@ -2803,11 +2807,11 @@ colon '2r>'
 semicolon
 inline
 
-# ( x1 x2 -- )  ( return: -- x1 x2 )
+# ( x1 x2 -- )  ( r: -- x1 x2 )
 colon '2>r'
-   code  '((r[++rp]=s[sp-1]))'
-   pop   'r[++rp]'
-   code  '((sp--))'
+   code '((++rp))'
+   pop 'r[++rp]'
+   pop 'r[rp-1]'
 semicolon
 inline
 
@@ -2849,6 +2853,12 @@ primitive ','              '((m[dp++]=s[sp--]))'                     # ( x -- )
 
 # ----- I/O ----------------------------------------------
 primitive '-whitespace'    'minwhitespace'
+primitive  'cr'      'printf "\n"'
+primitive  'space'   'printf " "'
+primitive  'page'    'clear'
+primitive  'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
+defer      'prompt'       'simpleprompt'
+
 
 
 # ----- launch ------------------------------------------- #fold00

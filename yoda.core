@@ -86,7 +86,9 @@ code unloop    ( -- x )                               "((i=r[rp--], ibar=r[rp--]
 
 \ ----- memory -------------------------------------------
 
-: unused       ( -- u )                               $fffff here -                       ; \ 1 MB trunc'ed
+: kb           ( n1 -- n2 )                           #10 <<                              ;        inline
+: mb           ( n1 -- n2 )                           #20 <<                              ;        inline
+: unused       ( -- u )                               here negate [ #128 kb 1- ] literal and ;              \ use a configurable item instead
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
 : <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
 : pad          ( -- a )                               here #256 +                         ;        inline

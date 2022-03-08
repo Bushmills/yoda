@@ -1111,9 +1111,11 @@ see()  {
          readarray -t see < <(type $name)
          for ((i=0; i<${#see[@]}; i++)); do
             tmp="${see[i]}"
-            [[ "${tmp}" == *"${nameprefix}_"*';' ]] && {
+            [[ "${tmp}" == "${nameprefix}_"* ]] || {
+               [[ "${tmp}" == *"${nameprefix}_"* ]] && {
                xt="${tmp#*${nameprefix}_}"
                tmp="${tmp%%${nameprefix}_*}${names[${xt%;}]}"
+               }
             }
             printf "%s\n" "$tmp"
          done

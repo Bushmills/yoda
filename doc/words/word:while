@@ -1,10 +1,13 @@
 name:                while
-stack:               ( -- )
+stack:               ( x -- )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            compileonly
 category:            flow control
 
-description:         part of a begin ... while ... repeat flow control construct
+description:         part of a begin ... while ... repeat flow control construct:
+                     depending on value of x, branch to code following while (in
+                     case x isn't zero) or repeat (x is zero).
 
-standard:            not sure
+standard:            yes
+url:                 https://forth-standard.org/standard/core/WHILE

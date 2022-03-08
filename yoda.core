@@ -86,11 +86,12 @@ code unloop    ( -- x )                               "((i=r[rp--], ibar=r[rp--]
 
 \ ----- memory -------------------------------------------
 
-: kilo         ( n1 -- n2 )                           #10 <<                              ;        inline
-: mega         ( n1 -- n2 )                           #20 <<                              ;        inline
-: giga         ( n1 -- n2 )                           #30 <<                              ;        inline
+: kibi         ( n1 -- n2 )                           #10 <<                              ;        inline
+bits #22 < unless : mebi  ( n1 -- n2 )                #20 <<                              ;        inline
+bits #32 < unless : gibi  ( n1 -- n2 )                #30 <<                              ;        inline
+
 : unused       ( -- u )                               here negate
-                                                      [ #128 kilo cells 1- ] literal and  ;                    \ use a configurable item instead
+                                                      [ #128 kibi cells 1- ] literal and  ;                    \ use a configurable item instead
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
 : <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
 : pad          ( -- a )                               here #256 +                         ;        inline

@@ -1,4 +1,5 @@
 provides: .s
+needs: bracket$
 once
 9 constant items     transient
 : .s  ( -- )

@@ -1,0 +1,11 @@
+name:                kibi
+stack:               ( n1 -- n2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetic
+
+description:         multiply n1 with 1024^1
+
+standard:            no
+deviation:           standard has no equivalent

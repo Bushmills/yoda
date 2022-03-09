@@ -1,0 +1,16 @@
+name:                >number
+stack:               ( ud1 c-addr1 u1 -- ud2 c-addr2 u2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            number conversion
+
+description:         read not more than u1 characters from c-addr1 which are, if those
+                     represent legal digits in the current number base, accumulated into
+                     ud2. Conversion stops when a character is encountered which doesn't
+                     represent a legal digit, in which case will c-addr2 point to the
+                     first non-digit character, and u2 indicates the count of yet
+                     unconverted characters.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/toNUMBER

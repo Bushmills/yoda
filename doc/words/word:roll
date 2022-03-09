@@ -1,0 +1,13 @@
+name:                roll
+stack:               ( xu xu-1 ... x0 u -- xu-1 ... x0 xu )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            stack
+
+description:         remove u, then move (u+1)th item to top of stack.
+
+notes:               1 roll has same effect as swap, 2 roll same as rot.
+                     0 roll doesn't change stack order.
+standard:            yes
+url:                 https://forth-standard.org/standard/core/ROLL

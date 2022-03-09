@@ -1,0 +1,13 @@
+name:                dum*
+stack:               ( ud1 u -- ud2)
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            arithmetics
+
+description:         multiples unsigned double ud1 with u to produce unsigned double ud2
+
+notes:               added specifically for >number and may be removed again when another
+                     more general unsigned double multiplication becomes available
+standard:            no
+deviation:           standard has no equivalent

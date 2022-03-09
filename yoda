@@ -64,12 +64,11 @@ for dir in                          \
 do                                                                   # loop through directory candidates
    [[ -d "$dir" ]] && libdirs+=("$dir")                              # add directory if existing
 done
-#declare -i corefiles=1                                               # reading source location is different for later files. will be set be launch
 nameprefix="yoda"                                                    # prefix to bash function names,  _${xt} will be appended upon header creation
 declare -i firstxt="1000"                                            # names enumeration, initially. Can be any positive integer
 declare -i xt=firstxt                                                # names enumeration, incremented, starting with xt
 
-declare -ai r=() s=() m=()
+declare -ai r=() s=(0) m=()
 declare -a strings=()                                                # string memory
 declare -i sp=0 rp=0 dp=0 sdp=0
 declare -a ss=()
@@ -614,6 +613,7 @@ constant 'cell'               "1"
 
 
 
+# may not inline: value may change, inlined code won't
 value()  {
    local linenr="${linenr:-${BASH_LINENO[0]}}"
    nowheader "$1" "$filehandle" "$linenr"
@@ -630,9 +630,12 @@ warm()  {
    compiling="$false"                                                # interpret
    error=0
    r=() rp=0
-   ((sp<0)) &&s=() sp=0                                              # always clear stack underflow
-   ((clean))&&s=() sp=0 ss=()                                        # empty stacks
+   ((sp<0)) &&s=(0) sp=0                                             # always clear stack underflow
+   ((clean))&&s=(0) sp=0 ss=()                                       # empty stacks
    m[base]="10"                                                      # set decimal if base exists
+# not a good idea
+#   order=("$forthwid" "$onlywid")                                    # only forth
+#   currentwid="${order[0]}"                                          # definitions
    compiler_init
 }
 
@@ -1096,7 +1099,7 @@ wordsplus() {
 
 
 see()  {
-   local context wid name found=0 xt i see
+   local context wid name found=0 s0 i
    word
    [[ -z "$word" ]] && missingname
    for wid in "${order[@]}" "$compilerwid"; do
@@ -1110,14 +1113,16 @@ see()  {
          ((found++))
          readarray -t see < <(type $name)
          for ((i=0; i<${#see[@]}; i++)); do
-            tmp="${see[i]}"
-            [[ "${tmp}" == "${nameprefix}_"* ]] || {
-               [[ "${tmp}" == *"${nameprefix}_"* ]] && {
-               xt="${tmp#*${nameprefix}_}"
-               tmp="${tmp%%${nameprefix}_*}${names[${xt%;}]}"
+
+            s0="${see[i]}"
+            [[ "${s0}" == "${nameprefix}_"* ]] || {
+               [[ "${s0}" == *"${nameprefix}_"* ]] && {
+               tmp="${s0#*${nameprefix}_}"
+               s0="${s0%%${nameprefix}_*}${names[${tmp%;}]}"
                }
             }
-            printf "%s\n" "$tmp"
+            printf "%s\n" "$s0"
+
          done
       }
    done
@@ -1333,16 +1338,9 @@ colon 'nip'
 semicolon
 inline
 
-
-roll() {
-   echo "${s[@]} - $sp"
-   s=("${s[@]:0:(sp-$1-1)}" "${s[@]:sp-$1+1:$1}" "${s[@]:sp-$1:1}")
-   echo "${s[@]} - $sp"
-}
-
 colon 'roll'
-   pop 's0'
-   code 'roll "$s0"'
+   code '((s0=s[sp--], tmp=sp-s0))'
+   code 's=(${s[@]:0:tmp} ${s[@]:tmp+1:s0} ${s[@]:tmp:1})'
 semicolon
 inline
 
@@ -1426,11 +1424,11 @@ inline
 
 
 # parse input for string delimited by character specified by ASCII value on stack
-colon 'parse\$'
-   code 'parsebacksl "${char[s[sp--]]}"'
-   code 'ss+=("$word")'
-semicolon
-inline
+#colon 'parse\$'
+#   code 'parsebacksl "${char[s[sp--]]}"'
+#   code 'ss+=("$word")'
+#semicolon
+#inline
 
 
 # parse input for string delimited by character specified by ASCII value on stack
@@ -1857,17 +1855,16 @@ inline
 
 # ----- arithmetics, mixed ------------------------------- #fold01
 
-# incorrect result with large number
+# s0:s1
 # ( u1 u2 -- ud )
 umstar()  {
-   local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 dh=0 i=bits
+   local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 i=bits
    for ((; i--;)); do
-      ((dh*=2, dl*=2, dl&carry))&&((dh++))
-      ((s1&true))&&((s1*=2, s1&carry))&&((dl+=s0, dl&(carry)))&&((dh++))
+      ((dl*=2, s1*=2))
+      ((dl&carry))&&((s1++, dl&=true))
+      ((s1&carry))&&((dl+=s0,dl&carry))&&((s1++))
    done
-   ((dl&=true))
-   s[sp-1]="$dl"
-   s[sp]="$dh"
+   ((s[sp-1]=dl&true, s[sp]=s1&true))
 }
 
 # ( u1 u2 -- ud )
@@ -1877,22 +1874,69 @@ semicolon
 inline
 
 mstar()  {
-   local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 dh=0 sign i=bits
+   local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 sign i=bits
    sign=$(((s0^s1)&msb))
    ((s0&msb))&&((s0=(-s0&true)))
    ((s1&msb))&&((s1=-s1))
    for ((; i--;)); do
-      ((dh*=2, dl*=2, dl&carry))&&((dh++))
-      ((s1&true))&&((s1<<=1, s1&carry))&&((dl+=s0, dl&(carry)))&&((dh++))
+      ((dl*=2, s1*=2))
+      ((dl&carry))&&((s1++, dl&=true))
+      ((s1&carry))&&((dl+=s0,dl&carry))&&((s1++))
    done
-   ((sign))&&{((dl^=true, dh^=true, dl=(dl+1)&true, dl))||((dh++)); }
-   ((s[sp-1]=dl&true, s[sp]=dh&true))
+   ((sign))&&{
+      ((dl^=true, s1=true, dl=(dl+1)&true, dl))||((s1++))
+   }
+   ((s[sp-1]=dl&true, s[sp]=s1&true))
 }
 
 colon 'm*'
    code 'mstar'
 semicolon
 inline
+
+# for >number:  ud*u -> ud
+# ( ud u -- ud )    dum*
+dumstar()  {
+   local s0="${s[sp--]}" s1="${s[sp]}" s2="${s[sp-1]}" i=bits dl=0
+   ((s1*=s0))
+   for ((; i--;)); do
+      ((dl*=2, s2*=2))
+      ((dl&carry))&&((s2++, dl&=true))
+      ((s2&carry))&&((dl+=s0,dl&carry))&&((s2++))
+   done
+   ((s2+=s1))
+   ((s[sp-1]=dl&true, s[sp]=s2&true))
+}
+
+primitive 'dum*'  'dumstar'
+
+# arg1=asc
+digit() {
+   ((digit=$1-48, digit>9))&&((digit-=39))
+   ((digit<0 || digit>=m[base])) && return 1
+   return 0
+}
+
+# rough early version
+# ( ud1 c-addr1 u1 -- ud2 c-addr2 u2 )
+tonumber()  {
+   local s0="${s[sp--]}" s1="${s[sp--]}"
+   for ((; s0;)); do
+      digit "${m[s1]}" || break
+      ((s[++sp]=${m[base]}))
+      dumstar
+      ((s[sp-1]+="$digit"))
+      ((s[sp-1]&carry))&&((s[sp]++))
+      ((s1++))
+      ((s0--))
+   done
+   ((s[sp]&=true))
+   ((s[sp-1]&=true))
+   ((s[++sp]=s1))
+   ((s[++sp]=s0))
+}
+
+primitive '>number'  'tonumber'
 
 
 #                     msb&    msb&
@@ -2833,7 +2877,7 @@ primitive 'ndrop'          '((sp-=s[sp]+1))'                         # ( [x item
 primitive 'drop'           '((sp--))'                                # ( x -- )
 primitive 'rdrop'          '((rp--))'                                # ( -- ) ( r: x -- )
 primitive '2drop'          '((sp-=2))'                               # ( x1 x2 -- )
-primitive 'empty'          's=() sp=0'                               # ( ??? -- )
+primitive 'empty'          's=(0) sp=0'                              # ( ??? -- )
 primitive 'rempty'         'r=() rp=0'                               # ( -- ) ( r: ??? -- )
 
 # ----- flow ---------------------------------------------

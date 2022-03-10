@@ -176,8 +176,8 @@ trash x
 : >environment$  ( i+x -- ) ( $1 -- )                 here dup unpack$ environment!       ;      transient
 
 #255        1 "/COUNTED-STRING"     >environment$  \ max count of chars in a counted string
-#4095       1 "/HOLD"               >environment$  \ size of the pictured numeric output string buffer, in characters
-#4095       1 "/PAD"                >environment$  \ size of the scratch area pointed to by PAD, in characters
+#255        1 "/HOLD"               >environment$  \ size of the pictured numeric output string buffer, in characters
+#4096       1 "/PAD"                >environment$  \ size of the scratch area pointed to by PAD, in characters
 bits        1 "ADDRESS-UNIT-BITS"   >environment$  \ size of one address unit, in bits
 false       1 "FLOORED"             >environment$  \ true if floored division is the default
 #127        1 "MAX-CHAR"            >environment$  \ maximum value of any character in the implementation-defined character set

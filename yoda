@@ -258,7 +258,7 @@ compiler_init()  {
 # NOTE: leave it to header to prepend $nameprefix.
 header()  {
 # NOTE: case sensitivity
-   lastword="$1"
+   lastword="${1,,}"
    [[ -z "${current["$lastword"]}" ]] ||
       echo "redefining $lastword"
    current["$lastword"]="$2"                                         # associate word with name
@@ -726,10 +726,11 @@ exists()  {
       declare -n context="wordlist_$wid"                             # make next wordlist visible
       declare -n flags                                               # appease shellcheck
       declare -n flags="flags_$wid"
-      [[ -n "${context[$word]}" ]] && {                              # word found in it?
+#      [[ -n "${context[$word]}" ]] && {                              # word found in it?
+      [[ -n "${context[${word,,}]}" ]] && {                              # word found in it?
          exists=(                                                    # yes: return xt, flags and wid as result
-            "${context[$word]##*_}"
-            "${flags[$word]}"
+            "${context[${word,,}]##*_}"
+            "${flags[${word,,}]}"
             "$wid"
             )
          return 0

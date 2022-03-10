@@ -96,7 +96,7 @@ bits #32 < unless : gibi  ( n1 -- n2 )                #30 <<                    
 : <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
 : pad          ( -- a )                               here #256 +                         ;        inline
 : count$       ( -- u ) ( $1 -- )                     [ "${#ss[-1]}" ]        push, drop$ ;        inline
-: scrape       ( a u -- )                             for skim swap next drop             ;
+: scrape       ( a i -- i*x )                         for skim swap next drop             ;
 : spread       ( i*x a u -- )                         tuck cells + swap for cell - tuck ! next drop  ;
 
 \ ----- i/o ----------------------------------------------
@@ -169,11 +169,11 @@ trash x
 
 : newwordlist$  ( -- wid )  ( $1 -- )                 here$ $, dup initwordlist           ;
 "environment" newwordlist$ constant environment
-: environment?    ( c-addr u -- false | i*x true )    environment searchwordlist    
+: environment?    ( c-addr u -- false | i*x true )    environment searchwordlist
                                                       dup lest count scrape true  ;
-: environment!    ( i*x i c-addr u -- )               here -rot environment writewordlist 
-                                                      dup c, here swap dup cells allot spread  ;
-: >environment$  ( i+x -- ) ( $1 -- )                 here dup unpack$ environment! ;
+: environment!    ( i*x i c-addr u -- )               here -rot environment writewordlist
+                                                      dup c, here swap dup cells allot spread  ; transient
+: >environment$  ( i+x -- ) ( $1 -- )                 here dup unpack$ environment!       ;      transient
 
 #255        1 "/COUNTED-STRING"     >environment$  \ max count of chars in a counted string
 #4095       1 "/HOLD"               >environment$  \ size of the pictured numeric output string buffer, in characters

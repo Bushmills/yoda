@@ -49,6 +49,13 @@ only forth definitions
 \ otherwise searched during compilation only.
 : compiler        ( -- )                  [ "compilerwid" env ] literal set-context  ;             inline
 
+\ ----- environment --------------------------------------
+
+: newwordlist$  ( -- wid )  ( $1 -- )                 here$ $, dup initwordlist           ;
+"environment" newwordlist$ constant environment
+: environment?    ( c-addr u -- false | i * x true )  environment searchwordlist          ;        inline
+: environment!    ( x c-addr u -- )                   environment writewordlist           ;        inline
+
 \ ----- stack --------------------------------------------
 
 \ code sp!       ( ??? u -- [u items] )               "sp"                          pop,  ;code    inline

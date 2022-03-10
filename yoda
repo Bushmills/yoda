@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154
-v="0.7.6"
+v="0.7.7"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -2227,6 +2227,12 @@ colon 'unpack$'
 semicolon
 inline
 
+# arg1: a   arg2: u
+pack()  {
+   local a="$1" u="$2" tmp=""
+   for ((; u--; )); do tmp+="${char[m[a++]]}"; done
+   ss+=("$tmp")
+}
 
 # ( a n -- ) ( string: -- $ )
 colon 'pack$'
@@ -2259,6 +2265,26 @@ primitive 'env$' 'ss[-1]="${!ss[-1]}"'
 colon '>env$'
    code 'eval "${ss[-1]}=${ss[-2]}"'
    code 'unset "ss[-1]"'
+   code 'unset "ss[-1]"'
+semicolon
+
+
+# ( a u wid -- 0 | x )
+colon 'searchwordlist'
+   code 'local wordlist'
+   code 'declare -n wordlist="wordlist_${s[sp--]}"'
+   code 'pack "${s[sp-1]}" "${s[sp--]}"'
+   code 's[sp]="${wordlist[${ss[-1]:-0}]}"'
+   code 'unset "ss[-1]"'
+semicolon
+
+# ( x c-addr u wid -- )
+colon 'writewordlist'
+   code 'local wordlist'
+   code 'declare -n wordlist="wordlist_${s[sp--]}"'
+   code 'pack "${s[sp-1]}" "${s[sp]}"'
+   code '((sp-=2))'
+   code 'wordlist[${ss[-1]}]="${s[sp--]}"'
    code 'unset "ss[-1]"'
 semicolon
 

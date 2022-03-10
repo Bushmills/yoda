@@ -12,7 +12,6 @@ once
     last$ $,
     does> doshell ;
 
-
 only forth
 vocabulary os
 also os definitions
@@ -29,4 +28,5 @@ shell: rm
 shell: pwd
 shell: mc
 
-only os also forth definitions
+only os
+also forth definitions

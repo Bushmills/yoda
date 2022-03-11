@@ -112,7 +112,7 @@ defer query$                                          ' simplequery$ is query$
 : parse-name   ( -- c-addr u )                        word$  c-addr,u                     ;
 : source       ( -- c-addr u )                        "tib" env$ c-addr,u                 ;
 : s(           ( -- c-addr u )                        ')' parse                           ;
-: .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ;
+: .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ; immediate
 : c"           ( -- ) ( $1 -- )                       '"' parse$ c-addr
                                                       dup postpone literal
                                                       c@ 1+ allot                         ; compiled

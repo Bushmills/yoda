@@ -9,5 +9,5 @@ t{ 3 3 um* -> 9 0 }t
 t{ mid-uint+1 1 rshift 2 um* -> mid-uint+1 0 }t
 t{ mid-uint+1 2 um* -> 0 1 }t
 t{ mid-uint+1 4 um* -> 0 2 }t
-\ t{ 1s 2 um* -> 1s 1 lshift 1 }t
-\ t{ max-uint max-uint um* -> 1 1 invert }t
+t{ 1s 2 um* -> 1s 1 lshift 1 }t
+t{ max-uint max-uint um* -> 1 1 invert }t

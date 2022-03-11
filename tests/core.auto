@@ -1,5 +1,6 @@
 hex
 
+bits constant #bits
 
 \ ------------------------------------------------------------------------
 testing here , @ ! cell+ cells c, c@ c! chars 2@ 2! align aligned +! allot
@@ -49,20 +50,16 @@ t{ 3 a-addr cell+ c!  a-addr cell+ c@ -> 3 }t
 t{ 1234 a-addr cell+ !  a-addr cell+ @ -> 1234 }t
 t{ 123 456 a-addr cell+ 2!  a-addr cell+ 2@ -> 123 456 }t
 
-\ : bits ( x -- u )
-\    0 swap begin dup while dup msb and if >r 1+ r> then 2* repeat drop ;
-( characters >= 1 au, <= size of cell, >= 8 bits )
 t{ 1 chars 1 < -> <false> }t
 t{ 1 chars 1 cells > -> <false> }t
-( tbd: how to find number of bits? )
 
 ( cells >= 1 au, integral multiple of char size, >= 16 bits )
 t{ 1 cells 1 < -> <false> }t
 t{ 1 cells 1 chars mod -> 0 }t
 
 
-\ t{ 1s bits 10 < -> <false> }t
-t{ bits 8 < -> <false> }t
+t{ #bits 10 < -> <false> }t
+t{ #bits 8 < -> <false> }t
 
 
 t{ 0 1st ! -> }t
@@ -82,9 +79,9 @@ t{ gc1 -> 58 }t
 t{ gc2 -> 48 }t
 t{ : gc3 [ gc1 ] literal ; -> }t
 t{ gc3 -> 58 }t
-\ t{ : gc4 s" xy" ; -> }t
-\ t{ gc4 swap drop -> 2 }t
-\ t{ gc4 drop dup c@ swap char+ c@ -> 58 59 }t
+t{ : gc4 s" XY" ; -> }t
+t{ gc4 swap drop -> 2 }t
+t{ gc4 drop dup c@ swap char+ c@ -> 58 59 }t
 
 \ ------------------------------------------------------------------------
 testing ' ['] find execute immediate count literal postpone state
@@ -116,143 +113,6 @@ t{ : gt8 state @ ; immediate -> }t
 t{ gt8 -> 0 }t
 t{ : gt9 gt8 literal ; -> }t
 t{ gt9 0= -> <false> }t
-
-\ ------------------------------------------------------------------------
-testing if else then begin while repeat until recurse
-
-t{ : gi1 if 123 then ; -> }t
-t{ : gi2 if 123 else 234 then ; -> }t
-t{ 0 gi1 -> }t
-t{ 1 gi1 -> 123 }t
-t{ -1 gi1 -> 123 }t
-t{ 0 gi2 -> 234 }t
-t{ 1 gi2 -> 123 }t
-t{ -1 gi1 -> 123 }t
-
-t{ : gi3 begin dup 5 < while dup 1+ repeat ; -> }t
-t{ 0 gi3 -> 0 1 2 3 4 5 }t
-t{ 4 gi3 -> 4 5 }t
-t{ 5 gi3 -> 5 }t
-t{ 6 gi3 -> 6 }t
-
-t{ : gi4 begin dup 1+ dup 5 > until ; -> }t
-t{ 3 gi4 -> 3 4 5 6 }t
-t{ 5 gi4 -> 5 6 }t
-t{ 6 gi4 -> 6 7 }t
-
-omit
-t{ : gi5 begin dup 2 >
-         while dup 5 < while dup 1+ repeat 123 else 345 then ; -> }t
-t{ 1 gi5 -> 1 345 }t
-t{ 2 gi5 -> 2 345 }t
-t{ 3 gi5 -> 3 4 5 123 }t
-t{ 4 gi5 -> 4 5 123 }t
-t{ 5 gi5 -> 5 123 }t
-
-t{ : gi6 ( n -- 0,1,..n ) dup if dup >r 1- recurse r> then ; -> }t
-t{ 0 gi6 -> 0 }t
-t{ 1 gi6 -> 0 1 }t
-t{ 2 gi6 -> 0 1 2 }t
-t{ 3 gi6 -> 0 1 2 3 }t
-t{ 4 gi6 -> 0 1 2 3 4 }t
-
-\ ------------------------------------------------------------------------
-testing do loop +loop i j unloop leave exit
-
-t{ : gd1 do i loop ; -> }t
-t{ 4 1 gd1 -> 1 2 3 }t
-t{ 2 -1 gd1 -> -1 0 1 }t
-t{ mid-uint+1 mid-uint gd1 -> mid-uint }t
-
-t{ : gd2 do i -1 +loop ; -> }t
-t{ 1 4 gd2 -> 4 3 2 1 }t
-t{ -1 2 gd2 -> 2 1 0 -1 }t
-t{ mid-uint mid-uint+1 gd2 -> mid-uint+1 mid-uint }t
-
-t{ : gd3 do 1 0 do j loop loop ; -> }t
-t{ 4 1 gd3 -> 1 2 3 }t
-t{ 2 -1 gd3 -> -1 0 1 }t
-t{ mid-uint+1 mid-uint gd3 -> mid-uint }t
-
-t{ : gd4 do 1 0 do j loop -1 +loop ; -> }t
-t{ 1 4 gd4 -> 4 3 2 1 }t
-t{ -1 2 gd4 -> 2 1 0 -1 }t
-t{ mid-uint mid-uint+1 gd4 -> mid-uint+1 mid-uint }t
-
-t{ : gd5 123 swap 0 do i 4 > if drop 234 leave then loop ; -> }t
-t{ 1 gd5 -> 123 }t
-t{ 5 gd5 -> 123 }t
-t{ 6 gd5 -> 234 }t
-
-t{ : gd6  ( pat: t{0 0},{0 0}{1 0}{1 1},{0 0}{1 0}{1 1}{2 0}{2 1}{2 2} )
-   0 swap 0 do
-      i 1+ 0 do i j + 3 = if i unloop i unloop exit then 1+ loop
-    loop ; -> }t
-t{ 1 gd6 -> 1 }t
-t{ 2 gd6 -> 3 }t
-t{ 3 gd6 -> 4 1 2 }t
-
-\ ------------------------------------------------------------------------
-testing defining words: : ; constant variable create does> >body
-
-t{ 123 constant x123 -> }t
-t{ x123 -> 123 }t
-t{ : equ constant ; -> }t
-t{ x123 equ y123 -> }t
-t{ y123 -> 123 }t
-
-t{ variable v1 -> }t
-t{ 123 v1 ! -> }t
-t{ v1 @ -> 123 }t
-
-t{ : nop : postpone ; ; -> }t
-t{ nop nop1 nop nop2 -> }t
-t{ nop1 -> }t
-t{ nop2 -> }t
-
-omit
-t{ : does1 does> @ 1 + ; -> }t
-t{ : does2 does> @ 2 + ; -> }t
-t{ create cr1 -> }t
-t{ cr1 -> here }t
-t{ ' cr1 >body -> here }t
-t{ 1 , -> }t
-t{ cr1 @ -> 1 }t
-t{ does1 -> }t
-t{ cr1 -> 2 }t
-t{ does2 -> }t
-t{ cr1 -> 3 }t
-
-omit
-t{ : weird: create does> 1 + does> 2 + ; -> }t
-t{ weird: w1 -> }t
-t{ ' w1 >body -> here }t
-t{ w1 -> here 1 + }t
-t{ w1 -> here 2 + }t
-
-\ ------------------------------------------------------------------------
-testing evaluate
-
-omit
-: ge1 s" 123" ; immediate
-: ge2 s" 123 1+" ; immediate
-: ge3 s" : ge4 345 ;" ;
-: ge5 evaluate ; immediate
-
-: ge1 "123"         >pad ; immediate
-: ge2 "123 1+"      >pad ; immediate
-: ge3 ": ge4 345 ;" >pad ;
-: ge5 evaluate ; immediate
-
-t{ ge1 evaluate -> 123 }t         ( test evaluate in interp. state )
-t{ ge2 evaluate -> 124 }t
-t{ ge3 evaluate -> }t
-t{ ge4 -> 345 }t
-
-t{ : ge6 ge1 ge5 ; -> }t         ( test evaluate in compile state )
-t{ ge6 -> 123 }t
-t{ : ge7 ge2 ge5 ; -> }t
-t{ ge7 -> 124 }t
 
 \ ------------------------------------------------------------------------
 
@@ -314,9 +174,6 @@ t{ gp3 -> <true> }t
 t{ gp4 -> <true> }t
 
 24 constant max-base         \ base 2 .. 36
-\ : count-bits
-\   0 0 invert begin dup while >r 1+ r> 2* repeat drop ;
-\ count-bits 2* constant #bits-ud      \ number of bits in ud
 
 : gp5
    base @ <true>
@@ -359,27 +216,23 @@ create gn-buf 0 c,
 : gn-consumed   gn-buf char+ 0 ;
 : gn'      [char] ' word$ >pad char+ c@ gn-buf c!  gn-string ;
 
-omit
-t{ 0 0 gn' 0' >number -> 0 0 gn-consumed }t
-t{ 0 0 gn' 1' >number -> 1 0 gn-consumed }t
-t{ 1 0 gn' 1' >number -> base @ 1+ 0 gn-consumed }t
-t{ 0 0 gn' -' >number -> 0 0 gn-string }t   \ should fail to convert these
-t{ 0 0 gn' +' >number -> 0 0 gn-string }t
-t{ 0 0 gn' .' >number -> 0 0 gn-string }t
+\ t{ 0 0 gn' 0' >number -> 0 0 gn-consumed }t
+\ t{ 0 0 gn' 1' >number -> 1 0 gn-consumed }t
+\ t{ 1 0 gn' 1' >number -> base @ 1+ 0 gn-consumed }t
+\ t{ 0 0 gn' -' >number -> 0 0 gn-string }t   \ should fail to convert these
+\ t{ 0 0 gn' +' >number -> 0 0 gn-string }t
+\ t{ 0 0 gn' .' >number -> 0 0 gn-string }t
 
-omit
 : >number-based
    base @ >r base ! >number r> base ! ;
 
-omit
-t{ 0 0 gn' 2' 10 >number-based -> 2 0 gn-consumed }t
-t{ 0 0 gn' 2'  2 >number-based -> 0 0 gn-string }t
-t{ 0 0 gn' f' 10 >number-based -> f 0 gn-consumed }t
-t{ 0 0 gn' g' 10 >number-based -> 0 0 gn-string }t
-t{ 0 0 gn' g' max-base >number-based -> 10 0 gn-consumed }t
-t{ 0 0 gn' z' max-base >number-based -> 23 0 gn-consumed }t
+\ t{ 0 0 gn' 2' 10 >number-based -> 2 0 gn-consumed }t
+\ t{ 0 0 gn' 2'  2 >number-based -> 0 0 gn-string }t
+\ t{ 0 0 gn' f' 10 >number-based -> f 0 gn-consumed }t
+\ t{ 0 0 gn' g' 10 >number-based -> 0 0 gn-string }t
+\ t{ 0 0 gn' g' max-base >number-based -> 10 0 gn-consumed }t
+\ t{ 0 0 gn' z' max-base >number-based -> 23 0 gn-consumed }t
 
-omit
 : gn1   \ ( ud base -- ud' len ) ud should equal ud' and len should be zero.
    base @ >r base !
    <# #s #>
@@ -397,66 +250,6 @@ t{ max-uint dup max-base gn1 -> max-uint dup 0 }t
 t{ gn2 -> 10 a }t
 
 \ ------------------------------------------------------------------------
-testing fill move
-
-create fbuf 00 c, 00 c, 00 c,
-create sbuf 12 c, 34 c, 56 c,
-: seebuf fbuf c@  fbuf char+ c@  fbuf char+ char+ c@ ;
-
-t{ fbuf 0 20 fill -> }t
-t{ seebuf -> 00 00 00 }t
-
-t{ fbuf 1 20 fill -> }t
-t{ seebuf -> 20 00 00 }t
-
-t{ fbuf 3 20 fill -> }t
-t{ seebuf -> 20 20 20 }t
-
-t{ fbuf fbuf 3 chars move -> }t      \ bizarre special case
-t{ seebuf -> 20 20 20 }t
-
-t{ sbuf fbuf 0 chars move -> }t
-t{ seebuf -> 20 20 20 }t
-
-t{ sbuf fbuf 1 chars move -> }t
-t{ seebuf -> 12 20 20 }t
-
-t{ sbuf fbuf 3 chars move -> }t
-t{ seebuf -> 12 34 56 }t
-
-t{ fbuf fbuf char+ 2 chars move -> }t
-t{ seebuf -> 12 12 34 }t
-
-t{ fbuf char+ fbuf 2 chars move -> }t
-t{ seebuf -> 12 34 34 }t
-
-\ ------------------------------------------------------------------------
-testing output: . ." cr emit space spaces type u.
-
-: output-test
-   "you should see the standard graphic characters:" type$ cr
-   41 bl do i emit loop cr
-   61 41 do i emit loop cr
-   7f 61 do i emit loop cr
-   "you should see 0-9 separated by a space:" type$ cr
-   9 1+ 0 do i . loop cr
-   "you should see 0-9 (with no spaces):" type$ cr
-   [char] 9 1+ [char] 0 do i 0 spaces emit loop cr
-   "you should see a-g separated by a space:" type$ cr
-   [char] g 1+ [char] a do i emit space loop cr
-   "you should see 0-5 separated by two spaces:" type$ cr
-   5 1+ 0 do i [char] 0 + emit 2 spaces loop cr
-   "you should see two separate lines:" type$ cr
-   "line 1" >pad type cr "line 2" >pad type cr
-   "you should see the number ranges of signed and unsigned numbers:" type$ cr
-   "signed: " type$  min-int . max-int . cr
-   "unsigned: " type$  0 u. max-uint u. cr
-;
-
-t{ output-test -> }t
-
-
-\ ------------------------------------------------------------------------
 
 omit
 testing input: accept
@@ -468,14 +261,4 @@ create abuf 50 chars allot
    abuf swap type [char] " emit cr
 ;
 t{ accept-test -> }t
-
-\ ------------------------------------------------------------------------
-testing dictionary search rules
-
-t{ : gdx   123 ; : gdx   gdx 234 ; -> }t
-
-t{ gdx -> 123 234 }t
-
-cr "end of core word set tests" type$ cr
-
 

@@ -1,0 +1,13 @@
+name:                environment?
+stack:               ( c-addr u -- false | i*x true )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            environment
+
+description:         perform an environmental query for c-addr u. Return environment entry
+                     specific type and count of results, along with true if found. Return
+                     false otherwise.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/ENVIRONMENTq

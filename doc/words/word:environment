@@ -1,0 +1,11 @@
+name:                environment
+stack:               ( -- wid )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            wordlists
+
+description:         returnd the wid of the environment wordlist
+
+standard:            no
+deviation:           standard has no equivalent

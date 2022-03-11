@@ -1,0 +1,14 @@
+name:                searchwordlist
+stack:               ( c-addr u wid -- 0 | x )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            wordlists
+
+description:         look up an entry defined by name c-addr u in wordlist wid.
+                     Return the value associated with entry if found, 0 otherwise.
+
+notes:               mainly added for environment? Single returned item represents
+                     a memory address. environment string data is stored there.
+standard:            no
+deviation:           standard has no equivalent

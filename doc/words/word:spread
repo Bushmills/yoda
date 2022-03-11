@@ -1,0 +1,12 @@
+name:                spread
+stack:               ( u * x a u -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+description:         write u stack items to consecutive memory addresses at a
+
+notes:               complementary to scrape
+standard:            no
+deviation:           standard has no equivalent

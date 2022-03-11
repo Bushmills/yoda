@@ -1,0 +1,11 @@
+name:                writewordlist
+stack:               ( x c-addr u wid -- )
+contexts:            stateless
+category:            wordlists
+
+description:         creates an entry in wordlist wid by name of c-addr u, associated
+                     with value x
+
+notes:               mostly added for populating environment
+standard:            no
+deviation:           standard has no equivalent

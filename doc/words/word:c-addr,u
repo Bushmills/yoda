@@ -1,0 +1,12 @@
+created:             auto     (remove line after having checked and revised description)
+name:                c-addr,u
+stack:               ( -- c-addr u )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            strings
+
+description:         converts topmost string stack item to c-addr u representation.
+
+standard:            no
+deviation:           standard has no equivalent

@@ -1,0 +1,12 @@
+name:                scrape
+stack:               ( a u -- u * x )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            memory
+
+description:         collect u cells from address a on stack
+
+notes:               complementary to spread
+standard:            no
+deviation:           standard has no equivalent

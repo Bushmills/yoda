@@ -1,0 +1,12 @@
+name:                c-addr
+stack:               ( -- c-addr )
+return stack:        ( -- )
+string stack:        ( $1 -- )
+contexts:            stateless
+category:            strings
+
+description:         converts top string stack item to counted string, returning
+                     the address of its count byte
+
+standard:            no
+deviation:           standard has no equivalent

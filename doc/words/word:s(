@@ -1,0 +1,14 @@
+name:                s(
+stack:               ( -- c-addr u )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            strings
+input stream:        right parenthesis delmited string
+
+description:         read input up to and including right parenthesis. Write
+                     string to memory, excluding the delimiting right parenthesis, and
+                     return address of first char, along with count of chars in string
+
+standard:            no
+deviation:           standard has no equivalent

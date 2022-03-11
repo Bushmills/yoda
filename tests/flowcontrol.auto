@@ -1,0 +1,73 @@
+testing if else then begin while repeat until recurse
+
+t{ : gi1 if 123 then ; -> }t
+t{ : gi2 if 123 else 234 then ; -> }t
+t{ 0 gi1 -> }t
+t{ 1 gi1 -> 123 }t
+t{ -1 gi1 -> 123 }t
+t{ 0 gi2 -> 234 }t
+t{ 1 gi2 -> 123 }t
+t{ -1 gi1 -> 123 }t
+
+t{ : gi3 begin dup 5 < while dup 1+ repeat ; -> }t
+t{ 0 gi3 -> 0 1 2 3 4 5 }t
+t{ 4 gi3 -> 4 5 }t
+t{ 5 gi3 -> 5 }t
+t{ 6 gi3 -> 6 }t
+
+t{ : gi4 begin dup 1+ dup 5 > until ; -> }t
+t{ 3 gi4 -> 3 4 5 6 }t
+t{ 5 gi4 -> 5 6 }t
+t{ 6 gi4 -> 6 7 }t
+
+omit
+t{ : gi5 begin dup 2 >
+         while dup 5 < while dup 1+ repeat 123 else 345 then ; -> }t
+t{ 1 gi5 -> 1 345 }t
+t{ 2 gi5 -> 2 345 }t
+t{ 3 gi5 -> 3 4 5 123 }t
+t{ 4 gi5 -> 4 5 123 }t
+t{ 5 gi5 -> 5 123 }t
+
+t{ : gi6 ( n -- 0,1,..n ) dup if dup >r 1- recurse r> then ; -> }t
+t{ 0 gi6 -> 0 }t
+t{ 1 gi6 -> 0 1 }t
+t{ 2 gi6 -> 0 1 2 }t
+t{ 3 gi6 -> 0 1 2 3 }t
+t{ 4 gi6 -> 0 1 2 3 4 }t
+
+\ ------------------------------------------------------------------------
+testing do loop +loop i j unloop leave exit
+
+t{ : gd1 do i loop ; -> }t
+t{ 4 1 gd1 -> 1 2 3 }t
+t{ 2 -1 gd1 -> -1 0 1 }t
+t{ mid-uint+1 mid-uint gd1 -> mid-uint }t
+
+t{ : gd2 do i -1 +loop ; -> }t
+t{ 1 4 gd2 -> 4 3 2 1 }t
+t{ -1 2 gd2 -> 2 1 0 -1 }t
+t{ mid-uint mid-uint+1 gd2 -> mid-uint+1 mid-uint }t
+
+t{ : gd3 do 1 0 do j loop loop ; -> }t
+t{ 4 1 gd3 -> 1 2 3 }t
+t{ 2 -1 gd3 -> -1 0 1 }t
+t{ mid-uint+1 mid-uint gd3 -> mid-uint }t
+
+t{ : gd4 do 1 0 do j loop -1 +loop ; -> }t
+t{ 1 4 gd4 -> 4 3 2 1 }t
+t{ -1 2 gd4 -> 2 1 0 -1 }t
+t{ mid-uint mid-uint+1 gd4 -> mid-uint+1 mid-uint }t
+
+t{ : gd5 123 swap 0 do i 4 > if drop 234 leave then loop ; -> }t
+t{ 1 gd5 -> 123 }t
+t{ 5 gd5 -> 123 }t
+t{ 6 gd5 -> 234 }t
+
+t{ : gd6  ( pat: t{0 0},{0 0}{1 0}{1 1},{0 0}{1 0}{1 1}{2 0}{2 1}{2 2} )
+   0 swap 0 do
+      i 1+ 0 do i j + 3 = if i unloop i unloop exit then 1+ loop
+    loop ; -> }t
+t{ 1 gd6 -> 1 }t
+t{ 2 gd6 -> 3 }t
+t{ 3 gd6 -> 4 1 2 }t

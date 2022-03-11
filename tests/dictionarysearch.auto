@@ -1,0 +1,8 @@
+testing dictionary search rules
+
+t{ : gdx   123 ; : gdx   gdx 234 ; -> }t
+
+t{ gdx -> 123 234 }t
+
+cr "end of core word set tests" type$ cr
+

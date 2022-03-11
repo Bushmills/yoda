@@ -1,0 +1,22 @@
+testing evaluate
+
+omit
+: ge1 s" 123" ; immediate
+: ge2 s" 123 1+" ; immediate
+: ge3 s" : ge4 345 ;" ;
+: ge5 evaluate ; immediate
+
+: ge1 "123"         >pad ; immediate
+: ge2 "123 1+"      >pad ; immediate
+: ge3 ": ge4 345 ;" >pad ;
+: ge5 evaluate ; immediate
+
+t{ ge1 evaluate -> 123 }t         ( test evaluate in interp. state )
+t{ ge2 evaluate -> 124 }t
+t{ ge3 evaluate -> }t
+t{ ge4 -> 345 }t
+
+t{ : ge6 ge1 ge5 ; -> }t         ( test evaluate in compile state )
+t{ ge6 -> 123 }t
+t{ : ge7 ge2 ge5 ; -> }t
+t{ ge7 -> 124 }t

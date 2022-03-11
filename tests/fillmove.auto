@@ -1,0 +1,32 @@
+testing fill move
+
+create fbuf 00 c, 00 c, 00 c,
+create sbuf 12 c, 34 c, 56 c,
+: seebuf fbuf c@  fbuf char+ c@  fbuf char+ char+ c@ ;
+
+t{ fbuf 0 20 fill -> }t
+t{ seebuf -> 00 00 00 }t
+
+t{ fbuf 1 20 fill -> }t
+t{ seebuf -> 20 00 00 }t
+
+t{ fbuf 3 20 fill -> }t
+t{ seebuf -> 20 20 20 }t
+
+t{ fbuf fbuf 3 chars move -> }t      \ bizarre special case
+t{ seebuf -> 20 20 20 }t
+
+t{ sbuf fbuf 0 chars move -> }t
+t{ seebuf -> 20 20 20 }t
+
+t{ sbuf fbuf 1 chars move -> }t
+t{ seebuf -> 12 20 20 }t
+
+t{ sbuf fbuf 3 chars move -> }t
+t{ seebuf -> 12 34 56 }t
+
+t{ fbuf fbuf char+ 2 chars move -> }t
+t{ seebuf -> 12 12 34 }t
+
+t{ fbuf char+ fbuf 2 chars move -> }t
+t{ seebuf -> 12 34 34 }t

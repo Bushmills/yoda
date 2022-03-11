@@ -1,0 +1,23 @@
+testing output: . ." cr emit space spaces type u.
+hex
+: output-test
+   "you should see the standard graphic characters:" type$ cr
+   41 bl do i emit loop cr
+   61 41 do i emit loop cr
+   7f 61 do i emit loop cr
+   "you should see 0-9 separated by a space:" type$ cr
+   9 1+ 0 do i . loop cr
+   "you should see 0-9 (with no spaces):" type$ cr
+   [char] 9 1+ [char] 0 do i 0 spaces emit loop cr
+   "you should see a-g separated by a space:" type$ cr
+   [char] g 1+ [char] a do i emit space loop cr
+   "you should see 0-5 separated by two spaces:" type$ cr
+   5 1+ 0 do i [char] 0 + emit 2 spaces loop cr
+   "you should see two separate lines:" type$ cr
+   "line 1" >pad type cr "line 2" >pad type cr
+   "you should see the number ranges of signed and unsigned numbers:" type$ cr
+   "signed: " type$  min-int . max-int . cr
+   "unsigned: " type$  0 u. max-uint u. cr
+;
+
+t{ output-test -> }t

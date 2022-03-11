@@ -1,0 +1,36 @@
+testing defining words: : ; constant variable create does> >body
+
+t{ 123 constant x123 -> }t
+t{ x123 -> 123 }t
+t{ : equ constant ; -> }t
+t{ x123 equ y123 -> }t
+t{ y123 -> 123 }t
+
+t{ variable v1 -> }t
+t{ 123 v1 ! -> }t
+t{ v1 @ -> 123 }t
+
+t{ : nop : postpone ; ; -> }t
+t{ nop nop1 nop nop2 -> }t
+t{ nop1 -> }t
+t{ nop2 -> }t
+
+omit
+t{ : does1 does> @ 1 + ; -> }t
+t{ : does2 does> @ 2 + ; -> }t
+t{ create cr1 -> }t
+t{ cr1 -> here }t
+t{ ' cr1 >body -> here }t
+t{ 1 , -> }t
+t{ cr1 @ -> 1 }t
+t{ does1 -> }t
+t{ cr1 -> 2 }t
+t{ does2 -> }t
+t{ cr1 -> 3 }t
+
+omit
+t{ : weird: create does> 1 + does> 2 + ; -> }t
+t{ weird: w1 -> }t
+t{ ' w1 >body -> here }t
+t{ w1 -> here 1 + }t
+t{ w1 -> here 2 + }t

@@ -572,7 +572,7 @@ semicolon()  {
 
 
 constant()  {
-   delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
+   delayheader "${1,,}" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    push "$2"
    body[xt]="$dp"
    semicolon
@@ -811,7 +811,7 @@ forwardref()  {
 # NOTE: case sensitivity
    [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
       newname "$1"                                                   # generate new function name
-      unresolved["$1"]="$name"                                       # keep in unresolved vocabulary
+      unresolved["${1,,}"]="$name"                                   # keep in unresolved vocabulary
    }
 }
 
@@ -821,10 +821,10 @@ forwardref()  {
 # if source isn't available, a forward ref will be generated.
 satisfy1()  {
    exists "$1" "${order[@]}" && return 0                             # word already defined, nothing to do
-   local word="$1"
+   local word="${1,,}"
    [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
       forwardref "$word"                                             # yes: create forward ref only
-      ((${#raw[@]})) && return 1                                    #   refuse to satisfy while building new word is in progress
+      ((${#raw[@]})) && return 1                                     #   refuse to satisfy while building new word is in progress
       tmp="${libdirs[0]}/${lib["$word"]}"                            #   path and name of lib file
       [[ -f "$tmp" ]] && from "$tmp"                                 #   load if file exists
       return 0
@@ -900,7 +900,7 @@ evaluate()  {
       (( m[forwardrefs] )) && {                                      #     and forward references enabled ...
          ((compiling)) && {                                          # still not successfully dealt with word. last resolve: in case of compiling ...
             forwardref "$word"  "$lastword"                          #     create a forward reference.
-            code "${unresolved["$word"]}"                            #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
+            code "${unresolved["${word,,}"]}"                        #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
             continue                                                 # hope that it will eventually get resolved
          }
       }
@@ -965,17 +965,15 @@ set-current()  {
 # expects word in current
 # ( -- )
 trash()  {
-   local current flags
+   local current flags word="${1,,}"
 # seems that by using local current, option -g with
 # declare will not address the proper set of arrays,
 # but can't use set-current without -g
    declare -n current="wordlist_$currentwid"
    declare -n flags="flags_$currentwid"
-   tmp="${flags[$1]}"
-# NOTE: case sensitivity
+   tmp="${flags[$word]}"
    (((tmp&inline) && (!(tmp&protected)))) && unset -f "${current[$1]}"
-# NOTE: case sensitivity
-   removeheaderfromcurrent "$1"
+   removeheaderfromcurrent "$word"
 }
 
 
@@ -1057,8 +1055,8 @@ atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
-   code "((s[sp--] == $magic))||{ unstructured ':'; return; }"   # check the magic left by :
-   code '((${s[sp--]} == ${#raw[@]}))&& code "(())"'             # insert a noop into empty function bodies
+   code "((s[sp--] == $magic))||{ unstructured ':'; return; }"       # check the magic left by :
+   code '((${s[sp--]} == ${#raw[@]}))&& code "(())"'                 # insert a noop into empty function bodies
    code 'semicolon'                                                  # compile $lastword from $raw[@], resume interpreting
 semicolon
 compiled
@@ -1067,7 +1065,7 @@ compiled
 colon ':'
    code 'word'                                                       # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
-   push '${#raw[@]}'                                                # allow check of empty function
+   push '${#raw[@]}'                                                 # allow check of empty function
    push "$magic"                                                     # allow check of proper nesting
    code '((compiling=true))'
 semicolon
@@ -1103,6 +1101,7 @@ see()  {
    local context wid name found=0 s0 i
    word
    [[ -z "$word" ]] && missingname
+   word=${word,,}
    for wid in "${order[@]}" "$compilerwid"; do
       declare -n context="wordlist_$wid"
 # NOTE: case sensitivity
@@ -1167,7 +1166,7 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 create()  {
    code 'word'
-   code "constant \"\$word\" \"$1\""                                 # not using single quotes because want $1 to expand
+   code "constant \"\${word}\" \"$1\""                                 # not using single quotes because want $1 to expand
 }
 
 
@@ -1240,7 +1239,6 @@ colon 'defer!'                                                       # ( xt1 xt2
    pop 's1'
    code '((m[body[s0]]=s1))'
    code 'name "$s1"'
-#   code 'trace "apply s0:$s0 to name:$name"'
    code 'apply "$s0" "$name"'
 semicolon
 
@@ -1622,7 +1620,7 @@ compiled
 
 
 colon 'where$'
-    code 'tmp="${ss[-1]}"'                                           # name of word to look up
+    code 'tmp="${ss[-1],,}"'                                         # name of word to look up
     code 'unset "ss[-1]"'
     code '[[ -z "$tmp" ]]&&missingname'                              # no name given
     code 'tmp1="${where[$tmp]}"'                                     # "file:line"
@@ -1833,9 +1831,7 @@ semicolon
 colon 'boot'
    code 'word'
    code '[[ -z "$word" ]]&&missingname'
-# NOTE: case sensitivity
    code 'satisfy1 "$word"'
-# NOTE: case sensitivity
    code 'exists "$word" "currentwid" "${order[@]}"'                  # search current first because satisfy may have compiled it there
    code 'name "${exists[0]}"'                                        # convert xt to function name
    code 'coldvector="$name"'
@@ -2560,7 +2556,7 @@ colon 'need'                                                         # ( -- )  (
 semicolon
 
 colon 'needed$'                                                      # ( -- f ) ( $1 -- )
-   code '[[ -z "${unresolved[${ss[-1]}]}" ]]'                        # check unresolved status of word
+   code '[[ -z "${unresolved[${ss[-1],,}]}" ]]'                      # check unresolved status of word
    push '$??true:false'                                              # return result
    code 'unset "ss[-1]"'
 semicolon
@@ -2571,7 +2567,7 @@ colon 'neededanyof'                                                  # ( -- f ) 
    push "false"
    code 'while [[ -n "$line" ]]; do'
    code 'word'
-   code '[[ -z "${unresolved["$word"]}" ]] || {'                     # check unresolved status of word
+   code '[[ -z "${unresolved[${word,,}]}" ]] || {'                   # check unresolved status of word
    put  'true'                                                       # unresolved -> needed
    code 'line=""'                                                    # "wired or" - one needed is enough, skip rest
    code '}'
@@ -2595,7 +2591,7 @@ generate_dependencies()  {                                           # library i
 cache_dependencies()  {
    lib=()
    while read -r word file _; do
-   lib["$word"]="$file"
+   lib["${word,,}"]="$file"
    done < "$dependencies"
 }
 
@@ -2688,7 +2684,7 @@ declare -A sanitised=(
    ['?']="qmrk"
    ['*']="star")
 sanitise()  {
-   sanitise="$1"
+   sanitise="${1,,}"
    for tmp in "${!sanitised[@]}"; do
       sanitise="${sanitise//"$tmp"/"[${sanitised[$tmp]}]"}"
    done
@@ -2736,8 +2732,8 @@ colon 'about'
 semicolon
 
 colon 'concerning'
-   code word
-   code 'concerning=($(grep -l "$word" "${worddoc%/*}"/*))'
+   code 'word'
+   code 'concerning=($(grep -il "$word" "${worddoc%/*}"/*))'
    code 'grep -h "^name: " "${concerning[@]}"'
    code 'unset -v "concerning"'
 semicolon
@@ -2938,12 +2934,11 @@ primitive ','              '((m[dp++]=s[sp--]))'                     # ( x -- )
 
 # ----- I/O ----------------------------------------------
 primitive '-whitespace'    'minwhitespace'
-primitive  'cr'      'printf "\n"'
-primitive  'space'   'printf " "'
-primitive  'page'    'clear'
-primitive  'simpleprompt' '((compiling)) || printf " %s\n" "ok"'
-defer      'prompt'       'simpleprompt'
-
+primitive  'cr'            'printf "\n"'
+primitive  'space'         'printf " "'
+primitive  'page'          'clear'
+primitive  'simpleprompt'  '((compiling)) || printf " %s\n" "ok"'
+defer      'prompt'        'simpleprompt'
 
 
 # ----- launch ------------------------------------------- #fold00

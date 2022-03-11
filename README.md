@@ -14,22 +14,21 @@ shell, or as Forthish coding environment.
 yoda facilitates exploring it, by providing words for examining misc
 aspects, described on the [Explore wiki page](https://github.com/Bushmills/yoda/wiki/Explore).
 
-In some respects does yoda differ from Forth.  Some example code, giving
-more tangible clues where and how yoda differs from Forth can be reached
-from this [Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples).  
-Deviations from standard are identified in the [words descriptions](https://github.com/Bushmills/yoda/tree/main/doc/words). View these description from yoda with [`about`](https://github.com/Bushmills/yoda/tree/main/doc/words/word:about).  
-[These words](https://github.com/Bushmills/yoda/wiki/Compliant) are deemed to comply with standard.  
-
-Some differences are listed and commented on the [Differences wiki page](https://github.com/Bushmills/yoda/wiki/Differences).  
+By now is yoda more standards compliant than I originally believed it to be feasable. Only
+few differences remain. Consequently has the pool of code intending to demonstrate the
+differences been ground down. Only few source code examples remain in
+[Examples wiki page](https://github.com/Bushmills/yoda/wiki/Examples). By the same token
+has the extent of the file describing the deviations been reduced too:
+[Differences wiki page](https://github.com/Bushmills/yoda/wiki/Differences).
 
 My musings, ideas, plans and thoughts of possible changes can be found at
 [Considerations wiki
 page](https://github.com/Bushmills/yoda/wiki/Considerations), and the rest possibly
 among the [remaining wiki pages](https://github.com/Bushmills/yoda/wiki/Home).
 
-yoda has been coded as bash script with only a small count of [external dependencies](https://github.com/Bushmills/yoda/wiki/Dependencies)  
+yoda has been coded as bash script with only a small count of [external dependencies](https://github.com/Bushmills/yoda/wiki/Dependencies)
 
 Here's a screenshot showing yoda's status line, the current list of words, and a "word not found" error.
 Some of those words were compiled from library when a word needing them was executed, and are, therefore, not part
-of yoda's "core" vocabulary:  
+of yoda's "core" vocabulary:
 ![words and error screenshot](http://snap.scarydevilmonastery.net/github/1643883173174493618d.png)

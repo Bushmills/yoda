@@ -1,16 +1,9 @@
 provides: os shell: df ls cat cd most echo printf cp rm pwd mc
 once
 
-: doshell ( u -- )
-    "eval " $@ join$
-    bl append$
-    0 parse$ join$
-    shell$ ;         transient
-
 : shell:
-    here$ constant
-    last$ $,
-    does> doshell ;
+    "eval " word$ dup$ create$ join$
+    " $line; line=''" join$  use$  ;
 
 only forth
 vocabulary os

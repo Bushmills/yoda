@@ -106,18 +106,19 @@ defer query$                                          ' simplequery$ is query$
 : ltype$       ( u -- ) ( $1 -- )                     dup$ type$ count$ - spaces          ;
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
 
-: cstring      ( -- a u ) ( $1 -- )                   here dup unpack$                    ; transient inline
-: parse        ( c -- c-addr u )                      parse$ cstring                      ;
-: parse-name   ( -- c-addr u )                        word$  cstring                      ;
-: source       ( -- c-addr u )                        "tib" env$ cstring                  ;
-: c"           ( -- ) ( $1 -- )                       '"' parse$
-                                                      here dup postpone literal
-                                                      1+ unpack$ dup c, allot             ; compiled
+: c-addr       ( -- a )   ( $1 -- )                   here dup 1+ unpack$ over c!         ;
+: c-addr,u     ( -- a u ) ( $1 -- )                   here dup unpack$                    ;
+: parse        ( c -- c-addr u )                      parse$ c-addr,u                     ;
+: parse-name   ( -- c-addr u )                        word$  c-addr,u                     ;
+: source       ( -- c-addr u )                        "tib" env$ c-addr,u                 ;
+: s(           ( -- c-addr u )                        ')' parse                           ;
+: .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ;
+: c"           ( -- ) ( $1 -- )                       '"' parse$ c-addr
+                                                      dup postpone literal
+                                                      c@ 1+ allot                         ; compiled
 : s"           ( -- )                                 postpone c"  postpone count         ; compiled
 : ."           ( -- )                   '"' parse$ postpone literal$ postpone type$       ; compiled
-: .(           ( -- ) ( s: delim )      ')' parse$                            type$       ;
-: word         ( c -- c-addr )          -whitespace parse$ here dup 1+ unpack$  over c!   ;
-
+: word         ( c -- c-addr )                        -whitespace parse$ c-addr           ;
 \ ----- pictured number conversion -----------------------
 
 ' prepend$ alias hold                                                                              inline
@@ -132,7 +133,7 @@ defer query$                                          ' simplequery$ is query$
 : <#           ( -- $1 )                              ""                                  ;        inline
 : #s           ( d1 -- d2 )                           begin # 2dup or 0= until            ;
 : #>type       ( d -- ) ( $1 -- )                     #>$ type$                           ;        inline
-: #>           ( d -- )                               #>$ here here unpack$               ;
+: #>           ( d -- )                               #>$ c-addr,u                        ;
 : udconvert    ( ud -- ) ( -- $1 )                    <# #s #>$                           ;
 : dconvert     ( d -- ) ( -- $1 )                     tuck dabs udconvert sign            ;
 : d.           ( d -- )                               dconvert type$ space                ;
@@ -144,7 +145,7 @@ defer query$                                          ' simplequery$ is query$
 ' <# alias <x                                                                                      inline transient
 : xs           ( d -- d )                             begin x dup 0= until                ;        transient
 : x>type       ( x -- ) ( $1 -- )                     x>$ type$                           ;        inline transient
-: x>           ( x -- a n )( $1 -- )                  x>$ here here unpack$               ;        transient
+: x>           ( x -- a n )( $1 -- )                  x>$ c-addr,u                        ;        transient
 trash x
 
 : uconvert     ( u -- ) ( -- $1 )                     <x xs x>$                           ;
@@ -170,10 +171,10 @@ trash x
 : newwordlist$  ( -- wid )  ( $1 -- )                 here$ $, dup initwordlist           ;
 "environment" newwordlist$ constant environment
 : environment?    ( c-addr u -- false | i*x true )    environment searchwordlist
-                                                      dup lest count scrape true  ;
+                                                      dup lest count scrape true          ;
 : environment!    ( i*x i c-addr u -- )               here -rot environment writewordlist
                                                       dup c, here swap dup cells allot spread  ; transient
-: >environment$  ( i+x -- ) ( $1 -- )                 here dup unpack$ environment!       ;      transient
+: >environment$  ( i+x -- ) ( $1 -- )                 c-addr,u environment!               ;      transient
 
 #255        1 "/COUNTED-STRING"     >environment$  \ max count of chars in a counted string
 #255        1 "/HOLD"               >environment$  \ size of the pictured numeric output string buffer, in characters

@@ -9,3 +9,5 @@ input stream:        space delimited string
 description:         create an additional header for xt semantics, for an alternative name
 
 example:             ' lshift alias <<
+standard:            no
+deviation:           standard has no equivalent

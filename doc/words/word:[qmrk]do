@@ -6,3 +6,6 @@ contexts:            compileonly
 category:            flow control
 
 description:         begin of a ?do ... loop   or   ?do ... +loop flow control construct
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/qDO

@@ -6,3 +6,6 @@ contexts:            compileonly
 category:            flow control
 
 description:         part of an if ... then  or  if ... else ... then flow control construct
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/THEN

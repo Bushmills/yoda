@@ -8,5 +8,6 @@ category:            file I/O
 description:         produces a true flag when executed while loading from file.
                      when executed from console, pushed flag will be false.
 
+notes:               may be similar to source-id, https://forth-standard.org/standard/core/SOURCE-ID
 standard:            no
 deviation:           standard has no equivalent

@@ -8,5 +8,5 @@ category:            flow control
 description:         conclude a begin ... again structure, by compiling code
                      which unconditionally jumps back to begin.
 
-standard:            undecided
+standard:            yes
 url:                 https://forth-standard.org/standard/core/AGAIN

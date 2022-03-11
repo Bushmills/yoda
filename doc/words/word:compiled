@@ -10,14 +10,8 @@ description:         moves the header of the most recently defined word into
                      the word can only be found during compilation, but not
                      while interpreting.
 
-notes:               This replaces the common scheme of marking words as
-                     "immediate", and as such making them state smart.
-
-example:             word "unless" has been defined with compile time semantics
-                     of conditionally exiting the word (conceptualised as "jumping
-                     to its end") while deviating interpret time semantics skip
-                     evaluation of rest of the input line, conditionally.
+example:             words "unless" and "times" have been defined with compile
+                     time semantics different from interpret time semantics.
 
 standard:            no
-deviation:           standard has no direct equivalent
-                     closest standard word would be IMMEDIATE
+deviation:           standard has no equivalent

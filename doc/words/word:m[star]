@@ -7,6 +7,6 @@ category:            arithmetic
 
 description:         multiplies unsigned singles n1, n2 for signed double product d
 
-notes:               very slow
+notes:               slow
 standard:            yes
 url:                 https://forth-standard.org/standard/core/MTimes

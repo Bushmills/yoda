@@ -12,9 +12,5 @@ notes:               makes often more sense in combination with some conditional
                      guarding it. For a presentable alternative, hiding the flair
                      of unstructuredness of exit, see lest and unless.
 
-standard:            no
-deviation:           Execution:  ( -- ) ( R: nest-sys -- )
-                     "Return control to the calling definition specified by nest-sys."
-                     yoda doesn't use R for carrying nest-sys. Therefore can EXIT not
-                     return to nest-sys on R.
+standard:            yes
 url:                 https://forth-standard.org/standard/core/EXIT

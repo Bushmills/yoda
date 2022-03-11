@@ -12,3 +12,6 @@ example:             ...
                      true if  ( taken )
                      else     ( not taken )
                      then
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/ELSE

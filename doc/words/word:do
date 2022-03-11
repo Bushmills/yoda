@@ -7,3 +7,5 @@ category:            flow control
 
 description:         start of a do ... loop or  do ... +loop flow control contruct
 
+standard:            yes
+url                  https://forth-standard.org/standard/core/DO

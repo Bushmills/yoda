@@ -10,5 +10,4 @@ description:         initiate defining a code word, with name as read from input
 
 example:             code bye  "exit" code,   ;code
 standard:            no
-deviation:           standard has no equivalent, but using create or derived to
-                     initiate defining a code word.
+deviation:           standard has no equivalent

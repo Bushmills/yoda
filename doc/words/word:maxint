@@ -1,5 +1,5 @@
 name:                maxint
-stack:               ( -- )
+stack:               ( -- n )
 return stack:        ( -- )
 string stack:        ( -- )
 contexts:            stateless

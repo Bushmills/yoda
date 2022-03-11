@@ -9,3 +9,6 @@ description:         conclude a begin ... until flow control construct by compil
                      code which performs a conditional jump back to begin. If flag
                      is true, the jump is not taken, and execution continues with
                      code following until.
+
+standard:            yes
+url:                 https://forth-standard.org/standard/core/UNTIL

@@ -10,5 +10,5 @@ description:         initiate one of these flow control constructs:
                      begin ... until
                      begin ... while ... repeat
 
-standard:            undecided
-url:
+standard:            yes
+url:                 https://forth-standard.org/standard/core/BEGIN

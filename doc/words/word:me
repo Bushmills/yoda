@@ -2,7 +2,7 @@ name:                me
 stack:               ( -- )
 return stack:        ( -- )
 string stack:        ( -- )
-contexts:            compileonly
+contexts:            compile
 category:            compiling
 
 description:         compile code which pushs the the xt of the word to stack

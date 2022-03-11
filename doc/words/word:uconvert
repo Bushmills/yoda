@@ -7,3 +7,7 @@ category:            number conversion, strings
 
 description:         converts unsigned number u to a string which is pushed to
                      string stack. Respects base.
+
+standard:            no
+deviation:           standard has no equivalent
+

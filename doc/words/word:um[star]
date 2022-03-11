@@ -7,6 +7,6 @@ category:            arithmetics
 
 description:         multiply two unsigned singles, yielding an unsigned double
 
-notes:               very slow
+notes:               slow
 standard:            yes
 url:                 https://forth-standard.org/standard/core/UMTimes

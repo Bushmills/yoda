@@ -14,3 +14,7 @@ description:         concludes a do ... +loop flow control construct, which caus
                      do be executed, otherwise will loop data be cleaned up, and code
                      proceeds with code following +loop.
 
+notes:               last time test was run, a deviation was observed around
+                     an overflowing index. Careful for now.
+standard:            yes
+url:                 https://forth-standard.org/standard/core/PlusLOOP

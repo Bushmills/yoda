@@ -10,3 +10,5 @@ description:         completes a do ... loop or ?do ... loop construct, by
                      execution of loop will loop index be incremente by one
                      until loop limit, as passed to do or ?do, is reached.
 
+standard:            yes
+url:                 https://forth-standard.org/standard/core/LOOP

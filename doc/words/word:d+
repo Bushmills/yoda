@@ -8,5 +8,4 @@ category:            arithmetics
 description:         adds two double length numbers
 
 standard:            yes
-deviation:           standard has no equivalent
 url:                 https://forth-standard.org/standard/core/DPlus

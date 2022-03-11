@@ -11,4 +11,5 @@ description:         look up an entry defined by name c-addr u in wordlist wid.
 notes:               mainly added for environment? Single returned item represents
                      a memory address. environment string data is stored there.
 standard:            no
-deviation:           standard has no equivalent
+deviation:           standard search-wordlist has different stack effect
+url:                 https://forth-standard.org/standard/search/SEARCH-WORDLIST

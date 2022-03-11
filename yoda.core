@@ -49,11 +49,11 @@ only forth definitions
 \ otherwise searched during compilation only.
 : compiler        ( -- )                  [ "compilerwid" env ] literal set-context  ;             inline
 
-
 \ ----- stack --------------------------------------------
 
 \ code sp!       ( ??? u -- [u items] )               "sp"                          pop,  ;code    inline
-: ?dup         ( x -- 0 | x x )                       [ "((s[sp])) &&" ]   code,    dup   ;        inline
+\ code sp@       ( -- u )                             "sp"                          push, ;code    inline
+: ?dup         ( x -- 0 | x x )                       [ "((s[sp]))&&" ]  code,      dup   ;        inline
 : 2dup         ( x1 x2 -- x1 x2 x1 x2 )               over over                           ;        inline
 
 \ ----- flow control -------------------------------------
@@ -97,7 +97,8 @@ bits #32 < unless : gibi  ( n1 -- n2 )                #30 <<                    
 : pad          ( -- a )                               here #256 +                         ;        inline
 : count$       ( -- u ) ( $1 -- )                     [ "${#ss[-1]}" ]        push, drop$ ;        inline
 : scrape       ( a i -- i*x )                         for skim swap next drop             ;
-: spread       ( i*x a u -- )                         tuck cells + swap for cell - tuck ! next drop  ;
+: spread       ( i*x a u -- )                         tuck cells +
+                                                      swap for cell - tuck ! next drop    ;
 
 \ ----- i/o ----------------------------------------------
 
@@ -107,7 +108,7 @@ defer query$                                          ' simplequery$ is query$
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
 
 : c-addr       ( -- a )   ( $1 -- )                   here dup 1+ unpack$ over c!         ;
-: c-addr,u     ( -- a u ) ( $1 -- )                   here dup unpack$                    ;
+: c-addr,u     ( -- a u ) ( $1 -- )                   here dup    unpack$                 ;
 : parse        ( c -- c-addr u )                      parse$ c-addr,u                     ;
 : parse-name   ( -- c-addr u )                        word$  c-addr,u                     ;
 : source       ( -- c-addr u )                        "tib" env$ c-addr,u                 ;

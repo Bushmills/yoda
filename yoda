@@ -747,8 +747,9 @@ exists()  {
 
 # factor with d+, dum* and digit
 # arg1: number string:    123456.
-dunum()  {
-   local i j dh=0 dl digit num="$1"
+dnum()  {
+   local i j digit num="$1"
+   dh=0
    for ((j=0; j<${#num};j++)); do
       digit="${num:j:1}"
       [[ $digit == . ]] && {
@@ -763,61 +764,42 @@ dunum()  {
       ((digit=asc[$digit]-48, digit>9))&&((digit-=39))
       ((dh=s1+s2, dl+=digit, dl&carry))&&((dh++))
    done
-   ((dunum[0]=dl&true, dunum[1]=dh&true))
+   ((dl&=true, dh&=true))
 }
 
 
 # factor with dnegate
 # arg1: number string:   -123456.
-dnum()  {
-   dunum "${1#-}"
-   ((dl=dunum[0]^true, dh=dunum[1]^true, dl++, dl&carry))&&((dh++))
-   ((dnum[0]=dl&true, dnum[1]=dh&true))
-}
-
-
-# arg1: single unsigned number string
-u()  {
-   stateless "((s[++sp]=$((${m[base]}#$1&true))))"
-}
-
-# arg1: single signed number string  (dash stripped)
-n()  {
-   stateless "((s[++sp]=$((-${m[base]}#$1&true))))"
-}
-
-# arg1: double unsigned number string
-ud()  {
-   dunum "$1"
-   stateless "((s[++sp]=${dunum[0]}, s[++sp]=${dunum[1]}))"
-}
-
-# arg1: double signed number string  (dash stripped)
-nd()  {
-   dnum "$1"
-   stateless "((s[++sp]=${dnum[0]}, s[++sp]=${dnum[1]}))"
+dnum-()  {
+   dnum "${1#-}"
+   ((dl^=true, dh^=true, dl++, dl&carry))&&((dh++))
+   ((dl&=true, dh&=true))
 }
 
 
 querynum()  {
-   local word="$1" number="u"
+   local word="$1" sign="" dl dh
    legaldigits="${alldigits:0:m[base]}"
-   [[ ${word:0:1} == - ]] && {            # leading dash?
-      number="n"                          # indicate signed number
-      word="${word#?}"                    # strip dash
+   [[ ${word:0:1} == - ]] && {                                       # leading dash?
+      sign="-"
+      word="${word#?}"                                               # strip dash
    }
-   tail="${word#*[!$legaldigits]}"        # remove up to and including first non-digit character
-   left="${word%%$tail}"                  # the removed part
-   [[ ${left:0-1} == . ]] && {            # dot: assume double number
-      left="${left%?}"                    # remove dot
-      m[dpl]="${#left}"                   # write dot position to dpl
-      number+="d"                         # indicate double number
+   tail="${word#*[!$legaldigits]}"                                   # remove up to and including first non-digit character
+   left="${word%%$tail}"                                             # the removed part
+   [[ -z "$left" ]] && {                                             # no non-digit chars in string
+      stateless "((s[++sp]=$(($sign${m[base]}#$tail&true))))"        # push or compile as single signed or unsigned number
+      return 0
    }
-   word="${left}${tail}"                  # legal number if only legal digits left
-   [[ -z "${word//[$legaldigits]/}" ]] ||
-      return 1                            # test for only legal digits failed: not a number
-   "$number" "$word"                      # number: convert and push or compile
-   return 0                               # indicate success: no need for further examination
+   ((${#left} == 1)) && return 1                                     # leading decimal point: not a number
+   [[ ${left:0-1} == . ]] && {                                       # dot: assume double number
+      left="${left%?}"                                               # remove dot
+      m[dpl]="${#left}"                                              # write dot position to dpl
+   }
+   word="${left}${tail}"                                             # recombine number without decimal point
+   [[ -z "${word//[$legaldigits]/}" ]] || return 1                   # number contains other chars than legal digits: not a number
+   dnum$sign "$word"                                                 # convert to double numeric value
+   stateless "((s[++sp]=dl, s[++sp]=dh))"                            # push or compile signed or unsigned double number
+   return 0                                                          # indicate success: no need for further examination
 }
 
 

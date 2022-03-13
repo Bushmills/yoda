@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.7.8"
+v="0.7.9"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -2473,18 +2473,23 @@ primitive 'move'   'move'
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
 # duplicating 'char functionality because quoting in evaluate
 # becomes sometimes hard when using ' ' for characters' ASCIIs
-colon '[char]'
-   code 'word'
-   code 'push "${asc[${word:0:1}]}"'
-semicolon
-compiled
+
+char()  {
+   word
+   [[ -z "$word" ]] && missing
+   ((s[++sp]=asc["\\${word:0:1}"]))
+}
 
 # ( -- c )
 colon 'char'
-   code 'word'
-   code '[[ -z $word ]] && missing'
-   push 'asc[${word:0:1}]'
+   code "char"
 semicolon
+
+colon '[char]'
+   code "char"
+   code 'code "((s[++sp]=${s[sp--]}))"'
+semicolon
+compiled
 
 
 colon 'key'

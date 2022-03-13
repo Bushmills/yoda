@@ -745,8 +745,8 @@ exists()  {
 
 
 # factor with d+, dum* and digit
-# arg1: number string
-dnum()  {
+# arg1: number string:    123456.
+dunum()  {
    local i j dh=0 dl digit num="$1"
    for ((j=0; j<${#num}-1;j++)); do
       ((s1=dh, s2=dl, dl=0, s1*=m[base]))
@@ -757,6 +757,14 @@ dnum()  {
       ((digit=asc[${num:j:1}]-48, digit>9))&&((digit-=39))
       ((dh=s1+s2, dl+=digit, dl&carry))&&((dh++))
    done
+   ((dunum[0]=dl&true, dunum[1]=dh&true))
+}
+
+# factor with dnegate
+# arg1: number string:   -123456.
+dnum()  {
+   dunum "$1"
+   ((dl=dunum[0]^true, dh=dunum[1]^true, dl++, dl&carry))&&((dh++))
    ((dnum[0]=dl&true, dnum[1]=dh&true))
 }
 
@@ -776,16 +784,15 @@ pattern()  {                                                         # pattern i
       return 0; }
 
    [[ $word =~ ^[${tmp:0:$radix}]+.$ ]] && {                         # 1234.     unsigned double
-      dnum "$word"
+      dunum "$word"
+      stateless "((s[++sp]=${dunum[0]}, s[++sp]=${dunum[1]}))"
+      return 0; }
+   [[ $word =~ ^-[${tmp:0:$radix}]+.$ ]] && {                        # -1234.    signed double
+      dnum "${word:1}"
       stateless "((s[++sp]=${dnum[0]}, s[++sp]=${dnum[1]}))"
       return 0; }
-#   [[ $word =~ ^-[${tmp:0:$radix}]+.$ ]] && {                        # -1234.    signed double
-#      dnum "$word"
-#      dnegate dnum[0] dnum[1]
-#      stateless "((s[++sp]=${dnum[0]}, s[++sp]=${dnum[1]}))"
-#      return 0; }
 
-# add support for negative radix specified numbers
+# TODO: add support for negative radix specified numbers
    [[ ${word:0:1} == [%\$\#] ]] && {
       radix="${bases[${word:0:1}]}"                                  # yes: read radix associated with char
       [[ ${word:1} =~ ^[${tmp:0:$radix}]+$ ]] && {                   # remainder of number all legal chars?
@@ -2020,8 +2027,8 @@ primitive 'ud/mod'   'udslashmod'
 
 colon 'dnegate'                                                      # ( d1 -- d2 )
    code 'local dh="${s[sp]}" dl="${s[sp-1]}"'
-   code '((dl^=true, dh^=true, dl=(dl+1)&true, dl))||((dh++))'
-   code '((s[sp-1]=dl, s[sp]=dh&true))'
+   code '((dl^=true, dh^=true, dl++, dl&carry))&&((dh++))'
+   code '((s[sp-1]=dl&true, s[sp]=dh&true))'
 semicolon
 
 colon 'd+'                                                           # ( d1 d2 -- d3 )

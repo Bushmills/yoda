@@ -1,0 +1,16 @@
+name:                dpl
+stack:               ( -- a )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            number conversion
+
+description:         a variable containing the position of the decimal point
+                     where found during last conversion of a double length number.
+                     The value is identical to the number of digits left of the
+                     decimal point, as found in the string during conversion,
+                     regardless of radix and numeric value the string was converted
+                     to. A leading dash isn't taken into account, but leading zeroes are.
+
+standard:            no
+deviation:           standard has no equivalent

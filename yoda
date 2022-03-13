@@ -599,6 +599,7 @@ variable 'instantresolve'     "1"
 variable 'callstack'          "0"
 variable 'base'               "10"
 variable 'state'              "0"
+variable 'dpl'                "0"
 
 constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"
@@ -748,13 +749,18 @@ exists()  {
 # arg1: number string:    123456.
 dunum()  {
    local i j dh=0 dl digit num="$1"
-   for ((j=0; j<${#num}-1;j++)); do
-      ((s1=dh, s2=dl, dl=0, s1*=m[base]))
+   for ((j=0; j<${#num};j++)); do
+      digit="${num:j:1}"
+      [[ $digit == . ]] && {
+         ((m[dpl]=j))
+         continue
+      }
+      ((s1=dh*m[base], s2=dl, dl=0))
       for ((i=bits; i--;)); do
          ((dl*=2, s2*=2, dl&carry))&&((s2++, dl&=true))
          ((s2&carry))&&((dl+=m[base], dl&carry))&&((s2++))
       done
-      ((digit=asc[${num:j:1}]-48, digit>9))&&((digit-=39))
+      ((digit=asc[$digit]-48, digit>9))&&((digit-=39))
       ((dh=s1+s2, dl+=digit, dl&carry))&&((dh++))
    done
    ((dunum[0]=dl&true, dunum[1]=dh&true))
@@ -763,7 +769,7 @@ dunum()  {
 # factor with dnegate
 # arg1: number string:   -123456.
 dnum()  {
-   dunum "$1"
+   dunum "${1#-}"
    ((dl=dunum[0]^true, dh=dunum[1]^true, dl++, dl&carry))&&((dh++))
    ((dnum[0]=dl&true, dnum[1]=dh&true))
 }
@@ -772,23 +778,25 @@ dnum()  {
 # wondering whether a case statement would make this look any better
 declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
+
    ((radix=m[base]))
    tmp="0123456789abcdefghijklmnopqrstuvwxyz"                        # cut legal chars for base
-# can probably merge the next two, handling positive
-# and negative numbers in same action
+
    [[ $word =~ ^[${tmp:0:$radix}]+$ ]] && {                          # 1234      unsigned number
       stateless "((s[++sp]=$((${radix}#${word}&true))))"             # convert signless numbers without special treatment
       return 0; }
+
    [[ $word =~ ^-[${tmp:0:$radix}]+$ ]] && {                         # -1234     negative number
       stateless "((s[++sp]=$((-${radix}#${word:1}&true))))"
       return 0; }
 
-   [[ $word =~ ^[${tmp:0:$radix}]+.$ ]] && {                         # 1234.     unsigned double
-      dunum "$word"
+   [[ $word =~ ^[${tmp:0:$radix}][${tmp:0:$radix}.]+$ ]] && {        # 1234.     unsigned double
+      dunum "${word}"
       stateless "((s[++sp]=${dunum[0]}, s[++sp]=${dunum[1]}))"
       return 0; }
-   [[ $word =~ ^-[${tmp:0:$radix}]+.$ ]] && {                        # -1234.    signed double
-      dnum "${word:1}"
+
+   [[ $word =~ ^-[${tmp:0:$radix}][${tmp:0:$radix}.]+$ ]] && {       # -1234.    negative double
+      dnum "${word}"
       stateless "((s[++sp]=${dnum[0]}, s[++sp]=${dnum[1]}))"
       return 0; }
 

@@ -118,12 +118,12 @@ t{ gt9 0= -> <false> }t
 
 omit
 testing source >in word
-: gs1 "source" >pad 2dup evaluate
+: gs1 s" source" 2dup evaluate
        >r swap >r = r> r> = ;
 t{ gs1 -> <true> <true> }t
 
-omit
 variable scans
+omit
 : rescan?  -1 scans +! scans @ if 0 >in ! then ;
 t{ 2 scans !
 345 rescan?
@@ -133,7 +133,6 @@ omit
 : gs2  5 scans ! s" 123 rescan?" evaluate ;
 t{ gs2 -> 123 123 123 123 123 }t
 
-omit
 : gs3 word count swap c@ ;
 t{ bl gs3 hello -> 5 char h }t
 t{ char " gs3 goodbye" -> 7 char g }t
@@ -210,28 +209,28 @@ omit
    r> base ! ;
 t{ gp7 -> <true> }t
 
-\ >number tests
+\ number tests
 create gn-buf 0 c,
 : gn-string   gn-buf 1 ;
 : gn-consumed   gn-buf char+ 0 ;
-: gn'      [char] ' word$ >pad char+ c@ gn-buf c!  gn-string ;
+: gn'      [char] ' word char+ c@ gn-buf c!  gn-string ;
 
-\ t{ 0 0 gn' 0' >number -> 0 0 gn-consumed }t
-\ t{ 0 0 gn' 1' >number -> 1 0 gn-consumed }t
-\ t{ 1 0 gn' 1' >number -> base @ 1+ 0 gn-consumed }t
-\ t{ 0 0 gn' -' >number -> 0 0 gn-string }t   \ should fail to convert these
-\ t{ 0 0 gn' +' >number -> 0 0 gn-string }t
-\ t{ 0 0 gn' .' >number -> 0 0 gn-string }t
+t{ 0 0 gn' 0' >number -> 0 0 gn-consumed }t
+t{ 0 0 gn' 1' >number -> 1 0 gn-consumed }t
+t{ 1 0 gn' 1' >number -> base @ 1+ 0 gn-consumed }t
+t{ 0 0 gn' -' >number -> 0 0 gn-string }t   \ should fail to convert these
+t{ 0 0 gn' +' >number -> 0 0 gn-string }t
+t{ 0 0 gn' .' >number -> 0 0 gn-string }t
 
 : >number-based
    base @ >r base ! >number r> base ! ;
 
-\ t{ 0 0 gn' 2' 10 >number-based -> 2 0 gn-consumed }t
-\ t{ 0 0 gn' 2'  2 >number-based -> 0 0 gn-string }t
-\ t{ 0 0 gn' f' 10 >number-based -> f 0 gn-consumed }t
-\ t{ 0 0 gn' g' 10 >number-based -> 0 0 gn-string }t
-\ t{ 0 0 gn' g' max-base >number-based -> 10 0 gn-consumed }t
-\ t{ 0 0 gn' z' max-base >number-based -> 23 0 gn-consumed }t
+t{ 0 0 gn' 2' 10 >number-based -> 2 0 gn-consumed }t
+t{ 0 0 gn' 2'  2 >number-based -> 0 0 gn-string }t
+t{ 0 0 gn' f' 10 >number-based -> f 0 gn-consumed }t
+t{ 0 0 gn' g' 10 >number-based -> 0 0 gn-string }t
+t{ 0 0 gn' g' max-base >number-based -> 10 0 gn-consumed }t
+t{ 0 0 gn' z' max-base >number-based -> 23 0 gn-consumed }t
 
 : gn1   \ ( ud base -- ud' len ) ud should equal ud' and len should be zero.
    base @ >r base !

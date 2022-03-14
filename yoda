@@ -177,8 +177,9 @@ declare -i magic=100000
 remagic()  { magic+=RANDOM+10000; }
 remagic
 
+declare -Ai bases=(['%']=2 ['#']=10 ['$']=16)
 declare -Ai asc=()                                                   # ascii table
-declare -a char=()                                                   # character table
+declare -a  char=()                                                  # character table
 for i in {1..255}; do                                                # ascii->char LUT for emit, pack$, char$
    char[i]="$(echo -en "\\x$(printf "%x" "$i")")"
    ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
@@ -771,10 +772,9 @@ dnum-()  {
    ((dl&=true, dh&=true))
 }
 
-
-querynum()  {
-   local word="$1" sign="" dl dh
-   legaldigits="${alldigits:0:m[base]}"
+alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
+trynum()  {
+   local word="$1" sign="" legaldigits="${alldigits:0:m[base]}" dh dl
    [[ ${word:0:1} == - ]] && {                                       # leading dash?
       sign="-"
       word="${word#?}"                                               # strip dash
@@ -782,13 +782,11 @@ querynum()  {
    tail="${word#*[!$legaldigits]}"                                   # remove up to and including first non-digit character
    left="${word%%$tail}"                                             # the removed part
    [[ -z "$left" ]] && {                                             # no non-digit chars in string
-      stateless "((s[++sp]=$(($sign${m[base]}#$tail&true))))"        # push or compile as single signed or unsigned number
+      stateless "((s[++sp]=$sign${m[base]}#$tail&true))"             # push or compile as single signed or unsigned number
       return 0
    }
    ((${#left} == 1)) && return 1                                     # leading decimal point: not a number
-   [[ ${left:0-1} == . ]] && {                                       # dot: assume double number
-      left="${left%?}"                                               # remove dot
-   }
+   [[ ${left:0-1} == . ]] && left="${left%?}"                        # remove dot
    word="${left}${tail}"                                             # recombine number without decimal point
    [[ -z "${word//[$legaldigits]/}" ]] || return 1                   # number contains other chars than legal digits: not a number
    ((dpl=${#tail}))                                                  # write dot position to dpl
@@ -798,15 +796,13 @@ querynum()  {
 }
 
 
+
 # wondering whether a case statement would make this look any better
-declare -A bases=(['%']=2 ['#']=10 ['$']=16)
 pattern()  {                                                         # pattern interpreted as
-   local alldigits="0123456789abcdefghijklmnopqrstuvwxyz"
-   querynum "$word" && return 0
-   alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                  # cut legal chars for base
+   trynum "$word" && return 0
 # TODO: add support for negative radix specified numbers
    [[ ${word:0:1} == [%\$\#] ]] && {
-      radix="${bases[${word:0:1}]}"                                  # yes: read radix associated with char
+      ((radix=bases[${word:0:1}]))                                   # yes: read radix associated with char
       [[ ${word:1} =~ ^[${alldigits:0:$radix}]+$ ]] && {             # remainder of number all legal chars?
          stateless "((s[++sp]=$((${radix}#${word:1}&true))))"        # yes: convert from base and deal with it
          return 0; }; }
@@ -816,6 +812,8 @@ pattern()  {                                                         # pattern i
    [[ ${word} == ^[a-zA-Z\[] ]] && {                                 # ^X        return control char
       read -r tmp < <(printf "%d" "'${word:1:1}")
       stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
+   [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
+      line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
    [[ "${word:0:1}${word:0-1}" == '""' ]] && {                       # quoted string, single word
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
          ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
@@ -823,16 +821,14 @@ pattern()  {                                                         # pattern i
             return 0; }                                              # Both requirements are hard to formulate in one common version.
          ss+=("${word:1:${#word}-2}")
          return 0; }; }
-   [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
-      line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
-         ((compiling)) && {
-            code "ss+=('$tmp $word')"                                # compile: compile code to add string to string stack
-            return 0; }
-         ss+=("$tmp $word")                                          # interpret push string to string stack
+      ((compiling)) && {
+         code "ss+=('$tmp $word')"                                   # compile: compile code to add string to string stack
          return 0; }
+      ss+=("$tmp $word")                                             # interpret push string to string stack
+      return 0; }
    [[ "${word:0:1}" == '>' ]] && {                                   # >foo...                   execute a shell command
       tmp="${word:1}"                                                # >foo... ->  foo...
       if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command

@@ -1,0 +1,16 @@
+
+: bench
+   20 for
+    100 for
+       i convert  '.' append$
+       evaluate$ 2drop
+    next
+   next
+ ;
+
+: test
+   realtime bench
+   realtime swap - . cr
+;
+
+boot test

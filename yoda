@@ -599,7 +599,6 @@ variable 'instantresolve'     "1"
 variable 'callstack'          "0"
 variable 'base'               "10"
 variable 'state'              "0"
-variable 'dpl'                "0"
 
 constant 'maxuint'            "$maxuint"
 constant 'maxint'             "$maxint"
@@ -752,10 +751,6 @@ dnum()  {
    dh=0
    for ((j=0; j<${#num};j++)); do
       digit="${num:j:1}"
-      [[ $digit == . ]] && {
-         ((m[dpl]=j))
-         continue
-      }
       ((s1=dh*m[base], s2=dl, dl=0))
       for ((i=bits; i--;)); do
          ((dl*=2, s2*=2, dl&carry))&&((s2++, dl&=true))
@@ -793,10 +788,10 @@ querynum()  {
    ((${#left} == 1)) && return 1                                     # leading decimal point: not a number
    [[ ${left:0-1} == . ]] && {                                       # dot: assume double number
       left="${left%?}"                                               # remove dot
-      m[dpl]="${#left}"                                              # write dot position to dpl
    }
    word="${left}${tail}"                                             # recombine number without decimal point
    [[ -z "${word//[$legaldigits]/}" ]] || return 1                   # number contains other chars than legal digits: not a number
+   ((dpl=${#tail}))                                                  # write dot position to dpl
    dnum$sign "$word"                                                 # convert to double numeric value
    stateless "((s[++sp]=dl, s[++sp]=dh))"                            # push or compile signed or unsigned double number
    return 0                                                          # indicate success: no need for further examination
@@ -1990,6 +1985,10 @@ tonumber()  {
 }
 
 primitive '>number'  'tonumber'
+
+colon 'dpl'
+   push 'dpl'
+semicolon
 
 
 #                     msb&    msb&

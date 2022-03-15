@@ -1,25 +1,28 @@
->set-current "$forthwid"
+only forth definitions
 
 \ ----- defining words -----------------------------------
 
-: create
-   here constant  ;
+: create                      ( -- ) ( s: word -- )      \ creation
+   here constant  ;           ( -- a )                   \ execution
 
-: create$
-   here constant$  ;
+: create$                     ( --)  ( $1 -- )           \ creation
+   here constant$  ;          ( -- a )                   \ execution
 
-: variable
-   create cell allot  ;
+: variable                    ( -- ) ( s: word -- )      \ creation
+   create cell allot  ;       ( -- a )                   \ execution
 
-: primitive   ( -- )  ( $1 -- )
+: primitive                   ( s: word -- ) ( $1 -- )   \ creation
       code
       postpone code,
-      ;code  >inline
- ;
+      ;code  inline  ;
 
-            ( a -- ) ( s: word )   \ creation
-: buffer:   ( -- a )             \ execution
-      create allot  ;
+: buffer:                     ( a -- ) ( s: word -- )    \ creation
+      create allot  ;         ( -- a )                   \ execution
+
+' have$ alias xt                                                                                   inline
+: noname                      ( -- xt )
+      last$ dup$ xt
+      protect trash$  ;
 
 \ ----- system constants ---------------------------------
 
@@ -27,59 +30,24 @@
 ' noop alias cells                                                                                 immediate
 ' noop alias aligned                                                                               immediate
 ' noop alias align                                                                                 immediate
-
-' 1+ alias char+  inline
-' 1+ alias cell+  inline
-
-
-\ ----- manage wordlists ---------------------------------
-
-: literal         ( x -- )                literal,                            ;                    compiled
-: env             ( -- x ) ( $1 -- )      [ "${!ss[-1]}+0&true" ]    push,    drop$ ;              inline
-
->set-current      "$onlywid"
-"words"                                   primitive words            ( -- )                        inline
-: definitions     ( -- )                  get-context set-current             ;                    inline
-: only            ( -- )                  >order=("$onlywid"); also definitions ;                  inline
-: forth           ( -- )                  [ "forthwid" env ] literal set-context  ;                inline
-only forth definitions
-
-\ by making compiler wordlist visible, it can be added to order,
-\ providing the means to control searching it, as compiler voc is
-\ otherwise searched during compilation only.
-: compiler        ( -- )                  [ "compilerwid" env ] literal set-context  ;             inline
-
-\ ----- stack --------------------------------------------
-
-\ code sp!       ( ??? u -- [u items] )               "sp"                          pop,  ;code    inline
-\ code sp@       ( -- u )                             "sp"                          push, ;code    inline
-: ?dup         ( x -- 0 | x x )                       [ "((s[sp]))&&" ]  code,      dup   ;        inline
-: 2dup         ( x1 x2 -- x1 x2 x1 x2 )               over over                           ;        inline
-
-\ ----- flow control -------------------------------------
-
-' r@ alias j                                                                                       inline
-code i         ( -- x )                               "i"                           push, ;code    inline
-code ?leave    ( flag -- )                            "code '((s[sp--]))&&break'"   code, ;code    compiled
-code unloop    ( -- x )                               "((i=r[rp--], ibar=r[rp--]))" code, ;code    inline
+' 1+   alias char+   inline
+' 1+   alias cell+   inline
 
 \ ----- arithmetics --------------------------------------
 
 ' lshift alias <<                                                                                  inline
 ' rshift alias >>                                                                                  inline
 
-: ?negate      ( n flag -- n | -n )                   [ "((s[sp--]))&&" ]   code, negate  ;        inline
-: abs          ( n -- u )                             [ "((s[sp]&msb))&&" ] code, negate  ;        inline
 : /mod         ( n1 n2 -- n3 n4 )                     1 -rot  */mod                       ;                 \ divisions are truncated, symmetric
 : */           ( n1 n2 n3 -- n4 )                     */mod nip                           ;        inline
 : /            ( n1 n2 -- n3 )                        /mod nip                            ;        inline
-: *            ( n1 n2 -- n3 )                        1 */                                ;        inline
-: mod          ( n1 n2 -- n3 )                        /mod drop                           ;        inline
+: mod          ( n1 n2 -- n3 )                        /mod drop                           ;
 : %            ( n1 n2 -- n3 )                        #50 */ dup 0< 1 or + 2/             ;                 \ percentage rounded, not truncated
-: min          ( n1 n2 -- n1|n2 )                     2dup >  if nip exit then drop       ;
-: max          ( n1 n2 -- n1|n2 )                     2dup <  if nip exit then drop       ;
-: umin         ( u1 u2 -- u1|u2 )                     2dup u> if nip exit then drop       ;
-: umax         ( u1 u2 -- u1|u2 )                     2dup u< if nip exit then drop       ;
+: cull         ( x1 x2 f -- x1|x2 )                   if nip exit then drop               ; transient inline
+: min          ( n1 n2 -- n1|n2 )                     2dup >  cull                        ;
+: max          ( n1 n2 -- n1|n2 )                     2dup <  cull                        ;
+: umin         ( u1 u2 -- u1|u2 )                     2dup u> cull                        ;
+: umax         ( u1 u2 -- u1|u2 )                     2dup u< cull                        ;
 : s>d          ( n -- d )                             dup 0<                              ;        inline
 : within       ( x low high -- flag )                 over - >r - r> u<                   ;
 : um/mod       ( d u1 -- u2 u3 )                      ud/mod drop                         ;        inline   \ d / u1 -> quotient u3 remainder u2
@@ -90,12 +58,10 @@ code unloop    ( -- x )                               "((i=r[rp--], ibar=r[rp--]
 : kibi         ( n1 -- n2 )                           #10 <<                              ;        inline
 bits #22 < unless : mebi  ( n1 -- n2 )                #20 <<                              ;        inline
 bits #32 < unless : gibi  ( n1 -- n2 )                #30 <<                              ;        inline
-: unused       ( -- u )                               here negate
-                                                      [ #128 kibi cells 1- ] literal and  ;                    \ use a configurable item instead
+#128 kibi cells 1-  constant memend     ( must be 2^u-1 )                                  transient          \ use a configurable item instead
+: unused       ( -- u )                               here negate memend and              ;
+: pad          ( -- a )                               here #256 +                         ;        inline      \ use a configuration item instead
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
-: <-           ( a x -- )                             [ "m[s[sp]]" ]          pop, drop   ;        inline      \ same as:  swap !
-: pad          ( -- a )                               here #256 +                         ;        inline
-: count$       ( -- u ) ( $1 -- )                     [ "${#ss[-1]}" ]        push, drop$ ;        inline
 : scrape       ( a i -- i*x )                         for skim swap next drop             ;
 : spread       ( i*x a u -- )                         tuck cells +
                                                       swap for cell - tuck ! next drop    ;
@@ -106,20 +72,22 @@ defer query$                                          ' simplequery$ is query$
 : type         ( c-addr u -- )                        pack$ type$                         ;        inline
 : ltype$       ( u -- ) ( $1 -- )                     dup$ type$ count$ - spaces          ;
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
-
 : c-addr       ( -- a )   ( $1 -- )                   here dup 1+ unpack$ over c!         ;
 : c-addr,u     ( -- a u ) ( $1 -- )                   here dup    unpack$                 ;
 : parse        ( c -- c-addr u )                      parse$ c-addr,u                     ;
 : parse-name   ( -- c-addr u )                        word$  c-addr,u                     ;
 : source       ( -- c-addr u )                        "tib" env$ c-addr,u                 ;
+: word         ( c -- c-addr )                        -whitespace parse$ c-addr           ;
 : s(           ( -- c-addr u )                        ')' parse                           ;
 : .(           ( -- ) ( s: delim )                    ')' parse$ type$                    ; immediate
 : c"           ( -- ) ( $1 -- )                       '"' parse$ c-addr
                                                       dup postpone literal
                                                       c@ 1+ allot                         ; compiled
 : s"           ( -- )                                 postpone c"  postpone count         ; compiled
-: ."           ( -- )                   '"' parse$ postpone literal$ postpone type$       ; compiled
-: word         ( c -- c-addr )                        -whitespace parse$ c-addr           ;
+: ."           ( -- )                                 '"' parse$
+                                                      postpone literal$
+                                                      postpone type$                      ; compiled
+
 \ ----- pictured number conversion -----------------------
 
 ' prepend$ alias hold                                                                              inline
@@ -134,7 +102,8 @@ defer query$                                          ' simplequery$ is query$
 : <#           ( -- $1 )                              ""                                  ;        inline
 : #s           ( d1 -- d2 )                           begin # 2dup or 0= until            ;
 : #>type       ( d -- ) ( $1 -- )                     #>$ type$                           ;        inline
-: #>           ( d -- )                               #>$ c-addr,u                        ;
+: #>           ( d -- )                               #>$ c-addr,u                        ;        inline
+
 : udconvert    ( ud -- ) ( -- $1 )                    <# #s #>$                           ;
 : dconvert     ( d -- ) ( -- $1 )                     tuck dabs udconvert sign            ;
 : d.           ( d -- )                               dconvert type$ space                ;
@@ -142,11 +111,11 @@ defer query$                                          ' simplequery$ is query$
 : d.r          ( d u -- )                             >r  dconvert r> rtype$              ;
 : ud.r         ( ud u -- )                            >r udconvert r> rtype$              ;
 
-' drop alias x>$                                                                                   inline transient
-' <# alias <x                                                                                      inline transient
-: xs           ( d -- d )                             begin x dup 0= until                ;        transient
-: x>type       ( x -- ) ( $1 -- )                     x>$ type$                           ;        inline transient
-: x>           ( x -- a n )( $1 -- )                  x>$ c-addr,u                        ;        transient
+' drop alias x>$                                                                            inline transient
+' <# alias <x                                                                               inline transient
+: xs           ( d -- d )                             begin x dup 0= until                ; inline transient
+: x>type       ( x -- ) ( $1 -- )                     x>$ type$                           ; inline transient
+: x>           ( x -- a n )( $1 -- )                  x>$ c-addr,u                        ; inline transient
 trash x
 
 : uconvert     ( u -- ) ( -- $1 )                     <x xs x>$                           ;
@@ -156,16 +125,14 @@ trash x
 : .r           ( n u -- )                             >r  convert r> rtype$               ;
 : u.r          ( u1 u2 -- )                           >r uconvert r> rtype$               ;
 
-' have$ alias xt                                                                                   inline
-' satisfy alias needs:                                                                             inline
+\ ----- files and loading --------------------------------
 
+' satisfy alias needs:                                                                             inline
 \ produces execution token and removes header of last word:  : foo ... ; noname
-: noname       ( -- xt )                              last$ dup$ xt   protect trash$      ;
-: me           ( compile: -- )   ( run: -- x )        [ "xt" ] push,          literal,    ;        compiled
 : needed       ( -- f ) ( stream: word )              word$ needed$                       ;        inline
 : have         ( -- 0|xt ) ( stream: word )           word$ have$                         ;        inline      \ word exists?
 : lack         ( -- flag ) ( stream: word )           have  0=                            ;        inline      \ word missing?
-: [']          ( -- )   ( stream: word )              ' literal,                          ;        compiled
+: [']          ( -- )   ( stream: word )              ' literal,                          ; compiled
 
 \ ----- environment --------------------------------------
 
@@ -174,26 +141,22 @@ trash x
 : environment?    ( c-addr u -- false | i*x true )    environment searchwordlist
                                                       dup lest count scrape true          ;
 : environment!    ( i*x i c-addr u -- )               here -rot environment writewordlist
-                                                      dup c, here swap dup cells allot spread  ; transient
-: >environment$  ( i+x -- ) ( $1 -- )                 c-addr,u environment!               ;      transient
-
-#255        1 "/COUNTED-STRING"     >environment$  \ max count of chars in a counted string
-#255        1 "/HOLD"               >environment$  \ size of the pictured numeric output string buffer, in characters
-#4096       1 "/PAD"                >environment$  \ size of the scratch area pointed to by PAD, in characters
-bits        1 "ADDRESS-UNIT-BITS"   >environment$  \ size of one address unit, in bits
-false       1 "FLOORED"             >environment$  \ true if floored division is the default
-#127        1 "MAX-CHAR"            >environment$  \ maximum value of any character in the implementation-defined character set
--1 s>d 1 >> 2 "MAX-D"               >environment$  \ largest usable signed double number
--1 s>d      2 "MAX-UD"              >environment$  \ largest usable unsigned double number
-maxint      1 "MAX-N"               >environment$  \ largest usable signed integer
-maxuint     1 "MAX-U"               >environment$  \ largest usable unsigned integer
-#1023       1 "RETURN-STACK-CELLS"  >environment$  \ maximum size of the return stack, in cells
-#2047       1 "STACK-CELLS"         >environment$  \ maximum size of the data stack, in cells
+                                                      dup c,
+                                                      here swap dup cells allot spread    ; transient
+#255          1 s( /COUNTED-STRING)     environment!  \ max count of chars in a counted string
+pad here - 1- 1 s( /HOLD)               environment!  \ size of the pictured numeric output string buffer, in characters
+#4095         1 s( /PAD)                environment!  \ size of the scratch area pointed to by PAD, in characters
+bits          1 s( ADDRESS-UNIT-BITS)   environment!  \ size of one address unit, in bits
+false         1 s( FLOORED)             environment!  \ true if floored division is the default
+#127          1 s( MAX-CHAR)            environment!  \ maximum value of any character in the implementation-defined character set
+-1 msb 1-     2 s( MAX-D)               environment!  \ largest usable signed double number
+-1 dup        2 s( MAX-UD)              environment!  \ largest usable unsigned double number
+maxint        1 s( MAX-N)               environment!  \ largest usable signed integer
+maxuint       1 s( MAX-U)               environment!  \ largest usable unsigned integer
+#1023         1 s( RETURN-STACK-CELLS)  environment!  \ maximum size of the return stack, in cells
+#2047         1 s( STACK-CELLS)         environment!  \ maximum size of the data stack, in cells
 
 \ ----- unsorted -----------------------------------------
-
-code random    ( -- u )                               "SRANDOM&true"             push,    ;code    inline      \  32 bits random number
-code realtime  ( -- u )                               "${EPOCHREALTIME//[,.]/}&true" push, ;code   inline      \ a 51 bit microseconds epoch
 
 : evaluate     ( c-addr u -- )                        pack$ evaluate$                     ;        inline
 : quit         ( ??? -- )                             warm
@@ -214,21 +177,6 @@ code realtime  ( -- u )                               "${EPOCHREALTIME//[,.]/}&t
 \ ----- files and loading --------------------------------
 
 ' origin alias thisfile                                                                                        \ better symmetry with thisfile$
-
-\ check whether current source had already been
-\ compiled from before. most useful when used
-\ interpretatively in a file, for testing whether
-\ it will be or has been reloaded, such as with
-\ "loaded lest done" returned u is the count
-\ the file has been loaded.
-code loaded    ( -- u )                               "loaded[filehandle]"       push,    ;code    inline
-
-\ true: loading from file?,  false: interactive
-\ (console). pipe or redirection is indicated as
-\ loading from file.
-code loading   ( -- flag )                            "linenr<0?false:true"      push,    ;code    inline
-code #files    ( -- u )                               "${#files[@]}"             push,    ;code    inline
-
 : once         ( -- )                                 loaded lest done                    ;                    \ prevent reloading file
 : from         ( -- ) ( stream: filename )            word$ from$                         ;        inline
 : thisfile$    ( -- )   ( -- $1 )                     thisfile filename$                  ;        inline      \ produce name of currently loaded file

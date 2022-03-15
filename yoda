@@ -1571,6 +1571,16 @@ colon 'code,'
 semicolon
 immediate
 
+
+primitive 'literal,'       'push ${s[sp--]}'                         # ( -- ) ( compile time: x -- ) ( run time: -- x )
+
+# ( x -- )
+colon 'literal'
+   code  'push ${s[sp--]}'                                           # ( -- ) ( compile time: x -- ) ( run time: -- x )
+semicolon
+compiled
+
+
 # ( compile: $1 -- ) ( run: -- $1 )
 colon 'literal$'
    code 'code "ss+=(\"${ss[-1]}\")"'
@@ -1777,9 +1787,8 @@ compiled
 remagic
 colon 'for'
    code 'code "((r[++rp]=i))"'
-   code 'code "((i=s[sp--]))"'
-   code 'code "for ((; i--; )); do"'
-   push '${#raw[@]}'                                                # allow check of empty function
+   code 'code "for ((i=s[sp--]; i--; )); do"'
+   push '${#raw[@]}'                                                 # allow check of empty function
    push "$magic"                                                     # allow check of structure and empty function
 semicolon
 compiled
@@ -1894,6 +1903,11 @@ inline
 
 colon '-'
    put '(s[sp-1]-s[sp--])&true'
+semicolon
+inline
+
+colon '*'
+   put '(s[sp-1]*s[sp--])&true'
 semicolon
 inline
 
@@ -2056,6 +2070,7 @@ primitive 'drop$'    'unset "ss[-1]"'
 primitive 'over$'    'ss+=("${ss[-2]}")'
 primitive 'pluck$'   'ss+=("${ss[-3]}")'
 primitive 'pick$'    'ss+=("${ss[-s[sp--]-1]}")'
+primitive 'count$'   '((s[++sp]=${#ss[-1]})); unset "ss[-1]"'        # ( -- u ) ( $1 -- )
 
 colon '2dup$'
    code 'ss+=("${ss[-2]}")'
@@ -2264,7 +2279,7 @@ unpack()  {
    string="$1"
    ((tmp="${#string}", s1=s[sp]))
    for ((len=0; tmp--;)); do
-      ((m[s1++]="asc['${string:len++:1}']"))
+      ((m[s1++]=asc["\\${string:len++:1}"]))
    done
    ((s[sp]="$len"))
 }
@@ -2296,6 +2311,13 @@ primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) 
 
 
 # ----- environment--------------------------------------- #fold01
+
+# ( -- x ) ( $1 -- )
+colon 'env'
+   push '${!ss[-1]}+0&true'
+   code 'unset "ss[-1]"'
+semicolon
+inline
 
 # store $1 in bash environment variable with name $2
 # ( x -- ) ( string:  $1 -- )
@@ -2335,7 +2357,6 @@ colon 'writewordlist'
    code 'wordlist[${ss[-1]}]="${s[sp--]}"'
    code 'unset "ss[-1]"'
 semicolon
-
 
 # ----- memory ------------------------------------------- #fold01
 
@@ -2843,7 +2864,20 @@ colon 'done'
 semicolon
 inline
 
-# ----- populate only wordlist, mark 1 ------------------- #fold01
+# check whether current source had already been
+# compiled from before. most useful when used
+# interpretatively in a file, for testing whether
+# it will be or has been reloaded, such as with
+# "loaded lest done" returned u is the count
+# the file has been loaded.
+primitive 'loaded'         '((s[++sp]=loaded[filehandle]))'          # ( -- u )
+# true: loading from file?,  false: interactive
+# (console). pipe or redirection is indicated as
+# loading from file.
+primitive 'loading'        '((s[++sp]=linenr<0?false:true))'        # ( -- flag )
+primitive '#files'         '((s[++sp]=${#files[@]}))'               # ( -- u )
+
+# ----- populate only wordlist --------------------------- #fold01
 
 set-current "$onlywid"
 
@@ -2855,9 +2889,15 @@ colon 'order'
    code 'printf "\ncurrent: %s\n" "${strings[currentwid]}"'
 semicolon
 
-primitive 'previous' '((${#order[@]}>1))&&order=("${order[@]:1}")'
-primitive 'also'     'order=("${order[0]}" "${order[@]}")'
-
+primitive 'previous'    '((${#order[@]}>1))&&order=("${order[@]:1}")'
+primitive 'also'        'order=("${order[0]}" "${order[@]}")'
+primitive 'words'       'words'                                      # ( -- )
+primitive 'forth'       '((order[0]=forthwid))'                      # ( -- )
+primitive 'definitions' 'set-current "${order[0]}"'                  # ( -- )
+colon 'only'                                                         # ( -- )
+   code 'order=("$onlywid" "$onlywid")'
+   code 'set-current "$onlywid"'
+semicolon
 set-current "$forthwid"
 
 # ----- misc --------------------------------------------- #fold01
@@ -2873,6 +2913,8 @@ colon 'x'                                                            # : #
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;
 
+primitive 'random'      '((s[++sp]=SRANDOM&true))'                   # ( -- u )
+primitive 'realtime'    '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))'   # ( -- u )     \ a 51 bit microseconds epoch
 primitive 'secs'     'sleep "${s[sp--]}"'                            # ( u -- )
 
 colon 'version'                                                      # ( -- u1 u2 u3 )
@@ -2901,9 +2943,10 @@ primitive 'inline'         'inline'                                  # ( -- )
 primitive 'immediate'      'immediate'                               # ( -- )
 primitive 'compiled'       'compiled'                                # ( -- )
 primitive 'protect'        'protect'                                 # ( -- )
-primitive 'literal,'       'push ${s[sp--]}'                         # ( -- ) ( compile time: x -- ) ( run time: -- x )
 primitive 'compile,'       'call ${s[sp--]}'                         # ( -- ) ( compile time: x -- ) ( run time: -- x )
-primitive '>body'          's[sp]=${body[s[sp]]}'                    # ( xt -- pfa )
+primitive '>body'          '((s[sp]=body[s[sp]]))'                   # ( xt -- pfa )
+primitive 'compiler'       '((order[0]=compilerwid))'                # ( -- )
+primitive 'me'             'push "$xt"'; compiled                    # ( compile: -- )   ( run: -- x )
 
 # ----- numbers ------------------------------------------
 
@@ -2918,6 +2961,8 @@ primitive 'dup'           '((s[++sp]=s[sp]))'                        # ( x -- x 
 primitive 'over'          '((s[++sp]=s[sp-1]))'                      # ( x1 x2 -- x1 x2 x1 )
 primitive 'pluck'         '((s[++sp]=s[sp-2]))'                      # ( x1 x2 x3 -- x1 x2 x3 x1 )
 primitive 'pick'          '((s[++sp]=s[sp-s[sp--]-1]))'              # ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
+primitive '?dup'          '((s[sp]))&&((s[++sp]=s[sp]))'             # ( x -- 0 | x x )
+primitive '2dup'           '((s[++sp]=s[sp-1], s[++sp]=s[sp-1]))'    # ( x1 x2 -- x1 x2 x1 )
 primitive 'r@'            '((s[++sp]=r[rp]))'                        # ( -- x )  ( r: x -- x )
 primitive 'r>'            '((s[++sp]=r[rp--]))'                      # ( -- x ) ( r: x -- )
 primitive 'rdepth'        '((s[++sp]=rp))'                           # ( -- u )
@@ -2956,6 +3001,7 @@ primitive 'ndrop'          '((sp-=s[sp]+1))'                         # ( [x item
 primitive 'drop'           '((sp--))'                                # ( x -- )
 primitive 'rdrop'          '((rp--))'                                # ( -- ) ( r: x -- )
 primitive '2drop'          '((sp-=2))'                               # ( x1 x2 -- )
+primitive '2nip'           '((s[sp-1]=s[sp--],s[sp-1]=s[sp--]))'     # ( x1 x2 x3 x4 -- x3 x4 )
 primitive 'empty'          's=(0) sp=0'                              # ( ??? -- )
 primitive 'rempty'         'r=() rp=0'                               # ( -- ) ( r: ??? -- )
 
@@ -2964,10 +3010,15 @@ primitive 'rempty'         'r=() rp=0'                               # ( -- ) ( 
 # construction due to inline, which is
 # therefore essential. primitives have
 # inline flag set by default.
+
+primitive 'i'              '((s[++sp]=i))'                           # ( -- x )
+primitive 'j'              '((s[++sp]=r[rp]))'                       # ( -- x )
+primitive 'unloop'         '((i=r[rp--], ibar=r[rp--]))'             # ( -- x )
 primitive 'exit'           'return'                                  # ( -- )
 primitive 'leave'          'code "break"'                ; compiled  # ( -- )
 primitive 'warm'           'warm'                                    # ( ??? - ) ( r: ??? -- )
 primitive 'bye'            'exit 0'                                  # ( -- )
+primitive '?leave'         'code "((s[sp--]))&&break"'  ; compiled   # ( flag -- )
 
 # ----- arithmetics --------------------------------------
 
@@ -2977,6 +3028,8 @@ primitive '2*'             '((s[sp]=(s[sp]<<1)&true))'               # ( x1 -- x
 primitive '2/'             '((s[sp]=(s[sp]>>1)|(s[sp]&msb)))'        # ( x1 -- x2 )
 primitive 'invert'         '((s[sp]^=maxuint))'                      # ( x1 -- x2 )
 primitive 'negate'         '((s[sp]=(-s[sp]&true)))'                 # ( n1 -- n2 )
+primitive '?negate'        '((s[sp--]))&&((s[sp]=(-s[sp]&true)))'    # ( n flag -- n | -n )
+primitive 'abs'            '((s[sp]&msb))&&((s[sp]=(-s[sp]&true)))'  # ( n -- u )
 
 # ----- memory -------------------------------------------
 
@@ -2984,6 +3037,7 @@ primitive '@'              '((s[sp]=m[s[sp]]))'                      # ( a -- x 
 primitive 'c,'             '((m[dp++]=s[sp--]&255))'                 # ( c -- )
 primitive 'count'          '((s[++sp]=m[s[sp]++]&255))'              # ( a -- a+1 c )
 primitive 'skim'           '((s[++sp]=m[s[sp]++]))'                  # ( a -- a+cell x )
+primitive '<-'             '((m[s[sp--]]=s[sp--]))'                  # ( a x -- )
 primitive 'here$'          '((s[++sp]=sdp))'                         # ( -- u )
 primitive 'here'           '((s[++sp]=dp))'                          # ( -- a )
 primitive ','              '((m[dp++]=s[sp--]))'                     # ( x -- )

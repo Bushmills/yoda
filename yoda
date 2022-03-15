@@ -123,11 +123,7 @@ newflag()  {
 
 newflag functionheader                                               # create header
 newflag sourcelocation                                               # store source location
-newflag atomiccode                                                   # expand
 newflag does                                                         # rip code apart into define- and run time portions
-
-declare -A atom=()                                                   # a table with token -> code mappings.
-
 
 # what to execute when no command line args given
 default='from defaults'                                              # load defaults from file
@@ -335,10 +331,6 @@ analyser_sourcelocation()  {
    return 1
 }
 
-analyser_atomiccode()  {
-   targetline="${atom[$rawline]}"
-}
-
 analyser_does()  {
    dodoes_at="$((${#target[@]}+1))"                                  # remember end of target for splitting code (but only when whole word
 }
@@ -346,7 +338,6 @@ analyser_does()  {
 
 # doesn't actually do any optimizing.
 # Function is limited to:
-# - expanding atoms
 # - generating code for pushing
 # - generating code for function calls from xts
 # - dealing with does>
@@ -448,16 +439,6 @@ parsebacksl()  {
 # ----- compiler ----------------------------------------- #fold00
 
 
-# atoms may be:
-#  - micro instructions
-#  - single instructions
-#  - primitives
-# those can describe their effects more easily to the optimiser,
-# enabling it to combine and remove them to target code.
-# in addition are meta directives allowed:
-#  - compile time instructions for word creation, such as header building
-
-
 # arg1: xt
 codebody()  {                                                        # inline compiler
 # NOTE: case sensitivity
@@ -509,11 +490,6 @@ push()  { code "((s[++sp]=$1))"; }
 get()   { code "(($1=s[sp]))"; }                                     # pop without point dec
 pop()   { code "(($1=s[sp--]))"; }
 call()  { code "${nameprefix}_$1"; }
-atom()  {
-   [[ -z "${atom[$1]}" ]] && error "no atomic $1"
-   code "$1" "$atomiccode"; }                                        # insert into code buffer, mark as atom
-
-
 
 # variable last doesn't exist yet, but is used in header, and
 # can't be defined earlier, because defining it calls header.
@@ -631,20 +607,16 @@ warm()  {
    compiling="$false"                                                # interpret
    error=0
    r=() rp=0
-   ((sp<0)) &&s=(0) sp=0                                             # always clear stack underflow
+   ((sp<0))&&s=(0) sp=0                                              # always clear stack underflow
    ((clean))&&s=(0) sp=0 ss=()                                       # empty stacks
-   m[base]="10"                                                      # set decimal if base exists
-# not a good idea
-#   order=("$forthwid" "$onlywid")                                    # only forth
-#   currentwid="${order[0]}"                                          # definitions
+   ((m[base]=10))                                                    # set decimal if base exists
    compiler_init
 }
 
 coldvector=""                                                        # colon word "boot" assigns coldvector. started when compilation completed.
 cold()  {                                                            # also by running cold. error restarts interpreter at cold
    [[ -z "$coldvector" ]] && exit 1
-   warm
-   $coldvector
+   warm; $coldvector
 }
 
 callstack()  {
@@ -727,7 +699,6 @@ exists()  {
       declare -n context="wordlist_$wid"                             # make next wordlist visible
       declare -n flags                                               # appease shellcheck
       declare -n flags="flags_$wid"
-#      [[ -n "${context[$word]}" ]] && {                              # word found in it?
       [[ -n "${context[${word,,}]}" ]] && {                              # word found in it?
          exists=(                                                    # yes: return xt, flags and wid as result
             "${context[${word,,}]##*_}"
@@ -1072,32 +1043,6 @@ from()  {
    return 0
 }
 
-
-# ----- populating detokeniser --------------------------- #fold00
-
-# atoms are substituted against corresponding code.
-# most of them have been eliminated now.
-
-atom["drop"]='((sp--))'
-atom["s2"]='((s2=s[sp-1]))'
-atom["s3"]='((s3=s[sp-2]))'
-atom["s4"]='((s4=s[sp-3]))'
-atom["s2=tmp"]='((s[sp-1]=tmp))'
-atom["s3=tmp"]='((s[sp-2]=tmp))'
-atom["s4=tmp"]='((s[sp-3]=tmp))'
-atom["tmp=s2"]='((tmp=s[sp-1]))'
-atom["tmp=s3"]='((tmp=s[sp-2]))'
-atom["tmp=s4"]='((tmp=s[sp-3]))'
-atom["s1=s2"]='((s[sp]=s[sp-1]))'
-atom["s1=s3"]='((s[sp]=s[sp-2]))'
-atom["s2=s3"]='((s[sp-1]=s[sp-2]))'
-atom["s3=s2"]='((s[sp-2]=s[sp-1]))'
-atom["s4=s2"]='((s[sp-3]=s[sp-1]))'
-atom["s4=s3"]='((s[sp-3]=s[sp-2]))'
-
-
-
-
 # ----- primitives --------------------------------------- #fold00
 # ----- colon/semicolon ---------------------------------- #fold01
 
@@ -1341,41 +1286,35 @@ semicolon
 
 
 colon 'swap'
-   atom 'tmp=s2'
+   code '((tmp=s[sp-1]))'
    get 's[sp-1]'
    put  'tmp'
 semicolon
 inline
 
+# s4 s3 s2 s1 -- s2 s1 s4 s3
 colon '2swap'
-   atom 'tmp=s4'
-   atom 's4=s2'
-   atom 's2=tmp'
-   atom 'tmp=s3'
-   get 's[sp-2]'
-   put  'tmp'
+   code '((tmp=s[sp-3], s[sp-3]=s[sp-1], s[sp-1]=tmp))'
+   code '((tmp=s[sp-2], s[sp-2]=s[sp], s[sp]=tmp))'
 semicolon
 
-colon 'tuck'
-   push 's[sp]'
-   atom 's2=s3'
-   get 's[sp-2]'
+# s2 s1 -- s1 s2 s1
+colon 'tuck'                              # s2 s1
+   push 's[sp]'                           # s2 s1 s1
+   code '((s[sp-1]=s[sp-2]))'             # s2 s2 s1
+   get 's[sp-2]'                          # s1 s2 s1
 semicolon
 inline
 
 colon 'rot'
    get  'tmp'
-   atom 's1=s3'
-   atom 's3=s2'
-   atom 's2=tmp'
+   code '((s[sp]=s[sp-2], s[sp-2]=s[sp-1], s[sp-1]=tmp))'
 semicolon
 inline
 
 colon '-rot'
    get  'tmp'
-   atom 's1=s2'
-   atom 's2=s3'
-   atom 's3=tmp'
+   code '((s[sp]=s[sp-1], s[sp-1]=s[sp-2], s[sp-2]=tmp))'
 semicolon
 inline
 
@@ -1738,7 +1677,7 @@ compiled
 
 colon 'then'
    code "((s[sp] == $magic ||  s[sp] == $((magic+1)))) || { unstructured 'if or else'; return; }"
-   atom 'drop'
+   code '((sp--))'
    code '((s[sp--] == ${#raw[@]})) && code "(())"'
    code 'code "fi"'
 semicolon
@@ -1765,7 +1704,7 @@ compiled
 colon 'until'
    code "(( s[sp--] == \"$magic\" )) || { unstructured 'begin'; return; }"
    code 'code "((s[sp--]))&&break"'
-   atom 'drop'
+   code '((sp--))'
    code 'code "done"'
 semicolon
 compiled
@@ -1778,7 +1717,7 @@ compiled
 
 colon 'repeat'
    code "(( s[sp--] == $((magic+1)) )) || { unstructured 'while'; return; }"
-   atom 'drop'
+   code '((sp--))'
    code 'code "done"'
 semicolon
 compiled
@@ -1806,7 +1745,7 @@ compiled
 # : bounds   over + swap ;
 colon 'bounds'
    get  's1'
-   atom 's2'
+   code '((s2=s[sp-1]))'
    put  's2'
    code '((s[sp-1]=(s1+s2)&true))'
 semicolon
@@ -1918,8 +1857,7 @@ inline
 umstar()  {
    local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 i=bits
    for ((; i--;)); do
-      ((dl*=2, s1*=2))
-      ((dl&carry))&&((s1++, dl&=true))
+      ((dl*=2, s1*=2, dl&carry))&&((s1++, dl&=true))
       ((s1&carry))&&((dl+=s0,dl&carry))&&((s1++))
    done
    ((s[sp-1]=dl&true, s[sp]=s1&true))
@@ -1937,8 +1875,7 @@ mstar()  {
    ((s0&msb))&&((s0=(-s0&true)))
    ((s1&msb))&&((s1=-s1))
    for ((; i--;)); do
-      ((dl*=2, s1*=2))
-      ((dl&carry))&&((s1++, dl&=true))
+      ((dl*=2, s1*=2, dl&carry))&&((s1++, dl&=true))
       ((s1&carry))&&((dl+=s0,dl&carry))&&((s1++))
    done
    ((sign))&&{
@@ -1958,12 +1895,10 @@ dumstar()  {
    local s0="${s[sp--]}" s1="${s[sp]}" s2="${s[sp-1]}" i=bits dl=0
    ((s1*=s0))
    for ((; i--;)); do
-      ((dl*=2, s2*=2))
-      ((dl&carry))&&((s2++, dl&=true))
+      ((dl*=2, s2*=2, dl&carry))&&((s2++, dl&=true))
       ((s2&carry))&&((dl+=s0,dl&carry))&&((s2++))
    done
-   ((s2+=s1))
-   ((s[sp-1]=dl&true, s[sp]=s2&true))
+   ((s2+=s1, s[sp-1]=dl&true, s[sp]=s2&true))
 }
 
 primitive 'dum*'  'dumstar'
@@ -1983,15 +1918,10 @@ tonumber()  {
       digit "${m[s1]}" || break
       ((s[++sp]=m[base]))
       dumstar
-      ((s[sp-1]+="$digit"))
-      ((s[sp-1]&carry))&&((s[sp]++))
-      ((s1++))
-      ((s0--))
+      ((s[sp-1]+=digit, s[sp-1]&carry))&&((s[sp]++))
+      ((s1++, s0--))
    done
-   ((s[sp]&=true))
-   ((s[sp-1]&=true))
-   ((s[++sp]=s1))
-   ((s[++sp]=s0))
+   ((s[sp]&=true, s[sp-1]&=true, s[++sp]=s1, s[++sp]=s0))
 }
 
 primitive '>number'  'tonumber'
@@ -2015,14 +1945,9 @@ semicolon
 # ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
 colon '*/mod'
    get  's1'
-   atom 's2'
-   atom 's3'
-   atom 'drop'
-   code '((signr=(s2^s3)))'                                          # 0:+   x:-
-   code '((signq=(signr^s1)))'                                       # 0:+   x:-
-   code '((s1&msb&&(s1=-s1&true)))'                                  # abs s1
-   code '((s2*=s3))'
-   code '((s2&msb&&(s2=-s2&true)))'
+   code '((s2=s[sp-1], s3=s[sp-2], sp--, signr=(s2^s3)))'
+   code '((signq=(signr^s1),s1&msb&&(s1=-s1&true)))'
+   code '((s2*=s3,s2&msb&&(s2=-s2&true)))'
    code '((s[sp-1]=(signr&msb?(-s2%s1)&true:s2%s1)))'
    put  '(signq&msb?-(s2/s1)&true:(s2/s1)&true)'
 semicolon
@@ -2039,9 +1964,7 @@ udslashmod()  {
         ((d1h*=2, d1l&msb))&&((d1h++))
         ((d1h&=maxuint, d1l=(d1l*2)&maxuint))
     done
-    s[++sp]="$u2"
-    s[++sp]="$d2l"
-    s[++sp]="$d2h"
+    ((s[++sp]=u2, s[++sp]=d2l, s[++sp]=d2h))
 }
 
 # ( d1 u1 -- u2 d2 )   d1/u2 -> d2 remainder u2
@@ -2363,7 +2286,7 @@ semicolon
 
 colon '!'
    code '((m[s[sp--]]=s[sp-1]))'
-   atom 'drop'
+   code '((sp--))'
 semicolon
 inline
 
@@ -2375,16 +2298,14 @@ inline
 
 colon 'c!'
    code '((m[s[sp--]]=s[sp-1]&255))'
-   atom 'drop'
+   code '((sp--))'
 semicolon
 inline
 
-
 # ( a -- [a+cell] [a] )
 colon '2@'
-   pop 's0'
-   push 'm[s0+1]'
-   push 'm[s0]'
+   push 'm[s[sp]]'
+   code 's[sp-1]=m[s[sp-1]+1]'
 semicolon
 inline
 
@@ -2398,8 +2319,7 @@ semicolon
 inline
 
 colon '+!'
-   code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&true))'
-   atom 'drop'
+   code '((m[s[sp--]]=(s[sp-1]+m[s[sp]])&true, sp--))'
 semicolon
 inline
 
@@ -2412,9 +2332,7 @@ primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))'
 # while returning former contents as x2
 # ( x1 a -- x2 )
 colon 'exchange'
-   code '((tmp=m[s[sp]]))'
-   code '((m[s[sp]]=s[sp-1]))'
-   code '((s[--sp]=tmp))'
+   code '((tmp=m[s[sp]], m[s[sp]]=s[sp-1], s[--sp]=tmp))'
 semicolon
 
 # replace contents of a and a+cell against x1 x2,
@@ -2425,9 +2343,7 @@ colon '2exchange'
   get  's1'
   code '((s2=s[sp-1]))'
   put  'm[s0]'
-  code '((s[sp-1]=m[s0+1]))'
-  code '((m[s0]=s1))'
-  code '((m[s0+1]=s2))'
+  code '((s[sp-1]=m[s0+1], m[s0]=s1, m[s0+1]=s2))'
 semicolon
 
 colon 'allot'

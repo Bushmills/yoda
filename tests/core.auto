@@ -194,7 +194,6 @@ t{ gp5 -> <true> }t
    loop swap drop ;
 t{ gp6 -> <true> }t
 
-omit
 : gp7
    base @ >r    max-base base !
    <true>
@@ -207,7 +206,7 @@ omit
       1 = swap c@ 41 i a - + = and and
    loop
    r> base ! ;
-t{ gp7 -> <true> }t
+\ t{ gp7 -> <true> }t
 
 \ number tests
 create gn-buf 0 c,
@@ -247,17 +246,3 @@ t{ max-uint dup max-base gn1 -> max-uint dup 0 }t
 : gn2   \ ( -- 16 10 )
    base @ >r  hex base @  decimal base @  r> base ! ;
 t{ gn2 -> 10 a }t
-
-\ ------------------------------------------------------------------------
-
-omit
-testing input: accept
-create abuf 50 chars allot
-: accept-test
-   cr "please type up to 80 characters:" type$ cr
-   abuf 50 accept
-   cr "received: " type$ [char] " emit
-   abuf swap type [char] " emit cr
-;
-t{ accept-test -> }t
-

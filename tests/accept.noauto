@@ -1,0 +1,13 @@
+\ ------------------------------------------------------------------------
+
+omit
+testing input: accept
+create abuf 50 chars allot
+: accept-test
+   cr "please type up to 80 characters:" type$ cr
+   abuf 50 accept
+   cr "received: " type$ [char] " emit
+   abuf swap type [char] " emit cr
+;
+t{ accept-test -> }t
+

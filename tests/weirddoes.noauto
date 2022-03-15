@@ -1,0 +1,6 @@
+testing weird does>
+t{ : weird: create does> 1 + does> 2 + ; -> }t
+t{ weird: w1 -> }t
+t{ ' w1 >body -> here }t
+t{ w1 -> here 1 + }t
+t{ w1 -> here 2 + }t

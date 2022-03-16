@@ -718,15 +718,16 @@ exists()  {
 
 # factor with d+, dum* and digit
 # arg1: number string:    123456.
+# variable radix:  radix
 dnum()  {
    local i j digit num="$1"
    dh=0
    for ((j=0; j<${#num};j++)); do
       digit="${num:j:1}"
-      ((s1=dh*m[base], s2=dl, dl=0))
+      ((s1=dh*radix, s2=dl, dl=0))
       for ((i=bits; i--;)); do
          ((dl*=2, s2*=2, dl&carry))&&((s2++, dl&=true))
-         ((s2&carry))&&((dl+=m[base], dl&carry))&&((s2++))
+         ((s2&carry))&&((dl+=radix, dl&carry))&&((s2++))
       done
       ((digit=asc[$digit]-48, digit>9))&&((digit-=39))
       ((dh=s1+s2, dl+=digit, dl&carry))&&((dh++))
@@ -736,24 +737,26 @@ dnum()  {
 
 
 # factor with dnegate
-# arg1: number string:   -123456.
+# arg1: number string:   -123456.   arg2: optional radix override
 dnum-()  {
-   dnum "${1#-}"
+   dnum "${1#-}" "$2"
    ((dl^=true, dh^=true, dl++, dl&carry))&&((dh++))
    ((dl&=true, dh&=true))
 }
 
+# arg1: number string,  arg2: optional radix override
 alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
 trynum()  {
-   local word="$1" sign="" legaldigits="${alldigits:0:m[base]}" dh dl
+   local word="$1" radix="${2:-${m[base]}}"
+   local legaldigits="${alldigits:0:radix}" sign="" dh dl
    [[ ${word:0:1} == - ]] && {                                       # leading dash?
       sign="-"
       word="${word#?}"                                               # strip dash
    }
-   tail="${word#*[!$legaldigits]}"                                   # remove up to and including first non-digit character
-   left="${word%%$tail}"                                             # the removed part
+   tail="${word#*[!"$legaldigits"]}"                                 # remove up to and including first non-digit character
+   left="${word%%"$tail"}"                                           # the removed part
    [[ -z "$left" ]] && {                                             # no non-digit chars in string
-      stateless "((s[++sp]=$sign${m[base]}#$tail&true))"             # push or compile as single signed or unsigned number
+      stateless "((s[++sp]=$sign$radix#$tail&true))"                 # push or compile as single signed or unsigned number
       return 0
    }
    ((${#left} == 1)) && return 1                                     # leading decimal point: not a number
@@ -770,13 +773,20 @@ trynum()  {
 
 # wondering whether a case statement would make this look any better
 pattern()  {                                                         # pattern interpreted as
+# 123  -123  123.456  -123.456  respecting base
    trynum "$word" && return 0
-# TODO: add support for negative radix specified numbers
+
+# #123 #123.456 #-123 #-123.456
+# $abc $abc.def $-abc $-abc.def
+# %101 %101.01  %-101 %-101.01
    [[ ${word:0:1} == [%\$\#] ]] && {
       ((radix=bases[${word:0:1}]))                                   # yes: read radix associated with char
-      [[ ${word:1} =~ ^[${alldigits:0:$radix}]+$ ]] && {             # remainder of number all legal chars?
-         stateless "((s[++sp]=$((${radix}#${word:1}&true))))"        # yes: convert from base and deal with it
-         return 0; }; }
+      [[ ${word:1} =~ ^-?[${alldigits:0:$radix}.]+$ ]] && {          # remainder of number all legal chars?
+         trynum "${word:1}" "$radix" && return 0
+      }
+   }
+
+# 'c'  and   'c
    [[ ${word} == \'? || ${word} == \'?\' ]] && {                     # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
       read -r tmp < <(printf "%d" "'${word:1:1}'")
       stateless "s[++sp]=\"$tmp\""; return 0; }
@@ -785,13 +795,18 @@ pattern()  {                                                         # pattern i
       stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
    [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
       line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
+
+# can probably factor ' and " type strings
+#  "string"
    [[ "${word:0:1}${word:0-1}" == '""' ]] && {                       # quoted string, single word
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
          ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
-            code  "ss+=('${word:1:${#word}-2}')"                     # But variable expansion take place in interpreted branch.
+            code  "ss+=('${word:1:${#word}-2}')"
             return 0; }                                              # Both requirements are hard to formulate in one common version.
          ss+=("${word:1:${#word}-2}")
          return 0; }; }
+
+# "multi word string"
    [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
@@ -800,6 +815,27 @@ pattern()  {                                                         # pattern i
          return 0; }
       ss+=("$tmp $word")                                             # interpret push string to string stack
       return 0; }
+
+# 'string'
+   [[ "${word:0:1}${word:0-1}" == "''" ]] && {                       # single quoted string, single word
+      ((compiling)) && {                                             # arg for compile differs with quoting, to make strings like $1 $2  literal
+         code  "ss+=('${word:1:${#word}-2}')"                        # No variable expansion in interpreted branch.
+         return 0; }                                                 # Both requirements are hard to formulate in one common version.
+      ss+=("${word:1:${#word}-2}")
+      return 0; }
+
+# 'multi word string'
+   [[ "${word:0:1}" == \' ]] && {                                    # single quoted string, multiple words (single words already dealt with)
+      tmp="${word:1}"                                                # strip leading " from first word
+      parse "'"                                                      # parse rest of line for closing quotes
+      ((compiling)) && {
+         code "ss+=('$tmp $word')"                                   # compile: compile code to add string to string stack
+         return 0; }
+      ss+=("$tmp $word")                                             # interpret push string to string stack
+      return 0; }
+
+
+# >shell command
    [[ "${word:0:1}" == '>' ]] && {                                   # >foo...                   execute a shell command
       tmp="${word:1}"                                                # >foo... ->  foo...
       if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command
@@ -1929,7 +1965,7 @@ primitive '>number'  'tonumber'
 colon 'dpl'
    push 'dpl'
 semicolon
-
+inline
 
 #                     msb&    msb&
 #  s3 s2 s1 -- r q  s1^s2^s3  s2^s3
@@ -2161,12 +2197,13 @@ semicolon
 colon 'allot$'
    pop 'sdp+'
 semicolon
+inline
 
 colon '$,'
    code 'strings[sdp++]="${ss[s-1]}"'
    code 'unset "ss[-1]"'
 semicolon
-
+inline
 
 # push string array item u to string stack
 # ( u -- ) ( -- $1 )
@@ -2178,7 +2215,7 @@ colon '$!'
    code 'strings[s[sp--]]="${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
-
+inline
 
 # --- mixed mode operations, exchanges between stack and string stack ---
 # remove first character from top of string stack, push its ASCII value
@@ -2248,6 +2285,7 @@ colon '>env'
    code 'eval "${ss[-1]}=$((s[sp--]))"'
    code 'unset "ss[-1]"'
 semicolon
+inline
 
 # read string from environment variable with name on string stack
 # ( string:  $1 -- $2 )
@@ -2334,6 +2372,7 @@ primitive 'dec'  '((m[s[sp--]]=(m[s[sp]]-1)&true))'
 colon 'exchange'
    code '((tmp=m[s[sp]], m[s[sp]]=s[sp-1], s[--sp]=tmp))'
 semicolon
+inline
 
 # replace contents of a and a+cell against x1 x2,
 # while returning former contents as x3 x4
@@ -2349,16 +2388,15 @@ semicolon
 colon 'allot'
    pop 'dp+'
 semicolon
+inline
 
 # c -> m[a++],  u times
 # ( a u c -- )
 colon 'fill'
-   pop 's0'
-   pop 's1'
-   pop 's2'
+   code '((s0=s[sp--], s1=s[sp--], s2=s[sp--]))'
    code 'for ((;s1--;)); do ((m[s2++]=s0)); done'                    # c -> m[a++],  u times
 semicolon
-
+inline
 
 # ( a1 a2 u -- )
 move()  {                                                            # deals with destination overlapping source
@@ -2379,8 +2417,6 @@ move()  {                                                            # deals wit
 primitive 'move'   'move'
 
 
-
-
 # ----- character i/o ------------------------------------ #fold01
 
 # given an ASCII, print the character
@@ -2398,6 +2434,7 @@ char()  {
 colon 'char'
    code "char"
 semicolon
+inline
 
 colon '[char]'
    code "char"
@@ -2433,7 +2470,7 @@ colon 'spaces'
    pop  's0'
    code '((s0&msb))||printf "%${s0}s" ""'
 semicolon
-
+inline
 
 # ----- file i/o ----------------------------------------- #fold01
 
@@ -2555,7 +2592,6 @@ colon 'needed$'                                                      # ( -- f ) 
 semicolon
 
 
-
 colon 'neededanyof'                                                  # ( -- f ) ( stream: bl delimited strings, whole input line )
    push "false"
    code 'while [[ -n "$line" ]]; do'
@@ -2606,7 +2642,7 @@ satisfy()  {
 }
 
 primitive 'dependencies' 'dependencies'                              # generate, then cache
-primitive "provides:"   'line=""'        ;                           # double quoted escaped backslash rather than
+primitive "provides:"   'line=""'                                    # double quoted escaped backslash rather than
 
 colon 'satisfy'
    code  'satisfy "$line"'
@@ -2814,6 +2850,8 @@ colon 'only'                                                         # ( -- )
    code 'order=("$onlywid" "$onlywid")'
    code 'set-current "$onlywid"'
 semicolon
+inline
+
 set-current "$forthwid"
 
 # ----- misc --------------------------------------------- #fold01

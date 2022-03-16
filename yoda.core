@@ -32,12 +32,12 @@ only forth definitions
 ' noop alias align                                                                                 immediate
 ' 1+   alias char+   inline
 ' 1+   alias cell+   inline
+' 1-   alias cell-   inline
 
 \ ----- arithmetics --------------------------------------
 
 ' lshift alias <<                                                                                  inline
 ' rshift alias >>                                                                                  inline
-
 : /mod         ( n1 n2 -- n3 n4 )                     1 -rot  */mod                       ;                 \ divisions are truncated, symmetric
 : */           ( n1 n2 n3 -- n4 )                     */mod nip                           ;        inline
 : /            ( n1 n2 -- n3 )                        /mod nip                            ;        inline
@@ -64,7 +64,7 @@ bits #32 < unless : gibi  ( n1 -- n2 )                #30 <<                    
 : erase        ( a u -- )                             0 fill ;                                     inline      \ 0 -> m[a++],  u times
 : scrape       ( a i -- i*x )                         for skim swap next drop             ;
 : spread       ( i*x a u -- )                         tuck cells +
-                                                      swap for cell - tuck ! next drop    ;
+                                                      swap for cell- tuck ! next drop     ;
 
 \ ----- i/o ----------------------------------------------
 

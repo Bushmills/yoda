@@ -210,9 +210,7 @@ protect()    { setheaderflag "$protected"; }
 # from current wordlist
 # arg1: word
 removeheaderfromcurrent()  {
-# NOTE: case sensitivity
    unset -v 'current["$1"]'                                          # remove from source wordlist
-# NOTE: case sensitivity
    unset -v 'flags["$1"]'
 }
 
@@ -254,7 +252,6 @@ compiler_init()  {
 # arg2: function name
 # NOTE: leave it to header to prepend $nameprefix.
 header()  {
-# NOTE: case sensitivity
    lastword="${1,,}"
    [[ -z "${current["$lastword"]}" ]] ||
       echo "redefining $lastword"
@@ -441,7 +438,6 @@ parsebacksl()  {
 
 # arg1: xt
 codebody()  {                                                        # inline compiler
-# NOTE: case sensitivity
    name "$1"                                                         # xt to function name
    while read -r tmp; do
       [[ "${tmp:0:1}" == "{" ]] &&
@@ -500,7 +496,6 @@ call()  { code "${nameprefix}_$1"; }
 # arg2: filehandle
 # arg3: line number
 delayheader()  {
-# NOTE: case sensitivity
    [[ -z "$1" ]] && missingname
    lastword="$1"
    compiler_init
@@ -527,10 +522,8 @@ primitive()  {
 colon()  {
    tmp="${BASH_LINENO[0]}"                                           # assume not evaluate
    (( filehandle == 1 )) &&                                          # if defined in yoda
-# NOTE: case sensitivity
    [[ "${FUNCNAME[2]}" == "evaluate" ]] &&                           # by evaluate
    tmp="${BASH_LINENO[2]}"                                           # then take line number from different entry
-# NOTE: case sensitivity
    delayheader "$1" "$filehandle" "${linenr:-$tmp}"
 }
 
@@ -692,7 +685,6 @@ declare -ai exists                                                   # result ar
 # arg1:word  arg2+:wids
 # returns: exists[0]=0|xt, [1]=flags,  [2]=wid where word was found
 exists()  {
-# NOTE: case sensitivity
    local context word="$1"                                           # this is what we're looking for
    shift
    for wid in "$@"; do                                               # in these word lists
@@ -748,7 +740,7 @@ dnum-()  {
 # arg1: number string,  arg2: radix
 alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
 trynum()  {
-   local word="$1" radix="$2"
+   local word="${1,,}" radix="$2"
    local legaldigits="${alldigits:0:radix}" sign="" dh dl
    [[ ${word:0:1} == - ]] && {                                       # leading dash?
       sign="-"
@@ -862,7 +854,6 @@ totalheaders()  { ((totalheaders=xt)); }
 # create a forward ref for word
 # arg1: word
 forwardref()  {
-# NOTE: case sensitivity
    [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
       newname "$1"                                                   # generate new function name
       unresolved["${1,,}"]="$name"                                   # keep in unresolved vocabulary
@@ -1132,16 +1123,13 @@ see()  {
    word=${word,,}
    for wid in "${order[@]}" "$compilerwid"; do
       declare -n context="wordlist_$wid"
-# NOTE: case sensitivity
       [[ -z "${context["$word"]}" ]] || {
          printf "found in %s:\n" "${strings[wid]}"
-# NOTE: case sensitivity
          name="${context["$word"]}"
          [[ -z "$name" ]] && notfound
          ((found++))
          readarray -t see < <(type "$name")
          for ((i=0; i<${#see[@]}; i++)); do
-
             s0="${see[i]}"
             [[ "${s0}" == "${nameprefix}_"* ]] || {
                [[ "${s0}" == *"${nameprefix}_"* ]] && {
@@ -1150,7 +1138,6 @@ see()  {
                }
             }
             printf "%s\n" "$s0"
-
          done
       }
    done

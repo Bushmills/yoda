@@ -5,13 +5,3 @@
 - input line history would be nice
 - string operations based on search and match are mostly absent.
   index / index$ might cover a lot already. cut$ was added
-
---- optimiser todos:
-- describe microinstructions effects to optimiser, using atom list
-- have optimiser determine optimisable code sequences (linear code)
-- run optimisable sequences with indicator data through arguments tracer.
-- replace micro operations sequence to directly reflect tracer results.
-- merge sequences of micro instructions to macro instructions.
-
---- common suspects
-- more tests

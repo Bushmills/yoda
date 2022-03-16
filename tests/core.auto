@@ -160,25 +160,25 @@ testing <# # #s #> hold sign base >number hex decimal
       r> drop 2drop <false>      \ lengths mismatch
    then ;
 
-: gp1  <# 41 hold 42 hold 0 0 #> "BA" >pad s= ;
+: gp1  <# 41 hold 42 hold 0 0 #> s" BA" s= ;
 t{ gp1 -> <true> }t
 
-: gp2  <# -1 sign 0 sign -1 sign 0 0 #> "--" >pad s= ;
+: gp2  <# -1 sign 0 sign -1 sign 0 0 #> s" --" s= ;
 t{ gp2 -> <true> }t
 
-: gp3  <# 1 0 # # #> "01" >pad s= ;
+: gp3  <# 1 0 # # #> s" 01" s= ;
 t{ gp3 -> <true> }t
 
-: gp4  <# 1 0 #s #> "1" >pad s= ;
+: gp4  <# 1 0 #s #> s" 1" s= ;
 t{ gp4 -> <true> }t
 
-24 constant max-base         \ base 2 .. 36
+$24 constant max-base         \ base 2 .. 36
 
 : gp5
    base @ <true>
    max-base 1+ 2 do         \ for each possible base
       i base !            \ tbd: assumes base works
-      i 0 <# #s #> "10" >pad s= and
+      i 0 <# #s #> s" 10" s= and
    loop
    swap base ! ;
 t{ gp5 -> <true> }t
@@ -207,6 +207,7 @@ t{ gp6 -> <true> }t
    loop
    r> base ! ;
 \ t{ gp7 -> <true> }t
+
 
 \ number tests
 create gn-buf 0 c,

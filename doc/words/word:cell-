@@ -1,0 +1,11 @@
+name:                cell-
+stack:               ( x1 -- x2 )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            system, arithmetics
+
+description:         substract number of address increments needed for a cell from x1
+
+standard:            no
+deviation:           standard has no equivalent

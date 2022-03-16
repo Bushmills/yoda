@@ -8,18 +8,16 @@ once
 only forth
 vocabulary os
 also os definitions
-
-shell: df
-shell: ls
-shell: cat
-shell: cd
-shell: most
-shell: echo
-shell: printf
-shell: cp
-shell: rm
-shell: pwd
-shell: mc
-
+   shell: df
+   shell: ls
+   shell: cat
+   shell: cd
+   shell: most
+   shell: echo
+   shell: printf
+   shell: cp
+   shell: rm
+   shell: pwd
+   shell: mc
 only os
 also forth definitions

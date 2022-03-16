@@ -1,3 +1,4 @@
 version 0.8.0, 2022mar16,03:50
 fixed error with compilation of doubles
 minor tweaks
+number input is now case insensitive

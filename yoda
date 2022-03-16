@@ -752,7 +752,7 @@ trynum()  {
    local legaldigits="${alldigits:0:radix}" sign="" dh dl
    [[ ${word:0:1} == - ]] && {                                       # leading dash?
       sign="-"
-      word="${word#?}"                                               # strip dash
+      word="${word:1}"                                               # strip dash
    }
    tail="${word#*[!"$legaldigits"]}"                                 # remove up to and including first non-digit character
    left="${word%%"$tail"}"                                           # the removed part
@@ -762,7 +762,7 @@ trynum()  {
       return 0
    }
    ((${#left} == 1)) && return 1                                     # leading decimal point: not a number
-   [[ ${left:0-1} == . ]] && left="${left%?}"                        # remove dot
+   [[ ${left:0-1} == . ]] && left="${left:0:-1}"                     # remove dot
    word="${left}${tail}"                                             # recombine number without decimal point
    [[ -z "${word//[$legaldigits]/}" ]] || return 1                   # number contains other chars than legal digits: not a number
    ((dpl=${#tail}))                                                  # write dot position to dpl
@@ -782,9 +782,7 @@ pattern()  {                                                         # pattern i
 # $abc $abc.def $-abc $-abc.def
 # %101 %101.01  %-101 %-101.01
    local char1="${word:0:1}"
-   [[ $char1 == [%\$\#] ]] && {
-         trynum "${word:1}" "${bases[$char1]}" && return 0
-   }
+   [[ $char1 == [%\$\#] ]] && trynum "${word:1}" "${bases[$char1]}" && return 0
 
 # 'c'  and   'c
    [[ ${word} == \'? || ${word} == \'?\' ]] && {                     # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
@@ -795,10 +793,6 @@ pattern()  {                                                         # pattern i
    [[ ${word} == ^[a-zA-Z\[] ]] && {                                 # ^X        return control char
       read -r tmp < <(printf "%d" "'${word:1:1}")
       stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
-
-# #!hashbang
-   [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
-      line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
 
 # can probably factor ' and " type strings
 #  "string"
@@ -837,12 +831,15 @@ pattern()  {                                                         # pattern i
          return 0; }
       ss+=("$tmp $word")                                             # interpret push string to string stack
       return 0; }
+# #!hashbang
+   [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
+      line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
 
 # >shell command
    [[ "$char1" == '>' ]] && {                                        # >foo...                   execute a shell command
       tmp="${word:1}"                                                # >foo... ->  foo...
       if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command
-         tmp="${tmp%;}"                                              # foo; -> foo
+         tmp="${tmp:0:-1}"                                           # foo; -> foo
       elif [[ "$line" == *';'* ]]; then                              # semicolon space seperated from command
          parse ';'                                                   # parse input until ;
          tmp+=" $word"

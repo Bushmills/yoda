@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.7.9"
+v="0.8.0"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -582,7 +582,7 @@ constant 'maxint'             "$maxint"
 constant 'msb'                "$msb"
 constant 'true'               "$true"
 constant 'false'              "false"
-constant '0'                  "0"
+#constant '0'                  "0"
 constant 'esc'                "27"
 constant 'bl'                 "32"
 constant 'bits'               "$bits"
@@ -718,9 +718,9 @@ exists()  {
 
 # factor with d+, dum* and digit
 # arg1: number string:    123456.
-# variable radix:  radix
+# arg2:  radix
 dnum()  {
-   local i j digit num="$1"
+   local i j digit num="$1" radix="$2"
    dh=0
    for ((j=0; j<${#num};j++)); do
       digit="${num:j:1}"
@@ -737,17 +737,18 @@ dnum()  {
 
 
 # factor with dnegate
-# arg1: number string:   -123456.   arg2: optional radix override
+# arg1: number string:   -123456.
+# arg2: radix
 dnum-()  {
-   dnum "${1#-}" "$2"
+   dnum "${1#-}" "$radix"
    ((dl^=true, dh^=true, dl++, dl&carry))&&((dh++))
    ((dl&=true, dh&=true))
 }
 
-# arg1: number string,  arg2: optional radix override
+# arg1: number string,  arg2: radix
 alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
 trynum()  {
-   local word="$1" radix="${2:-${m[base]}}"
+   local word="$1" radix="$2"
    local legaldigits="${alldigits:0:radix}" sign="" dh dl
    [[ ${word:0:1} == - ]] && {                                       # leading dash?
       sign="-"
@@ -756,7 +757,8 @@ trynum()  {
    tail="${word#*[!"$legaldigits"]}"                                 # remove up to and including first non-digit character
    left="${word%%"$tail"}"                                           # the removed part
    [[ -z "$left" ]] && {                                             # no non-digit chars in string
-      stateless "((s[++sp]=$sign$radix#$tail&true))"                 # push or compile as single signed or unsigned number
+      ((tmp=$sign$radix#$tail&true))                                 # push or compile as single signed or unsigned number
+      stateless "((s[++sp]=$tmp))"                                   # push or compile as single signed or unsigned number
       return 0
    }
    ((${#left} == 1)) && return 1                                     # leading decimal point: not a number
@@ -764,8 +766,8 @@ trynum()  {
    word="${left}${tail}"                                             # recombine number without decimal point
    [[ -z "${word//[$legaldigits]/}" ]] || return 1                   # number contains other chars than legal digits: not a number
    ((dpl=${#tail}))                                                  # write dot position to dpl
-   dnum$sign "$word"                                                 # convert to double numeric value
-   stateless "((s[++sp]=dl, s[++sp]=dh))"                            # push or compile signed or unsigned double number
+   dnum$sign "$word" "$radix"                                        # convert to double numeric value
+   stateless "((s[++sp]=$dl, s[++sp]=$dh))"                          # push or compile signed or unsigned double number
    return 0                                                          # indicate success: no need for further examination
 }
 
@@ -774,31 +776,33 @@ trynum()  {
 # wondering whether a case statement would make this look any better
 pattern()  {                                                         # pattern interpreted as
 # 123  -123  123.456  -123.456  respecting base
-   trynum "$word" && return 0
+   trynum "$word" "${m[base ]}" && return 0
 
 # #123 #123.456 #-123 #-123.456
 # $abc $abc.def $-abc $-abc.def
 # %101 %101.01  %-101 %-101.01
-   [[ ${word:0:1} == [%\$\#] ]] && {
-      ((radix=bases[${word:0:1}]))                                   # yes: read radix associated with char
-      [[ ${word:1} =~ ^-?[${alldigits:0:$radix}.]+$ ]] && {          # remainder of number all legal chars?
-         trynum "${word:1}" "$radix" && return 0
-      }
+   local char1="${word:0:1}"
+   [[ $char1 == [%\$\#] ]] && {
+         trynum "${word:1}" "${bases[$char1]}" && return 0
    }
 
 # 'c'  and   'c
    [[ ${word} == \'? || ${word} == \'?\' ]] && {                     # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
       read -r tmp < <(printf "%d" "'${word:1:1}'")
       stateless "s[++sp]=\"$tmp\""; return 0; }
+
+# ^c and ^C
    [[ ${word} == ^[a-zA-Z\[] ]] && {                                 # ^X        return control char
       read -r tmp < <(printf "%d" "'${word:1:1}")
       stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
+
+# #!hashbang
    [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
       line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
 
 # can probably factor ' and " type strings
 #  "string"
-   [[ "${word:0:1}${word:0-1}" == '""' ]] && {                       # quoted string, single word
+   [[ "${char1}${word:0-1}" == '""' ]] && {                          # quoted string, single word
       (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
          ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
             code  "ss+=('${word:1:${#word}-2}')"
@@ -807,7 +811,7 @@ pattern()  {                                                         # pattern i
          return 0; }; }
 
 # "multi word string"
-   [[ "${word:0:1}" == \" ]] && {                                    # quoted string, multiple words (single words already dealt with)
+   [[ "$char1" == \" ]] && {                                         # quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse '"'                                                      # parse rest of line for closing quotes
       ((compiling)) && {
@@ -817,7 +821,7 @@ pattern()  {                                                         # pattern i
       return 0; }
 
 # 'string'
-   [[ "${word:0:1}${word:0-1}" == "''" ]] && {                       # single quoted string, single word
+   [[ "${char1}${word:0-1}" == "''" ]] && {                          # single quoted string, single word
       ((compiling)) && {                                             # arg for compile differs with quoting, to make strings like $1 $2  literal
          code  "ss+=('${word:1:${#word}-2}')"                        # No variable expansion in interpreted branch.
          return 0; }                                                 # Both requirements are hard to formulate in one common version.
@@ -825,7 +829,7 @@ pattern()  {                                                         # pattern i
       return 0; }
 
 # 'multi word string'
-   [[ "${word:0:1}" == \' ]] && {                                    # single quoted string, multiple words (single words already dealt with)
+   [[ "$char1" == \' ]] && {                                         # single quoted string, multiple words (single words already dealt with)
       tmp="${word:1}"                                                # strip leading " from first word
       parse "'"                                                      # parse rest of line for closing quotes
       ((compiling)) && {
@@ -834,9 +838,8 @@ pattern()  {                                                         # pattern i
       ss+=("$tmp $word")                                             # interpret push string to string stack
       return 0; }
 
-
 # >shell command
-   [[ "${word:0:1}" == '>' ]] && {                                   # >foo...                   execute a shell command
+   [[ "$char1" == '>' ]] && {                                        # >foo...                   execute a shell command
       tmp="${word:1}"                                                # >foo... ->  foo...
       if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command
          tmp="${tmp%;}"                                              # foo; -> foo

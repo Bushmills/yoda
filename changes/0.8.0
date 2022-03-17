@@ -2,3 +2,7 @@ version 0.8.0, 2022mar16,03:50
 fixed error with compilation of doubles
 minor tweaks
 number input is now case insensitive
+split pattern into a bunch of patternlets
+added word "standard" which opens web page on forth-standard for word taken from
+   input stream provided it is a standard word (url taken from "about" information).
+   browser still hardcoded in yoda, will become a configuration item.

@@ -6,3 +6,4 @@ split pattern into a bunch of patternlets
 added word "standard" which opens web page on forth-standard for word taken from
    input stream provided it is a standard word (url taken from "about" information).
    browser still hardcoded in yoda, will become a configuration item.
+factored patternlets

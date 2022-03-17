@@ -770,22 +770,17 @@ number_radix()  {
 declare -a patterns
 add_pattern()  { patterns+=("$1"); }
 
-# 123 -123 123.456 -123.456  respecting base
-add_pattern "number"
-number()  {
-   number_radix "$word" "${m[base ]}"
-   return $?
-}
 
-# #123 #123.456 #-123 #-123.456, base override
-# $abc $abc.def $-abc $-abc.def
-# %101 %101.01  %-101 %-101.01
-add_pattern "prefixednumber"
+# patternlets must return a value=0 if matching, <>0 otherwise.
+# return value determines whether search for matching pattern will continue.
+add_pattern "number"                                                 # 123 -123 123.456 -123.456  respecting base
+number()  { number_radix "$word" "${m[base ]}"; }
+
+add_pattern "prefixednumber"                                         # #123 #123.456 #-123 #-123.456 $abc $abc.def $-abc $-abc.def %101 %101.01 %-101 %-101.01
 prefixednumber()  {
    [[ $char1 == [%\$\#] ]] &&
-      number_radix "$tail" "${bases[$char1]}"
+   number_radix "$tail" "${bases[$char1]}"
 }
-
 
 add_pattern "tick_char"
 # 'c'  and   'c
@@ -803,58 +798,30 @@ ctrl_char() {
    stateless "s[++sp]=\"$((tmp&31))\""
 }
 
-add_pattern "string_single_dquote"
-#  "string"
-string_single_dquote()  {
-   [[ "${char1}${word:0-1}" == '""' ]] || return
+
+string()  { stateless "ss+=('$*')"; }
+string_single()  {
+   [[ "${char1}${word:0-1}" == "$1" ]] || return
    (( ${#word} > 1 )) || return                                      # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-   ((compiling)) && {                                                # arg for compile differs with quoting, to make strings like $1 $2  literal
-      code  "ss+=('${word:1:${#word}-2}')"
-      return 0; }                                                    # Both requirements are hard to formulate in one common version.
-   ss+=("${word:1:${#word}-2}")
+   string "${word:1:${#word}-2}"
 }
 
-
-add_pattern "string_multi_dquote"
-# "multi word string"
-string_multi_dquote()  {
-   [[ "$char1" == \" ]] || return
-   parse '"'                                                         # parse rest of line for closing quotes
-   ((compiling)) && {
-      code "ss+=('$tail $word')"                                     # compile: compile code to add string to string stack
-      return 0; }
-   ss+=("$tail $word")                                               # interpret push string to string stack
+string_multi()  {
+   [[ "$char1" == "$1" ]] || return
+   parse "$1"                                                        # parses into variable "word"
+   string "$tail $word"                                              # compile: compile code to add string to string stack
 }
 
-
-add_pattern "string_single_squote"
-# 'string'
-string_single_squote()  {
-   [[ "${char1}${word:0-1}" == "''" ]] || return
-   ((compiling)) && {                                                # arg for compile differs with quoting, to make strings like $1 $2  literal
-      code  "ss+=('${word:1:${#word}-2}')"                           # No variable expansion in interpreted branch.
-      return 0; }                                                    # Both requirements are hard to formulate in one common version.
-   ss+=("${word:1:${#word}-2}")
-}
-
-
-add_pattern "string_multi_squote"
-# 'multi word string'
-string_multi_squote()  {
-   [[ "$char1" == \' ]] || return
-   parse "'"                                                         # parse rest of line for closing quotes
-   ((compiling)) && {
-      code "ss+=('$tail $word')"                                     # compile: compile code to add string to string stack
-      return 0; }
-   ss+=("$tail $word")                                               # interpret push string to string stack
-}
-
-
-add_pattern "hashbang"
-# #!hashbang
-hashbang()  {
-   [[ "${word:0:2}" == '#!' ]] && line=""
-}
+add_pattern "string_single_dquote"                                   #  "string"
+string_single_dquote()  { string_single '""'; }
+add_pattern "string_single_squote"                                   # 'string'
+string_single_squote()  { string_single "''"; }
+add_pattern "string_multi_dquote"                                    # "multi word string"
+string_multi_dquote()  { string_multi '"'; }
+add_pattern "string_multi_squote"                                    # 'multi word string'
+string_multi_squote()  { string_multi "'"; }
+add_pattern "hashbang"                                               # #!hashbang
+hashbang()  { [[ "${word:0:2}" == '#!' ]] && line=""; }
 
 add_pattern "shellcommand"
 # >shell command

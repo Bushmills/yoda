@@ -876,7 +876,7 @@ shellcommand()  {
 
 pattern()  {                                                         # pattern interpreted as
    local char1="${word:0:1}" tail="${word:1}"
-   for pattern in ${patterns[@]}; do
+   for pattern in "${patterns[@]}"; do
       $pattern && return                                             # arguments in $word, $char1, $tail
    done
 }

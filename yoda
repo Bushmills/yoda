@@ -25,15 +25,14 @@ v="0.8.0"
 # ----- shellcheck ignores ------------------------------- #fold00
 # invoke shellcheck with:    shellcheck -x yoda.
 
-# shellcheck disable=SC2016 disable=SC2034 disable=SC2154
-
 # SC2016: "expressions don't expand between single quotes"
 #         right, that's the reason for using single quotes there.
 # SC2034  "... appears unused. Verify use (or export if used externally)"
 #         in most cases is "appears" the correct term.
 # SC2154 "(warning): base is referenced but not assigned."
 #        is assigned, but shellcheck can't see how
-
+# SC2288 This is interpreted as a command name ending with ','.
+#        That's how it's meant to be done.
 
 # ----- declarations ------------------------------------- #fold00
 
@@ -168,6 +167,11 @@ editor="vi"
    editor()  { $xeditor "$@" & }                                     # used with doc, edit
    editor="$xeditor"
 }
+
+# webview()  { links2 -dump "$@"; }
+# webview()  { dillo "$@"; }
+# webview()  { firefox "$@"; }
+webview()  { netsurf "$@"; }
 
 declare -i magic=100000
 remagic()  { magic+=RANDOM+10000; }
@@ -739,7 +743,7 @@ dnum-()  {
 
 # arg1: number string,  arg2: radix
 alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
-trynum()  {
+number_radix()  {
    local word="${1,,}" radix="$2"
    local legaldigits="${alldigits:0:radix}" sign="" dh dl
    [[ ${word:0:1} == - ]] && {                                       # leading dash?
@@ -763,85 +767,118 @@ trynum()  {
    return 0                                                          # indicate success: no need for further examination
 }
 
+declare -a patterns
+add_pattern()  { patterns+=("$1"); }
 
+# 123 -123 123.456 -123.456  respecting base
+add_pattern "number"
+number()  {
+   number_radix "$word" "${m[base ]}"
+   return $?
+}
 
-# wondering whether a case statement would make this look any better
-pattern()  {                                                         # pattern interpreted as
-# 123  -123  123.456  -123.456  respecting base
-   trynum "$word" "${m[base ]}" && return 0
-
-# #123 #123.456 #-123 #-123.456
+# #123 #123.456 #-123 #-123.456, base override
 # $abc $abc.def $-abc $-abc.def
 # %101 %101.01  %-101 %-101.01
-   local char1="${word:0:1}"
-   [[ $char1 == [%\$\#] ]] && trynum "${word:1}" "${bases[$char1]}" && return 0
+add_pattern "prefixednumber"
+prefixednumber()  {
+   [[ $char1 == [%\$\#] ]] &&
+      number_radix "$tail" "${bases[$char1]}"
+}
 
+
+add_pattern "tick_char"
 # 'c'  and   'c
-   [[ ${word} == \'? || ${word} == \'?\' ]] && {                     # 'X bzw 'X' return ASCII - easier on editor syntax highlighting
-      read -r tmp < <(printf "%d" "'${word:1:1}'")
-      stateless "s[++sp]=\"$tmp\""; return 0; }
+tick_char()  {
+   [[ ${word} == \'? || ${word} == \'?\' ]] || return
+   read -r tmp < <(printf "%d" "'${word:1:1}'")
+   stateless "s[++sp]=\"$tmp\""
+}
 
+add_pattern "ctrl_char"
 # ^c and ^C
-   [[ ${word} == ^[a-zA-Z\[] ]] && {                                 # ^X        return control char
-      read -r tmp < <(printf "%d" "'${word:1:1}")
-      stateless "s[++sp]=\"$((tmp&31))\""; return 0; }
+ctrl_char() {
+   [[ ${word,,} == ^[a-z\[] ]] || return
+   read -r tmp < <(printf "%d" "'${word:1:1}")
+   stateless "s[++sp]=\"$((tmp&31))\""
+}
 
-# can probably factor ' and " type strings
+add_pattern "string_single_dquote"
 #  "string"
-   [[ "${char1}${word:0-1}" == '""' ]] && {                          # quoted string, single word
-      (( ${#word} > 1 )) &&  {                                       # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-         ((compiling)) && {                                          # arg for compile differs with quoting, to make strings like $1 $2  literal
-            code  "ss+=('${word:1:${#word}-2}')"
-            return 0; }                                              # Both requirements are hard to formulate in one common version.
-         ss+=("${word:1:${#word}-2}")
-         return 0; }; }
+string_single_dquote()  {
+   [[ "${char1}${word:0-1}" == '""' ]] || return
+   (( ${#word} > 1 )) || return                                      # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
+   ((compiling)) && {                                                # arg for compile differs with quoting, to make strings like $1 $2  literal
+      code  "ss+=('${word:1:${#word}-2}')"
+      return 0; }                                                    # Both requirements are hard to formulate in one common version.
+   ss+=("${word:1:${#word}-2}")
+}
 
+
+add_pattern "string_multi_dquote"
 # "multi word string"
-   [[ "$char1" == \" ]] && {                                         # quoted string, multiple words (single words already dealt with)
-      tmp="${word:1}"                                                # strip leading " from first word
-      parse '"'                                                      # parse rest of line for closing quotes
-      ((compiling)) && {
-         code "ss+=('$tmp $word')"                                   # compile: compile code to add string to string stack
-         return 0; }
-      ss+=("$tmp $word")                                             # interpret push string to string stack
+string_multi_dquote()  {
+   [[ "$char1" == \" ]] || return
+   parse '"'                                                         # parse rest of line for closing quotes
+   ((compiling)) && {
+      code "ss+=('$tail $word')"                                     # compile: compile code to add string to string stack
       return 0; }
+   ss+=("$tail $word")                                               # interpret push string to string stack
+}
 
+
+add_pattern "string_single_squote"
 # 'string'
-   [[ "${char1}${word:0-1}" == "''" ]] && {                          # single quoted string, single word
-      ((compiling)) && {                                             # arg for compile differs with quoting, to make strings like $1 $2  literal
-         code  "ss+=('${word:1:${#word}-2}')"                        # No variable expansion in interpreted branch.
-         return 0; }                                                 # Both requirements are hard to formulate in one common version.
-      ss+=("${word:1:${#word}-2}")
-      return 0; }
+string_single_squote()  {
+   [[ "${char1}${word:0-1}" == "''" ]] || return
+   ((compiling)) && {                                                # arg for compile differs with quoting, to make strings like $1 $2  literal
+      code  "ss+=('${word:1:${#word}-2}')"                           # No variable expansion in interpreted branch.
+      return 0; }                                                    # Both requirements are hard to formulate in one common version.
+   ss+=("${word:1:${#word}-2}")
+}
 
+
+add_pattern "string_multi_squote"
 # 'multi word string'
-   [[ "$char1" == \' ]] && {                                         # single quoted string, multiple words (single words already dealt with)
-      tmp="${word:1}"                                                # strip leading " from first word
-      parse "'"                                                      # parse rest of line for closing quotes
-      ((compiling)) && {
-         code "ss+=('$tmp $word')"                                   # compile: compile code to add string to string stack
-         return 0; }
-      ss+=("$tmp $word")                                             # interpret push string to string stack
+string_multi_squote()  {
+   [[ "$char1" == \' ]] || return
+   parse "'"                                                         # parse rest of line for closing quotes
+   ((compiling)) && {
+      code "ss+=('$tail $word')"                                     # compile: compile code to add string to string stack
       return 0; }
-# #!hashbang
-   [[ "${word:0:2}" == '#!' ]] && {                                  # #!        ignore hashbang
-      line=""; return 0; }                                           # only relevant when loading hashbang file with from. OS doesn't pass hashbang line
+   ss+=("$tail $word")                                               # interpret push string to string stack
+}
 
+
+add_pattern "hashbang"
+# #!hashbang
+hashbang()  {
+   [[ "${word:0:2}" == '#!' ]] && line=""
+}
+
+add_pattern "shellcommand"
 # >shell command
-   [[ "$char1" == '>' ]] && {                                        # >foo...                   execute a shell command
-      tmp="${word:1}"                                                # >foo... ->  foo...
-      if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command
-         tmp="${tmp:0:-1}"                                           # foo; -> foo
-      elif [[ "$line" == *';'* ]]; then                              # semicolon space seperated from command
-         parse ';'                                                   # parse input until ;
-         tmp+=" $word"
-      else                                                           # no semicolon at all
-         tmp+=" $line"
-         line=""                                                     # and removed from further evaluation
-      fi
-      stateless "$tmp"                                               # execute or compile the parsed shell command
-      return 0; }
-   return 1
+shellcommand()  {
+   [[ "$char1" == '>' ]] || return
+   tmp="$tail"                                                    # >foo... ->  foo...
+   if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command
+      tmp="${tmp:0:-1}"                                           # foo; -> foo
+   elif [[ "$line" == *';'* ]]; then                              # semicolon space seperated from command
+      parse ';'                                                   # parse input until ;
+      tmp+=" $word"
+   else                                                           # no semicolon at all
+      tmp+=" $line"
+      line=""                                                     # and removed from further evaluation
+   fi
+   stateless "$tmp"                                               # execute or compile the parsed shell command
+   return 0
+}
+
+pattern()  {                                                         # pattern interpreted as
+   local char1="${word:0:1}" tail="${word:1}"
+   for pattern in ${patterns[@]}; do
+      $pattern && return                                             # arguments in $word, $char1, $tail
+   done
 }
 
 
@@ -2726,25 +2763,16 @@ undoc()  {
 }
 primitive 'undoc' 'undoc'
 
-# candidates for $command further down
-doc()  {
-   sanitise "$1"
-   editor "$worddoc:$sanitise"
-}
-
-about()  {
-   sanitise "$1"
-   cat "$worddoc:$sanitise"
-}
-
 colon 'doc'
    code 'word'
-   code 'doc "$word"'
+   code 'sanitise "$word"'
+   code 'editor "$worddoc:$sanitise"'
 semicolon
 
 colon 'about'
    code 'word'
-   code 'about "$word"'
+   code 'sanitise "$word"'
+   code 'cat "$worddoc:$sanitise"'
 semicolon
 
 colon 'concerning'
@@ -2753,6 +2781,14 @@ colon 'concerning'
    code 'grep -h "^name: " "${concerning[@]}"'
    code 'unset -v "concerning"'
 semicolon
+
+colon 'standard'
+   code 'word'
+   code 'sanitise "$word"'
+   code 'read -r _ url _  < <(grep "^url:" "$worddoc:$sanitise")'
+   code '[[ -z "$url" ]] || webview "$url"'
+semicolon
+
 
 # ----- shell ---------------------------------------------
 # TODO: optimiser: invalidate all stack register contents

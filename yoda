@@ -712,14 +712,31 @@ exists()  {
 # ----- patterns ----------------------------------------- #fold00
 
 
-# factor with d+, dum* and digit
 # arg1: number string:    123456.
-# arg2:  radix
-dnum()  {
-   local i j digit num="$1" radix="$2"
-   dh=0
-   for ((j=0; j<${#num};j++)); do
-      digit="${num:j:1}"
+# arg2: radix
+# return values in dh:dl are not masked with $true
+alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
+number_radix()  {                                                    # base passed as argument
+   local word="${1,,}" radix="$2" i j digit
+   local legaldigits="${alldigits:0:radix}" sign="" dh=0 dl=0
+   [[ ${word:0:1} == - ]]&&{                                         # leading dash?
+      sign="-"
+      word="${word:1}"                                               # strip dash
+   }
+   local tail="${word#*[!"$legaldigits"]}"                           # remove up to and including first non-digit character
+   local left="${word%%"$tail"}"                                     # the removed part
+   [[ -z "$left" ]]&&{                                               # no non-digit chars in string
+      ((tmp=$sign$radix#$tail&true))
+      stateless "((s[++sp]=$tmp))"                                   # push or compile as single signed or unsigned number
+      return 0
+   }
+   ((${#left}>1))||return                                            # leading decimal point: not a number
+   [[ ${left:0-1} == . ]]&&left="${left:0:-1}"                       # remove dot
+   word="${left}${tail}"                                             # recombine number without decimal point
+   [[ -z "${word//[$legaldigits]/}" ]]||return                       # number contains other chars than legal digits: not a number
+   ((dpl=${#tail}))                                                  # write dot position to dpl
+   for ((j=0; j<${#word};j++)); do
+      digit="${word:j:1}"
       ((s1=dh*radix, s2=dl, dl=0))
       for ((i=bits; i--;)); do
          ((dl*=2, s2*=2, dl&carry))&&((s2++, dl&=true))
@@ -728,41 +745,10 @@ dnum()  {
       ((digit=asc[$digit]-48, digit>9))&&((digit-=39))
       ((dh=s1+s2, dl+=digit, dl&carry))&&((dh++))
    done
-   ((dl&=true, dh&=true))
-}
-
-
-# factor with dnegate
-# arg1: number string:   -123456.
-# arg2: radix
-dnum-()  {
-   dnum "${1#-}" "$radix"
-   ((dl^=true, dh^=true, dl++, dl&carry))&&((dh++))
-   ((dl&=true, dh&=true))
-}
-
-# arg1: number string,  arg2: radix
-alldigits="0123456789abcdefghijklmnopqrstuvwxyz"                     # cut legal chars for base
-number_radix()  {
-   local word="${1,,}" radix="$2"
-   local legaldigits="${alldigits:0:radix}" sign="" dh dl
-   [[ ${word:0:1} == - ]] && {                                       # leading dash?
-      sign="-"
-      word="${word:1}"                                               # strip dash
+   [[ -z "$sign" ]]||{                                               # reapply sign
+      ((dl^=true, dh^=true, dl++, dl&carry))&&((dh++))
    }
-   tail="${word#*[!"$legaldigits"]}"                                 # remove up to and including first non-digit character
-   left="${word%%"$tail"}"                                           # the removed part
-   [[ -z "$left" ]] && {                                             # no non-digit chars in string
-      ((tmp=$sign$radix#$tail&true))                                 # push or compile as single signed or unsigned number
-      stateless "((s[++sp]=$tmp))"                                   # push or compile as single signed or unsigned number
-      return 0
-   }
-   ((${#left} == 1)) && return 1                                     # leading decimal point: not a number
-   [[ ${left:0-1} == . ]] && left="${left:0:-1}"                     # remove dot
-   word="${left}${tail}"                                             # recombine number without decimal point
-   [[ -z "${word//[$legaldigits]/}" ]] || return 1                   # number contains other chars than legal digits: not a number
-   ((dpl=${#tail}))                                                  # write dot position to dpl
-   dnum$sign "$word" "$radix"                                        # convert to double numeric value
+   ((dl&=true, dh&=true))
    stateless "((s[++sp]=$dl, s[++sp]=$dh))"                          # push or compile signed or unsigned double number
    return 0                                                          # indicate success: no need for further examination
 }
@@ -770,49 +756,43 @@ number_radix()  {
 declare -a patterns
 add_pattern()  { patterns+=("$1"); }
 
-
 # patternlets must return a value=0 if matching, <>0 otherwise.
 # return value determines whether search for matching pattern will continue.
-add_pattern "number"                                                 # 123 -123 123.456 -123.456  respecting base
-number()  { number_radix "$word" "${m[base ]}"; }
+add_pattern "number"                                                 # 123 -123 123.456 -123.456
+number()  { number_radix "$word" "${m[base ]}"; }                    # respecting base
 
 add_pattern "prefixednumber"                                         # #123 #123.456 #-123 #-123.456 $abc $abc.def $-abc $-abc.def %101 %101.01 %-101 %-101.01
-prefixednumber()  {
+prefixednumber()  {                                                  # base override by number prefix
    [[ $char1 == [%\$\#] ]] &&
    number_radix "$tail" "${bases[$char1]}"
 }
 
-add_pattern "tick_char"
-# 'c'  and   'c
+add_pattern "tick_char"                                              # 'c'  and   'c
 tick_char()  {
    [[ ${word} == \'? || ${word} == \'?\' ]] || return
-   read -r tmp < <(printf "%d" "'${word:1:1}'")
-   stateless "s[++sp]=\"$tmp\""
+   stateless "s[++sp]=\"$(printf "%d" "'$tail'")\""
 }
 
-add_pattern "ctrl_char"
-# ^c and ^C
+add_pattern "ctrl_char"                                              # ^c and ^C
 ctrl_char() {
    [[ ${word,,} == ^[a-z\[] ]] || return
-   read -r tmp < <(printf "%d" "'${word:1:1}")
-   stateless "s[++sp]=\"$((tmp&31))\""
+   stateless "s[++sp]=\"$(($(printf "%d" "'$tail'")&31))\""
 }
 
-
-string()  { stateless "ss+=('$*')"; }
+string()  { stateless "ss+=(\"$*\")"; }
 string_single()  {
-   [[ "${char1}${word:0-1}" == "$1" ]] || return
-   (( ${#word} > 1 )) || return                                      # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-   string "${word:1:${#word}-2}"
+   [[ "${char1}${tail:0-1}" == "$1" ]] || return
+   (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
+   string "${tail:0:-1}"
 }
 
 string_multi()  {
    [[ "$char1" == "$1" ]] || return
    parse "$1"                                                        # parses into variable "word"
-   string "$tail $word"                                              # compile: compile code to add string to string stack
+   string "$tail" "$word"                                            # compile: compile code to add string to string stack
 }
 
-add_pattern "string_single_dquote"                                   #  "string"
+add_pattern "string_single_dquote"                                   # "string"
 string_single_dquote()  { string_single '""'; }
 add_pattern "string_single_squote"                                   # 'string'
 string_single_squote()  { string_single "''"; }
@@ -822,30 +802,21 @@ add_pattern "string_multi_squote"                                    # 'multi wo
 string_multi_squote()  { string_multi "'"; }
 add_pattern "hashbang"                                               # #!hashbang
 hashbang()  { [[ "${word:0:2}" == '#!' ]] && line=""; }
-
-add_pattern "shellcommand"
-# >shell command
+add_pattern "shellcommand"                                           # >shell command
 shellcommand()  {
    [[ "$char1" == '>' ]] || return
-   tmp="$tail"                                                    # >foo... ->  foo...
-   if [[ ${tmp:0-1} == ";" ]]; then                               # semicolon attached to command
-      tmp="${tmp:0:-1}"                                           # foo; -> foo
-   elif [[ "$line" == *';'* ]]; then                              # semicolon space seperated from command
-      parse ';'                                                   # parse input until ;
+   tmp="$tail"                                                       # >foo... ->  foo...
+   if [[ ${tmp:0-1} == ";" ]]; then                                  # semicolon attached to command
+      tmp="${tmp:0:-1}"                                              # foo; -> foo
+   elif [[ "$line" == *';'* ]]; then                                 # semicolon space seperated from command
+      parse ';'                                                      # parse input until ;
       tmp+=" $word"
-   else                                                           # no semicolon at all
+   else                                                              # no semicolon at all
       tmp+=" $line"
-      line=""                                                     # and removed from further evaluation
+      line=""                                                        # and removed from further evaluation
    fi
-   stateless "$tmp"                                               # execute or compile the parsed shell command
+   stateless "$tmp"                                                  # execute or compile the parsed shell command
    return 0
-}
-
-pattern()  {                                                         # pattern interpreted as
-   local char1="${word:0:1}" tail="${word:1}"
-   for pattern in "${patterns[@]}"; do
-      $pattern && return                                             # arguments in $word, $char1, $tail
-   done
 }
 
 
@@ -945,12 +916,16 @@ evaluate()  {
       }
 # --- word not in a searched wordlist
 # --- pattern?
-      pattern "$word" && continue                                    # not found yet: try patterns (numbers, strings, chars, hashbang, shell commands)
-      (( m[forwardrefs] )) && {                                      #     and forward references enabled ...
-         ((compiling)) && {                                          # still not successfully dealt with word. last resolve: in case of compiling ...
-            forwardref "$word"  "$lastword"                          #     create a forward reference.
-            code "${unresolved["${word,,}"]}"                        #     compile dangling call to unresolved name. (tag as forward ref call for optimiser?)
-            continue                                                 # hope that it will eventually get resolved
+      local char1="${word:0:1}" tail="${word:1}"                     # many patternlets look at first char and use the remainder
+      for pattern in "${patterns[@]}"; do
+         $pattern && continue 2                                      # arguments in $word, $char1, $tail
+      done
+# --- forward reference?
+      (( m[forwardrefs] )) && {                                      # forward references enabled?
+         ((compiling)) && {                                          # and compiling?
+            forwardref "$word" "$lastword"                           #     create a forward reference.
+            code "${unresolved["${word,,}"]}"                        #     compile dangling call to unresolved name.
+            continue
          }
       }
 # --- can be included?

@@ -2,8 +2,9 @@ provides: os shell: df ls cat cd most echo printf cp rm pwd mc
 once
 
 : shell:
-    "eval " word$ dup$ create$ join$
-    " $line; line=''" join$  use$  ;
+    "eval " word$ dup$ create$   \ forth name is command name
+    " $line" join$ quote$ join$  \ add command line to command, then quoted command as args to eval
+    "; line=" join$ use$  ;      \ command consumes line.
 
 only forth
 vocabulary os

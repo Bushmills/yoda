@@ -168,10 +168,7 @@ editor="vi"
    editor="$xeditor"
 }
 
-# webview()  { links2 -dump "$@"; }
-# webview()  { dillo "$@"; }
-# webview()  { firefox "$@"; }
-webview()  { netsurf "$@"; }
+webview()  { lynx -dump "$1"; }
 
 declare -i magic=100000
 remagic()  { magic+=RANDOM+10000; }

@@ -136,7 +136,7 @@ trash x
 
 \ ----- environment --------------------------------------
 
-: newwordlist$  ( -- wid )  ( $1 -- )                 here$ $, dup initwordlist           ;
+: newwordlist$  ( -- wid )  ( $1 -- )                 here$ $, dup addwordlist            ;
 "environment" newwordlist$ constant environment
 : environment?    ( c-addr u -- false | i*x true )    environment searchwordlist
                                                       dup lest count scrape true          ;

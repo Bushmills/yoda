@@ -79,12 +79,14 @@ declare -A doescode                                                  # items ass
 #  wordlist:     name of a wordlist
 #  wordlistwid:  wid of a wordlist
 # convert wid to wordlist:   $@    ( ${strings[wid]} )
+declare -a wordlists                                                 # list of wordlists
 declare -a builtin_wordlists=("only" "forth" "compiler" "unresolved")
 for wordlist in "${builtin_wordlists[@]}"; do
    declare -Ai "flags_$sdp"                                          # header flags per vocabulary
    declare -A  "wordlist_$sdp"                                       # this is the name of the wordlist array, named "wordlist_$wid"
    declare -n  "$wordlist"="wordlist_$sdp"                           # allow referencing builtins by name without indirection ( ${unresolved[...]} )
    ((${wordlist}wid=sdp))                                            # builtins can also be refered by wid, assigned here
+   wordlists+=("$sdp")
    strings[sdp++]="$wordlist"                                        # finally associate wid with name.
 done
 
@@ -776,7 +778,9 @@ ctrl_char() {
    stateless "s[++sp]=\"$(($(printf "%d" "'$tail'")&31))\""
 }
 
-string()  { stateless "ss+=(\"$*\")"; }
+string()  {
+   stateless "ss+=('$*')"
+}
 string_single()  {
    [[ "${char1}${tail:0-1}" == "$1" ]] || return
    (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
@@ -2627,12 +2631,25 @@ semicolon
 
 primitive 'transient'   'transients+=("$currentwid $lastword")'
 
-colon 'initwordlist'                                                 # ( wid -- )
+# arg1: wod
+initwordlist()  {                                                    # empty and vector
+   declare -gA "flags_$tmp=()"
+   declare -gA "wordlist_$tmp=()"
+}
+
+colon 'addwordlist'                                                 # ( wid -- )
    pop  'tmp'
-   code 'declare -gA "flags_$tmp=()"'                                # word to function name and header flags
-   code 'declare -gA "wordlist_$tmp=()"'                             # word to function name and header flags
+   code 'initwordlist "$tmp"'
+   code 'wordlists+=("$tmp")'
 semicolon
 
+dotwordlists()  {
+   local wid
+   for wid in "${wordlists[@]}"; do
+      printf "%s " "${strings[wid]}"
+   done
+}
+primitive '.wordlists'  'dotwordlists'
 
 
 # ----- documentation ------------------------------------ #fold01

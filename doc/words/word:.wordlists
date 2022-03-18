@@ -1,0 +1,11 @@
+name:                .wordlists
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            wordlists
+
+description:         lists wordlists known to yoda
+
+standard:            no
+deviation:           standard has no equivalent

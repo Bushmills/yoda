@@ -1,0 +1,18 @@
+created:             auto     (remove line after having checked and revised description)
+name:                addwordlist
+stack:               ( wid -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            wordlists
+
+description:         part of creating new wordlists, responsable for creating the
+                     bash data structures holding wordlist data, and adding wordlist
+                     to list of existing wordlists.
+                     Does not associate wordlist with name of wordlist, but expects
+                     that to be done already (see: newwordlist$), with wid referencing
+                     wordlist name. This allows creation of nameless wordlists, which are
+                     only referenced by wid, but not by name.
+
+standard:            no
+deviation:           standard has no equivalent

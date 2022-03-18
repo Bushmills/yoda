@@ -8,3 +8,4 @@ category:            dictionary
 description:         shows a listing of names in first word list of search order.
 
 standard:            yes
+url:                 https://forth-standard.org/standard/tools/WORDS

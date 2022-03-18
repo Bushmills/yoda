@@ -1,0 +1,15 @@
+name:                standard
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( -- )
+contexts:            stateless
+category:            information
+input stream:        word
+
+description:         read word name from input stream, look into its "about" information
+                     for an "url:" line. If found, open the URL with the html viewer or
+                     web browser configured as "webview"
+
+example:             standard bye
+standard:            no
+deviation:           standard has no equivalent

@@ -186,11 +186,9 @@ done
 
 # ----- diagnostics  ------------------------------------- #fold00
 
-declare -a comp=("" ":")
-
 trace()  {
-   printf "### %-1s %-20s %s\n" "${comp[compiling & 1]}" "[${FUNCNAME[1]}]" "$@"
-#                                                 ^^^  convert any non-zero to 1, used as array index
+   printf "### %-1s %-20s %s\n" "${char[$(((compiling&1)?58:32))]}" "[${FUNCNAME[1]}]" "$@"
+#                                                        :  bl
 }
 
 pretend()         {
@@ -297,13 +295,15 @@ newname()  {
 }
 
 
-# arg1: code token, arg2: code token type (opt)
+# arg1: code token
+# arg2: code token type (opt)
 code()  {                                                            # instruction stream injector
    raw+=("$1")
    analyser+=("${2:-0}")                                             # default to literal code
 }
 
-
+# arg1: file handle
+# arg2: line number
 where()  {
    code "$1:$2" "$sourcelocation"
 }
@@ -327,7 +327,7 @@ analyser_functionheader()  {
 }
 
 analyser_sourcelocation()  {
-   where["$lastword"]="$rawline"                                    # remember source location
+   where["$lastword"]="$rawline"                                     # remember source location
    return 1
 }
 
@@ -350,9 +350,9 @@ optimise()  {                                                        # run code 
    for ((tmp=0; tmp<${#raw[@]}; tmp++)); do
       rawline="${raw[tmp]}"
       rawflag="${analyser[tmp]}"
-      targetline="$rawline"                                         # assume code
-      (( rawflag )) && {
-         analyser_"${flagname[rawflag]}" || continue                # flags: examine and act upon
+      targetline="$rawline"                                          # assume code
+      ((rawflag)) && {
+         analyser_"${flagname[rawflag]}" || continue                 # flags: examine and act upon
       }
       [[ -z "$targetline" ]] || target+=("$targetline")
    done
@@ -391,6 +391,7 @@ word()  {
    peek_word
    line="${line#*"$word"}"                                           # quotes around word are needed
    line="${line#+([[:space:]])}"                                     # remove single leading space (n
+   [[ -n "$word" ]]
 }
 
 # read string from line and remove it, also remove delimiter.
@@ -403,41 +404,7 @@ parse()  {
    line="${line#"$1"}"
 }
 
-# prepared for s\" - this version of parse will be required
-# to translate specific backslash escaped sequences:
-# \a  (alert, ASCII 7)
-# \b  (backspace, ASCII 8)
-# \e  (escape, ASCII 27)
-# \f  (form feed, ASCII 12)
-# \l  (line feed, ASCII 10)
-# \m  (cr,lf, ASCII 13, 10)
-# \n  (implementation dependent , e.g., CR/LF, CR, LF, LF/CR)
-# \q  (double-quote, ASCII 34)
-# \r  (carriage return, ASCII 13)
-# \t  (horizontal tab, ASCII 9)
-# \v  (vertical tab, ASCII 11)
-# \z  (no character, ASCII 0)
-# \"  (double-quote ASCII 34)
-# \x<hexdigit><hexdigit>
-# \\  (backslash ASCII 92)
-parsebacksl()  {
-   word="${line%%"${1}"*}"
-# #word > 1?   possibly an escaped terminator: check whether last two chars are \$1 && $1 is escapable. if so, continue parsing.
-   [[ -z "$1" ]] && word="$line"                                     # -z $1 includes NUL character
-   line="${line#"${word}"}"
-   line="${line#"$1"}"
-# translate $word:
-# rawword=$word"; word=""
-# while ((${#rawword})); do
-#    word+="${rawword%%'\'*}"
-#    rawword="${rawword#*'\'}"
-#    word+="${subst[${rawword:0:1}]}"
-#    rawword="${rawword:1}"
-# done
-}
-
 # ----- compiler ----------------------------------------- #fold00
-
 
 # arg1: xt
 codebody()  {                                                        # inline compiler
@@ -578,7 +545,6 @@ constant 'maxint'             "$maxint"
 constant 'msb'                "$msb"
 constant 'true'               "$true"
 constant 'false'              "false"
-#constant '0'                  "0"
 constant 'esc'                "27"
 constant 'bl'                 "32"
 constant 'bits'               "$bits"
@@ -823,9 +789,9 @@ shellcommand()  {
 
 # ----- resolve forward refs ----------------------------- #fold00
 
-# used to help determining if resolving forward refs create
-# new forward refs, in which case resolving will be repeated.
-totalheaders()  { ((totalheaders=xt)); }
+newheaders() {
+   ((tmp=previousheaders, previousheaders=xt, xt!=tmp))
+}
 
 # create a forward ref for word
 # arg1: word
@@ -841,16 +807,15 @@ forwardref()  {
 # tries by loading source immediately if available.
 # if source isn't available, a forward ref will be generated.
 satisfy1()  {
-   exists "$1" "${order[@]}" && return 0                             # word already defined, nothing to do
+   exists "$1" "${order[@]}" && return                               # word already defined, nothing to do
    local word="${1,,}"
-   [[ -z "${lib[$word]}" ]] || {                                     # library of needed word known?
+   [[ -n "${lib[$word]}" ]] && {                                     # library of needed word known?
       forwardref "$word"                                             # yes: create forward ref only
       ((${#raw[@]})) && return 1                                     #   refuse to satisfy while building new word is in progress
       tmp="${libdirs[0]}/${lib["$word"]}"                            #   path and name of lib file
       [[ -f "$tmp" ]] && from "$tmp"                                 #   load if file exists
       return 0
    }
-   return 1
 }
 
 resolving=0                                                          # early termination helper
@@ -858,19 +823,12 @@ resolving=0                                                          # early ter
 # doing so because resolving forward references may create
 # new forward references, which also need resolving.
 resolve()  {
-   (( ${#unresolved[@]} )) || return                                 # only run if unresolved words exist
-   ((resolving)) && return                                           # nesting into resolve doesn't get any more work done -
-   local file                                                        #   we'll resolve anything open, or we don't, no matter
-   local resolving=1                                                 #   how often resolve calls itself. This would only slow down
-   previousheaders="-1"
-   totalheaders                                                      # total headers count before inclusion
-   until (( totalheaders == previousheaders )); do                   # loop until header count stabilises
-      previousheaders="$totalheaders"
+   (( ${#unresolved[@]} && ! resolving)) || return                   # only run without recursing if unresolved words exist
+   local file resolving=1                                            # prevent recursion
+   while newheaders && ((${#unresolved[@]})); do                     # loop while unresolved until header count stabilises
       for word in "${!unresolved[@]}"; do                            # try to resolve all in unresolved vocabulary
          satisfy1 "$word"                                            # satisfying a word can create new forward references
       done
-      ((${#unresolved[@]})) || break                                 # no forwardrefs left: done
-      totalheaders                                                   # total headers count now, after inclusion
    done
 }
 
@@ -883,12 +841,12 @@ resolve()  {
 # in here most compiling and interpreting work is done.
 # time to split this thing up, as it's getting a tad unwieldy
 evaluate()  {
-   local line="$*"                                                   # line may get modified, and that must be. some words depend on being able to change it,
-   local tib="$line"                                                 # tib remains unaffected unless explicitely modified (query et al), for error reporting.
+# line may get modified, and that must be. some words depend on being able to empty it.
+# tib remains unaffected unless explicitely modified (query et al), for error reporting.
+   local line="$*" tib="$line"
    while [[ -n "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
-      ((error | (sp<0)))&&break
-      word                                                           # parse white space delimited word
-      [[ -z "$word" ]] && continue                                   # empty: tabs, line end, nothing of substance
+      ((error || (sp<0)))&&break
+      word || continue                                               # parse white space delimited word.
 # examine compiler wordlist first
       if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
          [[ -z "${compiler["$word"]}" ]] || {                        # found in in compiler while compiling
@@ -1098,8 +1056,7 @@ wordsplus() {
 
 see()  {
    local context wid name found=0 s0 i
-   word
-   [[ -z "$word" ]] && missingname
+   word || missingname
    word=${word,,}
    for wid in "${order[@]}" "$compilerwid"; do
       declare -n context="wordlist_$wid"
@@ -1240,8 +1197,7 @@ semicolon
 
 # ( xt -- ) ( s: word )
 colon 'is'
-   code 'word'
-   code '[[ -z "$word" ]] && missingname'
+   code 'word || missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
    code 'code "((m[${body[exists[0]]}]=s[sp]))"'
    code 'name "\${s[sp--]}"'
@@ -1250,8 +1206,7 @@ semicolon
 compiled
 
 colon 'is'
-   code 'word'
-   code '[[ -z "$word" ]] && missingname'
+   code 'word || missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
    pop  's0'
    code '((m[body[exists[0]]]=s0))'
@@ -1262,22 +1217,20 @@ semicolon
 # ----- value, to ---------------------------------------- #fold01
 
 colon "value"
-   code 'word'
+   code 'word || missingname'
    code 'value "$word" "${s[sp--]}"'
 semicolon
 inline
 
 colon 'to'
-   code 'word'
-   code '[[ -z "$word" ]] && missingname'
+   code 'word || missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
    code 'code "apply \"${exists[0]}\" \"s[++sp]=\${s[sp--]}\""'
 semicolon
 compiled
 
 colon 'to'
-   code 'word'
-   code '[[ -z "$word" ]] && missingname'
+   code 'word || missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
    code 'apply  "${exists[0]}" "s[++sp]=${s[sp--]}"'
 semicolon
@@ -1497,7 +1450,7 @@ semicolon
 immediate
 
 colon 'code'
-   code 'word'
+   code 'word || missingname'
    code 'delayheader "$word" "$filehandle" "$linenr"'
 semicolon
 inline
@@ -1532,8 +1485,7 @@ compiled
 
 
 colon "'"                                                            # ( -- xt ) ( stream: word )
-   code 'word'
-   code '[[ -z "$word" ]] && missingname'
+   code 'word || missingname'
    code 'exists "$word" "${order[@]}" "$compilerwid" || notfound "$word"'
    push 'exists[0]'
 semicolon
@@ -1572,7 +1524,7 @@ inline
 # trashed name from input stream
 # ( -- )
 colon 'trash'
-   code 'word'
+   code 'word || missingname'
    code 'trash "$word"'
 semicolon
 inline
@@ -1595,7 +1547,7 @@ primitive 'last$'   'ss+=("$lastword")'
 # for including those, add them to order.
 # ( stream: word )
 colon 'postpone'
-   code 'word; [[ -z "$word" ]]&&missingname'
+   code 'word || missingname'
    code 'exists "$word" "$compilerwid" "${order[@]}" || notfound "$word"'
    code 'if ((exists[2] == compilerwid)); then call "${exists[0]}"'
    code 'else code "call \"${exists[0]}\""; fi'
@@ -1827,8 +1779,7 @@ colon 'many'
 semicolon
 
 colon 'boot'
-   code 'word'
-   code '[[ -z "$word" ]]&&missingname'
+   code 'word || missingname'
    code 'satisfy1 "$word"'
    code 'exists "$word" "currentwid" "${order[@]}"'                  # search current first because satisfy may have compiled it there
    code 'name "${exists[0]}"'                                        # convert xt to function name
@@ -2392,8 +2343,7 @@ primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
 # becomes sometimes hard when using ' ' for characters' ASCIIs
 
 char()  {
-   word
-   [[ -z "$word" ]] && missing
+   word || missing
    ((s[++sp]=asc["\\${word:0:1}"]))
 }
 
@@ -2548,7 +2498,7 @@ need()  {
 }
 
 colon 'need'                                                         # ( -- )  ( stream: bl delimited string )
-   code 'word'
+   code 'word || missingname'
    code 'need "$word" ""'                                            # empty arg indicates explicit need, no referer
 semicolon
 
@@ -2720,26 +2670,26 @@ undoc()  {
 primitive 'undoc' 'undoc'
 
 colon 'doc'
-   code 'word'
+   code 'word || missingname'
    code 'sanitise "$word"'
    code 'editor "$worddoc:$sanitise"'
 semicolon
 
 colon 'about'
-   code 'word'
+   code 'word || missingname'
    code 'sanitise "$word"'
    code 'cat "$worddoc:$sanitise"'
 semicolon
 
 colon 'concerning'
-   code 'word'
+   code 'word || missingname'
    code 'concerning=($(grep -il "$word" "${worddoc%/*}"/*))'
    code 'grep -h "^name: " "${concerning[@]}"'
    code 'unset -v "concerning"'
 semicolon
 
 colon 'standard'
-   code 'word'
+   code 'word || missingname'
    code 'sanitise "$word"'
    code 'read -r _ url _  < <(grep "^url:" "$worddoc:$sanitise")'
    code '[[ -z "$url" ]] || webview "$url"'

@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.8.0"
+v="0.8.1"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -246,6 +246,7 @@ compiler_init()  {
    raw=()
    analyser=()                                                       # reinitialise code tags for analyser
    target=()
+   conclude=()
 }
 
 # create header, but don't compile, and don't generate function yet.
@@ -432,6 +433,9 @@ apply()  {
 }
 
 
+# arg1: add action for semicolon to execute to conclude[@]
+conclude()  { conclude+=("$@"); }
+
 # create a function from raw[@]
 compile()  {
    optimise                                                          # rewrite ${raw[@]} to ${target[@]}
@@ -456,6 +460,11 @@ push()  { code "((s[++sp]=$1))"; }
 get()   { code "(($1=s[sp]))"; }                                     # pop without point dec
 pop()   { code "(($1=s[sp--]))"; }
 call()  { code "${nameprefix}_$1"; }
+execute() {
+   tmp="${context[$1]}"
+   [[ -z "$tmp" ]] && notfound "$1"
+   code "$tmp"
+}
 
 # variable last doesn't exist yet, but is used in header, and
 # can't be defined earlier, because defining it calls header.
@@ -498,14 +507,10 @@ colon()  {
 }
 
 
-# arg1: add action for semicolon to execute to conclude[@]
-conclude()  { conclude+=("$@"); }
-
 semicolon()  {
    for ((nextconclude=0; nextconclude<${#conclude[@]};nextconclude++)); do
       eval "${conclude[nextconclude]}"
    done
-   conclude=()
    compile                                                           # compilation is gathered in an array raw. Only
    compiling="$false"                                                # when semicolon completes compilation, is
 }                                                                    # a function created from contents of array.
@@ -1020,7 +1025,7 @@ compiled
 
 
 colon ':'
-   code 'word'                                                       # parse space delimited word from input stream
+   code 'word || missingname'                                        # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
    push '${#raw[@]}'                                                 # allow check of empty function
    push "$magic"                                                     # allow check of proper nesting
@@ -1117,7 +1122,7 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 # ----- defining words ----------------------------------- #fold01
 
 create()  {
-   code 'word'
+   code 'word || missingname'
    code "constant \"\${word}\" \"$1\""                                 # not using single quotes because want $1 to expand
 }
 
@@ -1178,7 +1183,7 @@ defer()  {
 
 # example:  defer foo      ' bar is foo
 colon "defer"                                                        # use in yoda program
-   code 'word'
+   code 'word || missingname'
    code 'defer "$word"'
 semicolon
 inline
@@ -2025,7 +2030,6 @@ colon 'type$'
 semicolon
 inline
 
-
 # ( $1 -- $2 )
 primitive 'uppercase1$'   'ss[-1]="${ss[-1]^}"'                      # foobar -> Foobar
 primitive 'lowercase1$'   'ss[-1]="${ss[-1],}"'                      # FooBar -> fooBar
@@ -2339,22 +2343,18 @@ primitive 'move'   'move'
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
+
 # duplicating 'char functionality because quoting in evaluate
 # becomes sometimes hard when using ' ' for characters' ASCIIs
-
-char()  {
-   word || missing
-   ((s[++sp]=asc["\\${word:0:1}"]))
-}
-
 # ( -- c )
 colon 'char'
-   code "char"
+   code 'word || missing'
+   code '((s[++sp]=asc["\\${word:0:1}"]))'
 semicolon
 inline
 
 colon '[char]'
-   code "char"
+   execute 'char'
    code 'code "((s[++sp]=${s[sp--]}))"'
 semicolon
 compiled
@@ -2412,84 +2412,6 @@ semicolon
 
 
 # ----- foward referencing support words ----------------- #fold01
-
-# forward referencing scheme using dependencies files, which maps
-# word names to file names, allowing to locate source of required
-# code quickly for inclusion:
-#
-#  provides:
-#     like \ treating rest of line as comment.
-#     purpose is to allow grepping libraries for file names
-#     providing the words listed there, to generate a simple
-#     form of dependency files.
-#     Insert it into library files, listing the words which can
-#     be resolved by library. Idea is to have very short library
-#     files, often just containing a single word.
-#
-#  dependencies
-#     run through library directories and their subdirectories, and
-#     look for lines starting with provides:
-#     extract the list of names, and write names, one per line, followed
-#     by file name, into the "dependencies" file.
-#     This build the dependencies "database", and needs only done when
-#     dependencies are outdated, stale or missing.
-#
-#  satisfy
-#  needs:
-#     these are merely different names for the same function. needs:
-#     pairs more nicely with provides: when written into library fragments.
-#     These turn forward refs on, parse space delimited strings from input
-#     line (the name of needed words). For each word is the library
-#     file containing word's source located by searching the dependencies
-#     file, the source is included from file, thereby satisfying the
-#     forward reference. When done is old forward refs state restored.
-#     When a word can't be resolved, due to not having an entry in the
-#     dependencies fiel, or the file not existing, a vocabulary based
-#     forward reference is created through need. This renders the not
-#     included word compilable. When source becomes available (file
-#     suddenly existing, or word defined by other means) will the forward
-#     reference be cleared, and compiled calls to it associated with the
-#     then created word.
-#
-#  Purpose is to allow library inclusion with much finer granulation than
-#  what is possible with including library files which unconditionally
-#  include heaps of words, without the need to restructure the libraries
-#  towards conditional compilation.
-#
-#  Above words are more concerned with locating and including source. They
-#  don't address the case when a word source doesn't exist (yet). To deal
-#  with these words, a supporting word set working on vocabularies exists:
-
-# need can create forward ref even though forward refs are turned off.
-# resolving will still be done, that way can specific words (and their
-# dependencies) be picked from forward lib.
-# arg1: name of needed word,  arg2; referer
-
-# needed is used to test forward reference status of a word. A non-false
-# result indicates a forwards referenced word.
-# Interpret time flow control words such as lest or unless can be used
-# to respond to the result of needed.
-
-# words  have, lack and needed, all returning false or "some" value
-# (which could be true, but also an execution token), deliver results
-# according to this table:
-#
-#                         have    lack    needed
-# existing word            xt     false   false
-# non-existing non-forw   false   true    false
-# forward ref word        false   true    true
-
-# reason for this apparent redundancy of having both need/resolve and satisfy
-# for resolving yet unresolved words is that satisfy can't be used in some
-# situations, when need can. satisfy is unsuited for use while compiling a
-# word - most likely will execution of satisfy result in compiling words, and
-# we can't do that while already compiling a word, because compilation isn't
-# nestable. This disqualifies the use of satisfy for creating forward references
-# which arise during compilation - and that's probably the most common case
-# where forwards references are created. "Need" OTOH will do nicely there, by
-# only registering the need, but leaving it to "resolve" to include code at
-# a more appropriate time.
-
 
 need()  {
    [[ -z "$1" ]]&&missingname
@@ -2581,13 +2503,14 @@ semicolon
 
 primitive 'transient'   'transients+=("$currentwid $lastword")'
 
-# arg1: wod
+# arg1: wid
+
 initwordlist()  {                                                    # empty and vector
-   declare -gA "flags_$tmp=()"
-   declare -gA "wordlist_$tmp=()"
+   declare -gA "flags_$1=()"
+   declare -gA "wordlist_$1=()"
 }
 
-colon 'addwordlist'                                                 # ( wid -- )
+colon 'addwordlist'                                                  # ( wid -- )
    pop  'tmp'
    code 'initwordlist "$tmp"'
    code 'wordlists+=("$tmp")'
@@ -2805,6 +2728,15 @@ colon 'version'                                                      # ( -- u1 u
    push '${version[1]}'
    push '${version[2]}'
 semicolon
+
+#functional alternative. keeping as example
+#for words which push more than 3 items
+#colon 'version'                                                      # ( -- u1 u2 u3 )
+#   code 's=( ${s[@]:0:sp+1} ${version[@]})'
+#   code '((sp+=3))'
+#semicolon
+
+
 
 
 # ----- former yoda.core primitives ---------------------- #fold01

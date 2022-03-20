@@ -399,10 +399,9 @@ word()  {
 # delimiter passed as arg1.
 # leading spaces aren't removed from remainder of line.
 parse()  {
-   word="${line%%"${1}"*}"
-   [[ -z "$1" ]] && word="$line"
+   [[ -z "$1" ]] && word="$line" || word="${line%%"${1}"*}"
    line="${line#"${word}"}"
-   line="${line#"$1"}"
+   [[ ${line:0:1} == $1 ]] && line="${line:1}"
 }
 
 # ----- compiler ----------------------------------------- #fold00
@@ -628,7 +627,7 @@ newerror() {
 
 newerror "noerror"         "no error"
 newerror "missingname"     "no or empty name"
-newerror "missing"         "missing input"
+newerror "missing"         "missing"
 newerror "stackunderflow"  "stack underflow"
 newerror "notfound"        "not found:"
 newerror "nosource"        "no source for"
@@ -750,33 +749,48 @@ ctrl_char() {
 }
 
 
-add_pattern "string_single_dquote"                                   # "string"
+#add_pattern "string_single_dquote"                                   # "string"
 string_single_dquote()  {
    [[ "${char1}${tail:0-1}" == '""' ]] || return
    (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
    stateless "ss+=(\"${tail:0:-1}\")"
 }
 
-add_pattern "string_multi_dquote"                                    # "multi word string"
+#add_pattern "string_multi_dquote"                                    # "multi word string"
 string_multi_dquote()  {
    [[ "$char1" == '"' ]] || return
    parse '"'                                                         # parses into variable "word"
    stateless "ss+=(\"$tail $word\")"                                 # compile: compile code to add string to string stack
 }
 
-add_pattern "string_single_squote"                                   # 'string'
-string_single_squote()  {
-   [[ "${char1}${tail:0-1}" == "''" ]] || return
-   (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-   stateless  "ss+=('${tail:0:-1}')"
+
+add_pattern "string_dquote"                                          # "string", "multi string"
+string_dquote()  {
+   [[ "$char1" == '"' ]] || return
+   if [[ "${tail:0-1}" == '"' ]]; then                               # "string"
+      tmp="${tail:0:-1}"
+   else                                                              # 'string multi'
+      parse '"' || missing "closing double quotes"                   # parses into variable "word"
+      tmp="$tail $word"
+   fi
+   stateless "ss+=(\"$tmp\")"
 }
 
-add_pattern "string_multi_squote"                                    # 'multi word string'
-string_multi_squote()  {
+
+add_pattern "string_squote"                                          # 'string', 'multi string'
+string_squote()  {
    [[ "$char1" == "'" ]] || return
-   parse "'"                                                         # parses into variable "word"
-   stateless "ss+=('$tail $word')"
+   if [[ "${tail:0-1}" == "'" ]]; then                               # 'string'
+      tmp="${tail:0:-1}"
+   else                                                              # 'string multi'
+      parse "'" || missing "closing single quote"                    # parses into variable "word"
+      tmp="$tail $word"
+   fi
+   stateless "ss+=('$tmp')"
 }
+
+
+
 
 add_pattern "hashbang"                                               # #!hashbang
 hashbang()  { [[ "${word:0:2}" == '#!' ]] && line=""; }
@@ -2353,7 +2367,7 @@ primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
 # becomes sometimes hard when using ' ' for characters' ASCIIs
 # ( -- c )
 colon 'char'
-   code 'word || missing'
+   code 'word || missing "character"'
    code '((s[++sp]=asc["\\${word:0:1}"]))'
 semicolon
 inline

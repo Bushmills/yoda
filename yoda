@@ -156,9 +156,9 @@ declare -i maxuint="maxint|msb"
 declare -i true="maxuint"
 declare -i false=0
 declare -i compiling="false"                                         # state flag: interpreting or compiling
+declare -l lastword=""                                               # most recently created word, set by defining words
 line=""                                                              # source line being worked on. modified during parsing and processing
 word=""                                                              # bl delimited string from line currently being processed
-lastword=""                                                          # most recently created word, set by defining words
 
 # xeditor runs detached from yoda process and doesn't block input
 # therefore an xeditor should open its own window
@@ -254,7 +254,7 @@ compiler_init()  {
 # arg2: function name
 # NOTE: leave it to header to prepend $nameprefix.
 header()  {
-   lastword="${1,,}"
+   lastword="$1"
    [[ -z "${current["$lastword"]}" ]] ||
       echo "redefining $lastword"
    current["$lastword"]="$2"                                         # associate word with name
@@ -512,14 +512,14 @@ semicolon()  {
       eval "${conclude[nextconclude]}"
    done
    compile                                                           # compilation is gathered in an array raw. Only
-   compiling="$false"                                                # when semicolon completes compilation, is
+   ((compiling=false))                                               # when semicolon completes compilation, is
 }                                                                    # a function created from contents of array.
 
 
 constant()  {
-   delayheader "${1,,}" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
+   delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    push "$2"
-   body[xt]="$dp"
+   ((body[xt]=dp))
    semicolon
    inline
 }
@@ -659,16 +659,16 @@ declare -ai exists                                                   # result ar
 # arg1:word  arg2+:wids
 # returns: exists[0]=0|xt, [1]=flags,  [2]=wid where word was found
 exists()  {
-   local context word="$1"                                           # this is what we're looking for
+   local context word="${1,,}"                                       # this is what we're looking for
    shift
    for wid in "$@"; do                                               # in these word lists
       declare -n context="wordlist_$wid"                             # make next wordlist visible
       declare -n flags                                               # appease shellcheck
       declare -n flags="flags_$wid"
-      [[ -n "${context[${word,,}]}" ]] && {                              # word found in it?
+      [[ -n "${context[${word}]}" ]] && {                              # word found in it?
          exists=(                                                    # yes: return xt, flags and wid as result
-            "${context[${word,,}]##*_}"
-            "${flags[${word,,}]}"
+            "${context[${word}]##*_}"
+            "${flags[${word}]}"
             "$wid"
             )
          return 0
@@ -749,29 +749,35 @@ ctrl_char() {
    stateless "s[++sp]=\"$(($(printf "%d" "'$tail'")&31))\""
 }
 
-string()  {
-   stateless "ss+=('$*')"
-}
-string_single()  {
-   [[ "${char1}${tail:0-1}" == "$1" ]] || return
-   (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-   string "${tail:0:-1}"
-}
-
-string_multi()  {
-   [[ "$char1" == "$1" ]] || return
-   parse "$1"                                                        # parses into variable "word"
-   string "$tail" "$word"                                            # compile: compile code to add string to string stack
-}
 
 add_pattern "string_single_dquote"                                   # "string"
-string_single_dquote()  { string_single '""'; }
-add_pattern "string_single_squote"                                   # 'string'
-string_single_squote()  { string_single "''"; }
+string_single_dquote()  {
+   [[ "${char1}${tail:0-1}" == '""' ]] || return
+   (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
+   stateless "ss+=(\"${tail:0:-1}\")"
+}
+
 add_pattern "string_multi_dquote"                                    # "multi word string"
-string_multi_dquote()  { string_multi '"'; }
+string_multi_dquote()  {
+   [[ "$char1" == '"' ]] || return
+   parse '"'                                                         # parses into variable "word"
+   stateless "ss+=(\"$tail $word\")"                                 # compile: compile code to add string to string stack
+}
+
+add_pattern "string_single_squote"                                   # 'string'
+string_single_squote()  {
+   [[ "${char1}${tail:0-1}" == "''" ]] || return
+   (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
+   stateless  "ss+=('${tail:0:-1}')"
+}
+
 add_pattern "string_multi_squote"                                    # 'multi word string'
-string_multi_squote()  { string_multi "'"; }
+string_multi_squote()  {
+   [[ "$char1" == "'" ]] || return
+   parse "'"                                                         # parses into variable "word"
+   stateless "ss+=('$tail $word')"
+}
+
 add_pattern "hashbang"                                               # #!hashbang
 hashbang()  { [[ "${word:0:2}" == '#!' ]] && line=""; }
 add_pattern "shellcommand"                                           # >shell command
@@ -852,19 +858,20 @@ evaluate()  {
    while [[ -n "$line" ]]; do                                        # still more to process on line (parsing removes strings from line)
       ((error || (sp<0)))&&break
       word || continue                                               # parse white space delimited word.
+      local wordlower="${word,,}"
 # examine compiler wordlist first
       if ((compiling)); then                                         # word wasn't found. search state specific vocabularies
-         [[ -z "${compiler["$word"]}" ]] || {                        # found in in compiler while compiling
-            ${compiler["$word"]}                                     # word in there are inherently "immediate", therefore they're executed here
+         [[ -z "${compiler["$wordlower"]}" ]] || {                   # found in in compiler while compiling
+            ${compiler["$wordlower"]}                                # word in there are inherently "immediate", therefore they're executed here
             continue                                                 #     because that also deals with inline compilation.
          }
-         [[ -z "${unresolved["$word"]}" ]] || {                      # found in unresolved while compiling
-            code "${unresolved[$word]}"                              # compile it
+         [[ -z "${unresolved["$wordlower"]}" ]] || {                 # found in unresolved while compiling
+            code "${unresolved[$wordlower]}"                         # compile it
             continue
          }
       fi
 # --- search word in order ---
-      exists "$word" "${order[@]}" && {                              # stateless word found?
+      exists "$wordlower" "${order[@]}" && {                         # stateless word found?
          tmp="${exists[0]}"
          ((compiling)) && {
             ((exists[1]&inline)) && {
@@ -887,22 +894,20 @@ evaluate()  {
 # --- forward reference?
       (( m[forwardrefs] )) && {                                      # forward references enabled?
          ((compiling)) && {                                          # and compiling?
-            forwardref "$word" "$lastword"                           #     create a forward reference.
-            code "${unresolved["${word,,}"]}"                        #     compile dangling call to unresolved name.
+            forwardref "$wordlower" "$lastword"                      #     create a forward reference.
+            code "${unresolved["$wordlower"]}"                       #     compile dangling call to unresolved name.
             continue
          }
       }
 # --- can be included?
       (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
-         satisfy1 "$word" && {                                       # attempt to load word
-            exists "$word" "${order[@]}" && {                        # load was successful. Execution now depends on whether the wordlist it was compiled
-               name "${exists[0]}"                                   # into is in search order. Therefore search order is searched for word.
-               $name                                                 # word found in search order -> execute
-               continue
-            }
-            notfound "$word"                                         # word not found: error (though it was compiled successfully)
-         }                                                           # condition happens when source compiles to wordlist, then closes it,
-      }                                                              # in which case trying to execute that word, even while present, throws error too.
+         satisfy1 "$wordlower" && {                                  # attempt to load word
+            exists "$wordlower" "${order[@]}" || notfound "$word"    # word not found: error (though it was compiled successfully)
+            name "${exists[0]}"                                      # into is in search order. Therefore search order is searched for word.
+            $name                                                    # word found in search order -> execute
+            continue
+         }
+      }
 # --- can be shelled to?
       ((m[shell])) && {                                              # done unless shell flag was set
          stateless "${word} ${line}" ||                              # in which case execution as shell command is attempted (cmd not found returns 127)
@@ -2519,7 +2524,7 @@ semicolon
 dotwordlists()  {
    local wid
    for wid in "${wordlists[@]}"; do
-      printf "%s " "${strings[wid]}"
+      printf "%5d %s\n" "$wid" "${strings[wid]}"
    done
 }
 primitive '.wordlists'  'dotwordlists'

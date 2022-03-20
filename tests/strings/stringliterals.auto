@@ -1,0 +1,6 @@
+testing stringliterals
+
+t{ "abc"  s( abc) pack$ $= -> true }t
+t{ 'def'  s( def) pack$ $= -> true }t
+t{ "'" asc   -> '' }t
+t{ "123" evaluate$  -> '123' evaluate$ }t

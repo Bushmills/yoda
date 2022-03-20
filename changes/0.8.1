@@ -1,2 +1,10 @@
 version 0.8.1, 2022mar19,04:55
 trapping all cases where parsed name was expected but none found.
+reviewed case insensitivity
+undone factoring of four string types ("single" "multiple words"  'single'  'multi word')
+   and split them into discrete words again. It was hard to reuse a single word dealing
+   with all cases when " or ' were part of strings. Will try different factoring, for now
+   the different types of strings are functional again with " and ' as part of the strings
+   Change to before double quoted strings will expand during execution, single quoted
+   strings won't, pretty much how you'd expect bash to deal with those.
+.wordlists shows wids along with name of wordlists.

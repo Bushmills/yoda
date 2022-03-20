@@ -1,0 +1,11 @@
+name:                indent$
+stack:               ( u -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+description:         prepends u spaces to $1
+
+standard:            no
+deviation:           standard has no equivalent

@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.8.1"
+v="0.8.2"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -408,15 +408,15 @@ parse()  {
 
 # arg1: xt
 codebody()  {                                                        # inline compiler
+   local i codebody
    name "$1"                                                         # xt to function name
-   while read -r tmp; do
-      [[ "${tmp:0:1}" == "{" ]] &&
-      while read -r tmp; do
-         [[ "${tmp:0:1}" == "}" ]] && break
-         code "$tmp"
-      done
-   done < <(type "$name")
+   readarray -t codebody < <(type "$name")
+   for ((i=0; i<${#codebody[@]}; i++)); do
+      [[ "${codebody[i]:0:1}" == " " ]] &&
+      code "${codebody[i]}"
+   done
 }
+
 
 # rewrite run time semantics of most recently defined word
 # arg1+: new run time code.
@@ -749,21 +749,6 @@ ctrl_char() {
 }
 
 
-#add_pattern "string_single_dquote"                                   # "string"
-string_single_dquote()  {
-   [[ "${char1}${tail:0-1}" == '""' ]] || return
-   (( ${#tail} )) || return                                          # prevent false matches with leading spaces where a single " is both 0:1 and 0-1
-   stateless "ss+=(\"${tail:0:-1}\")"
-}
-
-#add_pattern "string_multi_dquote"                                    # "multi word string"
-string_multi_dquote()  {
-   [[ "$char1" == '"' ]] || return
-   parse '"'                                                         # parses into variable "word"
-   stateless "ss+=(\"$tail $word\")"                                 # compile: compile code to add string to string stack
-}
-
-
 add_pattern "string_dquote"                                          # "string", "multi string"
 string_dquote()  {
    [[ "$char1" == '"' ]] || return
@@ -788,8 +773,6 @@ string_squote()  {
    fi
    stateless "ss+=('$tmp')"
 }
-
-
 
 
 add_pattern "hashbang"                                               # #!hashbang
@@ -1078,28 +1061,35 @@ wordsplus() {
 
 
 
+
+see1()  {
+   local i see s0
+   readarray -t see < <(type "$1")
+   echo "{"
+   for ((i=0; i<${#see[@]}; i++)); do
+      [[ "${see[i]:0:1}" == " " ]] || continue
+      s0="${see[i]}"
+      [[ "${s0}" == "${nameprefix}_"* ]] || {
+         [[ "${s0}" == *"${nameprefix}_"* ]] && {
+         tmp="${s0#*"${nameprefix}"_}"
+         s0="${s0%%"${nameprefix}"_*}${names[${tmp%;}]}"
+         }
+      }
+      printf "%s\n" "$s0"
+   done
+   echo "}"
+}
+
 see()  {
-   local context wid name found=0 s0 i
+   local context wid name found=0
    word || missingname
-   word=${word,,}
    for wid in "${order[@]}" "$compilerwid"; do
       declare -n context="wordlist_$wid"
-      [[ -z "${context["$word"]}" ]] || {
+      name="${context["${word,,}"]}"
+      [[ -z "$name" ]] || {
          printf "found in %s:\n" "${strings[wid]}"
-         name="${context["$word"]}"
-         [[ -z "$name" ]] && notfound
+         see1 "$name"
          ((found++))
-         readarray -t see < <(type "$name")
-         for ((i=0; i<${#see[@]}; i++)); do
-            s0="${see[i]}"
-            [[ "${s0}" == "${nameprefix}_"* ]] || {
-               [[ "${s0}" == *"${nameprefix}_"* ]] && {
-               tmp="${s0#*"${nameprefix}"_}"
-               s0="${s0%%"${nameprefix}"_*}${names[${tmp%;}]}"
-               }
-            }
-            printf "%s\n" "$s0"
-         done
       }
    done
    ((found))||notfound "$word"
@@ -1122,8 +1112,7 @@ primitive 'see' 'see'
 # compiled by create.
 dodoes()  {                                                          # append does> part to original address pushing create semantics
    ${current[$lastword]}
-   use  "s[++sp]=\"${s[sp--]}\"
-         ${doescode[${FUNCNAME[1]}]}"
+   use  "s[++sp]=\"${s[sp--]}\"; ${doescode[${FUNCNAME[1]}]}"
 }
 
 # detokeniser detects and reacts to this "$does" tagged code:
@@ -2109,6 +2098,11 @@ colon 'join$'
 semicolon
 inline
 
+colon 'indent$'                                                      # ( u -- ) ( $1 -- $2 )
+   code 'ss[-1]="$(printf "%${s[sp]}s")${ss[-1]}"'
+   code '((sp--))'
+semicolon
+
 colon '$='
    code '[[ ${ss[-1]} != ${ss[-2]} ]]'
    push '(-$?)&true'
@@ -2141,7 +2135,7 @@ semicolon
 inline
 
 colon '$,'
-   code 'strings[sdp++]="${ss[s-1]}"'
+   code 'strings[sdp++]="${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
 inline
@@ -2208,7 +2202,7 @@ colon 'pack$'
 semicolon
 
 primitive 'append$' 'ss[-1]+="${char[s[sp--]]}"'                     # ( c -- ) ( string: $1 -- $2 )
-primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[s-1]}"'           # ( c -- ) ( string: $1 -- $2 )
+primitive 'prepend$' 'ss[-1]="${char[s[sp--]]}${ss[-1]}"'            # ( c -- ) ( string: $1 -- $2 )
 
 
 # ----- environment--------------------------------------- #fold01
@@ -2651,7 +2645,6 @@ colon 'command$'
    code 'unset "ss[-1]"'
    code 'unset "ss[-1]"'
 semicolon
-
 
 
 # ----- files -------------------------------------------- #fold01

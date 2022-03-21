@@ -8,5 +8,7 @@ category:            strings, environment
 description:         read contents of environment variable with name on string stack
                      the contents read are pushed as $2 to string stack.
 
+notes:               as alternative, double quote the environment variable, to let
+                     it expand:  "$USER" type$
 standard:            no
 deviation:           standard has no equivalent

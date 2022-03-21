@@ -1,0 +1,11 @@
+name:                -trailing$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+description:         removes all trailing whitespace from string $1
+
+standard:            no
+deviation:           standard has no equivalent

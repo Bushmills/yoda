@@ -1,0 +1,11 @@
+name:                trim$
+stack:               ( -- )
+return stack:        ( -- )
+string stack:        ( $1 -- $2 )
+contexts:            stateless
+category:            strings
+
+description:         removed all leading and trailing white space from string $1
+
+standard:            no
+deviation:           standard has no equivalent

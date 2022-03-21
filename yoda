@@ -370,7 +370,8 @@ optimise()  {                                                        # run code 
         unset "target[-1]"                                           # will cause to compile without any does run time action. no code behind does>
      fi                                                              # results in no additional action at all, therefore the whole does> can be dropped.
    }
-}
+   raw=()                                                            #äempty raw queue indicates that no compilation is in progress.
+}                                                                    # satisfy will refuse including while compiling to prevent nesting of compilation
 
 # ----- line parser -------------------------------------- #fold00
 
@@ -458,17 +459,12 @@ put()   { code "((s[sp]=$1))"; }                                     # push with
 push()  { code "((s[++sp]=$1))"; }
 get()   { code "(($1=s[sp]))"; }                                     # pop without point dec
 pop()   { code "(($1=s[sp--]))"; }
-call()  { code "${nameprefix}_$1"; }
-execute() {
+call()  { code "${nameprefix}_$1"; }                                 # compile call to xt
+execute() {                                                          # compile call to word name
    tmp="${context[$1]}"
-   [[ -z "$tmp" ]] && notfound "$1"
+   [[ -n "$tmp" ]] || notfound "$1"
    code "$tmp"
 }
-
-# variable last doesn't exist yet, but is used in header, and
-# can't be defined earlier, because defining it calls header.
-# remedy: remember here, allot cell, define it as constant later.
-#((last=dp++))
 
 # arg1: wordname
 # arg2: filehandle
@@ -514,7 +510,8 @@ semicolon()  {
    ((compiling=false))                                               # when semicolon completes compilation, is
 }                                                                    # a function created from contents of array.
 
-
+# arg1: word
+# arg2: val
 constant()  {
    delayheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    push "$2"
@@ -524,7 +521,7 @@ constant()  {
 }
 
 
-# arg1=name  arg2=val
+# arg1=name  arg2=optional value
 # initialized with 0 or optional arg2
 variable()  {
    local linenr="${linenr:-${BASH_LINENO[0]}}"
@@ -558,8 +555,7 @@ constant 'cell'               "1"
 
 # may not inline: value may change, inlined code won't
 value()  {
-   local linenr="${linenr:-${BASH_LINENO[0]}}"
-   nowheader "$1" "$filehandle" "$linenr"
+   nowheader "$1" "$filehandle" "${linenr:-${BASH_LINENO[0]}}"
    use "((s[++sp]=$2))"
 }
 
@@ -567,15 +563,11 @@ value()  {
 # ----- errors, traps, entry points----------------------- #fold00
 
 warm()  {
-   filehandle=0                                                      # 1=yoda. 0=tty.  >1=loaded source
-   line=""                                                           # signal to evaluate to stop evaluation of current line
-   linenr="-1"                                                       # signal to from to stop sending more lines to evaluate
-   compiling="$false"                                                # interpret
-   error=0
    r=() rp=0
    ((sp<0))&&s=(0) sp=0                                              # always clear stack underflow
-   ((clean))&&s=(0) sp=0 ss=()                                       # empty stacks
-   ((m[base]=10))                                                    # set decimal if base exists
+   ((clean))&&s=(0) sp=0 ss=()
+   ((filehandle=0, linenr=-1, compiling=false, error=0, m[base]=10))
+   line=""                                                           # signal to evaluate to stop evaluation of current line
    compiler_init
 }
 
@@ -664,7 +656,7 @@ exists()  {
       declare -n context="wordlist_$wid"                             # make next wordlist visible
       declare -n flags                                               # appease shellcheck
       declare -n flags="flags_$wid"
-      [[ -n "${context[${word}]}" ]] && {                              # word found in it?
+      [[ -n "${context[${word}]}" ]] && {                            # word found in it?
          exists=(                                                    # yes: return xt, flags and wid as result
             "${context[${word}]##*_}"
             "${flags[${word}]}"
@@ -700,7 +692,7 @@ number_radix()  {                                                    # base pass
       return 0
    }
    ((${#left}>1))||return                                            # leading decimal point: not a number
-   [[ ${left:0-1} == . ]]&&left="${left:0:-1}"                       # remove dot
+   [[ ${left:0-1} == . ]]&&left="${left:0:-1}"                       # remove decimal point
    word="${left}${tail}"                                             # recombine number without decimal point
    [[ -z "${word//[$legaldigits]/}" ]]||return                       # number contains other chars than legal digits: not a number
    ((dpl=${#tail}))                                                  # write dot position to dpl
@@ -777,6 +769,7 @@ string_squote()  {
 
 add_pattern "hashbang"                                               # #!hashbang
 hashbang()  { [[ "${word:0:2}" == '#!' ]] && line=""; }
+
 add_pattern "shellcommand"                                           # >shell command
 shellcommand()  {
    [[ "$char1" == '>' ]] || return
@@ -814,6 +807,7 @@ forwardref()  {
 # satisfy one single reference, passed as arg1.
 # tries by loading source immediately if available.
 # if source isn't available, a forward ref will be generated.
+
 satisfy1()  {
    exists "$1" "${order[@]}" && return                               # word already defined, nothing to do
    local word="${1,,}"
@@ -1060,8 +1054,6 @@ wordsplus() {
 }
 
 
-
-
 see1()  {
    local i see s0
    readarray -t see < <(type "$1")
@@ -1069,8 +1061,8 @@ see1()  {
    for ((i=0; i<${#see[@]}; i++)); do
       [[ "${see[i]:0:1}" == " " ]] || continue
       s0="${see[i]}"
-      [[ "${s0}" == "${nameprefix}_"* ]] || {
-         [[ "${s0}" == *"${nameprefix}_"* ]] && {
+      [[ "$s0" == "${nameprefix}_"* ]] || {
+         [[ "$s0" == *"${nameprefix}_"* ]] && {
          tmp="${s0#*"${nameprefix}"_}"
          s0="${s0%%"${nameprefix}"_*}${names[${tmp%;}]}"
          }
@@ -1167,23 +1159,20 @@ semicolon                                                            # as trash 
 
 # ----- deferred words ----------------------------------- #fold01
 
-# new deferred words are initialised to noop
-primitive 'noop' '(())'
-
 
 # NOTE: be aware of possibility to defer an inlined word by xt,
 # then trash header of inlined word. trashing function body in
 # that situation will leave the deferred word with a dangling xt.
 # header flag "protect" disables code trashing, so does not setting
 # the word to "inline"
-# arg1: name of deferred word
 
-# because a deferred word is neither defined by create nor does it
-# correpond with a memory address which hold the xt of bound word,
-# but defer! and defer@ are facilitated by those, defer simulates
-# memory boundedness. So (will) do is, defer@, defer!
+# new deferred words are initialised to noop
+((noop_xt=xt))                                                       # used when creating deferred words
+primitive 'noop' '(())'
+
+# arg1: name of deferred word
 defer()  {
-   ((body[xt]=dp, m[dp++]=${current[noop]#${nameprefix}_}))
+   ((body[xt]=dp, m[dp++]=$noop_xt))
    local linenr="${linenr:-${BASH_LINENO[0]}}"
    nowheader "$1" "$filehandle" "$linenr"
    use "(())"
@@ -1211,7 +1200,7 @@ semicolon
 # ( xt -- ) ( s: word )
 colon 'is'
    code 'word || missingname'
-   code 'exists "$word" "${order}" || notfound "$word"'
+   code 'exists "$word" "${order[@]}" || notfound "$word"'
    code 'code "((m[${body[exists[0]]}]=s[sp]))"'
    code 'name "\${s[sp--]}"'
    code 'code "apply \"${exists[0]}\" \"$name\""'
@@ -1220,7 +1209,7 @@ compiled
 
 colon 'is'
    code 'word || missingname'
-   code 'exists "$word" "${order}" || notfound "$word"'
+   code 'exists "$word" "${order[@]}" || notfound "$word"'
    pop  's0'
    code '((m[body[exists[0]]]=s0))'
    code 'name "$s0"'

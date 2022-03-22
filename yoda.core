@@ -2,27 +2,13 @@ only forth definitions
 
 \ ----- defining words -----------------------------------
 
-: create                      ( -- ) ( s: word -- )      \ creation
-   here constant  ;           ( -- a )                   \ execution
-
-: create$                     ( --)  ( $1 -- )           \ creation
-   here constant$  ;          ( -- a )                   \ execution
-
-: variable                    ( -- ) ( s: word -- )      \ creation
-   create cell allot  ;       ( -- a )                   \ execution
-
-: primitive                   ( s: word -- ) ( $1 -- )   \ creation
-      code
-      postpone code,
-      ;code  inline  ;
-
-: buffer:                     ( a -- ) ( s: word -- )    \ creation
-      create allot  ;         ( -- a )                   \ execution
-
+: create     here constant  ;                            \ create: ( -- ) ( s: word -- )  execute: ( -- a )
+: create$    here constant$  ;                           \ create: ( --)  ( $1 -- ) execute: ( -- a )
+: variable   create cell allot ;                         \ create: ( -- ) ( s: word -- ) execute: ( -- a )
+: primitive  code  postpone code,  ;code inline  ;       \ create: ( $1 -- ) ( s: word -- )
+: buffer:    create allot  ;                             \ create: ( a -- ) ( s: word -- ) execute ( -- a )
 ' have$ alias xt                                                                                   inline
-: noname                      ( -- xt )
-      last$ dup$ xt
-      protect trash$  ;
+: noname     ( -- xt )  last$ dup$ xt  protect trash$  ;
 
 \ ----- system constants ---------------------------------
 
@@ -36,8 +22,8 @@ only forth definitions
 
 \ ----- arithmetics --------------------------------------
 
-' lshift alias <<                                                                                  inline
-' rshift alias >>                                                                                  inline
+' lshift alias <<   ( x1 u -- x2 )                                                                 inline
+' rshift alias >>   ( x1 u -- x2 )                                                                 inline
 : /mod         ( n1 n2 -- n3 n4 )                     1 -rot  */mod                       ;                 \ divisions are truncated, symmetric
 : */           ( n1 n2 n3 -- n4 )                     */mod nip                           ;        inline
 : /            ( n1 n2 -- n3 )                        /mod nip                            ;        inline
@@ -72,8 +58,8 @@ defer query$                                          ' simplequery$ is query$
 : type         ( c-addr u -- )                        pack$ type$                         ;        inline
 : ltype$       ( u -- ) ( $1 -- )                     dup$ type$ count$ - spaces          ;
 : rtype$       ( u -- ) ( $1 -- )                     dup$ count$ - spaces type$          ;
-: c-addr       ( -- a )   ( $1 -- )                   here dup 1+ unpack$ over c!         ;
-: c-addr,u     ( -- a u ) ( $1 -- )                   here dup    unpack$                 ;
+: c-addr       ( -- a )   ( $1 -- )                   here dup 1+ unpack$ over c!         ; transient
+: c-addr,u     ( -- a u ) ( $1 -- )                   here dup    unpack$                 ; transient
 : parse        ( c -- c-addr u )                      parse$ c-addr,u                     ;
 : parse-name   ( -- c-addr u )                        word$  c-addr,u                     ;
 : source       ( -- c-addr u )                        "tib" env$ c-addr,u                 ;
@@ -136,7 +122,6 @@ trash x
 
 \ ----- environment --------------------------------------
 
-: newwordlist$  ( -- wid )  ( $1 -- )                 here$ $, dup addwordlist            ;
 "environment" newwordlist$ constant environment
 : environment?    ( c-addr u -- false | i*x true )    environment searchwordlist
                                                       dup lest count scrape true          ;

@@ -1025,7 +1025,7 @@ compiled
 
 
 colon ':'
-   code 'word || missingname'                                        # parse space delimited word from input stream
+   code 'word||missingname'                                          # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
    push '${#raw[@]}'                                                 # allow check of empty function
    push "$magic"                                                     # allow check of proper nesting
@@ -1036,11 +1036,18 @@ semicolon
 # ----- diagnostics -------------------------------------- #fold01
 
 words() {
-   local context
+   local context width word columns i=0
    declare -n context="wordlist_${order[0]}"
    (( ${#context[@]} )) && {
-      printf  "%s  " "${!context[@]}"
-      printf "\n"
+      for word in "${!context[@]}"; do                               # determine longest word name
+         (( ${#word} > width )) && width="${#word}"
+      done
+      ((width+=2))                                                   # add spacing
+      ((columns=${COLUMNS:-80}/width))
+      for word in "${!context[@]}"; do
+         printf  "%-${width}s" "$word"                               # output words width padded
+         ((++i % columns)) || printf "\n"
+      done
    }
 }
 
@@ -2681,6 +2688,7 @@ colon 'x'                                                            # : #
    code '((tmp>57))&&((tmp+=39))'                                    # dup '9 > 39 and +
    code 'ss[-1]="${char[tmp]}${ss[-1]}"'                             # hold
 semicolon                                                            # ;
+inline
 
 primitive 'random'      '((s[++sp]=SRANDOM&true))'                   # ( -- u )
 primitive 'realtime'    '((s[++sp]=${EPOCHREALTIME//[,.]/}&true))'   # ( -- u )     \ a 51 bit microseconds epoch

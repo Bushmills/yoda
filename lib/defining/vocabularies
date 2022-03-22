@@ -1,10 +1,6 @@
 provides: vocabulary
 
-needed vocabulary unless omit
-need newwordlist$
 : vocabulary  ( -- ) ( stream: word )
-    word$
-    dup$ newwordlist$
-    constant$                                         \ constant points to string dp where voc name will be stored
-    does> set-context                                 \ index to vocabulary name is also the vocabulary "handle"
-;                                                     \ (means also, printing a voc name from "handle":   $@ type$
+    word$ dup$ newwordlist$ constant$           \ constant points wordlist name
+    does> set-context                           \ that addr is also the wid
+;

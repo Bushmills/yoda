@@ -1,10 +1,9 @@
 provides: screensize columns lines
 once
 
-: lines    [ "LINES" ]  push,  ;
-: columns  [ "COLUMNS" ]  push,  ;
-
-: screensize   ( -- x y )    columns   lines ;
+: lines        ( -- u )   [ "LINES" ]    push,  ; inline
+: columns      ( -- u )   [ "COLUMNS" ]  push,  ; inline
+: screensize   ( -- x y ) columns lines         ; inline
 
 \ initialise LINES and COLUMNS environment variables
 >read -ert0.001

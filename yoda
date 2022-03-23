@@ -630,7 +630,7 @@ newerror "unstructured"    "unstructured: missing"
 newerror "shellerror"      "shell returned"
 newerror "filenotfound"    "file not found:"
 
-
+# NOTE: recently
 ctrl-c()  {                                                          # "break" is configurable item to control
    printf "%s\n" "break"                                             # how yoda responds to break signal.
    ((break == 1))  && exit 1                                         # This is due to not having a clean
@@ -692,10 +692,14 @@ number_radix()  {                                                    # base pass
       stateless "((s[++sp]=$tmp))"                                   # push or compile as single signed or unsigned number
       return 0
    }
-   ((${#left}>1))||return                                            # leading decimal point: not a number
+   ((${#left}>1))|| {
+     return 1                                            # leading decimal point: not a number
+   }
    [[ ${left:0-1} == . ]]&&left="${left:0:-1}"                       # remove dot
    word="${left}${tail}"                                             # recombine number without decimal point
-   [[ -z "${word//[$legaldigits]/}" ]]||return                       # number contains other chars than legal digits: not a number
+   [[ -z "${word//[$legaldigits]/}" ]]||{
+      return 1                      # number contains other chars than legal digits: not a number
+   }
    ((dpl=${#tail}))                                                  # write dot position to dpl
    for ((j=0; j<${#word};j++)); do
       digit="${word:j:1}"
@@ -731,19 +735,19 @@ prefixednumber()  {                                                  # base over
 
 add_pattern "tick_char"                                              # 'c'  and   'c
 tick_char()  {
-   [[ ${word} == \'? || ${word} == \'?\' ]] || return
+   [[ ${word} == \'? || ${word} == \'?\' ]] || return 1
    stateless "s[++sp]=\"$(printf "%d" "'$tail'")\""
 }
 
 add_pattern "ctrl_char"                                              # ^c and ^C
 ctrl_char() {
-   [[ ${word,,} == ^[a-z\[] ]] || return
+   [[ ${word,,} == ^[a-z\[] ]] || return 1
    stateless "s[++sp]=\"$(($(printf "%d" "'$tail'")&31))\""
 }
 
 add_pattern "string_dquote"                                          # "string", "multi string"
 string_dquote()  {
-   [[ "$char1" == '"' ]] || return
+   [[ "$char1" == '"' ]] || return 1
    if [[ "${tail:0-1}" == '"' ]]; then                               # "string"
       tmp="${tail:0:-1}"
    else                                                              # 'string multi'
@@ -756,7 +760,7 @@ string_dquote()  {
 
 add_pattern "string_squote"                                          # 'string', 'multi string'
 string_squote()  {
-   [[ "$char1" == "'" ]] || return
+   [[ "$char1" == "'" ]] || return 1
    if [[ "${tail:0-1}" == "'" ]]; then                               # 'string'
       tmp="${tail:0:-1}"
    else                                                              # 'string multi'
@@ -767,13 +771,12 @@ string_squote()  {
 }
 
 
-
-
 add_pattern "hashbang"                                               # #!hashbang
 hashbang()  { [[ "${word:0:2}" == '#!' ]] && line=""; }
+
 add_pattern "shellcommand"                                           # >shell command
 shellcommand()  {
-   [[ "$char1" == '>' ]] || return
+   [[ "$char1" == '>' ]] || return 1
    tmp="$tail"                                                       # >foo... ->  foo...
    if [[ ${tmp:0-1} == ";" ]]; then                                  # semicolon attached to command
       tmp="${tmp:0:-1}"                                              # foo; -> foo
@@ -1014,7 +1017,7 @@ semicolon
 compiled
 
 
-colon ':'
+colon ':'                                                            # ( s: word )
    code 'word || missingname'                                        # parse space delimited word from input stream
    code 'colon "$word"'                                              # generate synthetic name, associate with word
    push '${#raw[@]}'                                                 # allow check of empty function
@@ -1093,7 +1096,7 @@ see()  {
 }
 
 # see word  "decompiles" and shows word.
-primitive 'see' 'see'
+primitive 'see' 'see'                                                # ( -- ) ( s: word )
 
 
 # ----- does> -------------------------------------------- #fold01
@@ -1129,11 +1132,11 @@ primitive 'does>'  'code "dodoes" "$does"';   compiled
 
 create()  {
    code 'word || missingname'
-   code "constant \"\${word}\" \"$1\""                                 # not using single quotes because want $1 to expand
+   code "constant \"\${word}\" \"$1\""                               # not using single quotes because want $1 to expand
 }
 
 
-colon 'constant'
+colon 'constant'                                                     # create: ( x -- ) ( s: word )  exec: ( -- x )
    create '${s[sp--]}'
 semicolon
 inline
@@ -1145,7 +1148,7 @@ createstring()  {
 }
 
 
-colon 'constant$'
+colon 'constant$'                                                    # create: ( x -- ) ( $1 -- )  exec: ( -- x )
    createstring '${s[sp--]}'
 semicolon
 inline
@@ -1153,7 +1156,7 @@ inline
 
 # NOTE: factor code common with header
 # ' foo alias bar
-colon 'alias'
+colon 'alias'                                                        # create: ( xt -- ) ( s: word )
    create ''                                                         # value irrelevant, will point to different function anyway
    code 'where["$lastword"]="${filehandle}:${linenr:-${BASH_LINENO[2]}}"'
    code 'name "${s[sp--]}"'                                          # convert xt to function name
@@ -1167,7 +1170,7 @@ semicolon                                                            # as trash 
 
 # new deferred words are initialised to noop
 ((noop_xt=xt))
-primitive 'noop' '(())'
+primitive 'noop' '(())'                                              # ( -- )
 
 
 # NOTE: be aware of possibility to defer an inlined word by xt,
@@ -1188,14 +1191,13 @@ defer()  {
 }
 
 # example:  defer foo      ' bar is foo
-colon "defer"                                                        # use in yoda program
+colon "defer"                                                        # create: ( -- ) ( s: word )
    code 'word || missingname'
    code 'defer "$word"'
 semicolon
 inline
 
 primitive 'defer@'   '((s[sp]=m[body[s[sp]]]))'                      # ( xt1 -- xt2 )
-
 
 colon 'defer!'                                                       # ( xt1 xt2 -- )
    pop 's0'
@@ -1206,8 +1208,7 @@ colon 'defer!'                                                       # ( xt1 xt2
 semicolon
 
 
-# ( xt -- ) ( s: word )
-colon 'is'
+colon 'is'                                                           # compile: ( -- ) ( s: word ) exec: ( xt -- )
    code 'word || missingname'
    code 'exists "$word" "${order[@]}" || notfound "$word"'
    code 'code "((m[${body[exists[0]]}]=s[sp]))"'
@@ -1216,7 +1217,7 @@ colon 'is'
 semicolon
 compiled
 
-colon 'is'
+colon 'is'                                                           # ( xt -- ) ( s: word )
    code 'word || missingname'
    code 'exists "$word" "${order[@]}" || notfound "$word"'
    pop  's0'
@@ -1227,20 +1228,20 @@ semicolon
 
 # ----- value, to ---------------------------------------- #fold01
 
-colon "value"
+colon "value"                                                        # create: ( x -- ) ( s: word )  exec: ( -- x )
    code 'word || missingname'
    code 'value "$word" "${s[sp--]}"'
 semicolon
 inline
 
-colon 'to'
+colon 'to'                                                           # compile: ( -- ) ( s: word ) exec: ( x -- )
    code 'word || missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
    code 'code "apply \"${exists[0]}\" \"s[++sp]=\${s[sp--]}\""'
 semicolon
 compiled
 
-colon 'to'
+colon 'to'                                                           # ( x -- ) ( s: word )
    code 'word || missingname'
    code 'exists "$word" "${order}" || notfound "$word"'
    code 'apply  "${exists[0]}" "s[++sp]=${s[sp--]}"'
@@ -1252,40 +1253,38 @@ semicolon
 # ----- parameter stack ---------------------------------- #fold01
 
 
-colon 'swap'
+colon 'swap'                                                         # ( x1 x2 -- x2 x1 )
    code '((tmp=s[sp-1]))'
    get 's[sp-1]'
    put  'tmp'
 semicolon
 inline
 
-# s4 s3 s2 s1 -- s2 s1 s4 s3
-colon '2swap'
+colon '2swap'                                                        # ( x1 x2 x3 x4 -- x3 x4 x1 x2 )
    code '((tmp=s[sp-3], s[sp-3]=s[sp-1], s[sp-1]=tmp))'
    code '((tmp=s[sp-2], s[sp-2]=s[sp], s[sp]=tmp))'
 semicolon
 
-# s2 s1 -- s1 s2 s1
-colon 'tuck'                              # s2 s1
-   push 's[sp]'                           # s2 s1 s1
-   code '((s[sp-1]=s[sp-2]))'             # s2 s2 s1
-   get 's[sp-2]'                          # s1 s2 s1
+colon 'tuck'                                                         # ( x1 x2 -- x2 x1 x2 )
+   push 's[sp]'                                                      # s2 s1 s1
+   code '((s[sp-1]=s[sp-2]))'                                        # s2 s2 s1
+   get 's[sp-2]'                                                     # s1 s2 s1
 semicolon
 inline
 
-colon 'rot'
+colon 'rot'                                                          # ( x1 x2 x3 -- x2 x3 x1 )
    get  'tmp'
    code '((s[sp]=s[sp-2], s[sp-2]=s[sp-1], s[sp-1]=tmp))'
 semicolon
 inline
 
-colon '-rot'
+colon '-rot'                                                         # ( x1 x2 x3 -- x3 x1 x2 )
    get  'tmp'
    code '((s[sp]=s[sp-1], s[sp-1]=s[sp-2], s[sp-2]=tmp))'
 semicolon
 inline
 
-colon 'nip'
+colon 'nip'                                                          # ( x1 x2 -- x2 )
    pop 's[sp]'
 semicolon
 inline
@@ -1298,53 +1297,53 @@ inline
 
 # ----- numeric comparison ------------------------------- #fold01
 
-colon '0='
-   put  's[sp]?false:true'                                            # 0->true  x->false
+colon '0='                                                           # ( x -- flag )
+   put  's[sp]?false:true'                                           # 0->true  x->false
 semicolon
 inline
 
-colon '0<>'
-   put  's[sp]?true:false'                                            # 0->0   x->true
+colon '0<>'                                                          # ( x -- flag )
+   put  's[sp]?true:false'                                           # 0->0   x->true
 semicolon
 inline
 
-colon '0<'
-   put  's[sp]&msb?true:false'                                        # &msb: 0->0   msb->true
+colon '0<'                                                           # ( n -- flag )
+   put  's[sp]&msb?true:false'                                       # &msb: 0->0   msb->true
 semicolon
 inline
 
-colon '='
+colon '='                                                            # ( x1 x2 -- flag )
    pop  's0'
    put  's0==s[sp]?true:false'
 semicolon
 inline
 
-colon '<>'
+colon '<>'                                                           # ( x1 x2 -- flag )
    pop  's0'
    put  's0==s[sp]?false:true'
 semicolon
 inline
 
-colon 'u<'
+colon 'u<'                                                           # ( u1 u2 -- flag )
    pop  's0'
    put  '(s[sp]&true)<s0?true:false'
 semicolon
 inline
 
-colon 'u>'
+colon 'u>'                                                           # ( u1 u2 -- flag )
    pop  's0'
    put  '(s[sp]&true)>s0?true:false'
 semicolon
 inline
 
-colon '<'
+colon '<'                                                            # ( n1 n2 -- flag )
    pop  's0'
    code '((sign=((s0^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
    put  '((s0>s[sp]&true)^sign)?true:false'
 semicolon
 inline
 
-colon '>'
+colon '>'                                                            # ( n1 n2 -- flag )
    pop  's0'
    code '((sign=((s0^s[sp])&msb)?1:0))'                              # set bit 0 if signs differ
    put  '((s0<s[sp]&true)^sign)?true:false'
@@ -1365,7 +1364,7 @@ inline
 #  1     $xxx1     true
 
 # ( x1 x2 x3 x4 -- 0 | -1 )
-colon 'd='                                                           # ( d1 d2 -- false | true )
+colon 'd='                                                           # ( d1 d2 -- flag )
   code '((s[sp-3]=((s[sp]==s[sp-2])&&(s[sp-1]==s[sp-3]))?true:false))'
   code '((sp-=3))'
 semicolon
@@ -1383,14 +1382,14 @@ inline
 
 
 # parse input for string delimited by character specified by ASCII value on stack
-colon 'parse$'
+colon 'parse$'                                                       # ( c -- ) ( -- $1 )
    code 'parse "${char[s[sp--]]}"'
    code 'ss+=("$word")'
 semicolon
 inline
 
 # ( -- ) ( -- $1 )
-colon 'word$'
+colon 'word$'                                                        # ( -- ) ( -- $1 )
    code 'word'
     code 'ss+=("$word")'
  semicolon
@@ -1407,21 +1406,20 @@ accept()  {
    keybuf=""
 }
 
-# ( a n1 -- n2 )
-colon 'accept'
+colon 'accept'                                                       # ( a n1 -- n2 )
    code 'accept "${s[sp--]}"'
    code 'unpack "$accept"'
 semicolon
 inline
 
 
-colon 'simplequery$'
+colon 'simplequery$'                                                 # ( -- ) ( -- $1 )
    code 'accept "65535"'
    code 'ss+=("$accept")'
 semicolon
 
 
-colon 'evaluate$'
+colon 'evaluate$'                                                    # ( -- ) ( $1 -- )
    code 'local tib="${ss[-1]}"'
    code 'unset "ss[-1]"'
    code 'evaluate "$tib"'
@@ -1430,12 +1428,11 @@ semicolon
 
 # ----- compiler, dictionary search related -------------- #fold01
 
-primitive '[' '((compiling=false))'; compiled
-primitive ']' '((compiling=true))'
+primitive '[' '((compiling=false))'; compiled                        # ( -- )
+primitive ']' '((compiling=true))'                                   # ( -- )
 
-# ( -- a )                                                           # a bit tricky here: a variable "state" already exists, but without
-colon 'state'                                                        # purpose yet. especially, it doesn't reflect compilation state.
-   push 'state'                                                      # So first its mem address is pushed.
+colon 'state'                                                        # ( -- a )
+   push 'state'                                                      # mem address is pushed.
    code '((m[state]=compiling))'                                     # then value of compiling is stored so that state reflects actual state.
    trash 'state'                                                     # as header of colon word state doesn't yet exist, this trashes the variable.
 semicolon                                                            # use in colon word state was the only purpose of variable state.
@@ -1445,32 +1442,30 @@ dropstring,()  {
    code 'unset "ss[-1]"'
 }
 
-# compile:  ( -- ) ( $1 -- )   run: ( -- x )
-colon 'push,'
+colon 'push,'                                                        # compile:  ( -- ) ( $1 -- )   run: ( -- x )
    code 'push "${ss[-1]}"'
    dropstring,
 semicolon
 immediate
 
-# compile: ( -- ) ( $1 -- )   run: ( x -- )
-colon 'pop,'
+colon 'pop,'                                                         # compile: ( -- ) ( $1 -- )   run: ( x -- )
    code 'code "((${ss[-1]}=s[sp--]))"'
    dropstring,
 semicolon
 immediate
 
-colon 'code'
+colon 'code'                                                         # ( -- ) ( s: word )
    code 'word || missingname'
    code 'delayheader "$word" "$filehandle" "$linenr"'
 semicolon
 inline
 
-colon ';code'
+colon ';code'                                                        # ( -- )
    code "compile"
 semicolon
 inline
 
-colon 'code,'
+colon 'code,'                                                        # ( -- ) ( $1 -- )
    code 'code "${ss[-1]}"'
    dropstring,
 semicolon
@@ -1486,8 +1481,7 @@ semicolon
 compiled
 
 
-# ( compile: $1 -- ) ( run: -- $1 )
-colon 'literal$'
+colon 'literal$'                                                     # ( compile: $1 -- ) ( run: -- $1 )
    code 'code "ss+=(\"${ss[-1]}\")"'
    dropstring,
 semicolon
@@ -1510,8 +1504,8 @@ colon 'have$'                                                        # ( -- 0|xt
 semicolon
 
 # ' word  "signalname"  trap
-colon 'trap'
-   code 'name "${s[sp--]}"'                                         # convert xt to function name
+colon 'trap'                                                         # ( xt - ) ( $1 -- )
+   code 'name "${s[sp--]}"'                                          # convert xt to function name
    code 'trap "$name" "${ss[-1]}"'
    dropstring,
 semicolon
@@ -1521,19 +1515,18 @@ primitive 'name$'   'ss+=("${names[s[sp--]]}")'                      # ( xt -- )
 primitive '.name'   'printf "%s" "${names[s[sp--]]}"'                # ( xt -- )
 
 primitive 'resolve' 'resolve'                                        # ( -- )    attempt to resolve forward references
-primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # print unresolved
+primitive '.unresolved'  '((${#unresolved[@]}))&&printf "%s " "${!unresolved[@]}"'   # ( -- ) print unresolved
 primitive 'recurse' 'call "$xt"'; compiled                           # ( -- )
 
 # apply run time semantic from string stack
-colon 'use$'
+colon 'use$'                                                         # ( -- ) ( $1 -- )
    code 'use "${ss[-1]}"'
    dropstring,
 semicolon
 inline
 
 # trashed name from input stream
-# ( -- )
-colon 'trash'
+colon 'trash'                                                        # ( -- ) ( s: word )
    code 'word || missingname'
    code 'trash "$word"'
 semicolon
@@ -1542,21 +1535,19 @@ inline
 # trashed name from string stack
 # word expected in current vocabulary
 # ( -- )  ( $1 -- )
-colon 'trash$'
+colon 'trash$'                                                       # ( -- ) ( $1 -- )
    code 'trash "${ss[-1]}"'
    dropstring,
 semicolon
 inline
 
 # name of last word to string stack
-# ( -- $1 )
-primitive 'last$'   'ss+=("$lastword")'
+primitive 'last$'   'ss+=("$lastword")'                              # ( -- $1 )
 
 # this version doesn't allow postponing forward references yet.
 # postpone doesn't search compiler context wordlist.
 # for including those, add them to order.
-# ( stream: word )
-colon 'postpone'
+colon 'postpone'                                                     # ( -- ) ( s: word )
    code 'word || missingname'
    code 'exists "$word" "$compilerwid" "${order[@]}" || notfound "$word"'
    code 'if ((exists[2] == compilerwid)); then call "${exists[0]}"'
@@ -1580,7 +1571,7 @@ compiled
 #may differ from those returned while not compiling.
 
 
-colon 'where$'
+colon 'where$'                                                       # ( -- n1 n2 ) ( $1 -- )
     code 'tmp="${ss[-1],,}"'                                         # name of word to look up
     code 'unset "ss[-1]"'
     code '[[ -z "$tmp" ]]&&missingname'                              # no name given
@@ -1591,31 +1582,29 @@ colon 'where$'
 semicolon
 
 
-
-
 # ----- bit logic ---------------------------------------- #fold01
 
-colon 'and'
+colon 'and'                                                          # ( x1 x2 -- x3 )
    pop 's[sp-1]&'
 semicolon
 inline
 
-colon 'or'
+colon 'or'                                                           # ( x1 x2 -- x3 )
    pop 's[sp-1]|'
 semicolon
 inline
 
-colon 'xor'
+colon 'xor'                                                          # ( x1 x2 -- x3 )
    pop 's[sp-1]^'
 semicolon
 inline
 
-colon 'lshift'
+colon 'lshift'                                                       # ( x1 u -- x2 )
    put '(s[sp-1]<<s[sp--])&true'
 semicolon
 inline
 
-colon 'rshift'
+colon 'rshift'                                                       # ( x1 u -- x2 )
    put '(s[sp-1]&true)>>s[sp--]'
 semicolon
 inline
@@ -1625,14 +1614,14 @@ inline
 
 remagic
 
-colon 'if'
+colon 'if'                                                           # compile: ( -- ifsys ) run: ( x -- )
    code 'code "if ((s[sp--])); then"'
-   push '${#raw[@]}'                                                # allow check of empty function
+   push '${#raw[@]}'                                                 # allow check of empty function
    push "$magic"                                                     # allow check of structure
 semicolon
 compiled
 
-colon 'else'
+colon 'else'                                                         # compile: ( ifsys1 -- ifsys2 ) run: ( -- )
    code "((s[sp]++ == \"$magic\")) || { unstructured 'if'; return; }"
    code '((s[sp-1] == ${#raw[@]})) && code "(())"'
    code 'code "else"'
@@ -1640,7 +1629,7 @@ colon 'else'
 semicolon
 compiled
 
-colon 'then'
+colon 'then'                                                         # compile: ( ifsys -- ) run: ( -- )
    code "((s[sp] == $magic ||  s[sp] == $((magic+1)))) || { unstructured 'if or else'; return; }"
    code '((sp--))'
    code '((s[sp--] == ${#raw[@]})) && code "(())"'
@@ -1651,22 +1640,22 @@ compiled
 
 remagic
 
-colon 'begin'
+colon 'begin'                                                        # compile: ( -- beginsys )  run: ( -- )
    code 'code "while :; do"'
-   push '${#raw[@]}'                                                # allow check of empty function
+   push '${#raw[@]}'                                                 # allow check of empty function
    push "$magic"                                                     # allow check of structure
 semicolon
 compiled
 
 
-colon 'again'
+colon 'again'                                                        # compile: ( beginsys -- )  run: ( -- )
    code "(( s[sp--] == \"$magic\" )) || { unstructured 'begin'; return; }"
    code '(( s[sp--] == ${#raw[@]} )) && code "(())"'
    code 'code "done"'
 semicolon
 compiled
 
-colon 'until'
+colon 'until'                                                        # compile: ( beginsys -- )  run: ( x -- )
    code "(( s[sp--] == \"$magic\" )) || { unstructured 'begin'; return; }"
    code 'code "((s[sp--]))&&break"'
    code '((sp--))'
@@ -1674,13 +1663,13 @@ colon 'until'
 semicolon
 compiled
 
-colon 'while'
+colon 'while'                                                        # compile: ( beginsys1 -- beginsys2 )  run: ( x -- )
    code "(( s[sp] == $magic+1 )) || (( s[sp]++ == $magic )) || { unstructured 'begin'; return; }"
    code 'code "((s[sp--]))||break"'
 semicolon
 compiled
 
-colon 'repeat'
+colon 'repeat'                                                       # compile: ( beginsys1 -- )  run: ( -- )
    code "(( s[sp--] == $((magic+1)) )) || { unstructured 'while'; return; }"
    code '((sp--))'
    code 'code "done"'
@@ -1689,7 +1678,7 @@ compiled
 
 
 remagic
-colon 'for'
+colon 'for'                                                          # compile: ( -- forsys )  run: ( u -- )
    code 'code "((r[++rp]=i))"'
    code 'code "for ((i=s[sp--]; i--; )); do"'
    push '${#raw[@]}'                                                 # allow check of empty function
@@ -1697,7 +1686,7 @@ colon 'for'
 semicolon
 compiled
 
-colon 'next'
+colon 'next'                                                         # compile: ( forsys -- )  run: ( -- )
    code "((s[sp--] == $magic))|| { unstructured 'for'; return; }"
    code '((s[sp--]-${#raw[@]}))||code "(())"'
    code 'code "done"'
@@ -1706,9 +1695,8 @@ semicolon
 compiled
 
 
-# x1 x2 -- x1+x2 x1
 # : bounds   over + swap ;
-colon 'bounds'
+colon 'bounds'                                                       # ( x1 x2 -- x1+x2 x1 )
    get  's1'
    code '((s2=s[sp-1]))'
    put  's2'
@@ -1721,14 +1709,14 @@ dodo()  {
    ((r[++rp]=ibar, r[++rp]=i, i=s[sp--], ibar=s[sp--]))
 }
 
-colon 'do'
+colon 'do'                                                           # compile: ( -- dosys )  exec: ( n1 n2 -- )
    code 'code "dodo"'
    code 'code "while :;do"'
    push "$magic"                                                     # allow check of structure and empty function
 semicolon
 compiled
 
-colon '?do'
+colon '?do'                                                          # compile: ( -- dosys )  exec: ( n1 n2 -- )
    code 'code "dodo"'
    code 'code "while :;do"'
    code 'code "((ibar-i))||break"'
@@ -1736,7 +1724,7 @@ colon '?do'
 semicolon
 compiled
 
-colon 'loop'
+colon 'loop'                                                         # compile: ( dosys -- )  exec: ( -- )
    code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
    code 'code "((i=(i+1)&true))"'
    code 'code "((ibar-i))||break"'
@@ -1746,7 +1734,7 @@ colon 'loop'
 semicolon
 compiled
 
-colon '+loop'
+colon '+loop'                                                        # compile: ( dosys -- )  exec: ( n -- )
    code "((s[sp--] == $magic))|| { unstructured 'do'; return; }"
    code 'code "((s0=s[sp--]))"'
    code 'code "((s1=i-ibar))"'
@@ -1758,13 +1746,13 @@ colon '+loop'
 semicolon
 compiled
 
-primitive 'lest'   'code "((s[sp--]))||return"'; compiled            # compiling version: skip until end of word (i.e. return) when true
-primitive 'lest'   '((s[sp--]))||line=""'      ;                     # interpreting version: skip rest of line when false
-primitive 'unless' 'code "((s[sp--]))&&return"'; compiled            # compiling version: skip rest of word when false
-primitive 'unless' '((s[sp--]))&&line=""'      ;                     # interpreting version: skip rest of line when true
+primitive 'lest'   'code "((s[sp--]))||return"'; compiled            # compile: ( -- )  exec: ( x -- )   # exit when false
+primitive 'lest'   '((s[sp--]))||line=""'      ;                     # ( x -- )                          # skip rest of line when false
+primitive 'unless' 'code "((s[sp--]))&&return"'; compiled            # compile: ( -- )  exec: ( x -- )   # exit when true
+primitive 'unless' '((s[sp--]))&&line=""'      ;                     # ( x -- )                          # skip rest of line when true
 
-colon 'times'
-   code 'code "((r[++rp]=i))"'                                       # by using i, and pushing previous i to rstack,
+colon 'times'                                                        # compile: ( -- )  exec: ( u -- )
+   code 'code "((r[++rp]=i))"'
    code 'code "for ((i=s[sp--];i--;)); do"'
    code 'conclude "code \"done\""'
    code 'conclude "code \"((i=r[rp--]))\""'
@@ -1772,7 +1760,7 @@ semicolon
 compiled
 
 # interpreting version: u times repeat evaluation of input line remainder
-colon 'times'
+colon 'times'                                                        # ( u -- ) ( s: line )
    code '((r[++rp]=i))'                                              # by using i, and pushing previous i to rstack,
    pop  'i'                                                          # we make times, and nested times, compatible with i and j
    code 'while ((i--)); do evaluate "$line"; done'                   # evaluate line i times
@@ -1783,12 +1771,14 @@ semicolon
 # this is the prefered version, repeating the line upon encountering many
 # prefered because its use is more symmetrical with times, both specified
 # before the repeated sequence.  times is harder to put at the end.
-colon 'many'
+colon 'many'                                                         # ( -- ) ( s: line )
    code 'until read -rsn1 -t 0.01; do evaluate "$line"; done'
    code 'line=""'
 semicolon
 
-colon 'boot'
+# NOTE: add compiled version of many
+
+colon 'boot'                                                         # ( -- ) ( s: word )
    code 'word || missingname'
    code 'satisfy1 "$word"'
    code 'exists "$word" "currentwid" "${order[@]}"'                  # search current first because satisfy may have compiled it there
@@ -1799,17 +1789,17 @@ semicolon
 
 # ----- arithmetics, single ------------------------------ #fold01
 
-colon '+'
+colon '+'                                                            # ( n1 n2 -- n3 )
    put '(s[sp-1]+s[sp--])&true'
 semicolon
 inline
 
-colon '-'
+colon '-'                                                            # ( n1 n2 -- n3 )
    put '(s[sp-1]-s[sp--])&true'
 semicolon
 inline
 
-colon '*'
+colon '*'                                                            # ( n1 n2 -- n3 )
    put '(s[sp-1]*s[sp--])&true'
 semicolon
 inline
@@ -1817,8 +1807,7 @@ inline
 # ----- arithmetics, mixed ------------------------------- #fold01
 
 # s0:s1
-# ( u1 u2 -- ud )
-umstar()  {
+umstar()  {                                                          # ( u1 u2 -- ud )
    local s0="${s[sp]}" s1="${s[sp-1]}" dl=0 i=bits
    for ((; i--;)); do
       ((dl*=2, s1*=2, dl&carry))&&((s1++, dl&=true))
@@ -1827,8 +1816,7 @@ umstar()  {
    ((s[sp-1]=dl&true, s[sp]=s1&true))
 }
 
-# ( u1 u2 -- ud )
-colon 'um*'
+colon 'um*'                                                          # ( u1 u2 -- ud )
    code 'umstar'
 semicolon
 inline
@@ -1848,7 +1836,7 @@ mstar()  {
    ((s[sp-1]=dl&true, s[sp]=s1&true))
 }
 
-colon 'm*'
+colon 'm*'                                                           # ( n1 n2 -- d )
    code 'mstar'
 semicolon
 inline
@@ -1865,7 +1853,7 @@ dumstar()  {
    ((s2+=s1, s[sp-1]=dl&true, s[sp]=s2&true))
 }
 
-primitive 'dum*'  'dumstar'
+primitive 'dum*'  'dumstar'                                          # ( ud u -- ud )
 
 # arg1=asc
 digit() {
@@ -1888,9 +1876,9 @@ tonumber()  {
    ((s[sp]&=true, s[sp-1]&=true, s[++sp]=s1, s[++sp]=s0))
 }
 
-primitive '>number'  'tonumber'
+primitive '>number'  'tonumber'                                      # ( ud1 c-addr1 u1 -- ud2 c-addr2 u2 )
 
-colon 'dpl'
+colon 'dpl'                                                          # ( -- u )
    push 'dpl'
 semicolon
 inline
@@ -1907,7 +1895,7 @@ inline
 #  -  -  +     + +     0        0
 #  -  -  -     + -     1        0
 # ( s3 s2 s1  -- s3*s2%s1 s3*s2/s1 )
-colon '*/mod'
+colon '*/mod'                                                        # ( n1 n2 n3 -- n4 n5 )
    get  's1'
    code '((s2=s[sp-1], s3=s[sp-2], sp--, signr=(s2^s3)))'
    code '((signq=(signr^s1),s1&msb&&(s1=-s1&true)))'
@@ -2619,7 +2607,7 @@ colon 'standard'                                                     # ( -- ) ( 
 semicolon
 
 
-# ----- shell ---------------------------------------------
+# ----- shell --------------------------------------------- #fold01
 # TODO: optimiser: invalidate all stack register contents
 # execute shell command "$2" with args "$1"
 colon 'shell$'                                                       # ( -- ) ( $1 -- )
@@ -2634,7 +2622,7 @@ colon 'command$'                                                     # ( -- ) ( 
 semicolon
 
 
-# ----- files --------------------------------------------
+# ----- files -------------------------------------------- #fold01
 
 
 
@@ -2677,7 +2665,7 @@ primitive 'loaded'         '((s[++sp]=loaded[filehandle]))'          # ( -- u )
 primitive 'loading'        '((s[++sp]=linenr<0?false:true))'         # ( -- flag )
 primitive '#files'         '((s[++sp]=${#files[@]}))'                # ( -- u )
 
-# ----- populate only wordlist ---------------------------
+# ----- populate only wordlist --------------------------- #fold01
 
 set-current "$onlywid"
 
@@ -2702,7 +2690,7 @@ inline
 
 set-current "$forthwid"
 
-# ----- misc ---------------------------------------------
+# ----- misc --------------------------------------------- #fold01
 
 # header will be trashed after it served its purpose, which
 # is for single length pictured number conversion only, used
@@ -2736,7 +2724,7 @@ semicolon
 
 
 
-# ----- former yoda.core primitives ----------------------
+# ----- former yoda.core primitives ---------------------- #fold01
 # moved back for faster loading
 
 primitive "\\"             'line=""'                   ; immediate   # ( -- ) ( s: line )
@@ -2859,7 +2847,7 @@ primitive  'simpleprompt'  '((compiling)) || printf " %s\n" "ok"'    # ( -- )
 defer      'prompt'        'simpleprompt'                            # ( -- )
 
 
-# ----- launch -------------------------------------------
+# ----- launch ------------------------------------------- #fold00
 config()  {
 # shellcheck disable=SC1090
    [[ -f "$HOME/$config" ]]  && { source "$HOME/$config"; return; }  # config in $HOME has priority over config in yoda dir

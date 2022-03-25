@@ -1,6 +1,8 @@
 version 0.8.3, 2022mar25,01:21
-experimentally treating instantresolve like forwardrefs in definitions.
-  consequence is that words which can be resolved from library need neither
-  forwardrefs on, nor, alternatively, a prior "need word". Instead those
-  words will silently be loaded and resolved.
-
+experimentally treating instantresolve like forwardrefs in definitions, if
+   they are resolvable from library.
+   consequence is that words which can be resolved from library need neither
+   forwardrefs on, nor, alternatively, a prior "need word". Instead those
+   words will silently be loaded and resolved.  instantresolve must still be on.
+   ("shortcuts" ü+i, -i for turning on and off instant resolves, and +f, -f for
+   forward refs exist and can be resolved from library).

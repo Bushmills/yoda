@@ -370,6 +370,70 @@ optimise()  {                                                        # run code 
    }
 }
 
+
+# ----- compile and resolve forward refs ----------------- #fold00
+
+newheaders() {
+   ((tmp=previousheaders, previousheaders=xt, xt!=tmp))
+}
+
+# create a forward ref for word
+# arg1: word
+forwardref()  {
+   local word="${1,,}"
+   [[ -z ${unresolved["$1"]} ]] && {                                 # don't re-forwardref and already forward ref'ed word
+      newname "$word"                                                # generate new function name
+      unresolved["$word"]="$name"                                    # keep in unresolved vocabulary
+   }
+}
+
+# arg1: word
+compile_forwardref()  {
+   local word="${1,,}"
+   [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
+      newname "$word"                                                # generate new function name
+      unresolved["$word"]="$name"                                    # keep in unresolved vocabulary
+   }
+   code "$name"                                                      # compile dangling call to unresolved name.
+}
+
+
+# satisfy one single reference, passed as arg1.
+# tries by loading source immediately if available.
+# if source isn't available, a forward ref will be generated.
+satisfy1()  {
+   exists "$1" "${order[@]}" && return                               # word already defined, nothing to do
+   local word="${1,,}"
+   [[ -n "${lib[$word]}" ]] && {                                     # library of needed word known?
+      forwardref "$word"                                             # yes: create forward ref only
+      ((${#raw[@]})) && return 1                                     #   refuse to satisfy while building new word is in progress
+      tmp="${libdirs[0]}/${lib["$word"]}"                            #   path and name of lib file
+      [[ -f "$tmp" ]] && from "$tmp"                                 #   load if file exists
+      return 0
+   }
+}
+
+resolving=0                                                          # early termination helper
+# looping resolve until header count stabilised.
+# doing so because resolving forward references may create
+# new forward references, which also need resolving.
+resolve()  {
+   (( ! ${#unresolved[@]} || compiling || resolving )) && return     # only run without recursing if unresolved words exist
+   local file resolving=1                                            # prevent recursion
+   while newheaders && ((${#unresolved[@]})); do                     # loop while unresolved until header count stabilises
+      for word in "${!unresolved[@]}"; do                            # try to resolve all in unresolved vocabulary
+         satisfy1 "$word"                                            # satisfying a word can create new forward references
+      done
+   done
+}
+
+compiler_init()  {
+   raw=()
+   target=()
+   analyser=()                                                       # reinitialise code tags for analyser
+   conclude=()
+}
+
 # create a function from raw[@]
 compile()  {
    optimise                                                          # rewrite ${raw[@]} to ${target[@]}
@@ -410,8 +474,7 @@ parse()  {
    [[ "${line:0:1}" == "$1" ]] && line="${line:1}"
 }
 
-# ----- compiler ----------------------------------------- #fold00
-
+# ----- compiler support words --------------------------- #fold00
 
 # arg1: xt
 codebody()  {                                                        # inline compiler
@@ -535,6 +598,11 @@ variable()  {
 # is equivlant:    bash:  m[foo]=123     yoda:   123 foo !
 variable 'shell'              "0"
 variable 'forwardrefs'        "1"
+
+# NOTE: here is an interesting bug:  last does> test
+# only succeeds if here's a variable with value of 1
+m[dp++]=1
+
 variable 'callstack'          "0"
 variable 'base'               "10"
 variable 'state'              "0"
@@ -627,7 +695,6 @@ newerror "unstructured"    "unstructured: missing"
 newerror "shellerror"      "shell returned"
 newerror "filenotfound"    "file not found:"
 
-# NOTE: recently
 ctrl-c()  {                                                          # "break" is configurable item to control
    printf "%s\n" "break"                                             # how yoda responds to break signal.
    ((break == 1))  && exit 1                                         # This is due to not having a clean
@@ -689,14 +756,10 @@ number_radix()  {                                                    # base pass
       stateless "((s[++sp]=$tmp))"                                   # push or compile as single signed or unsigned number
       return 0
    }
-   ((${#left}>1))|| {
-     return 1                                            # leading decimal point: not a number
-   }
+   ((${#left}>1))||return 1                                          # leading decimal point: not a number
    [[ ${left:0-1} == . ]]&&left="${left:0:-1}"                       # remove dot
    word="${left}${tail}"                                             # recombine number without decimal point
-   [[ -z "${word//[$legaldigits]/}" ]]||{
-      return 1                      # number contains other chars than legal digits: not a number
-   }
+   [[ -z "${word//[$legaldigits]/}" ]]||return 1                     # number contains other chars than legal digits: not a number
    ((dpl=${#tail}))                                                  # write dot position to dpl
    for ((j=0; j<${#word};j++)); do
       digit="${word:j:1}"
@@ -789,63 +852,6 @@ shellcommand()  {
 }
 
 
-# ----- compile and resolve forward refs ----------------- #fold00
-
-newheaders() {
-   ((tmp=previousheaders, previousheaders=xt, xt!=tmp))
-}
-
-# create a forward ref for word
-# arg1: word
-forwardref()  {
-   local word="${1,,}"
-   [[ -z ${unresolved["$1"]} ]] && {                                 # don't re-forwardref and already forward ref'ed word
-      newname "$word"                                                # generate new function name
-      unresolved["$word"]="$name"                                    # keep in unresolved vocabulary
-   }
-}
-
-# arg1: word
-compile_forwardref()  {
-   local word="${1,,}"
-   [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
-      newname "$word"                                                # generate new function name
-      unresolved["$word"]="$name"                                    # keep in unresolved vocabulary
-   }
-   code "$name"                                                      # compile dangling call to unresolved name.
-}
-
-
-# satisfy one single reference, passed as arg1.
-# tries by loading source immediately if available.
-# if source isn't available, a forward ref will be generated.
-satisfy1()  {
-   exists "$1" "${order[@]}" && return                               # word already defined, nothing to do
-   local word="${1,,}"
-   [[ -n "${lib[$word]}" ]] && {                                     # library of needed word known?
-      forwardref "$word"                                             # yes: create forward ref only
-      ((${#raw[@]})) && return 1                                     #   refuse to satisfy while building new word is in progress
-      tmp="${libdirs[0]}/${lib["$word"]}"                            #   path and name of lib file
-      [[ -f "$tmp" ]] && from "$tmp"                                 #   load if file exists
-      return 0
-   }
-}
-
-resolving=0                                                          # early termination helper
-# looping resolve until header count stabilised.
-# doing so because resolving forward references may create
-# new forward references, which also need resolving.
-resolve()  {
-   (( ${#unresolved[@]} && ! resolving)) || return                   # only run without recursing if unresolved words exist
-   local file resolving=1                                            # prevent recursion
-   while newheaders && ((${#unresolved[@]})); do                     # loop while unresolved until header count stabilises
-      for word in "${!unresolved[@]}"; do                            # try to resolve all in unresolved vocabulary
-         satisfy1 "$word"                                            # satisfying a word can create new forward references
-      done
-   done
-}
-
-
 # ----- line interpreter, evaluate------------------------ #fold00
 
 # text compiler and interpreter, the so-called outer interpreter
@@ -895,7 +901,6 @@ evaluate()  {
       done
 
 # --- can be included?
-# NOTE: creating dependencies may need lowercasting
       (( m[forwardrefs] )) && {                                      # forwardrefs can be 0, 1 or 2 for levels of forward referencing.
          if ((compiling)); then                                      # level 1 during compilation: forward resolve only word found in library
             (( m[forwardrefs] == 2 || ${#lib[$wordlower]} )) && {    # level 2 during compilation: forward reference all unknown words
@@ -1433,6 +1438,7 @@ colon 'evaluate$'                                                    # ( -- ) ( 
    code 'local tib="${ss[-1]}"'
    code 'unset "ss[-1]"'
    code 'evaluate "$tib"'
+   code "resolve"
 semicolon
 
 
@@ -2039,7 +2045,7 @@ primitive 'lowercase$'    'ss[-1]="${ss[-1],,}"'                     # FooBar ->
 primitive 'othercase$'    'ss[-1]="${ss[-1]~~}"'                     # FooBar -> fOObAR
 
 # split string into single words at white space, return count of resulting single word strings.
-# ( -- u )   ss: ( $ -- $1 $2 $3 §.. $u )
+# ( -- u )   ss: ( $ -- $1 $2 $3 ?.. $u )
 colon 'chop$'
    code 'tmp="${ss[-1]}"'
    code 'unset "ss[-1]"'
@@ -2394,8 +2400,7 @@ inline
 
 
 # load file whose name is given on string stack
-# ( -- ) ( string: $1 -- )
-colon 'from$'
+colon 'from$'                                                        # ( -- ) ( string: $1 -- )
    code 'file="${ss[-1]}"'
    code 'unset "ss[-1]"'
    code 'from "$file"||filenotfound "$file"'
@@ -2404,7 +2409,7 @@ semicolon
 
 # NOTE: test with tabs and spaces instead of empty lines
 # omit block of source lines up to next empty line
-colon 'omit'
+colon 'omit'                                                         # ( -- ) ( s: lines )
    code 'until (( linenr > ${#lines[@]} )); do'
    code 'line="${lines[linenr++]}"'
    code '[[ -z "$line" ]] && break'
@@ -2464,11 +2469,6 @@ cache_dependencies()  {
    done < "$dependencies"
 }
 
-dependencies()  {                                                    # library inclusion dependency file builder
-   generate_dependencies
-   cache_dependencies
-}
-
 # try to resolve all words given on input line.
 # args:  names of words
 satisfy()  {
@@ -2481,10 +2481,10 @@ satisfy()  {
    done
 }
 
-primitive 'dependencies' 'dependencies'                              # generate, then cache
-primitive "provides:"   'line=""'                                    # double quoted escaped backslash rather than
+primitive 'dependencies' 'generate_dependencies; cache_dependencies' # ( -- )
+primitive "provides:"   'line=""'                                    # ( -- ) ( s: line )
 
-colon 'satisfy'
+colon 'satisfy'                                                      # ( -- ) ( s: line )
    code  'satisfy "$line"'
    code  'line=""'
 semicolon
@@ -2492,8 +2492,7 @@ semicolon
 
 #
 # satisfy references from top string stack item
-# ( $1 -- )
-colon 'satisfy$'
+colon 'satisfy$'                                                     # ( -- ) ( $1 -- )
    code 'satisfy "${ss[-1]}"'
    code 'unset "ss[-1]"'
 semicolon
@@ -2502,9 +2501,7 @@ semicolon
 
 # ----- vocabularies and wordlists -----------------------
 
-primitive 'transient'   'transients+=("$currentwid $lastword")'
-
-# arg1: wid
+primitive 'transient'   'transients+=("$currentwid $lastword")'      # ( -- )
 
 colon 'newwordlist$'                                                 # ( -- wid )  ( $1 -- )
    code 'declare -gA "flags_$sdp=()"'

@@ -147,7 +147,6 @@ maxuint       1 s( MAX-U)               environment!  \ largest usable unsigned 
 : quit         ( ??? -- )                             warm
                                                       begin
                                                          query$ evaluate$
-                                                         resolve
                                                          prompt
                                                       again                               ;
 

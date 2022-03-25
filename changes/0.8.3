@@ -3,6 +3,21 @@ experimentally treating instantresolve like forwardrefs in definitions, if
    they are resolvable from library.
    consequence is that words which can be resolved from library need neither
    forwardrefs on, nor, alternatively, a prior "need word". Instead those
-   words will silently be loaded and resolved.  instantresolve must still be on.
-   ("shortcuts" ü+i, -i for turning on and off instant resolves, and +f, -f for
-   forward refs exist and can be resolved from library).
+   words will silently be loaded and resolved.
+dropped notion "instantrefs" completely, as well as all references to it.
+It is now "levels of forward resolving", which are:
+   0:  no forward referencing at all. Word not found -> throw error.
+   1:  similar to former instantresolve:
+      during interpretation: can word be resolved from library?
+         yes: compile, execute.
+         no: word not found
+      during compilation: can word be resolved from library?
+         yes: create forward ref, compile dangling call to word
+         no:  throw error
+   2: like former forwardrefs:
+      during interpretation: same as like 1.
+      during compilation:   always create forward ref, compule dangling call to word
+"shortcuts"  -f +f  -i +i   are now:
+      -f:   unchanged. set forward resolving to level 0 (similar to former -f -i)
+      +f:   set forward resolving to level 1  (similar to former instantresolve on, +i)
+      ++f   set forward resolving to level 2  (similar to former forwardredfs on, +f

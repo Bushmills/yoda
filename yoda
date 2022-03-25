@@ -36,8 +36,6 @@ v="0.8.3"
 
 # ----- declarations ------------------------------------- #fold00
 
-casesensitive=1
-
 shopt -s extglob
 shopt -u nullglob
 
@@ -536,8 +534,7 @@ variable()  {
 # as memory address. therefore, this code for variable foo
 # is equivlant:    bash:  m[foo]=123     yoda:   123 foo !
 variable 'shell'              "0"
-variable 'forwardrefs'        "0"
-variable 'instantresolve'     "1"
+variable 'forwardrefs'        "1"
 variable 'callstack'          "0"
 variable 'base'               "10"
 variable 'state'              "0"
@@ -792,7 +789,7 @@ shellcommand()  {
 }
 
 
-# ----- resolve forward refs ----------------------------- #fold00
+# ----- compile and resolve forward refs ----------------- #fold00
 
 newheaders() {
    ((tmp=previousheaders, previousheaders=xt, xt!=tmp))
@@ -899,13 +896,13 @@ evaluate()  {
 
 # --- can be included?
 # NOTE: creating dependencies may need lowercasting
-      (( m[instantresolve] )) && {                                   # interpret time forward references enables?
-         if ((compiling)); then
-            [[ -n "${lib[$wordlower]}" ]] && {                       # library of needed word known?
+      (( m[forwardrefs] )) && {                                      # forwardrefs can be 0, 1 or 2 for levels of forward referencing.
+         if ((compiling)); then                                      # level 1 during compilation: forward resolve only word found in library
+            (( m[forwardrefs] == 2 || ${#lib[$wordlower]} )) && {    # level 2 during compilation: forward reference all unknown words
                compile_forwardref "$wordlower"
                continue
             }
-         else
+         else                                                        # any level during interpretation: compile from library or throw error
             satisfy1 "$wordlower" && {                               # attempt to load word
                exists "$wordlower" "${order[@]}" || notfound "$word" # word not found: error (though it was compiled successfully)
                name "${exists[0]}"                                   # into is in search order. Therefore search order is searched for word.
@@ -913,11 +910,6 @@ evaluate()  {
                continue
             }
          fi
-      }
-
-      (( m[forwardrefs] && compiling )) && {                         # forward references enabled?
-         compile_forwardref "$wordlower"
-         continue
       }
 
 # --- can be shelled to?
@@ -2425,7 +2417,7 @@ semicolon
 need()  {
    [[ -z "$1" ]]&&missingname
    exists "$1" "${order[@]}" "$compilerwid" ||
-   forwardref "$1"  "$2"                                             # forwardref protects itself against already forwardref'd words
+   forwardref "$1"                                                   # forwardref protects itself against already forwardref'd words
 }
 
 colon 'need'                                                         # ( -- )  ( stream: bl delimited string )

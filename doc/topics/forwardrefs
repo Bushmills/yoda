@@ -75,17 +75,10 @@ or
 
 
 
-Forward references can be created and resolved even while they're typed,
-interactively. This needs enabling to. The variable for doing this is
-called  "instantresolve":
-
-   instantresolve on
-( or  +i   , which is now enabled by default )
-
-
 
 ------------ removed some, outdated ------------
-
+instantresolve merged with forwardrefs in version 0.8.3.
+any reference to instantresolves is outdated
 
 
 A forward referencable word from the library is "dump" ("hello" is now a

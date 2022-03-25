@@ -30,17 +30,11 @@ transient
         ': emit show0 ;
 transient
 
-
-: status          ( c -- )  ( $1 -- $2 )
-        if uppercase
-        then append$ ;
-transient
-
+create forwardflags    bl c, 'f c,  'F c,     transient
 : flags  ( -- $1 )
-        "flags" ""
-        'f  forwardrefs @     status
-        'i  instantresolve @  status
-        's  shell @           status  ;
+        "flags"
+         forwardrefs @ forwardflags + c@ char$
+        's shell @ if uppercase then append$ ;
 transient
 
 

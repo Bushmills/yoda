@@ -1,18 +1,16 @@
-provides: +s -s +f -f +r +r shortcuts
+provides: +s -s +f ++f -f shortcuts
 
-needed +s lest  : +s shell on ;
-needed -s lest  : -s shell off ;
-needed +f lest  : +f forwardrefs on ;                    \ only those during compilation
-needed -f lest  : -f forwardrefs off ;
-needed +i lest  : +i instantresolve on  ;                \ resolve interactive refs immediate
-needed -i lest  : -i instantresolve off  ;
+needed +s  lest  : +s  shell on ;
+needed -s  lest  : -s  shell off ;
+needed +f  lest  : +f  1 forwardrefs ! ;
+needed ++f lest  : ++f 2 forwardrefs ! ;
+needed -f  lest  : -f  forwardrefs off ;
 
 needed shortcuts unless omit
 need ?
 : shortcuts ( -- )
    "shell"          ?
    "forwardrefs"    ?
-   "instantresolve" ?
 ;
 
 needed ? unless omit
@@ -20,5 +18,5 @@ needed ? unless omit
    dup$ #16 ltype$
    evaluate$ @
    if "on" else "off" then
-   type$ cr ;        
+   type$ cr ;
 transient

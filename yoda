@@ -801,10 +801,21 @@ newheaders() {
 # create a forward ref for word
 # arg1: word
 forwardref()  {
-   [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
-      newname "$1"                                                   # generate new function name
-      unresolved["${1,,}"]="$name"                                   # keep in unresolved vocabulary
+   local word="${1,,}"
+   [[ -z ${unresolved["$1"]} ]] && {                                 # don't re-forwardref and already forward ref'ed word
+      newname "$word"                                                # generate new function name
+      unresolved["$word"]="$name"                                    # keep in unresolved vocabulary
    }
+}
+
+# arg1: word
+compile_forwardref()  {
+   local word="${1,,}"
+   [[ -z ${unresolved["$word"]} ]] && {                              # don't re-forwardref and already forward ref'ed word
+      newname "$word"                                                # generate new function name
+      unresolved["$word"]="$name"                                    # keep in unresolved vocabulary
+   }
+   code "$name"                                                      # compile dangling call to unresolved name.
 }
 
 
@@ -886,22 +897,27 @@ evaluate()  {
          $pattern && continue 2                                      # arguments in $word, $char1, $tail
       done
 
-#      (( m[forwardrefs] )) && {                                      # forward references enabled?
-      (( m[forwardrefs] || m[instantresolve] )) && {                                      # forward references enabled?
-         ((compiling)) && {                                          # and compiling?
-            forwardref "$wordlower" "$lastword"                      #     create a forward reference.
-            code "${unresolved["$wordlower"]}"                       #     compile dangling call to unresolved name.
-            continue
-         }
-      }
 # --- can be included?
-      (( m[instantresolve] && ! compiling)) && {                     # interpret time forward references enables?
-         satisfy1 "$wordlower" && {                                  # attempt to load word
-            exists "$wordlower" "${order[@]}" || notfound "$word"    # word not found: error (though it was compiled successfully)
-            name "${exists[0]}"                                      # into is in search order. Therefore search order is searched for word.
-            $name                                                    # word found in search order -> execute
-            continue
-         }
+# NOTE: creating dependencies may need lowercasting
+      (( m[instantresolve] )) && {                                   # interpret time forward references enables?
+         if ((compiling)); then
+            [[ -n "${lib[$wordlower]}" ]] && {                       # library of needed word known?
+               compile_forwardref "$wordlower"
+               continue
+            }
+         else
+            satisfy1 "$wordlower" && {                               # attempt to load word
+               exists "$wordlower" "${order[@]}" || notfound "$word" # word not found: error (though it was compiled successfully)
+               name "${exists[0]}"                                   # into is in search order. Therefore search order is searched for word.
+               $name                                                 # word found in search order -> execute
+               continue
+            }
+         fi
+      }
+
+      (( m[forwardrefs] && compiling )) && {                         # forward references enabled?
+         compile_forwardref "$wordlower"
+         continue
       }
 
 # --- can be shelled to?

@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.8.2"
+v="0.8.3"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -885,8 +885,9 @@ evaluate()  {
       for pattern in "${patterns[@]}"; do
          $pattern && continue 2                                      # arguments in $word, $char1, $tail
       done
-# --- forward reference?
-      (( m[forwardrefs] )) && {                                      # forward references enabled?
+
+#      (( m[forwardrefs] )) && {                                      # forward references enabled?
+      (( m[forwardrefs] || m[instantresolve] )) && {                                      # forward references enabled?
          ((compiling)) && {                                          # and compiling?
             forwardref "$wordlower" "$lastword"                      #     create a forward reference.
             code "${unresolved["$wordlower"]}"                       #     compile dangling call to unresolved name.
@@ -902,6 +903,7 @@ evaluate()  {
             continue
          }
       }
+
 # --- can be shelled to?
       ((m[shell])) && {                                              # done unless shell flag was set
          stateless "${word} ${line}" ||                              # in which case execution as shell command is attempted (cmd not found returns 127)

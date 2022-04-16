@@ -2769,7 +2769,7 @@ primitive 'over'          '((s[++sp]=s[sp-1]))'                      # ( x1 x2 -
 primitive 'pluck'         '((s[++sp]=s[sp-2]))'                      # ( x1 x2 x3 -- x1 x2 x3 x1 )
 primitive 'pick'          '((s[++sp]=s[sp-s[sp--]-1]))'              # ( ... x2 x1 x0 u -- ... x2 x1 x0 xu )
 primitive '?dup'          '((s[sp]))&&((s[++sp]=s[sp]))'             # ( x -- 0 | x x )
-primitive '2dup'           '((s[++sp]=s[sp-1], s[++sp]=s[sp-1]))'    # ( x1 x2 -- x1 x2 x1 )
+primitive '2dup'          '((s[++sp]=s[sp-1], s[++sp]=s[sp-1]))'     # ( x1 x2 -- x1 x2 x1 x2 )
 primitive 'r@'            '((s[++sp]=r[rp]))'                        # ( -- x )  ( r: x -- x )
 primitive 'r>'            '((s[++sp]=r[rp--]))'                      # ( -- x ) ( r: x -- )
 primitive 'rdepth'        '((s[++sp]=rp))'                           # ( -- u )

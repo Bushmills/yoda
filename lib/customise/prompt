@@ -1,39 +1,15 @@
-once
 provides: newprompt
 needs: bracket$
-
-: ok        ( -- )
-      " ok" type$  ;    inline transient
-
-
-\ no full prompt during compilation, but just a vertical bar
-: |      ( -- )
-      "|   " type$  ;
-inline transient
-
-
+once
+: ok     ( -- )    " ok"  type$  ;                                        inline transient
+: |      ( -- )    "|   " type$  ;                                        inline transient
+: ...    ( -- )    depth ?dup if space convert '+' prepend$ type$ then  ; inline transient
+\ : ...    ( -- )  depth ?dup if 1+ " .........>" left$ type$ then      ; inline transient
 \ show count of unresolved forward references if any
-: (unres)   ( -- )
-      #unresolved ?dup if
-         space
-         convert "()" bracket$ type$
-      then  ;
-inline transient
-
-
-\ show stack indicator, one dot per stack item
-\ up to some limit. above that limit, ">" indicates "more"
-: ...       ( -- )
-      depth ?dup if
-         space
-         ".........>" left$ type$
-      then ;
-inline transient
-
-
+: (unres)   ( -- )   #unresolved ?dup if      space
+                        convert "()" bracket$ type$
+                     then  ;                                              inline transient
 \ a more informative prompt than the very minimal prompt in yoda
-: newprompt  ( -- )
-   compiling if  |  exit then
-   ok (unres)  ...
-   cr  ;
-noname is prompt           \ activate this replacement prompt
+: newprompt  ( -- )  compiling if  |  exit then
+                     ok (unres)  ...  cr  ;
+noname is prompt     \ activate this replacement prompt

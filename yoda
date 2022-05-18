@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.8.3"
+v="0.8.4"
 # ----- about -------------------------------------------- #fold00
 
 # times in UTC
@@ -626,7 +626,7 @@ value()  {
 }
 
 
-# ----- errors, traps, entry points----------------------- #fold00
+# ----- errors, traps, entry points----------------------- #FOLD00
 
 warm()  {
    r=() rp=0
@@ -1021,7 +1021,7 @@ from()  {
    return 0
 }
 
-# ----- primitives --------------------------------------- #fold00
+# ----- primitives --------------------------------------- #FOLD00
 # ----- colon/semicolon ---------------------------------- #fold01
 
 colon ';'
@@ -2672,7 +2672,7 @@ primitive 'loaded'         '((s[++sp]=loaded[filehandle]))'          # ( -- u )
 primitive 'loading'        '((s[++sp]=linenr<0?false:true))'         # ( -- flag )
 primitive '#files'         '((s[++sp]=${#files[@]}))'                # ( -- u )
 
-# ----- populate only wordlist --------------------------- #fold01
+# ----- populate only wordlist --------------------------- #FOLD01
 
 set-current "$onlywid"
 
@@ -2691,7 +2691,6 @@ primitive 'forth'      '((order[0]=forthwid))'                       # ( -- )
 primitive 'definitions' 'set-current "${order[0]}"'                  # ( -- )
 colon 'only'                                                         # ( -- )
    code 'order=("$onlywid" "$onlywid")'
-   code 'set-current "$onlywid"'
 semicolon
 inline
 

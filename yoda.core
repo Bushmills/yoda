@@ -121,26 +121,26 @@ trash x
 : [']          ( -- )   ( stream: word )              ' literal,                          ; compiled
 
 \ ----- environment --------------------------------------
-
 "environment" newwordlist$ constant environment
 : environment?    ( c-addr u -- false | i*x true )    environment searchwordlist
                                                       dup lest count scrape true          ;
 : environment!    ( i*x i c-addr u -- )               here -rot environment writewordlist
                                                       dup c,
                                                       here swap dup cells allot spread    ; transient
-#255          1 s( /COUNTED-STRING)     environment!  \ max count of chars in a counted string
-pad here - 1- 1 s( /HOLD)               environment!  \ size of the pictured numeric output string buffer, in characters
-#4095         1 s( /PAD)                environment!  \ size of the scratch area pointed to by PAD, in characters
-bits          1 s( ADDRESS-UNIT-BITS)   environment!  \ size of one address unit, in bits
-false         1 s( FLOORED)             environment!  \ true if floored division is the default
-#127          1 s( MAX-CHAR)            environment!  \ maximum value of any character in the implementation-defined character set
--1 msb 1-     2 s( MAX-D)               environment!  \ largest usable signed double number
--1 dup        2 s( MAX-UD)              environment!  \ largest usable unsigned double number
-maxint        1 s( MAX-N)               environment!  \ largest usable signed integer
-maxuint       1 s( MAX-U)               environment!  \ largest usable unsigned integer
-#1023         1 s( RETURN-STACK-CELLS)  environment!  \ maximum size of the return stack, in cells
-#2047         1 s( STACK-CELLS)         environment!  \ maximum size of the data stack, in cells
-
+\ #255          1 s( /COUNTED-STRING)     environment!  \ max count of chars in a counted string
+\ pad here - 1- 1 s( /HOLD)               environment!  \ size of the pictured numeric output string buffer, in characters
+\ #4095         1 s( /PAD)                environment!  \ size of the scratch area pointed to by PAD, in characters
+\ bits          1 s( ADDRESS-UNIT-BITS)   environment!  \ size of one address unit, in bits
+\ false         1 s( FLOORED)             environment!  \ true if floored division is the default
+\ #127          1 s( MAX-CHAR)            environment!  \ maximum value of any character in the implementation-defined character set
+\ -1 msb 1-     2 s( MAX-D)               environment!  \ largest usable signed double number
+\ -1 dup        2 s( MAX-UD)              environment!  \ largest usable unsigned double number
+\ 4 .
+\ maxint        1 s( MAX-N)               environment!  \ largest usable signed integer
+\ maxuint       1 s( MAX-U)               environment!  \ largest usable unsigned integer
+\ #1023         1 s( RETURN-STACK-CELLS)  environment!  \ maximum size of the return stack, in cells
+\ #2047         1 s( STACK-CELLS)         environment!  \ maximum size of the data stack, in cells
+\ 5 .
 \ ----- unsorted -----------------------------------------
 
 : evaluate     ( c-addr u -- )                        pack$ evaluate$                     ;        inline

@@ -1,14 +1,18 @@
 provides: os shell: df ls cat cd most echo printf cp rm pwd mc
 once
 
+\ discovered in yoda v0.8.4 a problem with vocabularies, causing this vocabulary "os"
+\ to misbehave, by corrupting vocabulary search.
+\ vocabulary commented out for now.
+
 : shell:
     "eval " word$ dup$ create$   \ forth name is command name
     " \$line" join$ quote$ join$  \ add command line to command, then quoted command as args to eval
     "; line=" join$ use$  ;      \ command consumes line.
 
-only forth
-vocabulary os
-also os definitions
+\ only forth
+\ vocabulary os
+\ also os definitions
    shell: df
    shell: ls
    shell: cat
@@ -20,5 +24,5 @@ also os definitions
    shell: rm
    shell: pwd
    shell: mc
-only os
-also forth definitions
+\ only os
+\ also forth definitions

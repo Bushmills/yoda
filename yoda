@@ -2258,13 +2258,13 @@ semicolon
 inline
 
 colon 'c@'
-   put 'm[s[sp]]&255'
+   put 'm[s[sp]]'
 semicolon
 inline
 
 
 colon 'c!'
-   code '((m[s[sp--]]=s[sp-1]&255))'
+   code '((m[s[sp--]]=s[sp-1]))'
    code '((sp--))'
 semicolon
 inline
@@ -2836,8 +2836,8 @@ primitive 'abs'            '((s[sp]&msb))&&((s[sp]=(-s[sp]&true)))'  # ( n -- u 
 # ----- memory -------------------------------------------
 
 primitive '@'              '((s[sp]=m[s[sp]]))'                      # ( a -- x )
-primitive 'c,'             '((m[dp++]=s[sp--]&255))'                 # ( c -- )
-primitive 'count'          '((s[++sp]=m[s[sp]++]&255))'              # ( a -- a+1 c )
+primitive 'c,'             '((m[dp++]=s[sp--]))'                     # ( c -- )
+primitive 'count'          '((s[++sp]=m[s[sp]++]))'                  # ( a -- a+1 c )
 primitive 'skim'           '((s[++sp]=m[s[sp]++]))'                  # ( a -- a+cell x )
 primitive '<-'             '((m[s[sp--]]=s[sp--]))'                  # ( a x -- )
 primitive 'here$'          '((s[++sp]=sdp))'                         # ( -- u )

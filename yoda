@@ -1,7 +1,11 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.8.4"
-# ----- about -------------------------------------------- #fold00
+v="0.8.6"
+
+# 2024jun27
+# 0.8.6: char stopped working, had to change the old version 
+
+# ----- about -------------------------------------------- #FOLD00
 
 # times in UTC
 # dates in post-gregorian Sol3
@@ -182,7 +186,7 @@ for i in {1..255}; do                                                # ascii->ch
    ((i == 10)) || asc["${char[i]}"]="$i"                             # linefeed is invalid hash key
 done
 
-# ----- diagnostics  ------------------------------------- #fold00
+# ----- diagnostics  ------------------------------------- #FOLD00
 
 trace()  {
    printf "### %-1s %-20s %s\n" "${char[$(((compiling&1)?58:32))]}" "[${FUNCNAME[1]}]" "$@"
@@ -427,13 +431,6 @@ resolve()  {
    done
 }
 
-compiler_init()  {
-   raw=()
-   target=()
-   analyser=()                                                       # reinitialise code tags for analyser
-   conclude=()
-}
-
 # create a function from raw[@]
 compile()  {
    optimise                                                          # rewrite ${raw[@]} to ${target[@]}
@@ -469,9 +466,9 @@ word()  {
 # delimiter passed as arg1.
 # leading spaces aren't removed from remainder of line.
 parse()  {
-   [[ -z "$1" ]] && word="$line" || word="${line%%"${1}"*}"
+   [[ -z "$1" ]] && word="$line" || word="${line%%"${1}"*}"          # "   trick joe syntax highlighting
    line="${line#"${word}"}"
-   [[ "${line:0:1}" == "$1" ]] && line="${line:1}"
+   [[ "${line:0:1}" == "$1" ]] && line="${line:1}"                   # "   trick joe syntax highlighting
 }
 
 # ----- compiler support words --------------------------- #fold00
@@ -515,7 +512,7 @@ stateless()   {
 }
 
 
-# ----- defining words ----------------------------------- #fold00
+# ----- defining words ----------------------------------- #FOLD00
 
 put()   { code "((s[sp]=$1))"; }                                     # push without pointer inc
 push()  { code "((s[++sp]=$1))"; }
@@ -654,7 +651,7 @@ read -r redbg  < <(tput setab 1)
 read -r normal < <(tput sgr0)
 
 error() {
-   printf "%s%s %s\n" "${tib%"${word}"*"${line}"}" "${redbg}${word}${normal}" "$line"
+   printf "%s%s %s\n" "${tib%"${word}"*"${line}"}" "${redbg}${word}${normal}" "$line"       # "
    printf 'ERROR: %s\n' "$@"
    row=$((${#tib}-${#line}-${#word}))
 # NOTE: passing file name in lasterror - could pass file handle instead
@@ -1114,7 +1111,7 @@ see()  {
 primitive 'see' 'see'                                                # ( -- ) ( s: word )
 
 
-# ----- does> -------------------------------------------- #fold01
+# ----- does> -------------------------------------------- #FOLD01
 
 # compiled to the end of a defining word,
 # is therefore called by create part, and
@@ -1803,7 +1800,7 @@ colon 'boot'                                                         # ( -- ) ( 
 semicolon
 
 
-# ----- arithmetics, single ------------------------------ #fold01
+# ----- arithmetics, single ------------------------------ #FOLD01
 
 colon '+'                                                            # ( n1 n2 -- n3 )
    put '(s[sp-1]+s[sp--])&true'
@@ -1952,7 +1949,7 @@ colon 'd+'                                                           # ( d1 d2 -
    code '((s[sp-1]=d1l&true, s[sp]=d1h&true))'
 semicolon
 
-# ----- string stack operators---------------------------- #fold01
+# ----- string stack operators---------------------------- #FOLD01
 
 primitive 'empty$'   'ss=()'
 primitive 'dup$'     'ss+=("${ss[-1]}")'
@@ -2346,7 +2343,7 @@ move()  {                                                            # deals wit
 primitive 'move'   'move'
 
 
-# ----- character i/o ------------------------------------ #fold01
+# ----- character i/o ------------------------------------ #FOLD01
 
 # given an ASCII, print the character
 primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
@@ -2356,7 +2353,8 @@ primitive 'emit'  'printf "%c" "${char[s[sp--]&255]}"'
 # ( -- c )
 colon 'char'
    code 'word || missing "character"'
-   code '((s[++sp]=asc["\\${word:0:1}"]))'
+#   code '((s[++sp]=asc["\\${word:0:1}"]))'   # old version no good any longer
+   code '((s[++sp]=asc[${word:0:1}]))'      # year 2024 needs this one.
 semicolon
 inline
 
@@ -2730,7 +2728,7 @@ semicolon
 
 
 
-# ----- former yoda.core primitives ---------------------- #fold01
+# ----- former yoda.core primitives ---------------------- #FOLD01
 # moved back for faster loading
 
 primitive "\\"             'line=""'                   ; immediate   # ( -- ) ( s: line )

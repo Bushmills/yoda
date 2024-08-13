@@ -1,8 +1,14 @@
 #!/bin/bash
 # shellcheck disable=SC2016 disable=SC2034 disable=SC2154 disable=SC2288
-v="0.8.6"
+v="0.8.7"
 
-# 2024jun27
+# 2024aug14
+# 0.8.7: unpack$ escaping removed. Same as 0.8.6, stopped working.
+#        seems that the used bash version does something slightly different
+#        with quoting or escaping. Whatever has changed, it's apparently for
+#        the better, because needed code adjustments simplify.
+#        However, changes are needed, and those may introduce a backward
+#        compatibility issue. Currently using bash v5.2.21(1)
 # 0.8.6: char stopped working, had to change the old version 
 
 # ----- about -------------------------------------------- #FOLD00
@@ -2165,7 +2171,8 @@ primitive  'char$'  'ss+=("${char[s[sp--]]}")'
 unpack()  {                                                          # ( a -- len )
    local a="${s[sp]}" u=0 i=${#1}
    for ((; i--;)); do
-      ((m[a++]=asc["\\${1:u++:1}"]))
+      ((m[a++]=asc["${1:u++:1}"]))
+# ((m[a++]=asc["\\${1:u++:1}"]))
    done
    ((s[sp]=u))
 }

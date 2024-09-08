@@ -6,10 +6,10 @@ contexts:            stateless
 category:            dictionary
 
 description:         renders the last word headerless and produces its execution
-                     token xt. For defing the word, prior to use of "headerless",
+                     token xt. For defing the word, prior to use of "noname",
                      a name is still needed. That name can of course be a throwaway
                      dummy name.
-                     As headerless operates on words in general, not just on colon
+                     As noname operates on words in general, not just on colon
                      words, any newly defined dictionary word can be rendered
                      headerless.
 

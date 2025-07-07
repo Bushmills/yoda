@@ -1,7 +1,8 @@
 # yoda
 
-yoda is an acronym of Yet Onather Delirious Application, and does
-naturally not refer to any greenish midget with pointy ears, albeit it had
+yoda is an acronym of Yet Onather Delirious Application, though some rather call it "Yoda: Overdose of Duct-tape Abstractions" or even "Yoda: Overengineered Digital Anachronism".
+
+The name does naturally not refer to any greenish midget with pointy ears, albeit it had
 been said that reading yoda source aloud sounds like the very same midget
 talking.
 

@@ -9,8 +9,8 @@ talking.
 yoda implements a compiler which converts a close resemblance of Forth
 source code to bash functions, an interpreter which runs them, and a base
 vocabulary of useful functions, strongly orientated towards what a common
-Forth interpreter offers.  A Forth system can be described as a toolkit for
-creation of a domain specific language to execute pseudo code.
+Forth interpreter offers.  A Forth system can be roughly described as a toolkit
+supporting creation of domain specific languages for execution of pseudo code.
 
 Yoda can be used to augment bash, can serve as shell, or as Forthish coding environment.
 
